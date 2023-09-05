@@ -18,7 +18,6 @@ from time import sleep
 
 import pandas as pd
 import pytest
-from merlin.endpoint import Status
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
@@ -26,7 +25,7 @@ from merlin.transformer import StandardTransformer, Transformer
 from recursive_diff import recursive_eq
 
 import merlin
-from merlin import DeploymentMode
+from merlin import DeploymentMode, MetricsType
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 tensorflow_request_json = {
@@ -412,13 +411,25 @@ def test_resource_request(
 
     merlin.undeploy(v)
 
+
 @pytest.mark.gpu
 @pytest.mark.integration
-@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_resource_request_with_gpu(integration_test_url, project_name, deployment_mode, use_google_oauth, requests, gpu_config):
+@pytest.mark.parametrize(
+    "deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS]
+)
+def test_resource_request_with_gpu(
+    integration_test_url,
+    project_name,
+    deployment_mode,
+    use_google_oauth,
+    requests,
+    gpu_config,
+):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model(f"resource-request-with-gpu-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
+    merlin.set_model(
+        f"gpu-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST
+    )
 
     model_dir = "test/xgboost-model"
 
@@ -435,7 +446,10 @@ def test_resource_request_with_gpu(integration_test_url, project_name, deploymen
 
         resource_request = ResourceRequest(1, 1, "100m", "200Mi", **gpu_config)
         endpoint = merlin.deploy(
-            v, environment_name=default_env.name, resource_request=resource_request, deployment_mode=deployment_mode
+            v,
+            environment_name=default_env.name,
+            resource_request=resource_request,
+            deployment_mode=deployment_mode,
         )
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -1043,6 +1057,64 @@ def test_deployment_mode_for_serving_model(
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     merlin.stop_serving_traffic(model_endpoint.environment_name)
+    undeploy_all_version()
+
+
+@pytest.mark.integration
+def test_redeploy_model(integration_test_url, project_name, use_google_oauth, requests):
+    """
+    Validate that calling the 'merlin.deploy' twice in a row redeploys a Merlin model
+    """
+
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("model-sdk-redeploy", ModelType.TENSORFLOW)
+    model_dir = "test/tensorflow-model"
+
+    undeploy_all_version()
+
+    # Upload new model version: v1
+    with merlin.new_model_version() as v1:
+        merlin.log_model(model_dir=model_dir)
+
+    # Deploy using serverless with RPS autoscaling policy
+    endpoint = merlin.deploy(
+        v1,
+        autoscaling_policy=merlin.AutoscalingPolicy(
+            metrics_type=merlin.MetricsType.RPS, target_value=20
+        ),
+    )
+
+    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check the autoscaling policy of v1
+    assert endpoint.autoscaling_policy.metrics_type == MetricsType.RPS
+    assert endpoint.autoscaling_policy.target_value == 20
+
+    # Deploy v2 using raw_deployment with CPU autoscaling policy
+    new_endpoint = merlin.deploy(
+        v1,
+        autoscaling_policy=merlin.AutoscalingPolicy(
+            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=10
+        ),
+    )
+
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check that the endpoint remains the same
+    assert endpoint.url == new_endpoint.url
+    # Check the autoscaling policy of v2
+    assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+    assert new_endpoint.autoscaling_policy.target_value == 10
+
     undeploy_all_version()
 
 

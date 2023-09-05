@@ -33,6 +33,7 @@ from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
+from merlin import pyfunc
 from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
                                 SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
                                 AutoscalingPolicy)
@@ -57,7 +58,6 @@ from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
 
 import mlflow
-from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -1045,7 +1045,7 @@ class ModelVersion:
         if resource_request is None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
-            
+
             for env in env_list:
                 if env.name == target_env_name:
                     resource_request = ResourceRequest(
@@ -1054,7 +1054,7 @@ class ModelVersion:
                         env.default_resource_request.cpu_request,
                         env.default_resource_request.memory_request,
                         )
-                    
+
             # This case is when the default resource request is not specified in the environment config
             if resource_request is None:
                 raise ValueError("resource request must be specified")
@@ -1064,20 +1064,19 @@ class ModelVersion:
         target_resource_request = client.ResourceRequest(
             resource_request.min_replica, resource_request.max_replica,
             resource_request.cpu_request, resource_request.memory_request)
-        
+
         if resource_request.gpu_request is not None and resource_request.gpu_name is not None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
 
             for env in env_list:
                 for gpu in env.gpus:
-                    if resource_request.gpu_name == gpu.display_name:
+                    if resource_request.gpu_name == gpu.name:
                         if resource_request.gpu_request not in gpu.values:
                             raise ValueError(f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}")
-                        
+
+                        target_resource_request.gpu_name = resource_request.gpu_name
                         target_resource_request.gpu_request = resource_request.gpu_request
-                        target_resource_request.gpu_resource_type = gpu.resource_type
-                        target_resource_request.gpu_node_selector = gpu.node_selector
                         break
 
         target_env_vars = []
@@ -1119,12 +1118,23 @@ class ModelVersion:
                                                                                       autoscaling_policy.target_value),
                                           protocol=protocol.value
                                           )
-
-        endpoint = endpoint_api \
-            .models_model_id_versions_version_id_endpoint_post(int(model.id),
-                                                               int(self.id),
-                                                               body=endpoint.to_dict())
-
+        current_endpoint = self.endpoint
+        if current_endpoint is not None:
+            # This allows a serving deployment to be update while it is serving
+            if current_endpoint.status == Status.SERVING:
+                endpoint.status = Status.SERVING.value
+            else:
+                endpoint.status = Status.RUNNING.value
+            endpoint = endpoint_api \
+                .models_model_id_versions_version_id_endpoint_endpoint_id_put(int(model.id),
+                                                                   int(self.id),
+                                                                   current_endpoint.id,
+                                                                   body=endpoint.to_dict())
+        else:
+            endpoint = endpoint_api \
+                .models_model_id_versions_version_id_endpoint_post(int(model.id),
+                                                                   int(self.id),
+                                                                   body=endpoint.to_dict())
         bar = pyprind.ProgBar(100, track_time=True,
                               title=f"Deploying model {model.name} version "
                                     f"{self.id}")
@@ -1139,7 +1149,7 @@ class ModelVersion:
             sleep(5)
         bar.stop()
 
-        if endpoint.status != "running":
+        if endpoint.status != "running" and endpoint.status != "serving":
             raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
@@ -1147,7 +1157,7 @@ class ModelVersion:
               f"\nView model version logs: {log_url}")
 
         self._version_endpoints = self.list_endpoint()
-        
+
         return VersionEndpoint(endpoint, log_url)
 
     def create_transformer_spec(self, transformer: Transformer, target_env_name: str) -> client.Transformer:
@@ -1514,7 +1524,7 @@ class ModelVersion:
         if image_id:
             return
         raise BuildError('Unknown', logs)
-    
+
     def delete_model_version(self) -> int:
         """
         Delete this model version. Please note that any inactive related entity (endpoints and prediction jobs) will get deleted by this process.

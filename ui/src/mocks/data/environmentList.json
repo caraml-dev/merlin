@@ -8,31 +8,50 @@
     "updated_at": "2019-12-12T12:12:12Z",
     "gpus": [
       {
-        "values": [
-          "None",
-          "1",
-          "2",
-          "4"
-        ],
-        "display_name": "NVIDIA T4",
+        "name": "NVIDIA T4",
+        "values": ["None", "1", "2", "4"],
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
           "cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
         },
-        "monthly_cost_per_gpu": 189.07
+        "min_monthly_cost_per_gpu": 189.07,
+        "max_monthly_cost_per_gpu": 189.07
       },
       {
-        "values": [
-          "None",
-          "2",
-          "4"
-        ],
-        "display_name": "NVIDIA P4",
+        "name": "NVIDIA T4 with Time Sharing",
+        "values": ["None", "1", "2", "4"],
+        "resource_type": "nvidia.com/gpu",
+        "node_selector": {
+          "cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+          "cloud.google.com/gke-max-shared-clients-per-gpu": "8",
+          "cloud.google.com/gke-gpu-sharing-strategy": "time-sharing"
+        },
+        "min_monthly_cost_per_gpu": 23.63,
+        "max_monthly_cost_per_gpu": 189.07
+      },
+      {
+        "name": "NVIDIA P4",
+        "values": ["None", "2", "4"],
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
           "cloud.google.com/gke-accelerator": "nvidia-tesla-p4"
         },
-        "monthly_cost_per_gpu": 332.15
+        "tolerations": [
+          {
+            "key": "caraml/nvidia-tesla-p4",
+            "operator": "Equal",
+            "value": "enabled",
+            "effect": "NoSchedule"
+          },
+          {
+            "key": "nvidia.com/gpu",
+            "operator": "Equal",
+            "value": "present",
+            "effect": "NoSchedule"
+          }
+        ],
+        "min_monthly_cost_per_gpu": 332.15,
+        "max_monthly_cost_per_gpu": 332.15
       }
     ],
     "default_resource_request": {

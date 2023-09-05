@@ -1056,7 +1056,7 @@ definitions:
       gpus:
         type: "array"
         items:
-          $ref: "#/definitions/GPU"
+          $ref: "#/definitions/GPUConfig"
       created_at:
         type: "string"
         format: "date-time"
@@ -1436,14 +1436,10 @@ definitions:
         type: "string"
       memory_request:
         type: "string"
-      gpu_resource_type:
+      gpu_name:
         type: "string"
       gpu_request:
         type: "string"
-      gpu_node_selector:
-        type: "object"
-        additionalProperties:
-          type: "string"
 
   AutoscalingPolicy:
     type: "object"
@@ -1538,23 +1534,44 @@ definitions:
         items:
           $ref: "#/definitions/EnvVar"
 
-  GPU:
+  GPUConfig:
     type: "object"
     properties:
+      name:
+        type: "string"
       values:
         type: "array"
         items:
           type: string
-      display_name:
-        type: "string"
       resource_type:
         type: "string"
       node_selector:
         type: "object"
         additionalProperties:
           type: "string"
-      monthly_cost_per_gpu:
+      tolerations:
+        type: "array"
+        items:
+          $ref: "#/definitions/GPUToleration"
+      min_monthly_cost_per_gpu:
         type: "number"
+      max_monthly_cost_per_gpu:
+        type: "number"
+
+  GPUToleration:
+    type: "object"
+    properties:
+      key:
+        type: "string"
+      operator:
+        type: "string"
+      value:
+        type: "string"
+      effect:
+        type: "string"
+      toleration_seconds:
+        type: "integer"
+        format: "int64"
 
   PredictionJobResourceRequest:
     type: "object"

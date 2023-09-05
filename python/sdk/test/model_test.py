@@ -18,11 +18,11 @@ from unittest.mock import patch
 
 import client
 import client as cl
+import merlin
 import pytest
-from merlin.autoscaling import (
-    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-)
+from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY)
 from merlin.batch.config import PredictionJobConfig, ResultType
 from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
@@ -32,17 +32,18 @@ from merlin.model import ModelType
 from merlin.protocol import Protocol
 from urllib3_mock import Responses
 
-import merlin
-from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
-
 responses = Responses("requests.packages.urllib3")
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
-gpu = cl.GPU(
+gpu = cl.GPUConfig(
+    name="nvidia-tesla-p4",
     values=["1", "4", "8"],
-    display_name="nvidia-tesla-p4",
     resource_type="nvidia.com/gpu",
     node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
+    tolerations=[
+        cl.GPUToleration(key="caraml/nvidia-tesla-p4", operator="Equal", value="enabled", effect="NoSchedule"),
+        cl.GPUToleration(key="nvidia.com/gpu", operator="Equal", value="present", effect="NoSchedule"),
+    ],
 )
 
 env_1 = cl.Environment(
@@ -96,9 +97,8 @@ resource_request_with_gpu = cl.ResourceRequest(
     max_replica=1,
     cpu_request="100m",
     memory_request="128Mi",
+    gpu_name="nvidia-tesla-p4",
     gpu_request="1",
-    gpu_resource_type="nvidia.com/gpu",
-    gpu_node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
 )
 ep5 = cl.VersionEndpoint(
     "789",
@@ -346,6 +346,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -378,6 +386,14 @@ class TestModelVersion:
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
@@ -416,6 +432,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -449,6 +473,13 @@ class TestModelVersion:
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET", "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
@@ -505,6 +536,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -527,6 +566,52 @@ class TestModelVersion:
         assert endpoint.environment_name == ep1.environment_name
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
+
+    @responses.activate
+    def test_redeploy_model(self, version):
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "PUT",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep4.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep4.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+
+        # Redeployment (add autoscaling policy and change deployment mode)
+        endpoint = version.deploy(environment_name=env_1.name,
+                                  autoscaling_policy=AutoscalingPolicy(metrics_type=MetricsType.CPU_UTILIZATION,
+                                                                       target_value=10))
+
+        assert endpoint.id == ep4.id
+        assert endpoint.status.value == ep4.status
+        assert endpoint.environment_name == ep4.environment_name
+        assert endpoint.environment.cluster == env_1.cluster
+        assert endpoint.environment.name == env_1.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+        assert endpoint.autoscaling_policy.target_value == 10
 
     @responses.activate
     def test_deploy_with_gpu(self, version):
@@ -561,16 +646,12 @@ class TestModelVersion:
         assert endpoint.environment.name == env_3.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
         assert (
+            endpoint.resource_request.gpu_name
+            == resource_request_with_gpu.gpu_name
+        )
+        assert (
             endpoint.resource_request.gpu_request
             == resource_request_with_gpu.gpu_request
-        )
-        assert (
-            endpoint.resource_request.gpu_resource_type
-            == resource_request_with_gpu.gpu_resource_type
-        )
-        assert (
-            endpoint.resource_request.gpu_node_selector
-            == resource_request_with_gpu.gpu_node_selector
         )
 
     @responses.activate
