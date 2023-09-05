@@ -385,8 +385,6 @@ jobs:
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-3.10-pipenv-python-sdk
-      - name: Check disk size
-        run: df -h
       - name: Download k3d
         run: |
           curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.0 bash
@@ -399,13 +397,9 @@ jobs:
             --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@server:0' \
             --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
             --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*'
-      - name: Check disk size
-        run: df -h
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
-      - name: Check disk size
-        run: df -h
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
@@ -414,8 +408,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-      - name: Check disk size
-        run: df -h
       - name: Publish images to k3d registry
         run: |
           # Merlin API
@@ -427,13 +419,9 @@ jobs:
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
           docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
-      - name: Check disk size
-        run: df -h
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
-      - name: Check disk size
-        run: df -h
       - name: Prune docker image to make some space
         run: docker image prune --all --force
       - name: Run E2E Test
@@ -441,13 +429,6 @@ jobs:
         id: run-e2e-test
         working-directory: merlin/scripts/e2e
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }} ${{ env.E2E_PYTHON_VERSION }}
-      - name: Check disk size
-        if: always()
-        continue-on-error: true
-        run: |
-          df -h
-          docker image ls
-          docker system df
       - name: "Debug"
         if: always()
         continue-on-error: true
