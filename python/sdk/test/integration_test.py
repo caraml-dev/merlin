@@ -16,15 +16,16 @@ import os
 from test.utils import undeploy_all_version
 from time import sleep
 
-import merlin
 import pandas as pd
 import pytest
-from merlin import DeploymentMode, MetricsType
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import StandardTransformer, Transformer
 from recursive_diff import recursive_eq
+
+import merlin
+from merlin import DeploymentMode, MetricsType
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 tensorflow_request_json = {
@@ -978,7 +979,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.RPS
     assert endpoint.autoscaling_policy.target_value == 20
 
-    sleep(3)
+    sleep(10)
 
     # Deploy v2 using raw_deployment with CPU autoscaling policy
     new_endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
