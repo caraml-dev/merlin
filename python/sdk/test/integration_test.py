@@ -978,6 +978,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.RPS
     assert endpoint.autoscaling_policy.target_value == 20
 
+    sleep(3)
+
     # Deploy v2 using raw_deployment with CPU autoscaling policy
     new_endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
          metrics_type=merlin.MetricsType.CPU_UTILIZATION,
