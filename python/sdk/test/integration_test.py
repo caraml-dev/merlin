@@ -964,10 +964,14 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     with merlin.new_model_version() as v1:
         merlin.log_model(model_dir=model_dir)
 
-    # Deploy using serverless with RPS autoscaling policy
-    endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
-        metrics_type=merlin.MetricsType.RPS,
-        target_value=20))
+    # Deploy using raw_deployment with RPS autoscaling policy
+    endpoint = merlin.deploy(
+        v1,
+        autoscaling_policy=merlin.AutoscalingPolicy(
+            metrics_type=merlin.MetricsType.RPS, target_value=20
+        ),
+        deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+    )
 
     resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
 
@@ -982,9 +986,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     sleep(10)
 
     # Deploy v2 using raw_deployment with CPU autoscaling policy
-    new_endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
-         metrics_type=merlin.MetricsType.CPU_UTILIZATION,
-         target_value=10))
+    new_endpoint = merlin.deploy(
+        v1,
+        autoscaling_policy=merlin.AutoscalingPolicy(
+            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=10
+        ),
+        deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+    )
 
     resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
 
