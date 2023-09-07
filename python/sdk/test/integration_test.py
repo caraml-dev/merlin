@@ -964,11 +964,11 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     with merlin.new_model_version() as v1:
         merlin.log_model(model_dir=model_dir)
 
-    # Deploy using raw_deployment with RPS autoscaling policy
+    # Deploy using raw_deployment with CPU autoscaling policy
     endpoint = merlin.deploy(
         v1,
         autoscaling_policy=merlin.AutoscalingPolicy(
-            metrics_type=merlin.MetricsType.RPS, target_value=20
+            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
     )
@@ -980,8 +980,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     # Check the autoscaling policy of v1
-    assert endpoint.autoscaling_policy.metrics_type == MetricsType.RPS
-    assert endpoint.autoscaling_policy.target_value == 20
+    assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+    assert endpoint.autoscaling_policy.target_value == 50
 
     sleep(10)
 
@@ -989,7 +989,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     new_endpoint = merlin.deploy(
         v1,
         autoscaling_policy=merlin.AutoscalingPolicy(
-            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=10
+            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=90
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
     )
@@ -1004,7 +1004,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert endpoint.url == new_endpoint.url
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
-    assert new_endpoint.autoscaling_policy.target_value == 10
+    assert new_endpoint.autoscaling_policy.target_value == 90
 
     undeploy_all_version()
 
