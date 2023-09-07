@@ -358,8 +358,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-api
-      - build-batch-predictor
-      - build-pyfunc-server
       - build-transformer
       - create-version
     env:
@@ -369,26 +367,39 @@ jobs:
       INGRESS_HOST: "127.0.0.1.nip.io"
       MERLIN_CHART_VERSION: 0.11.4
       E2E_PYTHON_VERSION: "3.10.6"
+      K3S_VERSION: v1.26.7-k3s1
     steps:
       - uses: actions/checkout@v2
         with:
           path: merlin
-      - uses: actions/setup-go@v2
-        with:
-          go-version: ${{ env.GO_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.E2E_PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-3.10-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-3.10-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          key: ${{ runner.os }}-python-3.10-pipenv-python-sdk
+      - name: Download k3d
+        run: |
+          curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.0 bash
+      - name: Create Test Cluster
+        run: |
+          k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
+          k3d cluster create $K3D_CLUSTER --image rancher/k3s:${K3S_VERSION} --port 80:80@loadbalancer \
+            --k3s-arg '--disable=traefik,metrics-server@server:*' \
+            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@server:0' \
+            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@server:0' \
+            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
+            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*'
+      - name: Setup cluster
+        working-directory: merlin/scripts/e2e
+        run: ./setup-cluster.sh merlin-cluster
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
@@ -397,13 +408,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-      - name: Download k3d
-        run: |
-          curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
-      - name: Create Test Cluster
-        run: |
-          k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
-          k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.25.9-k3s1 --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
       - name: Publish images to k3d registry
         run: |
           # Merlin API
@@ -415,12 +419,11 @@ jobs:
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
           docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
-      - name: Setup cluster
-        working-directory: merlin/scripts/e2e
-        run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
+      - name: Prune docker image to make some space
+        run: docker image prune --all --force
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
@@ -429,84 +432,8 @@ jobs:
       - name: "Debug"
         if: always()
         continue-on-error: true
-        run: |
-          echo "::group::Get cert manager logs"
-          kubectl logs deploy/cert-manager -n cert-manager
-          echo "::endgroup::"
-
-          echo "::group::Get kserve pods"
-          kubectl get pods -n kserve -o wide
-          kubectl get pods -n kserve -o yaml
-          echo "::endgroup::"
-
-          echo "::group::KServe log"
-          kubectl logs deployment/kserve-controller-manager -n kserve -c manager
-          echo "::endgroup::"
-
-          echo "::group::KServe events"
-          kubectl get events -n kserve
-          echo "::endgroup::"
-
-          echo "::group::Knative log"
-          kubectl logs deploy/controller -n knative-serving
-          echo "::endgroup::"
-
-          echo "::group::Get Knative pods"
-          kubectl get pods -n knative-serving -o wide
-          kubectl get pods -n knative-serving -o yaml
-          echo "::endgroup::"
-
-          echo "::group::Get Event"
-          kubectl get events -A
-          echo "::endgroup::"
-
-          echo "::group::Get deployment mlp namespace"
-          kubectl get deployment -n mlp
-          echo "::endgroup::"
-
-          echo "::group::Describe pods mlp namespace"
-          kubectl describe pods -n mlp
-          echo "::endgroup::"
-
-          echo "::group::Describe deployment merlin-e2e namespace"
-          kubectl describe deployment -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get deployment merlin-e2e namespace"
-          kubectl get deployment -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get Pod  merlin-e2e namespace"
-          kubectl get pod -n merlin-e2e -o yaml
-          echo "::endgroup::"
-
-          echo "::group::Describe Pod merlin-e2e namespace"
-          kubectl describe pod -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get events merlin-e2e namespace"
-          kubectl get events -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Merlin log"
-          kubectl logs deploy/merlin -n mlp -c merlin
-          echo "::endgroup::"
-
-          echo "::group::Get Inference Service merlin-e2e namespace"
-          kubectl get isvc -n merlin-e2e -o yaml
-          echo "::endgroup::"
-
-          echo "::group::Model log"
-          kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Queue proxy log"
-          kubectl logs -l component=predictor -c queue-proxy -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Transformer log"
-          kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
-          echo "::endgroup::"
+        working-directory: merlin/scripts/e2e
+        run: ./debug-e2e.sh
 
   release:
     uses: ./.github/workflows/release.yml
