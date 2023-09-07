@@ -78,7 +78,10 @@ install_istio() {
 }
 
 set_ingress_host() {
+    echo "::group::Set Ingress Host"
     export INGRESS_HOST="$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}').nip.io"
+    echo "INGRESS_HOST=${INGRESS_HOST}"
+    echo "::endgroup::"
 }
 
 install_knative() {
