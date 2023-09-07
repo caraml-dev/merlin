@@ -13,12 +13,11 @@ set -o nounset
 
 # Prerequisites:
 # - cluster have been created using k3d
+# - cluster have enabled load balancer
 
 CLUSTER_NAME=$1
-INGRESS_HOST=$2
 
 ISTIO_VERSION=1.18.2
-# queue proxy version in config/knative/overlay.yaml should also be modified to upgrade knative
 KNATIVE_VERSION=1.10.2
 KNATIVE_NET_ISTIO_VERSION=1.10.1
 CERT_MANAGER_VERSION=1.12.2
@@ -76,6 +75,10 @@ install_istio() {
     sleep 30
 
     echo "::endgroup::"
+}
+
+set_ingress_host() {
+    export INGRESS_HOST="$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}').nip.io"
 }
 
 install_knative() {
@@ -151,6 +154,7 @@ patch_coredns() {
 
 add_helm_repo
 install_istio
+set_ingress_host
 install_knative
 install_minio
 install_cert_manager

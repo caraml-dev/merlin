@@ -399,7 +399,7 @@ jobs:
             --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*'
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
-        run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
+        run: ./setup-cluster.sh merlin-cluster
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:

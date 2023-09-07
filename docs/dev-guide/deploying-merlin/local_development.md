@@ -1,25 +1,25 @@
 # Local Development
 
-In this guide, we will deploy Merlin on a local Minikube cluster.
+In this guide, we will deploy Merlin on a local K3d cluster.
 
 ## Prerequesites
 
 1. Kubernetes
-   1. In this guide, we will use Minikube with LoadBalancer enabled
+   1. In this guide, we will use k3d with LoadBalancer enabled
 2. Kubernetes CLI (kubectl)
+3. Helm
 
-## Provision Minikube cluster
+## Provision k3d cluster
 
-First, you need to have Minikube installed on your machine. To install it, please follow this [documentation](https://minikube.sigs.k8s.io/docs/start/). You also need to have a [driver](https://minikube.sigs.k8s.io/docs/drivers/) to run Minikube cluster. This guide uses VirtualBox driver.
+First, you need to have k3d installed on your machine. To install it, please follow this [documentation](https://k3d.io/).
 
-Next, create a new Minikube cluster with Kubernetes v1.26.3:
+Next, create a new k3d cluster:
 
 ```bash
-export CLUSTER_NAME=dev
-minikube start --cpus=4 --memory=8192 --kubernetes-version=v1.26.3 --driver=docker
+export CLUSTER_NAME=merlin-cluster
+export K3S_VERSION=v1.26.7-k3s1
+k3d cluster create $CLUSTER_NAME --image rancher/k3s:$K3S_VERSION --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
 ```
-
-Lastly, we need to enable Minikube's LoadBalancer services by running `minikube tunnel` in another terminal.
 
 ## Install Merlin
 
