@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM continuumio/miniconda3
+FROM condaforge/miniforge3:23.3.1-1
 
 RUN apt-get -qq update \
-&& apt-get -y install vim make wget curl \
-&& conda install -c conda-forge pandoc=1.19.2
+    && apt-get -y install vim make wget curl \
+    && conda install pandoc=1.19.2
 
 COPY . /tmp/merlin-sdk
 WORKDIR /tmp/merlin-sdk/docs
