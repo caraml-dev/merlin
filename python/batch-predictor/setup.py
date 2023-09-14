@@ -21,11 +21,12 @@ with open('requirements_test.txt') as f:
 with open('requirements.txt') as f:
     REQUIRE = f.read().splitlines()
 
-merlin_path = os.path.join(os.getcwd(), "../sdk")
-merlin_sdk_package = "merlin-sdk"
-for index, item in enumerate(REQUIRE):
-    if merlin_sdk_package in item:
-        REQUIRE[index] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
+# TODO: Uncomment below lines after Pyfunc server stops supporting Python 3.7
+# merlin_path = os.path.join(os.getcwd(), "../sdk")
+# merlin_sdk_package = "merlin-sdk"
+# for index, item in enumerate(REQUIRE):
+#     if merlin_sdk_package in item:
+#         REQUIRE[index] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
 
 setup(
     name='merlin-pyspark-app',

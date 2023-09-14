@@ -11,7 +11,7 @@ Run E2E test as part of github actions workflow. This E2E test will be triggered
 - Pull merlin repository
 - Pull mlp repository
 - Setup go
-- Setup python 3.7
+- Setup python 3.8
 - Setup cluster
 - Setup mlp namespace
 - Deploy mlp

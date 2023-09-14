@@ -27,7 +27,7 @@ import (
 	"github.com/caraml-dev/merlin/utils"
 )
 
-const DEFAULT_PYTHON_VERSION = "3.7.*"
+const DEFAULT_PYTHON_VERSION = "3.8.*"
 
 type VersionsController struct {
 	*AppContext
