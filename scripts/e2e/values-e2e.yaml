@@ -27,14 +27,14 @@ imageBuilder:
   k8sConfig: {}
   builderConfig:
     BaseImages:
-      3.7.*:
-        ImageName: pyfunc-py37:v0.31.3
+      3.8.*:
+        ImageName: pyfunc-py38:v0.31.3
         DockerfilePath: "docker/Dockerfile"
         BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
         MainAppPath: /merlin-spark-app/main.py
     PredictionJobBaseImages:
-      3.7.*:
-        ImageName: pyspark-py37:v0.31.3
+      3.8.*:
+        ImageName: pyspark-py38:v0.31.3
         DockerfilePath: "docker/app.Dockerfile"
         BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
         MainAppPath: /merlin-spark-app/main.py
