@@ -67,7 +67,7 @@ def spark_udf(spark, model_uri, features, result_type="double"):
         archive_path = SparkModelCache.add_local_model(spark, local_model_path)
 
     def predict(*args):
-        model = SparkModelCache.get_or_load(archive_path)
+        model, _ = SparkModelCache.get_or_load(archive_path)
         schema = {features[i]: arg for i, arg in enumerate(args)}
         pdf = None
         for x in args:
