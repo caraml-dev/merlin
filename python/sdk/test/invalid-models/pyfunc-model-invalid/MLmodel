@@ -4,5 +4,5 @@ flavors:
     env: conda.yaml
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
-    python_version: 3.7.5
+    python_version: 3.8.5
 utc_time_created: '2020-01-20 09:53:55.355722'

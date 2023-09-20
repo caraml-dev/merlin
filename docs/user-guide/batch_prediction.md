@@ -136,7 +136,7 @@ Following error is thrown during batch prediction execution
                              "values")
 E       AttributeError: Can only use .dt accessor with datetimelike values
 
-../../../.local/share/virtualenvs/merlin-pyspark-n4ybPFnE/lib/python3.7/site-packages/pandas/core/indexes/accessors.py:324: AttributeError
+../../../.local/share/virtualenvs/merlin-pyspark-n4ybPFnE/lib/python3.8/site-packages/pandas/core/indexes/accessors.py:324: AttributeError
 
 Assertion failed
 ```

@@ -1,4 +1,7 @@
+#!/bin/sh
+
 export K3D_CLUSTER=merlin-cluster
+export K3S_VERSION=v1.26.7-k3s1
 export INGRESS_HOST=127.0.0.1.nip.io
 export LOCAL_REGISTRY_PORT=12345
 export LOCAL_REGISTRY=dev.localhost
@@ -10,7 +13,8 @@ export MERLIN_CHART_VERSION=0.11.1
 
 # Create k3d cluster and managed registry
 k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
-k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.25.9-k3s1 --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
+k3d cluster create $K3D_CLUSTER --image rancher/k3s:$K3S_VERSION --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
+
 # Install all dependencies
 ./setup-cluster.sh $K3D_CLUSTER $INGRESS_HOST
 

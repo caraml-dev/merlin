@@ -11,4 +11,5 @@ grpcio<1.49.0
 grpcio-reflection<1.49.0
 grpcio-tools<1.49.0
 grpcio-health-checking<1.49.0
-file:${SDK_PATH}#egg=merlin-sdk
+#TODO: Update merlin-sdk dep to: file:${SDK_PATH}#egg=merlin-sdk
+merlin-sdk==0.33.0 # Pin to the version that supports Python 3.7.

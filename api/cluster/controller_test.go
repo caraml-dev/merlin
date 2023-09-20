@@ -965,9 +965,9 @@ func Test_controller_ListPods(t *testing.T) {
 			Items: []corev1.Pod{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-model-1-predictor-default-a",
+						Name: "test-model-1-predictor-a",
 						Labels: map[string]string{
-							"serving.knative.dev/service": "test-model-1-predictor-default",
+							"serving.knative.dev/service": "test-model-1-predictor",
 						},
 					},
 					Spec: corev1.PodSpec{
@@ -983,9 +983,9 @@ func Test_controller_ListPods(t *testing.T) {
 				},
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-model-1-predictor-default-b",
+						Name: "test-model-1-predictor-b",
 						Labels: map[string]string{
-							"serving.knative.dev/service": "test-model-1-predictor-default",
+							"serving.knative.dev/service": "test-model-1-predictor",
 						},
 					},
 					Spec: corev1.PodSpec{
@@ -1007,12 +1007,12 @@ func Test_controller_ListPods(t *testing.T) {
 		clusterClient: v1Client.CoreV1(),
 	}
 
-	podList, err := ctl.ListPods(context.Background(), namespace, "serving.knative.dev/service=test-model-1-predictor-default")
+	podList, err := ctl.ListPods(context.Background(), namespace, "serving.knative.dev/service=test-model-1-predictor")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(podList.Items))
-	assert.Equal(t, "test-model-1-predictor-default-a", podList.Items[0].ObjectMeta.Name)
-	assert.Equal(t, "test-model-1-predictor-default-b", podList.Items[1].ObjectMeta.Name)
+	assert.Equal(t, "test-model-1-predictor-a", podList.Items[0].ObjectMeta.Name)
+	assert.Equal(t, "test-model-1-predictor-b", podList.Items[1].ObjectMeta.Name)
 }
 
 func TestController_Delete(t *testing.T) {

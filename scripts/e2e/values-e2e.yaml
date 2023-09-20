@@ -1,6 +1,4 @@
 deployment:
-  image:
-    repository: merlin
   replicaCount: 1
   podLabels:
     environment: e2e
@@ -8,8 +6,7 @@ deployment:
     requests:
       cpu: 25m
       memory: 64Mi
-    limits:
-      memory: 256Mi
+    limits: ~
 config:
   Environment: dev
   LoggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
@@ -17,7 +14,7 @@ config:
     APIHost: http://mlp:8080
     EncryptionKey: password
   StandardTransformerConfig:
-    ImageName: ghcr.io/caraml-dev/merlin-transformer:0.27.0
+    ImageName: ghcr.io/caraml-dev/merlin-transformer:0.31.3
   AuthorizationConfig:
     AuthorizationEnabled: false
 imageBuilder:
@@ -27,19 +24,19 @@ imageBuilder:
     annotations: {}
     labels: {}
   clusterName: "merlin-cluster"
-  k8s_config: {}
+  k8sConfig: {}
   builderConfig:
     BaseImages:
-      3.7.*:
-        ImageName: pyfunc-py37:v0.27.0
+      3.8.*:
+        ImageName: pyfunc-py38:v0.31.3
         DockerfilePath: "docker/Dockerfile"
-        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
         MainAppPath: /merlin-spark-app/main.py
     PredictionJobBaseImages:
-      3.7.*:
-        ImageName: pyspark-py37:v0.27.0
+      3.8.*:
+        ImageName: pyspark-py38:v0.31.3
         DockerfilePath: "docker/app.Dockerfile"
-        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
         MainAppPath: /merlin-spark-app/main.py
     BuildNamespace: "mlp"
     BuildContextURI: git://github.com/caraml-dev/merlin.git#refs/heads/main
@@ -67,10 +64,10 @@ environmentConfigs:
     cluster: merlin-cluster
     region: id
     gcp_project: gcp-project
-    deployment_timeout: 15m
+    deployment_timeout: 5m
     namespace_timeout: 2m
     max_cpu: 250m
-    max_memory: 256Mi
+    max_memory: 512Mi
     queue_resource_percentage: 20
     is_prediction_job_enabled: true
     is_default_prediction_job: true
@@ -83,13 +80,14 @@ environmentConfigs:
     default_deployment_config:
       min_replica: 0
       max_replica: 1
-      cpu_request: "32m"
+      cpu_request: "50m"
       memory_request: "128Mi"
     default_transformer_config:
       min_replica: 0
       max_replica: 1
-      cpu_request: "32m"
+      cpu_request: "25m"
       memory_request: "64Mi"
+    gpus: []
 ingress:
   enabled: true
   class: istio
@@ -103,6 +101,7 @@ merlin-postgresql:
     requests:
       cpu: 25m
       memory: 64Mi
+    limits: ~
   persistence:
     enabled: false
 mlflow:
@@ -112,6 +111,7 @@ mlflow:
     requests:
       cpu: 25m
       memory: 64Mi
+    limits: ~
   artifactRoot: s3://mlflow
   ingress:
     enabled: true
@@ -132,6 +132,7 @@ mlflow-postgresql:
     requests:
       cpu: 25m
       memory: 64Mi
+    limits: ~
   persistence:
     enabled: false
 swagger:
@@ -146,3 +147,9 @@ mlp:
   ingress:
     enabled: true
     class: istio
+  postgresql:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits: ~

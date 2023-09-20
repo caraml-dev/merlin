@@ -9,7 +9,7 @@ pip install -r requirements_docs.txt
 
 Install `pandoc`
 ```bash
-conda install -c conda-forge pandoc=1.19.2
+conda install pandoc=1.19.2
 ```
 
 Generate doc

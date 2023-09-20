@@ -16,16 +16,16 @@ import os
 from test.utils import undeploy_all_version
 from time import sleep
 
-import merlin
 import pandas as pd
 import pytest
-from merlin import DeploymentMode
-from merlin.endpoint import Status
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import StandardTransformer, Transformer
 from recursive_diff import recursive_eq
+
+import merlin
+from merlin import DeploymentMode, MetricsType
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 tensorflow_request_json = {
@@ -98,7 +98,10 @@ def test_sklearn(
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
 
-    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
+    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+    endpoint = merlin.deploy(
+        v, deployment_mode=deployment_mode, resource_request=resource_request
+    )
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -132,7 +135,7 @@ def test_xgboost(
 
     resource_request = ResourceRequest(1, 1, "100m", "200Mi")
     endpoint = merlin.deploy(
-        v, resource_request=resource_request, deployment_mode=deployment_mode
+        v, deployment_mode=deployment_mode, resource_request=resource_request
     )
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -262,8 +265,9 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth, reque
 
     with merlin.new_model_version() as v:
         # Upload the serialized model to MLP
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -303,8 +307,9 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
 
     with merlin.new_model_version() as v:
         # Upload the serialized model to MLP
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -946,7 +951,6 @@ def test_custom_model_with_artifact(
     )
     undeploy_all_version()
 
-    resource_request = ResourceRequest(1, 1, "25m", "128Mi")
     model_dir = "test/custom-model"
     BST_FILE = "model.bst"
 
@@ -957,7 +961,6 @@ def test_custom_model_with_artifact(
 
     endpoint = merlin.deploy(
         v,
-        resource_request=resource_request,
         env_vars={"MODEL_FILE_NAME": BST_FILE},
         deployment_mode=deployment_mode,
     )
@@ -1054,6 +1057,68 @@ def test_deployment_mode_for_serving_model(
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     merlin.stop_serving_traffic(model_endpoint.environment_name)
+    undeploy_all_version()
+
+
+@pytest.mark.integration
+def test_redeploy_model(integration_test_url, project_name, use_google_oauth, requests):
+    """
+    Validate that calling the 'merlin.deploy' twice in a row redeploys a Merlin model
+    """
+
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("model-sdk-redeploy", ModelType.TENSORFLOW)
+    model_dir = "test/tensorflow-model"
+
+    undeploy_all_version()
+
+    # Upload new model version: v1
+    with merlin.new_model_version() as v1:
+        merlin.log_model(model_dir=model_dir)
+
+    # Deploy using raw_deployment with CPU autoscaling policy
+    endpoint = merlin.deploy(
+        v1,
+        autoscaling_policy=merlin.AutoscalingPolicy(
+            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
+        ),
+        deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+    )
+
+    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check the autoscaling policy of v1
+    assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+    assert endpoint.autoscaling_policy.target_value == 50
+
+    sleep(10)
+
+    # Deploy v2 using raw_deployment with CPU autoscaling policy
+    new_endpoint = merlin.deploy(
+        v1,
+        autoscaling_policy=merlin.AutoscalingPolicy(
+            metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=90
+        ),
+        deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+    )
+
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check that the endpoint remains the same
+    assert endpoint.url == new_endpoint.url
+    # Check the autoscaling policy of v2
+    assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+    assert new_endpoint.autoscaling_policy.target_value == 90
+
     undeploy_all_version()
 
 

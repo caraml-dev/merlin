@@ -583,7 +583,7 @@ func createLivenessProbeSpec(protocol prt.Protocol, httpPath string) *corev1.Pro
 }
 
 func createPredictorHost(modelService *models.Service) string {
-	return fmt.Sprintf("%s-predictor-default.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
+	return fmt.Sprintf("%s-predictor.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
 }
 
 func createAnnotations(modelService *models.Service, config *config.DeploymentConfig, initialScale *int) (map[string]string, error) {
@@ -671,10 +671,10 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-default", modelService.Name, component)
+		newRevisionName = fmt.Sprintf("isvc.%s-%s", modelService.Name, component)
 	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-		newRevisionName = fmt.Sprintf("%s-%s-default-00001", modelService.Name, component)
+		newRevisionName = fmt.Sprintf("%s-%s-00001", modelService.Name, component)
 	} else {
 		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
 	}
@@ -698,7 +698,7 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-default", modelService.Name, component)
+		newRevisionName = fmt.Sprintf("isvc.%s-%s", modelService.Name, component)
 	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 		var err error
@@ -760,11 +760,11 @@ func copyTopologySpreadConstraints(
 
 // getNewRevisionNameForExistingServerlessDeployment examines the current revision name of an inference service (
 // serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
-// sklearn-sample-predictor-default-00001 -> sklearn-sample-predictor-default-00002
+// sklearn-sample-predictor-00001 -> sklearn-sample-predictor-00002
 func getNewRevisionNameForExistingServerlessDeployment(currentRevisionName string) (string, error) {
 	revisionNameElements := strings.Split(currentRevisionName, "-")
-	if len(revisionNameElements) < 5 {
-		return "", fmt.Errorf("unexpected revision name format that is not in at least 4 parts: %s",
+	if len(revisionNameElements) < 4 {
+		return "", fmt.Errorf("unexpected revision name format that is not in at least 3 parts: %s",
 			currentRevisionName)
 	}
 	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])

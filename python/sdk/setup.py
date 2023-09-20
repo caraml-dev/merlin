@@ -38,7 +38,7 @@ REQUIRES = [
     "six>=1.10",
     "urllib3>=1.23",
     "numpy<=1.23.5", # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
-    "caraml-auth-google==0.0.0.post6",
+    "caraml-auth-google==0.0.0.post7",
 ]
 
 TEST_REQUIRES = [
@@ -53,7 +53,7 @@ TEST_REQUIRES = [
     "pytest",
     "recursive-diff>=1.0.0",
     "requests",
-    "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
+    "scikit-learn==1.0.2", #TODO: >=1.1.2 upon python 3.7 deprecation
     "types-python-dateutil",
     "types-PyYAML",
     "types-six",
@@ -76,7 +76,7 @@ setup(
     setup_requires=["setuptools_scm"],
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
-    python_requires='>=3.7,<3.11',
+    python_requires='>=3.8,<3.11',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     entry_points='''

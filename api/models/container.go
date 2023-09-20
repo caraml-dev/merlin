@@ -62,9 +62,9 @@ func NewContainer(name string,
 
 func componentType(containerName, podName string) string {
 	componentType := ""
-	if strings.Contains(podName, "predictor-default") {
+	if strings.Contains(podName, "predictor") {
 		componentType = ModelComponentType
-	} else if strings.Contains(podName, "transformer-default") {
+	} else if strings.Contains(podName, "transformer") {
 		componentType = TransformerComponentType
 	} else if strings.Contains(podName, "driver") || containerName == "spark-kubernetes-driver" {
 		componentType = BatchJobDriverComponentType
