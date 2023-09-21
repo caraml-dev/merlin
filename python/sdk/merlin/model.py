@@ -1072,9 +1072,9 @@ class ModelVersion:
         env_vars: Dict[str, str] = None,
         transformer: Transformer = None,
         logger: Logger = None,
-        deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+        deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
-        protocol: Protocol = Protocol.HTTP_JSON,
+        protocol: Protocol = None,
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1090,6 +1090,21 @@ class ModelVersion:
         :param protocol: protocol to be used for deploying the model (default: HTTP_JSON)
         :return: VersionEndpoint object
         """
+        current_endpoint = self.endpoint
+
+        target_deployment_mode = None
+        if deployment_mode is None:
+            if current_endpoint is None:
+                target_deployment_mode = DeploymentMode.SERVERLESS
+        else:
+            target_deployment_mode = deployment_mode
+
+        target_protocol = None
+        if protocol is None:
+            if current_endpoint is None:
+                target_protocol = Protocol.HTTP_JSON
+        else:
+            target_protocol = protocol
 
         target_env_name = environment_name
         if target_env_name is None:
@@ -1105,52 +1120,61 @@ class ModelVersion:
                     "pass environment_name to the method"
                 )
 
+        target_resource_request = None
         if resource_request is None:
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
+            if current_endpoint is None:
+                # If a previous model version does not exist, we set up a default target_resource_request
+                env_api = EnvironmentApi(self._api_client)
+                env_list = env_api.environments_get()
 
-            for env in env_list:
-                if env.name == target_env_name:
-                    resource_request = ResourceRequest(
-                        env.default_resource_request.min_replica,
-                        env.default_resource_request.max_replica,
-                        env.default_resource_request.cpu_request,
-                        env.default_resource_request.memory_request,
-                    )
-
-            # This case is when the default resource request is not specified in the environment config
-            if resource_request is None:
-                raise ValueError("resource request must be specified")
-
-        resource_request.validate()
-
-        target_resource_request = client.ResourceRequest(
-            resource_request.min_replica,
-            resource_request.max_replica,
-            resource_request.cpu_request,
-            resource_request.memory_request,
-        )
-
-        if (
-            resource_request.gpu_request is not None
-            and resource_request.gpu_name is not None
-        ):
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
-
-            for env in env_list:
-                for gpu in env.gpus:
-                    if resource_request.gpu_name == gpu.name:
-                        if resource_request.gpu_request not in gpu.values:
-                            raise ValueError(
-                                f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
-                            )
-
-                        target_resource_request.gpu_name = resource_request.gpu_name
-                        target_resource_request.gpu_request = (
-                            resource_request.gpu_request
+                for env in env_list:
+                    if env.name == target_env_name:
+                        resource_request = ResourceRequest(
+                            env.default_resource_request.min_replica,
+                            env.default_resource_request.max_replica,
+                            env.default_resource_request.cpu_request,
+                            env.default_resource_request.memory_request,
                         )
-                        break
+
+                # This case is when the default resource request is not specified in the environment config
+                if resource_request is None:
+                    raise ValueError("resource request must be specified")
+
+                resource_request.validate()
+
+                target_resource_request = client.ResourceRequest(
+                    resource_request.min_replica, resource_request.max_replica,
+                    resource_request.cpu_request, resource_request.memory_request)
+        else:
+            resource_request.validate()
+
+            target_resource_request = client.ResourceRequest(
+                resource_request.min_replica,
+                resource_request.max_replica,
+                resource_request.cpu_request,
+                resource_request.memory_request,
+            )
+
+            if (
+                resource_request.gpu_request is not None
+                and resource_request.gpu_name is not None
+            ):
+                env_api = EnvironmentApi(self._api_client)
+                env_list = env_api.environments_get()
+
+                for env in env_list:
+                    for gpu in env.gpus:
+                        if resource_request.gpu_name == gpu.name:
+                            if resource_request.gpu_request not in gpu.values:
+                                raise ValueError(
+                                    f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
+                                )
+
+                            target_resource_request.gpu_name = resource_request.gpu_name
+                            target_resource_request.gpu_request = (
+                                resource_request.gpu_request
+                            )
+                            break
 
         target_env_vars = []
         if env_vars is not None:
@@ -1173,11 +1197,19 @@ class ModelVersion:
         if logger is not None:
             target_logger = logger.to_logger_spec()
 
+        target_autoscaling_policy = None
         if autoscaling_policy is None:
-            if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
-                autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
-            else:
-                autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+            if current_endpoint is None:
+                # If a previous model version does not exist, we set up a default autoscaling_policy
+                if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
+                    autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+                else:
+                    autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+                target_autoscaling_policy = client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
+                                                              autoscaling_policy.target_value)
+        else:
+            target_autoscaling_policy = client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
+                                                          autoscaling_policy.target_value)
 
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
@@ -1188,11 +1220,9 @@ class ModelVersion:
             env_vars=target_env_vars,
             transformer=target_transformer,
             logger=target_logger,
-            deployment_mode=deployment_mode.value,
-            autoscaling_policy=client.AutoscalingPolicy(
-                autoscaling_policy.metrics_type.value, autoscaling_policy.target_value
-            ),
-            protocol=protocol.value,
+            deployment_mode=target_deployment_mode,
+            autoscaling_policy=target_autoscaling_policy,
+            protocol=target_protocol,
         )
         current_endpoint = self.endpoint
         if current_endpoint is not None:
