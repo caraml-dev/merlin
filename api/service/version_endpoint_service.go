@@ -231,13 +231,10 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.EnvVars = models.MergeEnvVars(left.EnvVars, right.EnvVars)
 	}
 
-	// default to HttpJson if not provided
-	if right.Protocol == "" {
-		right.Protocol = protocol.HttpJson
-	}
-
 	// override protocol
-	left.Protocol = right.Protocol
+	if right.Protocol != "" {
+		left.Protocol = right.Protocol
+	}
 
 	return nil
 }
