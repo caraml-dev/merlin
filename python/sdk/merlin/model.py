@@ -1095,16 +1095,16 @@ class ModelVersion:
         target_deployment_mode = None
         if deployment_mode is None:
             if current_endpoint is None:
-                target_deployment_mode = DeploymentMode.SERVERLESS
+                target_deployment_mode = DeploymentMode.SERVERLESS.value
         else:
-            target_deployment_mode = deployment_mode
+            target_deployment_mode = deployment_mode.value
 
         target_protocol = None
         if protocol is None:
             if current_endpoint is None:
-                target_protocol = Protocol.HTTP_JSON
+                target_protocol = Protocol.HTTP_JSON.value
         else:
-            target_protocol = protocol
+            target_protocol = protocol.value
 
         target_env_name = environment_name
         if target_env_name is None:
