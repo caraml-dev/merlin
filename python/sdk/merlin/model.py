@@ -1093,9 +1093,11 @@ class ModelVersion:
         current_endpoint = self.endpoint
         env_list = self._get_env_list()
 
+        # target_env_name can never be set as null
+        target_env_name = environment_name if environment_name is not None else ModelVersion._get_default_target_env_name(env_list)
+
         target_deployment_mode = None
         target_protocol = None
-        target_env_name = ModelVersion._get_default_target_env_name(env_list)
         target_resource_request = None
         target_autoscaling_policy = None
         target_env_vars: List[client.models.Environment] = []
@@ -1117,9 +1119,6 @@ class ModelVersion:
 
         if protocol is not None:
             target_protocol = protocol.value
-
-        if environment_name is not None:
-            target_env_name = environment_name
 
         if resource_request is not None:
             resource_request.validate()
