@@ -1129,7 +1129,7 @@ def deployment_mode_suffix(deployment_mode: DeploymentMode):
 @pytest.mark.integration
 def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     """
-    Validate that set traffic is working when switching from different deployment mode
+    Test the `simulate` method of the `StandardTransformer` class.
     """
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
 
