@@ -1085,9 +1085,9 @@ class ModelVersion:
         :param env_vars: List of environment variables to be passed to the model container.
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
-        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+        :param deployment_mode: mode of deployment for the endpoint (default: None)
         :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
-        :param protocol: protocol to be used for deploying the model (default: HTTP_JSON)
+        :param protocol: protocol to be used for deploying the model (default: None)
         :return: VersionEndpoint object
         """
         current_endpoint = self.endpoint
@@ -1607,8 +1607,7 @@ class ModelVersion:
 
     @staticmethod
     def _get_default_autoscaling_policy(deployment_mode: str) -> client.AutoscalingPolicy:
-        # If a previous model version does not exist, we set up a default autoscaling_policy
-        if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
+        if deployment_mode == DeploymentMode.RAW_DEPLOYMENT.value:
             autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
         else:
             autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
