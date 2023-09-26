@@ -90,7 +90,7 @@ class StandardTransformer(Transformer):
         resource_request: ResourceRequest = None,
         env_vars: Dict[str, str] = None,
     ):
-        self.transformer_config = self._load_transformer_config(config_file)
+        self._load_transformer_config(config_file)
         transformer_env_var = self._transformer_config_env_var()
         merged_env_vars = env_vars or {}
         merged_env_vars = {**merged_env_vars, **transformer_env_var}
@@ -116,12 +116,20 @@ class StandardTransformer(Transformer):
         headers: Dict = None,
         model_prediction_config: Dict = None,
         protocol: Protocol = None,
-    ):
+        exclude_tracing: bool = False,
+    ) -> Dict:
         fluent._check_active_client()
-        return fluent._merlin_client.standard_transformer_simulate(
+        response = fluent._merlin_client.standard_transformer_simulate(
             payload=payload,
             headers=headers,
             config=self.transformer_config,
             model_prediction_config=model_prediction_config,
             protocol=protocol,
         )
+
+        # if exclude tracing delete key operation_tracing
+        response = response.to_dict()
+        if exclude_tracing:
+            del response["operation_tracing"]
+
+        return response
