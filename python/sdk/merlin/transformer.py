@@ -115,7 +115,7 @@ class StandardTransformer(Transformer):
         payload: Dict,
         headers: Dict = None,
         model_prediction_config: Dict = None,
-        protocol: Protocol = None,
+        protocol: Protocol = Protocol.HTTP_JSON,
         exclude_tracing: bool = False,
     ) -> Dict:
         fluent._check_active_client()
