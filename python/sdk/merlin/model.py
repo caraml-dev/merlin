@@ -1224,7 +1224,6 @@ class ModelVersion:
             autoscaling_policy=target_autoscaling_policy,
             protocol=target_protocol,
         )
-        current_endpoint = self.endpoint
         if current_endpoint is not None:
             # This allows a serving deployment to be update while it is serving
             if current_endpoint.status == Status.SERVING:
