@@ -1095,10 +1095,10 @@ class ModelVersion:
 
         target_deployment_mode = None
         target_protocol = None
-        target_env_name = None
+        target_env_name = ModelVersion._get_default_target_env_name(env_list)
         target_resource_request = None
         target_autoscaling_policy = None
-        target_env_vars = []
+        target_env_vars: List[client.models.Environment] = []
         target_transformer = None
         target_logger = None
 
@@ -1107,10 +1107,9 @@ class ModelVersion:
         if current_endpoint is None:
             target_deployment_mode = DeploymentMode.SERVERLESS.value
             target_protocol = Protocol.HTTP_JSON.value
-            target_env_name = ModelVersion._get_default_target_env_name(env_list)
             target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
             target_autoscaling_policy = ModelVersion._get_default_autoscaling_policy(
-                deployment_mode.value if deployment_mode.value else target_deployment_mode
+                deployment_mode.value if deployment_mode is not None else target_deployment_mode
             )
 
         if deployment_mode is not None:
@@ -1587,7 +1586,7 @@ class ModelVersion:
         return target_env_name
 
     @staticmethod
-    def _get_default_resource_request(env_name: str, env_list: List[client.models.Environment]) -> ResourceRequest:
+    def _get_default_resource_request(env_name: str, env_list: List[client.models.Environment]) -> client.ResourceRequest:
         resource_request = None
         for env in env_list:
             if env.name == env_name:
@@ -1603,10 +1602,12 @@ class ModelVersion:
             raise ValueError("default resource request not found in the environment config")
 
         resource_request.validate()
-        return resource_request
+        return client.ResourceRequest(
+            resource_request.min_replica, resource_request.max_replica,
+            resource_request.cpu_request, resource_request.memory_request)
 
     @staticmethod
-    def _get_default_autoscaling_policy(deployment_mode: DeploymentMode) -> client.AutoscalingPolicy:
+    def _get_default_autoscaling_policy(deployment_mode: str) -> client.AutoscalingPolicy:
         # If a previous model version does not exist, we set up a default autoscaling_policy
         if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
             autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
@@ -1630,15 +1631,14 @@ class ModelVersion:
     def _create_transformer_spec(transformer: Transformer, target_env_name: str, env_list: List[client.models.Environment]) -> client.Transformer:
         resource_request = transformer.resource_request
         if resource_request is None:
-            resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
+            target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
         else:
             resource_request.validate()
+            target_resource_request = client.ResourceRequest(
+                resource_request.min_replica, resource_request.max_replica,
+                resource_request.cpu_request, resource_request.memory_request)
 
-        target_resource_request = client.ResourceRequest(
-            resource_request.min_replica, resource_request.max_replica,
-            resource_request.cpu_request, resource_request.memory_request)
-
-        target_env_vars = []
+        target_env_vars: List[client.models.Environment] = []
         if transformer.env_vars is not None:
             target_env_vars = ModelVersion._add_env_vars(target_env_vars, transformer.env_vars)
 
