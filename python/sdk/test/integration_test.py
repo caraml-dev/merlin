@@ -1439,7 +1439,9 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
         },
     }
 
-    assert resp1 == resp_valid_wo_tracing
-    assert resp2 == resp_valid_w_tracing
     assert isinstance(resp1, dict)
     assert isinstance(resp2, dict)
+    assert ["response"] in resp1.keys()
+    assert ["operation_tracing", "response"] in resp2.keys()
+    assert resp1 == resp_valid_wo_tracing
+    assert resp2 == resp_valid_w_tracing
