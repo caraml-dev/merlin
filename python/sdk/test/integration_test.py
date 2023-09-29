@@ -1163,8 +1163,8 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
         ],
         "customer": {"id": 1111},
     }
-    resp1 = transformer.simulate(payload=payload, exclude_tracing=True)
-    resp2 = transformer.simulate(payload=payload, exclude_tracing=False)
+    resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
+    resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
 
     resp_valid_wo_tracing = {
         "response": {
@@ -1439,9 +1439,10 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
         },
     }
 
-    assert isinstance(resp1, dict)
-    assert isinstance(resp2, dict)
-    assert ["response"] in resp1.keys()
-    assert ["operation_tracing", "response"] in resp2.keys()
-    assert resp1 == resp_valid_wo_tracing
-    assert resp2 == resp_valid_w_tracing
+    assert isinstance(resp_wo_tracing, dict)
+    assert isinstance(resp_w_tracing, dict)
+    assert "response" in resp_wo_tracing.keys()
+    assert "response" in resp_w_tracing.keys()
+    assert "operation_tracing" not in resp_w_tracing.keys()
+    assert resp_wo_tracing == resp_valid_wo_tracing
+    assert resp_w_tracing == resp_valid_w_tracing
