@@ -276,18 +276,18 @@ class MerlinClient:
 
     def standard_transformer_simulate(
         self,
-        payload: dict,
-        headers: dict,
-        config: dict,
-        model_prediction_config: dict,
-        protocol: Protocol,
+        payload: Dict,
+        headers: Dict,
+        config: Dict,
+        model_prediction_config: Dict,
+        protocol: Protocol = Protocol.HTTP_JSON,
     ):
         request = StandardTransformerSimulationRequest(
             payload=payload,
             headers=headers,
             config=config,
             model_prediction_config=model_prediction_config,
-            protocol="HTTP_JSON",
+            protocol=protocol,
         )
 
         return self._standard_transformer_api.standard_transformer_simulate_post(
