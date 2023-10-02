@@ -280,7 +280,7 @@ class MerlinClient:
         headers: Dict,
         config: Dict,
         model_prediction_config: Dict,
-        protocol: Protocol = Protocol.HTTP_JSON,
+        protocol: Protocol = "HTTP_JSON",
     ):
         request = StandardTransformerSimulationRequest(
             payload=payload,

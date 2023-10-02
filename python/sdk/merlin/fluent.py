@@ -28,7 +28,7 @@ from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 
-_merlin_client: Optional[MerlinClient]
+_merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]
 _active_model: Optional[Model]
 _active_model_version: Optional[ModelVersion]
