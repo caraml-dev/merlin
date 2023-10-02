@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
@@ -113,9 +113,9 @@ class StandardTransformer(Transformer):
     def simulate(
         self,
         payload: Dict,
-        headers: Dict = None,
-        model_prediction_config: Dict = None,
-        protocol: Protocol = "HTTP_JSON",
+        headers: Dict[Any, Any] = None,
+        model_prediction_config: Dict[Any, Any] = None,
+        protocol: Protocol = Protocol.HTTP_JSON,
         exclude_tracing: bool = False,
     ) -> Dict:
         fluent._check_active_client()
