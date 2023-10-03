@@ -280,7 +280,7 @@ class MerlinClient:
         headers: Optional[Dict[Any, Any]] = None,
         config: Optional[Dict[Any, Any]] = None,
         model_prediction_config: Dict = None,
-        protocol: Protocol = "HTTP_JSON",
+        protocol: str = "HTTP_JSON",
     ):
         request = StandardTransformerSimulationRequest(
             payload=payload,
