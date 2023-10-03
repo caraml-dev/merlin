@@ -1124,3 +1124,60 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
 def deployment_mode_suffix(deployment_mode: DeploymentMode):
     return deployment_mode.value.lower()[0:1]
+
+
+@pytest.mark.integration
+def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
+    """
+    Test the `simulate` method of the `StandardTransformer` class.
+    """
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+
+    transformer_config_path = os.path.join(
+        "test/transformer", "standard_transformer_no_feast.yaml"
+    )
+    transformer = StandardTransformer(
+        config_file=transformer_config_path, enabled=False
+    )
+
+    payload = {
+        "drivers": [
+            # 1 Feb 2022, 00:00:00
+            {
+                "id": 1,
+                "name": "driver-1",
+                "vehicle": "motorcycle",
+                "previous_vehicle": "suv",
+                "rating": 4,
+                "ep_time": 1643673600,
+            },
+            # 30 Jan 2022, 00:00:00
+            {
+                "id": 2,
+                "name": "driver-2",
+                "vehicle": "sedan",
+                "previous_vehicle": "mpv",
+                "rating": 3,
+                "ep_time": 1643500800,
+            },
+        ],
+        "customer": {"id": 1111},
+    }
+
+    resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
+    resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
+
+    with open("test/transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
+        exp_resp_valid_wo_tracing = json.load(f)
+
+    with open("test/transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
+        exp_resp_valid_w_tracing = json.load(f)
+
+    assert isinstance(resp_wo_tracing, dict)
+    assert isinstance(resp_w_tracing, dict)
+    assert "response" in resp_wo_tracing.keys()
+    assert "response" in resp_w_tracing.keys()
+    assert "operation_tracing" not in resp_wo_tracing.keys()
+    assert "operation_tracing" in resp_w_tracing.keys()
+    assert resp_wo_tracing == exp_resp_valid_wo_tracing
+    assert resp_w_tracing == exp_resp_valid_w_tracing
