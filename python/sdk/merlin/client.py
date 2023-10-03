@@ -14,7 +14,7 @@
 
 import warnings
 from sys import version_info
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 import urllib3
 from caraml_auth.id_token_credentials import get_default_id_token_credentials
@@ -277,10 +277,10 @@ class MerlinClient:
     def standard_transformer_simulate(
         self,
         payload: Dict,
-        headers: Dict,
-        config: Dict,
-        model_prediction_config: Dict,
-        protocol: Protocol = "HTTP_JSON",
+        headers: Optional[Dict[Any, Any]] = None,
+        config: Optional[Dict[Any, Any]] = None,
+        model_prediction_config: Dict = None,
+        protocol: Protocol = Protocol.HTTP_JSON,
     ):
         request = StandardTransformerSimulationRequest(
             payload=payload,

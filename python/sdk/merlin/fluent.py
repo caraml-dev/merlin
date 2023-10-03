@@ -133,8 +133,8 @@ def set_model(model_name, model_type: ModelType = None):
     """
     _check_active_project()
     active_project_name = _active_project.name  # type: ignore
-    mdl = _merlin_client.get_or_create_model(
-        model_name, active_project_name, model_type  # type: ignore
+    mdl = _merlin_client.get_or_create_model(  # type: ignore
+        model_name, active_project_name, model_type
     )
     global _active_model
     _active_model = mdl
@@ -301,8 +301,8 @@ def log_pyfunc_model(
     :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
     """
     _check_active_model_version()
-    _active_model_version.log_pyfunc_model(
-        model_instance, conda_env, code_dir, artifacts  # type: ignore
+    _active_model_version.log_pyfunc_model(  # type: ignore
+        model_instance, conda_env, code_dir, artifacts
     )
 
 
@@ -341,8 +341,8 @@ def log_custom_model(
     :param args: Arguments that needs to be specified when running docker
     """
     _check_active_model_version()
-    _active_model_version.log_custom_model(
-        image=image, model_dir=model_dir, command=command, args=args  # type: ignore
+    _active_model_version.log_custom_model(  # type: ignore
+        image=image, model_dir=model_dir, command=command, args=args
     )
 
 
@@ -374,8 +374,8 @@ def deploy(
     _check_active_client()
     if model_version is None:
         _check_active_model_version()
-        return _active_model_version.deploy(
-            environment_name,  # type: ignore
+        return _active_model_version.deploy(  # type: ignore
+            environment_name,
             resource_request,
             env_vars,
             transformer,
@@ -385,8 +385,8 @@ def deploy(
             protocol,
         )
 
-    return _merlin_client.deploy(
-        model_version,  # type: ignore
+    return _merlin_client.deploy(  # type: ignore
+        model_version,
         environment_name,
         resource_request,
         env_vars,

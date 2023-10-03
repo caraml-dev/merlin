@@ -113,12 +113,15 @@ class StandardTransformer(Transformer):
     def simulate(
         self,
         payload: Dict,
-        headers: Dict[Any, Any] = None,
-        model_prediction_config: Dict[Any, Any] = None,
+        headers: Optional[Dict[Any, Any]] = None,
+        model_prediction_config: Optional[Dict[Any, Any]] = None,
         protocol: Protocol = Protocol.HTTP_JSON,
         exclude_tracing: bool = False,
     ) -> Dict:
         fluent._check_active_client()
+        if not fluent._merlin_client:
+            raise Exception("Merlin client is not initialized")
+
         response = fluent._merlin_client.standard_transformer_simulate(
             payload=payload,
             headers=headers,
