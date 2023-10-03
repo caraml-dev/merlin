@@ -1,0 +1,20 @@
+{
+  "response": {
+    "instances": {
+      "columns": [
+        "customer_id",
+        "name",
+        "rank",
+        "rating",
+        "vehicle",
+        "previous_vehicle",
+        "ep_time_x",
+        "ep_time_y"
+      ],
+      "data": [
+        [1111, "driver-2", 2.5, 0.5, 2, 3, 1, -4.100007228307977e-13],
+        [1111, "driver-1", -2.5, 0.75, 0, 1, 1, -6.364838707220068e-12]
+      ]
+    }
+  }
+}
