@@ -1163,13 +1163,14 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
         ],
         "customer": {"id": 1111},
     }
+
     resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
     resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
 
-    with open("transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
+    with open("test/transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
         exp_resp_valid_wo_tracing = json.load(f)
 
-    with open("transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
+    with open("test/transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
         exp_resp_valid_w_tracing = json.load(f)
 
     assert isinstance(resp_wo_tracing, dict)
