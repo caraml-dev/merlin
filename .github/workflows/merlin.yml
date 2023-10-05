@@ -263,7 +263,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["37", "38", "39", "310"]
+        python-version: ["39"]
     needs:
       - create-version
     steps:
@@ -284,7 +284,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["37", "38", "39", "310"]
+        python-version: ["39"]
     needs:
       - create-version
     steps:
