@@ -1,8 +1,9 @@
 import asyncio
 import logging
 import os
-import signal
 import sys
+
+from signal import SIGINT, SIGTERM
 
 import tornado
 from prometheus_client import CollectorRegistry
@@ -49,12 +50,11 @@ class HTTPServer:
         self._http_server.bind(self.http_port)
         logging.info("Will fork %d workers", self.workers)
         self._http_server.start(self.workers)
-
-        for signame in ('SIGINT', 'SIGTERM'):
-            asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
-                                                        lambda: asyncio.create_task(sig_handler(self._http_server)))
-
         tornado.ioloop.IOLoop.current().start()
+
+    async def stop(self, after_termination):
+        await asyncio.create_task(sig_handler(self._http_server))
+        after_termination()
 
     def register_model(self, model: PyFuncModel):
         self.registered_models[model.full_name] = model

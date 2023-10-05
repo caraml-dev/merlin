@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
+import signal
+import sys
 
 import prometheus_client
 from merlin.protocol import Protocol
@@ -23,6 +26,10 @@ from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.server import HTTPServer
 from pyfuncserver.protocol.upi.server import UPIServer
 
+from datetime import datetime
+# import yappi
+
+# yappi.set_clock_type("WALL")
 
 class PyFuncServer:
     def __init__(self, config: Config):
@@ -34,27 +41,44 @@ class PyFuncServer:
         registry = CollectorRegistry()
         multiprocess.MultiProcessCollector(registry)
 
+        # with yappi.run():
+        server = None
         # start only one server depending on the chosen protocol
         # the intent is to save memory consumption
         if self._config.protocol == Protocol.HTTP_JSON:
-            http_server = HTTPServer(model=model, config=self._config, metrics_registry=registry)
-            http_server.start()
+            server = HTTPServer(model=model, config=self._config, metrics_registry=registry)
         elif self._config.protocol == Protocol.UPI_V1:
             # Due to https://github.com/knative/serving/issues/8471, we have to resort to pushing metrics to
             # prometheus push gateway.
             if (self._config.push_gateway.enabled):
                 target_info = labels(self._config)
                 start_metrics_pusher(self._config.push_gateway.url,
-                                     registry,
-                                     target_info,
-                                     self._config.push_gateway.push_interval_sec)
+                                    registry,
+                                    target_info,
+                                    self._config.push_gateway.push_interval_sec)
             else:
                 # start prometheus metrics server and listen at http port
                 logging.info(f"starting metrics server at {self._config.http_port}")
                 prometheus_client.start_http_server(self._config.http_port, registry=registry)
 
             # start grpc/upi server and listen at grpc port
-            upi_server = UPIServer(model=model, config=self._config)
-            upi_server.start()
+            server = UPIServer(model=model, config=self._config)
         else:
             raise ValueError(f"unknown protocol {self._config.protocol}")
+        
+        # Add signal handlers
+        def after_server_termination():
+            pass
+            # logging.info(f"Writing func stats")
+            # yappi.get_func_stats().save(
+            #                 f"{self._config.protocol}-{datetime.now().isoformat()}.prof", type="pstat")
+        if sys.platform not in ['win32', 'win64']:
+            sig_list = [signal.SIGINT, signal.SIGTERM, signal.SIGQUIT]
+        else:
+            sig_list = [signal.SIGINT, signal.SIGTERM]
+        for sig in sig_list:
+            asyncio.get_event_loop().add_signal_handler(sig,
+                                                        lambda: asyncio.create_task(server.stop(after_server_termination)))
+        
+        # Start server
+        server.start()
