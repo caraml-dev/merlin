@@ -7,7 +7,7 @@ dev_install:
 setup: dev_install
 
 .PHONY: test
-test: type_check
+test:
 	pipenv run pytest -W ignore -s
 
 .PHONY: type_check
