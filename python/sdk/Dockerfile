@@ -12,5 +12,5 @@ COPY . .${WORKDIR}
 
 ARG VERSION
 
-RUN pip install merlin-sdk==${VERSION}
-RUN pip install merlin-sdk[test]==${VERSION}
+RUN pip install .
+RUN pip install ".[test]"
