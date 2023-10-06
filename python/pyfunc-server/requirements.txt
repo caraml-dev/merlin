@@ -11,6 +11,7 @@ grpcio<1.49.0
 grpcio-reflection<1.49.0
 grpcio-tools<1.49.0
 grpcio-health-checking<1.49.0
-file:${SDK_PATH}#egg=merlin-sdk
 opentelemetry-api 
 opentelemetry-sdk
+opentelemetry-ext-jaeger
+file:${SDK_PATH}#egg=merlin-sdk
