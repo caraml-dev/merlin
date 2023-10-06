@@ -1181,3 +1181,47 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     assert "operation_tracing" in resp_w_tracing.keys()
     assert resp_wo_tracing == exp_resp_valid_wo_tracing
     assert resp_w_tracing == exp_resp_valid_w_tracing
+
+
+# @pytest.mark.feast
+@pytest.mark.integration
+def test_standard_transformer_simulate_feast(integration_test_url, use_google_oauth):
+    """
+    Test the `simulate` method of the `StandardTransformer` class with Feast enricher.
+    """
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+
+    transformer_config_path = os.path.join(
+        "test/transformer", "standard_transformer_with_feast.yaml"
+    )
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+
+    request_json = {
+        "drivers": [
+            {"id": "1234", "name": "driver-1"},
+            {"id": "5678", "name": "driver-2"},
+        ],
+        "customer": {"id": 1111},
+    }
+
+    response_w_tracing = transformer.simulate(
+        payload=request_json, exclude_tracing=True
+    )
+    response_wo_tracing = transformer.simulate(
+        payload=request_json, exclude_tracing=False
+    )
+
+    with open("test/transformer/sim_exp_resp_feast_w_tracing.json", "r") as f:
+        exp_resp_w_tracing = json.load(f)
+
+    with open("test/transformer/sim_exp_resp_feast_wo_tracing.json", "r") as f:
+        exp_resp_wo_tracing = json.load(f)
+
+    assert isinstance(response_w_tracing, dict)
+    assert isinstance(response_wo_tracing, dict)
+    assert "response" in response_w_tracing.keys()
+    assert "response" in response_wo_tracing.keys()
+    assert "operation_tracing" not in response_w_tracing.keys()
+    assert "operation_tracing" in response_wo_tracing.keys()
+    assert response_w_tracing == exp_resp_w_tracing
+    assert response_wo_tracing == exp_resp_wo_tracing
