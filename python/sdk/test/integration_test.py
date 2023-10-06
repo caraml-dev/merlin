@@ -1221,7 +1221,7 @@ def test_standard_transformer_simulate_feast(integration_test_url, use_google_oa
     assert isinstance(response_wo_tracing, dict)
     assert "response" in response_w_tracing.keys()
     assert "response" in response_wo_tracing.keys()
-    assert "operation_tracing" not in response_w_tracing.keys()
-    assert "operation_tracing" in response_wo_tracing.keys()
+    assert "operation_tracing" not in response_wo_tracing.keys()
+    assert "operation_tracing" in response_w_tracing.keys()
     assert response_w_tracing == exp_resp_w_tracing
     assert response_wo_tracing == exp_resp_wo_tracing
