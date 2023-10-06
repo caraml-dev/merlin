@@ -1183,7 +1183,7 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     assert resp_w_tracing == exp_resp_valid_w_tracing
 
 
-# @pytest.mark.feast
+@pytest.mark.feast
 @pytest.mark.integration
 def test_standard_transformer_simulate_feast(integration_test_url, use_google_oauth):
     """
