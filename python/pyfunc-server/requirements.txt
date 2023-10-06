@@ -5,7 +5,7 @@ prometheus_client==0.14.1
 uvloop>=0.15.2
 orjson>=2.6.8
 tornado
-caraml-upi-protos
+caraml-upi-protos==0.3.7rc1
 # Starting 1.49.0, grpc uses protobuf 4.X which are incompatible with most of our dependencies
 grpcio<1.49.0
 grpcio-reflection<1.49.0

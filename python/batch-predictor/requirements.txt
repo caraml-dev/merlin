@@ -1,6 +1,6 @@
 findspark
 pyspark==3.0.1
-mlflow>=1.2.0,<=1.23.0
+mlflow>=1.26.1,<2.0.0
 cloudpickle==2.0.0
 pyarrow>=0.14.1,<=9.0.0
 protobuf>=3.0,<4.0.0
