@@ -1093,9 +1093,6 @@ class ModelVersion:
         current_endpoint = self.endpoint
         env_list = self._get_env_list()
 
-        # target_env_name can never be set as null
-        target_env_name = environment_name if environment_name is not None else ModelVersion._get_default_target_env_name(env_list)
-
         target_deployment_mode = None
         target_protocol = None
         target_resource_request = None
@@ -1107,12 +1104,20 @@ class ModelVersion:
         # Get the currently deployed endpoint and if there's no deployed endpoint yet, use the default values for
         # non-nullable fields
         if current_endpoint is None:
+            target_env_name = ModelVersion._get_default_target_env_name(env_list)
             target_deployment_mode = DeploymentMode.SERVERLESS.value
             target_protocol = Protocol.HTTP_JSON.value
             target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
             target_autoscaling_policy = ModelVersion._get_default_autoscaling_policy(
                 deployment_mode.value if deployment_mode is not None else target_deployment_mode
             )
+
+        if environment_name is not None:
+            target_env_name = environment_name
+        elif current_endpoint is not None:
+            # when we are updating a deployment but environment_name is not specified, we reuse the existing endpoint's
+            # environment name
+            target_env_name = current_endpoint.environment_name
 
         if deployment_mode is not None:
             target_deployment_mode = deployment_mode.value
