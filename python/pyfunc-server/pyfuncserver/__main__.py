@@ -34,7 +34,34 @@ args, _ = parser.parse_known_args()
 
 logging.getLogger('tornado.access').disabled = True
 
+import os
+from opentelemetry import trace
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+def setup_tracer():
+    if os.getenv("JAEGER_DISABLED", "true") == "false":
+        provider = TracerProvider()
+        processor = BatchSpanProcessor(ConsoleSpanExporter())
+        provider.add_span_processor(processor)
+
+        trace.set_tracer_provider(
+            TracerProvider(resource=Resource.create({SERVICE_NAME: os.getenv("K_REVISION", "pyfunc-service")}))
+        )
+        jaeger_exporter = JaegerExporter(
+            collector_endpoint=os.getenv("JAEGER_COLLECTOR_URL", "http://localhost:14268/api/traces")
+        )
+        trace.get_tracer_provider().add_span_processor(
+            BatchSpanProcessor(jaeger_exporter)
+        )
+
 if __name__ == "__main__":
+    setup_tracer()
+    
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 

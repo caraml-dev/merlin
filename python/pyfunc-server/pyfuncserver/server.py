@@ -26,7 +26,7 @@ from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.server import HTTPServer
 from pyfuncserver.protocol.upi.server import UPIServer
 
-from datetime import datetime
+# from datetime import datetime
 # import yappi
 
 # yappi.set_clock_type("WALL")
@@ -72,6 +72,7 @@ class PyFuncServer:
             # logging.info(f"Writing func stats")
             # yappi.get_func_stats().save(
             #                 f"{self._config.protocol}-{datetime.now().isoformat()}.prof", type="pstat")
+
         if sys.platform not in ['win32', 'win64']:
             sig_list = [signal.SIGINT, signal.SIGTERM, signal.SIGQUIT]
         else:

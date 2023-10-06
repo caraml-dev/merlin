@@ -12,14 +12,30 @@ from grpc_health.v1 import health_pb2_grpc
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 
+import os
+from opentelemetry import trace
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
     def __init__(self, model: PyFuncModel):
         if not model.ready:
             model.load()
         self._model = model
+        self._tracer = None
+        if os.getenv("JAEGER_DISABLED", "true") == "false":
+            self._tracer = trace.get_tracer("upi")
 
     def PredictValues(self, request, context):
-        return self._model.upiv1_predict(request=request, context=context)
+        if self._tracer is not None:
+            prop = TraceContextTextMapPropagator()
+            metadata = {}
+            for key, value in context.invocation_metadata():
+                metadata[key] = value
+            # Continue from existing span, if found
+            span_context = prop.extract(carrier=metadata)
+            with self._tracer.start_as_current_span('PredictValues', context=span_context):
+                return self._model.upiv1_predict(request=request, context=context)
+        else:
+            return self._model.upiv1_predict(request=request, context=context)
 
 
 class UPIServer:
