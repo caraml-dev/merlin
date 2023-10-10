@@ -118,7 +118,7 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 	return &InferenceServiceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig, currentReplicas DeploymentScale) (*kservev1beta1.InferenceService, error) {
 	applyDefaults(modelService, config)
 
 	annotations, err := createAnnotations(modelService, config, nil)
@@ -166,73 +166,6 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	}
 
 	return inferenceService, nil
-}
-
-func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(
-	orig *kservev1beta1.InferenceService,
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-	currentReplicas DeploymentScale,
-) (*kservev1beta1.InferenceService, error) {
-	// Identify the desired initial scale of the new deployment
-	var initialScale *int
-	if currentReplicas.Predictor != nil {
-		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
-		// Set the desired scale of the new deployment by taking the max of the 2 values.
-		// Consider the transformer's scale only if it is also enabled in the new spec.
-		if modelService.Transformer != nil &&
-			modelService.Transformer.Enabled &&
-			currentReplicas.Transformer != nil &&
-			*currentReplicas.Transformer > *currentReplicas.Predictor {
-			initialScale = currentReplicas.Transformer
-		} else {
-			initialScale = currentReplicas.Predictor
-		}
-	}
-
-	applyDefaults(modelService, config)
-
-	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
-	annotations, err := createAnnotations(modelService, config, initialScale)
-	if err != nil {
-		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
-	}
-	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
-
-	orig.Spec.Predictor = createPredictorSpec(modelService, config)
-	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-		orig,
-		modelService,
-		config,
-		kservev1beta1.PredictorComponent,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
-	}
-
-	orig.Spec.Transformer = nil
-	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		if _, ok := orig.Status.Components[kservev1beta1.TransformerComponent]; !ok ||
-			orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
-			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
-				modelService,
-				config,
-				kservev1beta1.TransformerComponent,
-			)
-		} else {
-			orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-				orig,
-				modelService,
-				config,
-				kservev1beta1.TransformerComponent,
-			)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
-		}
-	}
-	return orig, nil
 }
 
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
@@ -869,7 +802,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 	envVars := models.EnvVars{
 		models.EnvVar{
 			Name:  envPyFuncModelName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envModelName,
@@ -881,7 +814,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 		},
 		models.EnvVar{
 			Name:  envModelFullName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envHTTPPort,

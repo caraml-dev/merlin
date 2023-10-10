@@ -123,6 +123,9 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		return nil, err
 	}
 
+	// Increment endpoint revision id
+	endpoint.RevisionID++
+
 	// Copy to avoid race condition
 	tobeDeployedEndpoint := *endpoint
 	endpoint.Status = models.EndpointPending
@@ -249,7 +252,10 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	}
 
 	modelService := &models.Service{
-		Name:            models.CreateInferenceServiceName(model.Name, version.ID.String()),
+		Name:            models.CreateInferenceServiceName(model.Name, version.ID.String(), endpoint.RevisionID.String()),
+		ModelName:       model.Name,
+		ModelVersion:    version.ID.String(),
+		RevisionID:      endpoint.RevisionID,
 		Namespace:       model.Project.Name,
 		ResourceRequest: endpoint.ResourceRequest,
 		Transformer:     endpoint.Transformer,
@@ -296,7 +302,7 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 		containers = append(containers, imgBuilderContainers...)
 	}
 
-	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String()))
+	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String(), "TODO"))
 	if err != nil {
 		return nil, err
 	}

@@ -116,6 +116,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 		name               string
 		modelSvc           *models.Service
 		resourcePercentage string
+		deploymentScale    DeploymentScale
 		exp                *kservev1beta1.InferenceService
 		wantErr            bool
 	}{
@@ -134,6 +135,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -200,6 +202,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -266,6 +269,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -325,6 +329,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -439,6 +444,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -497,6 +503,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -554,6 +561,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -616,6 +624,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -677,6 +686,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -747,6 +757,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -808,6 +819,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				Protocol:        protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -875,6 +887,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -941,6 +954,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			wantErr:            true,
 		},
 		{
@@ -963,6 +977,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1029,6 +1044,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1095,6 +1111,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1161,6 +1178,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1227,6 +1245,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1288,6 +1307,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1349,6 +1369,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1409,6 +1430,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1479,6 +1501,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1533,7 +1556,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

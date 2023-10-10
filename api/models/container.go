@@ -76,8 +76,8 @@ func componentType(containerName, podName string) string {
 	return componentType
 }
 
-func OnlineInferencePodLabelSelector(modelName string, versionID string) string {
-	serviceName := CreateInferenceServiceName(modelName, versionID)
+func OnlineInferencePodLabelSelector(modelName, versionID, revisionID string) string {
+	serviceName := CreateInferenceServiceName(modelName, versionID, revisionID)
 	return fmt.Sprintf(onlineInferenceLabelTemplate, serviceName)
 }
 

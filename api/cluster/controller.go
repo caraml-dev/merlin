@@ -16,12 +16,14 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	"github.com/pkg/errors"
+	networkingv1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -83,6 +85,7 @@ type controller struct {
 	clusterClient              corev1client.CoreV1Interface
 	batchClient                batchv1client.BatchV1Interface
 	policyClient               policyv1client.PolicyV1Interface
+	istioClient                networkingv1beta1.NetworkingV1beta1Interface
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
 	kfServingResourceTemplater *resource.InferenceServiceTemplater
@@ -126,6 +129,11 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		return nil, err
 	}
 
+	istioClient, err := networkingv1beta1.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	containerFetcher := NewContainerFetcher(coreV1Client, Metadata{
 		ClusterName: clusterConfig.ClusterName,
 		GcpProject:  clusterConfig.GcpProject,
@@ -138,6 +146,7 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		coreV1Client,
 		batchV1Client,
 		policyV1Client,
+		istioClient,
 		deployConfig,
 		containerFetcher,
 		kfServingResourceTemplater,
@@ -150,6 +159,7 @@ func newController(
 	coreV1Client corev1client.CoreV1Interface,
 	batchV1Client batchv1client.BatchV1Interface,
 	policyV1Client policyv1client.PolicyV1Interface,
+	istioClient networkingv1beta1.NetworkingV1beta1Interface,
 	deploymentConfig config.DeploymentConfig,
 	containerFetcher ContainerFetcher,
 	templater *resource.InferenceServiceTemplater,
@@ -160,6 +170,7 @@ func newController(
 		clusterClient:              coreV1Client,
 		batchClient:                batchV1Client,
 		policyClient:               policyV1Client,
+		istioClient:                istioClient,
 		namespaceCreator:           NewNamespaceCreator(coreV1Client, deploymentConfig.NamespaceTimeout),
 		deploymentConfig:           &deploymentConfig,
 		ContainerFetcher:           containerFetcher,
@@ -190,51 +201,42 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	isvcName := modelService.Name
-	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(isvcName, metav1.GetOptions{})
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			log.Errorf("unable to check inference service %s %v", isvcName, err)
-			return nil, ErrUnableToGetInferenceServiceStatus
-		}
 
-		// create new resource
-		spec, err := c.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, c.deploymentConfig)
-		if err != nil {
-			log.Errorf("unable to create inference service spec %s %v", isvcName, err)
-			return nil, ErrUnableToCreateInferenceService
-		}
-
-		s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
-		if err != nil {
-			log.Errorf("unable to create inference service %s %v", isvcName, err)
-			return nil, ErrUnableToCreateInferenceService
-		}
-	} else {
-		// Get current scale of the existing deployment
-		deploymentScale := resource.DeploymentScale{}
+	// Get current scale of the existing deployment
+	deploymentScale := resource.DeploymentScale{}
+	if modelService.RevisionID > 1 {
 		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, s.Status.Components)
-		}
+			prevRevisionID := modelService.RevisionID - 1
+			prevIsvcName := models.CreateInferenceServiceName(modelService.ModelName, modelService.ModelVersion, prevRevisionID.String())
 
-		patchedSpec, err := c.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, c.deploymentConfig, deploymentScale)
-		if err != nil {
-			log.Errorf("unable to update inference service %s %v", isvcName, err)
-			return nil, ErrUnableToUpdateInferenceService
-		}
+			prevIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(prevIsvcName, metav1.GetOptions{})
+			if err != nil && !kerrors.IsNotFound(err) {
+				log.Errorf("unable to check status of inference service %s %v", isvcName, err)
+				return nil, ErrUnableToGetInferenceServiceStatus
+			}
 
-		// existing resource found, do update
-		s, err = c.kserveClient.InferenceServices(modelService.Namespace).Update(patchedSpec)
-		if err != nil {
-			log.Errorf("unable to update inference service %s %v", isvcName, err)
-			return nil, ErrUnableToUpdateInferenceService
+			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, prevIsvc.Status.Components)
 		}
+	}
+
+	// create new resource
+	spec, err := c.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, c.deploymentConfig, deploymentScale)
+	if err != nil {
+		log.Errorf("unable to create inference service spec %s %v", isvcName, err)
+		return nil, ErrUnableToCreateInferenceService
+	}
+
+	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
+	if err != nil {
+		log.Errorf("unable to create inference service %s %v", isvcName, err)
+		return nil, ErrUnableToCreateInferenceService
 	}
 
 	if c.deploymentConfig.PodDisruptionBudget.Enabled {
 		pdbs := createPodDisruptionBudgets(modelService, c.deploymentConfig.PodDisruptionBudget)
 		if err := c.deployPodDisruptionBudgets(ctx, pdbs); err != nil {
-			log.Errorf("unable to create pdb %v", err)
+			log.Errorf("unable to create pdb: %v", err)
 			return nil, ErrUnableToCreatePDB
 		}
 	}
@@ -250,6 +252,33 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
+
+	// Deploy virtual service
+	vsCfg, err := NewVirtualService(modelService, inferenceURL)
+	if err != nil {
+		log.Errorf("unable to initialize virtual service builder: %v", err)
+		return nil, ErrUnableToCreateVirtualService
+	}
+
+	vs, err := c.deployVirtualService(ctx, vsCfg)
+	if err != nil {
+		log.Errorf("unable to create virtual service: %v", err)
+		return nil, ErrUnableToCreateVirtualService
+	}
+
+	if len(vs.Spec.Hosts) > 0 {
+		inferenceURL = fmt.Sprintf("http://%s/v1/models/%s-%s:predict", vs.Spec.Hosts[0], modelService.ModelName, modelService.ModelVersion)
+	}
+
+	if modelService.RevisionID > 1 {
+		prevRevisionID := modelService.RevisionID - 1
+		prevModelServiceName := models.CreateInferenceServiceName(modelService.ModelName, modelService.ModelVersion, prevRevisionID.String())
+		if err := c.deleteInferenceService(prevModelServiceName, modelService.Namespace); err != nil {
+			log.Warnf("unable to delete prevision revision %s with error %v", prevModelServiceName, err)
+			return nil, ErrUnableToDeleteInferenceService
+		}
+	}
+
 	return &models.Service{
 		Name:        s.Name,
 		Namespace:   s.Namespace,
@@ -278,6 +307,12 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 			log.Errorf("unable to delete pdb %v", err)
 			return nil, ErrUnableToDeletePDB
 		}
+	}
+
+	vsName := fmt.Sprintf("%s-%s", modelService.ModelName, modelService.ModelVersion)
+	if err := c.deleteVirtualService(ctx, vsName, modelService.Namespace); err != nil {
+		log.Errorf("unable to delete virtual service %v", err)
+		return nil, ErrUnableToDeleteVirtualService
 	}
 
 	return modelService, nil
