@@ -82,28 +82,13 @@ const (
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
-var (
-	// list of configuration stored as annotations
-	configAnnotationKeys = []string{
-		annotationPrometheusScrapeFlag,
-		annotationPrometheusScrapePort,
-		knserving.QueueSidecarResourcePercentageAnnotationKey,
-		kserveconstant.AutoscalerClass,
-		kserveconstant.AutoscalerMetrics,
-		kserveconstant.TargetUtilizationPercentage,
-		knautoscaling.ClassAnnotationKey,
-		knautoscaling.MetricAnnotationKey,
-		knautoscaling.TargetAnnotationKey,
-	}
-
-	grpcContainerPorts = []corev1.ContainerPort{
-		{
-			ContainerPort: defaultGRPCPort,
-			Name:          "h2c",
-			Protocol:      corev1.ProtocolTCP,
-		},
-	}
-)
+var grpcContainerPorts = []corev1.ContainerPort{
+	{
+		ContainerPort: defaultGRPCPort,
+		Name:          "h2c",
+		Protocol:      corev1.ProtocolTCP,
+	},
+}
 
 type DeploymentScale struct {
 	Predictor   *int
@@ -617,39 +602,6 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	)
 }
 
-// updateExistingInferenceServiceTopologySpreadConstraints creates topology spread constraints for a component of a new
-// inference service
-func updateExistingInferenceServiceTopologySpreadConstraints(
-	orig *kservev1beta1.InferenceService,
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-	component kservev1beta1.ComponentType,
-) ([]corev1.TopologySpreadConstraint, error) {
-	if len(config.TopologySpreadConstraints) == 0 {
-		var topologySpreadConstraints []corev1.TopologySpreadConstraint
-		return topologySpreadConstraints, nil
-	}
-	var newRevisionName string
-	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s", modelService.Name, component)
-	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
-		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-		var err error
-		newRevisionName, err = getNewRevisionNameForExistingServerlessDeployment(
-			orig.Status.Components[component].LatestCreatedRevision,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("unable to generate new revision name: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
-	}
-	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
-		config.TopologySpreadConstraints,
-		newRevisionName,
-	)
-}
-
 // appendPodSpreadingLabelSelectorsToTopologySpreadConstraints makes a deep copy of the config topology spread
 // constraints and then adds the given revisionName as a label to the match labels of each topology spread constraint
 // to spread out all the pods across the specified topologyKey
@@ -689,24 +641,6 @@ func copyTopologySpreadConstraints(
 		return nil, fmt.Errorf("Error in type assertion of copied topology spread constraints interface: %w", err)
 	}
 	return topologySpreadConstraints, nil
-}
-
-// getNewRevisionNameForExistingServerlessDeployment examines the current revision name of an inference service (
-// serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
-// sklearn-sample-predictor-00001 -> sklearn-sample-predictor-00002
-func getNewRevisionNameForExistingServerlessDeployment(currentRevisionName string) (string, error) {
-	revisionNameElements := strings.Split(currentRevisionName, "-")
-	if len(revisionNameElements) < 4 {
-		return "", fmt.Errorf("unexpected revision name format that is not in at least 3 parts: %s",
-			currentRevisionName)
-	}
-	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])
-	if err != nil {
-		return "", err
-	}
-
-	revisionNameElements[len(revisionNameElements)-1] = fmt.Sprintf("%05d", currentRevisionNumber+1)
-	return strings.Join(revisionNameElements, "-"), nil
 }
 
 func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {

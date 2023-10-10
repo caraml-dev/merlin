@@ -2170,13 +2170,22 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 }
 
 func TestListContainers(t *testing.T) {
+	id := uuid.New()
+
 	project := mlp.Project{ID: 1, Name: "my-project"}
 	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.ID)}
 	version := &models.Version{ID: 1}
-	id := uuid.New()
+	revisionID := models.ID(1)
 	env := &models.Environment{Name: "my-env", Cluster: "my-cluster", IsDefault: &isDefaultTrue}
+	endpoint := &models.VersionEndpoint{
+		ID:              id,
+		VersionID:       version.ID,
+		VersionModelID:  model.ID,
+		RevisionID:      revisionID,
+		EnvironmentName: env.Name,
+	}
 	cfg := &config.Config{
-		Environment: "dev",
+		Environment: env.Name,
 		FeatureToggleConfig: config.FeatureToggleConfig{
 			MonitoringConfig: config.MonitoringConfig{
 				MonitoringEnabled: false,
@@ -2185,9 +2194,9 @@ func TestListContainers(t *testing.T) {
 	}
 
 	type args struct {
-		model   *models.Model
-		version *models.Version
-		id      uuid.UUID
+		model    *models.Model
+		version  *models.Version
+		endpoint *models.VersionEndpoint
 	}
 
 	type componentMock struct {
@@ -2205,13 +2214,14 @@ func TestListContainers(t *testing.T) {
 		{
 			"success: non-pyfunc model",
 			args{
-				model, version, id,
+				model, version, endpoint,
 			},
 			componentMock{
 				&models.VersionEndpoint{
 					ID:              id,
 					VersionID:       version.ID,
 					VersionModelID:  model.ID,
+					RevisionID:      revisionID,
 					EnvironmentName: env.Name,
 				},
 				nil,
@@ -2230,13 +2240,14 @@ func TestListContainers(t *testing.T) {
 		{
 			"success: pyfunc model",
 			args{
-				model, version, id,
+				model, version, endpoint,
 			},
 			componentMock{
 				&models.VersionEndpoint{
 					ID:              id,
 					VersionID:       version.ID,
 					VersionModelID:  model.ID,
+					RevisionID:      revisionID,
 					EnvironmentName: env.Name,
 				},
 				&models.Container{
@@ -2266,7 +2277,7 @@ func TestListContainers(t *testing.T) {
 			Return(tt.mock.imageBuilderContainer, nil)
 
 		envController := &clusterMock.Controller{}
-		envController.On("GetContainers", context.Background(), "my-project", "serving.kserve.io/inferenceservice=model-1").
+		envController.On("GetContainers", context.Background(), "my-project", "serving.kserve.io/inferenceservice=model-1-1").
 			Return(tt.mock.modelContainers, nil)
 
 		controllers := map[string]cluster.Controller{env.Name: envController}
@@ -2276,7 +2287,6 @@ func TestListContainers(t *testing.T) {
 		mockStorage.On("Get", mock.Anything).Return(tt.mock.versionEndpoint, nil)
 		mockDeploymentStorage.On("Save", mock.Anything).Return(nil, nil)
 
-		// endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, cfg.Environment, cfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
 		endpointSvc := NewEndpointService(EndpointServiceParams{
 			ClusterControllers:   controllers,
 			ImageBuilder:         imgBuilder,
@@ -2286,7 +2296,8 @@ func TestListContainers(t *testing.T) {
 			MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
 			LoggerDestinationURL: loggerDestinationURL,
 		})
-		containers, err := endpointSvc.ListContainers(context.Background(), tt.args.model, tt.args.version, tt.args.id)
+
+		containers, err := endpointSvc.ListContainers(context.Background(), tt.args.model, tt.args.version, tt.args.endpoint)
 		if !tt.wantError {
 			assert.Nil(t, err, "unwanted error %v", err)
 		} else {

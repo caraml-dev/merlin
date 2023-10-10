@@ -16,6 +16,7 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -87,8 +88,13 @@ type inferenceServiceReactor struct {
 	err  error
 }
 
-type knativeRevisionReactor struct {
-	rev *knservingv1.Revision
+type pdbReactor struct {
+	pdb *policyv1.PodDisruptionBudget
+	err error
+}
+
+type vsReactor struct {
+	vs  *istiov1beta1.VirtualService
 	err error
 }
 
@@ -355,18 +361,18 @@ func TestController_DeployInferenceService(t *testing.T) {
 	}
 
 	tests := []struct {
-		name          string
-		modelService  *models.Service
-		getRevResult  *knativeRevisionReactor
-		createResult  *inferenceServiceReactor
-		checkResult   *inferenceServiceReactor
-		deployTimeout time.Duration
-		wantError     bool
+		name            string
+		modelService    *models.Service
+		createResult    *inferenceServiceReactor
+		checkResult     *inferenceServiceReactor
+		createPdbResult *pdbReactor
+		createVsResult  *vsReactor
+		deployTimeout   time.Duration
+		wantError       bool
 	}{
 		{
 			name:         "success: create inference service",
 			modelService: modelSvc,
-			getRevResult: &knativeRevisionReactor{},
 			createResult: &inferenceServiceReactor{
 				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil,
@@ -378,8 +384,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 				},
 				nil,
 			},
-			deployTimeout: deployTimeout,
-			wantError:     false,
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       false,
 		},
 		{
 			name: "success: deploying service",
@@ -394,7 +402,6 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
-			getRevResult: &knativeRevisionReactor{},
 			createResult: &inferenceServiceReactor{
 				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil,
@@ -406,273 +413,224 @@ func TestController_DeployInferenceService(t *testing.T) {
 				},
 				nil,
 			},
-			deployTimeout: deployTimeout,
-			wantError:     false,
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       false,
 		},
-		// {
-		// 	"success: create inference service with transformer",
-		// 	&models.Service{
-		// 		Name:      isvcName,
-		// 		Namespace: project.Name,
-		// 		Options:   modelOpt,
-		// 		Transformer: &models.Transformer{
-		// 			Enabled:         true,
-		// 			TransformerType: models.StandardTransformerType,
-		// 			Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
-		// 		},
-		// 	},
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	false,
-		// },
-		// {
-		// 	"error: failed get",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		errors.New("error"),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: failed create",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		errors.New("error creating inference service"),
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: failed update",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{err: kerrors.NewNotFound(schema.GroupResource{}, "test service")},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		errors.New("error updating inference service"),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: failed check",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		errors.New("error check"),
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: predictor error",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     createPredErrorCond(),
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: routes error",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     createRoutesErrorCond(),
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: timeout",
-		// 	modelSvc,
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	1 * time.Millisecond,
-		// 	true,
-		// },
-		// {
-		// 	"error: deploying service due to insufficient CPU",
-		// 	&models.Service{
-		// 		Name:      isvcName,
-		// 		Namespace: project.Name,
-		// 		Options:   modelOpt,
-		// 		ResourceRequest: &models.ResourceRequest{
-		// 			MinReplica:    2,
-		// 			MaxReplica:    4,
-		// 			CPURequest:    resource.MustParse("10"),
-		// 			MemoryRequest: resource.MustParse("1Gi"),
-		// 		},
-		// 	},
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
-		// {
-		// 	"error: deploying service due to insufficient memory",
-		// 	&models.Service{
-		// 		Name:      isvcName,
-		// 		Namespace: project.Name,
-		// 		Options:   modelOpt,
-		// 		ResourceRequest: &models.ResourceRequest{
-		// 			MinReplica:    2,
-		// 			MaxReplica:    4,
-		// 			CPURequest:    resource.MustParse("1000m"),
-		// 			MemoryRequest: resource.MustParse("10Gi"),
-		// 		},
-		// 	},
-		// 	&knativeRevisionReactor{},
-		// 	&inferenceServiceReactor{
-		// 		nil,
-		// 		kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
-		// 	},
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
-		// 		nil,
-		// 	},
-		// 	nil,
-		// 	&inferenceServiceReactor{
-		// 		&kservev1beta1.InferenceService{
-		// 			ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
-		// 			Status:     statusReady,
-		// 		},
-		// 		nil,
-		// 	},
-		// 	deployTimeout,
-		// 	true,
-		// },
+		{
+			name: "success: create inference service with transformer",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: project.Name,
+				Options:   modelOpt,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
+				},
+			},
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     statusReady,
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       false,
+		},
+		{
+			name:         "error: failed create",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				nil,
+				errors.New("error creating inference service"),
+			},
+			checkResult:     nil,
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
+		{
+			name:         "error: failed check",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				nil,
+				errors.New("error check"),
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
+		{
+			name:         "error: predictor error",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     createPredErrorCond(),
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
+		{
+			name:         "error: routes error",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     createRoutesErrorCond(),
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
+		{
+			name:         "error: pdb error",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     createRoutesErrorCond(),
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{nil, ErrUnableToCreatePDB},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
+		{
+			name:         "error: vs error",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     createRoutesErrorCond(),
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{nil, ErrUnableToCreateVirtualService},
+			wantError:       true,
+		},
+		{
+			name:         "error: timeout",
+			modelService: modelSvc,
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     statusReady,
+				},
+				nil,
+			},
+			deployTimeout: 1 * time.Millisecond,
+			wantError:     true,
+		},
+		{
+			name: "error: deploying service due to insufficient CPU",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: project.Name,
+				Options:   modelOpt,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("10"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+			},
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     statusReady,
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
+		{
+			name: "error: deploying service due to insufficient memory",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: project.Name,
+				Options:   modelOpt,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1000m"),
+					MemoryRequest: resource.MustParse("10Gi"),
+				},
+			},
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     statusReady,
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			knClient := knservingfake.NewSimpleClientset()
-			knClient.PrependReactor(getMethod, revisionResource, func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, tt.getRevResult.rev, tt.getRevResult.err
-			})
 
 			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -694,12 +652,12 @@ func TestController_DeployInferenceService(t *testing.T) {
 
 			policyV1Client := fake.NewSimpleClientset().PolicyV1().(*fakepolicyv1.FakePolicyV1)
 			policyV1Client.Fake.PrependReactor(patchMethod, pdbResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, pdb, nil
+				return true, tt.createPdbResult.pdb, tt.createPdbResult.err
 			})
 
 			istioClient := fakeistio.NewSimpleClientset().NetworkingV1beta1().(*fakeistionetworking.FakeNetworkingV1beta1)
 			istioClient.PrependReactor(patchMethod, virtualServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, vs, nil
+				return true, tt.createVsResult.vs, tt.createVsResult.err
 			})
 
 			deployConfig := config.DeploymentConfig{
@@ -1188,7 +1146,7 @@ func TestController_Delete(t *testing.T) {
 
 			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{})
 
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, nil, tt.deployConfig, containerFetcher, templater)
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, tt.deployConfig, containerFetcher, templater)
 			mSvc, err := ctl.Delete(context.Background(), tt.modelService)
 
 			if tt.wantError {

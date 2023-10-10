@@ -33,10 +33,10 @@ import (
 // It is important to close the database after using it by calling defer db.Close()
 func InitDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	// Migrate
-	// err := migrateDB(cfg)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err := migrateDB(cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	// Init db
 	db, err := gorm.Open(

@@ -50,7 +50,7 @@ type EndpointsService interface {
 	// CountEndpoints count number of endpoint created from a model in an environment
 	CountEndpoints(ctx context.Context, environment *models.Environment, model *models.Model) (int, error)
 	// ListContainers list all container associated with an endpoint
-	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpointUuid uuid.UUID) ([]*models.Container, error)
+	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) ([]*models.Container, error)
 	// DeleteEndpoint hard delete endpoint data, including the relation from deployment
 	DeleteEndpoint(version *models.Version, endpoint *models.VersionEndpoint) error
 }
@@ -281,8 +281,8 @@ func (k *endpointService) CountEndpoints(ctx context.Context, environment *model
 }
 
 // ListContainers list all containers belong to the given version endpoint
-func (k *endpointService) ListContainers(ctx context.Context, model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error) {
-	ve, err := k.storage.Get(id)
+func (k *endpointService) ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) ([]*models.Container, error) {
+	ve, err := k.storage.Get(endpoint.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -302,14 +302,16 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 		containers = append(containers, imgBuilderContainers...)
 	}
 
-	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String(), "TODO"))
+	labelSelector := models.OnlineInferencePodLabelSelector(model.Name, version.ID.String(), endpoint.RevisionID.String())
+
+	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, labelSelector)
 	if err != nil {
 		return nil, err
 	}
 	containers = append(containers, modelContainers...)
 
 	for _, container := range containers {
-		container.VersionEndpointID = id
+		container.VersionEndpointID = endpoint.ID
 	}
 
 	return containers, nil

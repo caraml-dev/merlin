@@ -536,7 +536,13 @@ func TestListContainers(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, uuid).Return([]*models.Container{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
+					ID:             uuid,
+					VersionModelID: models.ID(1),
+					VersionID:      models.ID(1),
+					RevisionID:     models.ID(1),
+				}, nil)
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, mock.Anything).Return([]*models.Container{
 					{
 						Name:              "pod-1",
 						PodName:           "pod-1-1",
@@ -656,7 +662,13 @@ func TestListContainers(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, uuid).Return(nil, fmt.Errorf("Error creating secret: db is down"))
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
+					ID:             uuid,
+					VersionModelID: models.ID(1),
+					VersionID:      models.ID(1),
+					RevisionID:     models.ID(1),
+				}, nil)
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{

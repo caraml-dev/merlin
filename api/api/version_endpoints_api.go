@@ -379,12 +379,16 @@ func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]st
 	if err != nil {
 		return NotFound(fmt.Sprintf("Version not found: %v", err))
 	}
+	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
+	if err != nil {
+		return NotFound(fmt.Sprintf("Endpoint not found: %v", err))
+	}
 
-	endpoint, err := c.EndpointsService.ListContainers(ctx, model, version, endpointID)
+	containers, err := c.EndpointsService.ListContainers(ctx, model, version, endpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint: %v", err))
 	}
-	return Ok(endpoint)
+	return Ok(containers)
 }
 
 func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndpoint) error {

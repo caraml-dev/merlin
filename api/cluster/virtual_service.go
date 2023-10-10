@@ -12,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 )
@@ -90,8 +89,6 @@ func (cfg VirtualService) BuildVirtualServiceSpec() (*v1beta1.VirtualService, er
 			Http:     cfg.createHttpRoutes(modelVersionRevisionHost, modelVersionRevisionPath),
 		},
 	}
-
-	log.Infof("VS: %+v", vs)
 
 	return vs, nil
 }
