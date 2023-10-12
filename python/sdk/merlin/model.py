@@ -1083,8 +1083,10 @@ class ModelVersion:
         :param protocol: protocol to be used for deploying the model (default: None)
         :return: VersionEndpoint object
         """
-        current_endpoint = self._get_deployed_endpoint()
         env_list = self._get_env_list()
+        target_env_name = _get_default_target_env_name(env_list) if environment_name is None else environment_name
+
+        current_endpoint = self._get_endpoint_in_environment(environment_name)
 
         target_deployment_mode = None
         target_protocol = None
@@ -1097,22 +1099,12 @@ class ModelVersion:
         # Get the currently deployed endpoint and if there's no deployed endpoint yet, use the default values for
         # non-nullable fields
         if current_endpoint is None:
-            # This ensures that _get_default_target_env_name does not throw an error if there are no default
-            # environments configured but a non-null environment_name is provided as an argument
-            target_env_name = _get_default_target_env_name(env_list) if environment_name is None else environment_name
             target_deployment_mode = DeploymentMode.SERVERLESS.value
             target_protocol = Protocol.HTTP_JSON.value
             target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
             target_autoscaling_policy = ModelVersion._get_default_autoscaling_policy(
                 deployment_mode.value if deployment_mode is not None else target_deployment_mode
             )
-
-        if environment_name is not None:
-            target_env_name = environment_name
-        elif current_endpoint is not None:
-            # when we are updating a deployment but environment_name is not specified, we reuse the existing endpoint's
-            # environment name
-            target_env_name = current_endpoint.environment_name
 
         if deployment_mode is not None:
             target_deployment_mode = deployment_mode.value
@@ -1573,14 +1565,15 @@ class ModelVersion:
     def _get_env_list(self) -> List[client.models.Environment]:
         return EnvironmentApi(self._api_client).environments_get()
 
-    def _get_deployed_endpoint(self) -> Optional[VersionEndpoint]:
+    def _get_endpoint_in_environment(self, environment_name: str) -> Optional[VersionEndpoint]:
         """
-        Return the FIRST endpoint of this model version that is RUNNING or SERVING.
+        Return the FIRST endpoint of this model version that is deployed in the environment specified
 
+        :param environment_name: environment name where the endpoint is deployed in
         :return: VersionEndpoint or None
         """
         for endpoint in self.version_endpoints:
-            if endpoint.status == Status.RUNNING or endpoint.status == Status.SERVING:
+            if endpoint.environment_name == environment_name:
                 return endpoint
         return None
 
