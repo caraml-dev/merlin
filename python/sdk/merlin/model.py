@@ -1086,7 +1086,7 @@ class ModelVersion:
         env_list = self._get_env_list()
         target_env_name = _get_default_target_env_name(env_list) if environment_name is None else environment_name
 
-        current_endpoint = self._get_endpoint_in_environment(environment_name)
+        current_endpoint = self._get_endpoint_in_environment(target_env_name)
 
         target_deployment_mode = None
         target_protocol = None
