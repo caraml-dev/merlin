@@ -1565,7 +1565,7 @@ class ModelVersion:
     def _get_env_list(self) -> List[client.models.Environment]:
         return EnvironmentApi(self._api_client).environments_get()
 
-    def _get_endpoint_in_environment(self, environment_name: str) -> Optional[VersionEndpoint]:
+    def _get_endpoint_in_environment(self, environment_name: Optional[str]) -> Optional[VersionEndpoint]:
         """
         Return the FIRST endpoint of this model version that is deployed in the environment specified
 
