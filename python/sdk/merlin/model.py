@@ -479,15 +479,7 @@ class Model:
         if target_env is None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
-            for env in env_list:
-                if env.is_default:
-                    target_env = env.name
-
-            if target_env is None:
-                raise ValueError(
-                    "Unable to find default environment, "
-                    "pass environment_name to the method"
-                )
+            target_env = _get_default_target_env_name(env_list)
 
         total_traffic = 0
         for version_endpoint, traffic_split in traffic_rule.items():
@@ -1107,7 +1099,7 @@ class ModelVersion:
         if current_endpoint is None:
             # This ensures that _get_default_target_env_name does not throw an error if there are no default
             # environments configured but a non-null environment_name is provided as an argument
-            target_env_name = ModelVersion._get_default_target_env_name(env_list) if environment_name is None else environment_name
+            target_env_name = _get_default_target_env_name(env_list) if environment_name is None else environment_name
             target_deployment_mode = DeploymentMode.SERVERLESS.value
             target_protocol = Protocol.HTTP_JSON.value
             target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
@@ -1593,17 +1585,6 @@ class ModelVersion:
         return None
 
     @staticmethod
-    def _get_default_target_env_name(env_list: List[client.models.Environment]) -> str:
-        target_env_name = None
-        for env in env_list:
-            if env.is_default:
-                target_env_name = env.name
-        if target_env_name is None:
-            raise ValueError("Unable to find default environment, "
-                             "pass environment_name to the method")
-        return target_env_name
-
-    @staticmethod
     def _get_default_resource_request(env_name: str, env_list: List[client.models.Environment]) -> client.ResourceRequest:
         resource_request = None
         for env in env_list:
@@ -1675,6 +1656,17 @@ class ModelVersion:
         return versionApi.models_model_id_versions_version_id_delete(
             int(self.model.id), int(self.id)
         )
+
+
+def _get_default_target_env_name(env_list: List[client.models.Environment]) -> str:
+    target_env_name = None
+    for env in env_list:
+        if env.is_default:
+            target_env_name = env.name
+    if target_env_name is None:
+        raise ValueError("Unable to find default environment, "
+                         "pass environment_name to the method")
+    return target_env_name
 
 
 def _process_conda_env(
