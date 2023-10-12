@@ -630,6 +630,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",

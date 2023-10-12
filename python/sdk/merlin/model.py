@@ -718,6 +718,13 @@ class ModelVersion:
         return self._mlflow_url
 
     @property
+    def version_endpoints(self) -> List[VersionEndpoint]:
+        # For backward compatibility, we call VersionEndpoint API if _version_endpoints empty.
+        if self._version_endpoints is None:
+            self._version_endpoints = self.list_endpoint()
+        return self._version_endpoints
+
+    @property
     def endpoint(self) -> Optional[VersionEndpoint]:
         """
         Return endpoint of this model version that is deployed in default
@@ -725,15 +732,9 @@ class ModelVersion:
 
         :return: VersionEndpoint or None
         """
-
-        # For backward compatibility, we called VersionEndpoint API if _version_endpoints empty.
-        if self._version_endpoints is None:
-            self._version_endpoints = self.list_endpoint()
-
-        for endpoint in self._version_endpoints:
+        for endpoint in self.version_endpoints:
             if endpoint.environment.is_default:
-                return VersionEndpoint(endpoint)
-
+                return endpoint
         return None
 
     @property
@@ -1090,7 +1091,7 @@ class ModelVersion:
         :param protocol: protocol to be used for deploying the model (default: None)
         :return: VersionEndpoint object
         """
-        current_endpoint = self.endpoint
+        current_endpoint = self._get_deployed_endpoint()
         env_list = self._get_env_list()
 
         target_deployment_mode = None
@@ -1104,7 +1105,9 @@ class ModelVersion:
         # Get the currently deployed endpoint and if there's no deployed endpoint yet, use the default values for
         # non-nullable fields
         if current_endpoint is None:
-            target_env_name = ModelVersion._get_default_target_env_name(env_list)
+            # This ensures that _get_default_target_env_name does not throw an error if there are no default
+            # environments configured but a non-null environment_name is provided as an argument
+            target_env_name = ModelVersion._get_default_target_env_name(env_list) if environment_name is None else environment_name
             target_deployment_mode = DeploymentMode.SERVERLESS.value
             target_protocol = Protocol.HTTP_JSON.value
             target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
@@ -1180,7 +1183,7 @@ class ModelVersion:
             protocol=target_protocol,
         )
         if current_endpoint is not None:
-            # This allows a serving deployment to be update while it is serving
+            # This allows a serving deployment to be updated while it is serving
             if current_endpoint.status == Status.SERVING:
                 endpoint.status = Status.SERVING.value
             else:
@@ -1577,6 +1580,17 @@ class ModelVersion:
 
     def _get_env_list(self) -> List[client.models.Environment]:
         return EnvironmentApi(self._api_client).environments_get()
+
+    def _get_deployed_endpoint(self) -> Optional[VersionEndpoint]:
+        """
+        Return the FIRST endpoint of this model version that is RUNNING or SERVING.
+
+        :return: VersionEndpoint or None
+        """
+        for endpoint in self.version_endpoints:
+            if endpoint.status == Status.RUNNING or endpoint.status == Status.SERVING:
+                return endpoint
+        return None
 
     @staticmethod
     def _get_default_target_env_name(env_list: List[client.models.Environment]) -> str:
