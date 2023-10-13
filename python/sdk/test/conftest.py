@@ -136,7 +136,7 @@ def requests():
     retry_strategy = Retry(
         total=5,
         status_forcelist=[429, 500, 502, 503, 504, 404],
-        method_whitelist=["POST"],
+        allowed_methods=["POST"],
         backoff_factor=0.5,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)

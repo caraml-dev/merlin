@@ -702,6 +702,7 @@ func TestDeployEndpoint(t *testing.T) {
 							EnvironmentName:      env.Name,
 							Namespace:            project.Name,
 							InferenceServiceName: iSvcName,
+							Protocol:             protocol.HttpJson,
 						},
 					},
 				},

@@ -479,15 +479,7 @@ class Model:
         if target_env is None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
-            for env in env_list:
-                if env.is_default:
-                    target_env = env.name
-
-            if target_env is None:
-                raise ValueError(
-                    "Unable to find default environment, "
-                    "pass environment_name to the method"
-                )
+            target_env = _get_default_target_env_name(env_list)
 
         total_traffic = 0
         for version_endpoint, traffic_split in traffic_rule.items():
@@ -718,6 +710,13 @@ class ModelVersion:
         return self._mlflow_url
 
     @property
+    def version_endpoints(self) -> List[VersionEndpoint]:
+        # For backward compatibility, we call VersionEndpoint API if _version_endpoints empty.
+        if self._version_endpoints is None:
+            self._version_endpoints = self.list_endpoint()
+        return self._version_endpoints
+
+    @property
     def endpoint(self) -> Optional[VersionEndpoint]:
         """
         Return endpoint of this model version that is deployed in default
@@ -725,15 +724,9 @@ class ModelVersion:
 
         :return: VersionEndpoint or None
         """
-
-        # For backward compatibility, we called VersionEndpoint API if _version_endpoints empty.
-        if self._version_endpoints is None:
-            self._version_endpoints = self.list_endpoint()
-
-        for endpoint in self._version_endpoints:
+        for endpoint in self.version_endpoints:
             if endpoint.environment.is_default:
-                return VersionEndpoint(endpoint)
-
+                return endpoint
         return None
 
     @property
@@ -1072,9 +1065,9 @@ class ModelVersion:
         env_vars: Dict[str, str] = None,
         transformer: Transformer = None,
         logger: Logger = None,
-        deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+        deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
-        protocol: Protocol = Protocol.HTTP_JSON,
+        protocol: Protocol = None,
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1085,99 +1078,80 @@ class ModelVersion:
         :param env_vars: List of environment variables to be passed to the model container.
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
-        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+        :param deployment_mode: mode of deployment for the endpoint (default: None)
         :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
-        :param protocol: protocol to be used for deploying the model (default: HTTP_JSON)
+        :param protocol: protocol to be used for deploying the model (default: None)
         :return: VersionEndpoint object
         """
+        env_list = self._get_env_list()
+        target_env_name = _get_default_target_env_name(env_list) if environment_name is None else environment_name
 
-        target_env_name = environment_name
-        if target_env_name is None:
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
-            for env in env_list:
-                if env.is_default:
-                    target_env_name = env.name
+        current_endpoint = self._get_endpoint_in_environment(target_env_name)
 
-            if target_env_name is None:
-                raise ValueError(
-                    "Unable to find default environment, "
-                    "pass environment_name to the method"
-                )
-
-        if resource_request is None:
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
-
-            for env in env_list:
-                if env.name == target_env_name:
-                    resource_request = ResourceRequest(
-                        env.default_resource_request.min_replica,
-                        env.default_resource_request.max_replica,
-                        env.default_resource_request.cpu_request,
-                        env.default_resource_request.memory_request,
-                    )
-
-            # This case is when the default resource request is not specified in the environment config
-            if resource_request is None:
-                raise ValueError("resource request must be specified")
-
-        resource_request.validate()
-
-        target_resource_request = client.ResourceRequest(
-            resource_request.min_replica,
-            resource_request.max_replica,
-            resource_request.cpu_request,
-            resource_request.memory_request,
-        )
-
-        if (
-            resource_request.gpu_request is not None
-            and resource_request.gpu_name is not None
-        ):
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
-
-            for env in env_list:
-                for gpu in env.gpus:
-                    if resource_request.gpu_name == gpu.name:
-                        if resource_request.gpu_request not in gpu.values:
-                            raise ValueError(
-                                f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
-                            )
-
-                        target_resource_request.gpu_name = resource_request.gpu_name
-                        target_resource_request.gpu_request = (
-                            resource_request.gpu_request
-                        )
-                        break
-
-        target_env_vars = []
-        if env_vars is not None:
-            if not isinstance(env_vars, dict):
-                raise ValueError(
-                    f"env_vars should be dictionary, got: {type(env_vars)}"
-                )
-
-            if len(env_vars) > 0:
-                for name, value in env_vars.items():
-                    target_env_vars.append(client.EnvVar(str(name), str(value)))
-
+        target_deployment_mode = None
+        target_protocol = None
+        target_resource_request = None
+        target_autoscaling_policy = None
+        target_env_vars: List[client.models.Environment] = []
         target_transformer = None
-        if transformer is not None:
-            target_transformer = self.create_transformer_spec(
-                transformer, target_env_name
+        target_logger = None
+
+        # Get the currently deployed endpoint and if there's no deployed endpoint yet, use the default values for
+        # non-nullable fields
+        if current_endpoint is None:
+            target_deployment_mode = DeploymentMode.SERVERLESS.value
+            target_protocol = Protocol.HTTP_JSON.value
+            target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
+            target_autoscaling_policy = ModelVersion._get_default_autoscaling_policy(
+                deployment_mode.value if deployment_mode is not None else target_deployment_mode
             )
 
-        target_logger = None
+        if deployment_mode is not None:
+            target_deployment_mode = deployment_mode.value
+
+        if protocol is not None:
+            target_protocol = protocol.value
+
+        if resource_request is not None:
+            resource_request.validate()
+            target_resource_request = client.ResourceRequest(
+                resource_request.min_replica,
+                resource_request.max_replica,
+                resource_request.cpu_request,
+                resource_request.memory_request,
+            )
+            if (
+                    resource_request.gpu_request is not None
+                    and resource_request.gpu_name is not None
+            ):
+                for env in env_list:
+                    for gpu in env.gpus:
+                        if resource_request.gpu_name == gpu.name:
+                            if resource_request.gpu_request not in gpu.values:
+                                raise ValueError(
+                                    f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
+                                )
+
+                            target_resource_request.gpu_name = resource_request.gpu_name
+                            target_resource_request.gpu_request = (
+                                resource_request.gpu_request
+                            )
+                            break
+
+        if autoscaling_policy is not None:
+            target_autoscaling_policy = client.AutoscalingPolicy(
+                autoscaling_policy.metrics_type.value,
+                autoscaling_policy.target_value,
+            )
+
+        if env_vars is not None:
+            target_env_vars = ModelVersion._add_env_vars(target_env_vars, env_vars)
+
+        if transformer is not None:
+            target_transformer = ModelVersion._create_transformer_spec(transformer, target_env_name, env_list)
+
         if logger is not None:
             target_logger = logger.to_logger_spec()
-
-        if autoscaling_policy is None:
-            if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
-                autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
-            else:
-                autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
 
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
@@ -1188,15 +1162,12 @@ class ModelVersion:
             env_vars=target_env_vars,
             transformer=target_transformer,
             logger=target_logger,
-            deployment_mode=deployment_mode.value,
-            autoscaling_policy=client.AutoscalingPolicy(
-                autoscaling_policy.metrics_type.value, autoscaling_policy.target_value
-            ),
-            protocol=protocol.value,
+            deployment_mode=target_deployment_mode,
+            autoscaling_policy=target_autoscaling_policy,
+            protocol=target_protocol,
         )
-        current_endpoint = self.endpoint
         if current_endpoint is not None:
-            # This allows a serving deployment to be update while it is serving
+            # This allows a serving deployment to be updated while it is serving
             if current_endpoint.status == Status.SERVING:
                 endpoint.status = Status.SERVING.value
             else:
@@ -1238,55 +1209,6 @@ class ModelVersion:
 
         return VersionEndpoint(endpoint, log_url)
 
-    def create_transformer_spec(
-        self, transformer: Transformer, target_env_name: str
-    ) -> client.Transformer:
-        resource_request = transformer.resource_request
-        if resource_request is None:
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
-            for env in env_list:
-                if env.name == target_env_name:
-                    resource_request = ResourceRequest(
-                        env.default_resource_request.min_replica,
-                        env.default_resource_request.max_replica,
-                        env.default_resource_request.cpu_request,
-                        env.default_resource_request.memory_request,
-                    )
-            # This case is when the default resource request is not specified in the environment config
-            if resource_request is None:
-                raise ValueError("resource request must be specified")
-
-        resource_request.validate()
-
-        target_resource_request = client.ResourceRequest(
-            resource_request.min_replica,
-            resource_request.max_replica,
-            resource_request.cpu_request,
-            resource_request.memory_request,
-        )
-
-        target_env_vars = []
-        if transformer.env_vars is not None:
-            if not isinstance(transformer.env_vars, dict):
-                raise ValueError(
-                    f"transformer.env_vars should be dictionary, got: {type(transformer.env_vars)}"
-                )
-
-            if len(transformer.env_vars) > 0:
-                for name, value in transformer.env_vars.items():
-                    target_env_vars.append(client.EnvVar(str(name), str(value)))
-
-        return client.Transformer(
-            transformer.enabled,
-            transformer.transformer_type.value,
-            transformer.image,
-            transformer.command,
-            transformer.args,
-            target_resource_request,
-            target_env_vars,
-        )
-
     def undeploy(self, environment_name: str = None):
         """
         Delete deployment of the model version
@@ -1295,8 +1217,7 @@ class ModelVersion:
         """
         target_env = environment_name
         if target_env is None:
-            env_api = EnvironmentApi(self._api_client)
-            env_list = env_api.environments_get()
+            env_list = self._get_env_list()
             for env in env_list:
                 if env.is_default:
                     target_env = env.name
@@ -1641,6 +1562,82 @@ class ModelVersion:
             return
         raise BuildError("Unknown", logs)
 
+    def _get_env_list(self) -> List[client.models.Environment]:
+        return EnvironmentApi(self._api_client).environments_get()
+
+    def _get_endpoint_in_environment(self, environment_name: Optional[str]) -> Optional[VersionEndpoint]:
+        """
+        Return the FIRST endpoint of this model version that is deployed in the environment specified
+
+        :param environment_name: environment name where the endpoint is deployed in
+        :return: VersionEndpoint or None
+        """
+        for endpoint in self.version_endpoints:
+            if endpoint.environment_name == environment_name:
+                return endpoint
+        return None
+
+    @staticmethod
+    def _get_default_resource_request(env_name: str, env_list: List[client.models.Environment]) -> client.ResourceRequest:
+        resource_request = None
+        for env in env_list:
+            if env.name == env_name:
+                resource_request = ResourceRequest(
+                    env.default_resource_request.min_replica,
+                    env.default_resource_request.max_replica,
+                    env.default_resource_request.cpu_request,
+                    env.default_resource_request.memory_request,
+                )
+
+        # This case is when the default resource request is not specified in the environment config
+        if resource_request is None:
+            raise ValueError("default resource request not found in the environment config")
+
+        resource_request.validate()
+        return client.ResourceRequest(
+            resource_request.min_replica, resource_request.max_replica,
+            resource_request.cpu_request, resource_request.memory_request)
+
+    @staticmethod
+    def _get_default_autoscaling_policy(deployment_mode: str) -> client.AutoscalingPolicy:
+        if deployment_mode == DeploymentMode.RAW_DEPLOYMENT.value:
+            autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+        else:
+            autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+        return client.AutoscalingPolicy(autoscaling_policy.metrics_type.value, autoscaling_policy.target_value)
+
+    @staticmethod
+    def _add_env_vars(target_env_vars, new_env_vars):
+        if not isinstance(new_env_vars, dict):
+            raise ValueError(
+                f"env_vars should be dictionary, got: {type(new_env_vars)}")
+
+        if len(new_env_vars) > 0:
+            for name, value in new_env_vars.items():
+                target_env_vars.append(
+                    client.EnvVar(str(name), str(value)))
+        return target_env_vars
+
+    @staticmethod
+    def _create_transformer_spec(transformer: Transformer, target_env_name: str, env_list: List[client.models.Environment]) -> client.Transformer:
+        resource_request = transformer.resource_request
+        if resource_request is None:
+            target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
+        else:
+            resource_request.validate()
+            target_resource_request = client.ResourceRequest(
+                resource_request.min_replica, resource_request.max_replica,
+                resource_request.cpu_request, resource_request.memory_request)
+
+        target_env_vars: List[client.models.Environment] = []
+        if transformer.env_vars is not None:
+            target_env_vars = ModelVersion._add_env_vars(target_env_vars, transformer.env_vars)
+
+        return client.Transformer(
+            transformer.enabled, transformer.transformer_type.value,
+            transformer.image, transformer.command, transformer.args,
+            target_resource_request, target_env_vars)
+
     def delete_model_version(self) -> int:
         """
         Delete this model version. Please note that any inactive related entity (endpoints and prediction jobs) will get deleted by this process.
@@ -1652,6 +1649,17 @@ class ModelVersion:
         return versionApi.models_model_id_versions_version_id_delete(
             int(self.model.id), int(self.id)
         )
+
+
+def _get_default_target_env_name(env_list: List[client.models.Environment]) -> str:
+    target_env_name = None
+    for env in env_list:
+        if env.is_default:
+            target_env_name = env.name
+    if target_env_name is None:
+        raise ValueError("Unable to find default environment, "
+                         "pass environment_name to the method")
+    return target_env_name
 
 
 def _process_conda_env(
