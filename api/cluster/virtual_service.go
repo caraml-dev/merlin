@@ -12,11 +12,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/mitchellh/copystructure"
 )
 
 const (
+	// TODO: Make these configurable
 	knativeIngressGateway          = "knative-serving/knative-ingress-gateway"
 	defaultIstioIngressGatewayHost = "istio-ingressgateway.istio-system.svc.cluster.local"
 )
@@ -24,6 +27,7 @@ const (
 type VirtualService struct {
 	Name                    string
 	Namespace               string
+	ModelName               string
 	VersionID               string
 	RevisionID              models.ID
 	Labels                  map[string]string
@@ -46,8 +50,9 @@ func NewVirtualService(modelService *models.Service, isvcURL string) (*VirtualSe
 	}
 
 	return &VirtualService{
-		Name:                    fmt.Sprintf("%s-%s", modelService.ModelName, modelService.ModelVersion),
+		Name:                    fmt.Sprintf("%s-%s-%s", modelService.ModelName, modelService.ModelVersion, models.VirtualServiceComponentType),
 		Namespace:               modelService.Namespace,
+		ModelName:               modelService.ModelName,
 		VersionID:               modelService.ModelVersion,
 		RevisionID:              modelService.RevisionID,
 		Labels:                  modelService.Metadata.ToLabel(),
@@ -61,14 +66,6 @@ func (cfg VirtualService) BuildVirtualServiceSpec() (*v1beta1.VirtualService, er
 	if err != nil {
 		return nil, err
 	}
-
-	// We manually create model version revision to avoid Kserve's modification to transformer url if the name contains "transformer"
-	// E.g. given a model version: std-transformer-s-157.namespace.caraml.dev
-	// The isvc.Status.URL would be: std-s-157-3-transformer.namespace.caraml.dev
-	// modelVersionRevisionHost, err := cfg.getModelVersionRevisionHost()
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	modelVersionRevisionHost := cfg.ModelVersionRevisionURL.Hostname()
 	modelVersionRevisionPath := cfg.ModelVersionRevisionURL.Path
@@ -101,18 +98,7 @@ func (cfg *VirtualService) getModelVersionHost() (string, error) {
 	}
 
 	domain := host[1]
-	return fmt.Sprintf("%s.%s.%s", cfg.Name, cfg.Namespace, domain), nil
-}
-
-// getModelVersionRevisionHost creates model version endpoint host based on version endpoint's url
-func (cfg *VirtualService) getModelVersionRevisionHost() (string, error) {
-	host := strings.Split(cfg.ModelVersionRevisionURL.Hostname(), fmt.Sprintf(".%s.", cfg.Namespace))
-	if len(host) != 2 {
-		return "", fmt.Errorf("invalid version endpoint url: %s. failed to split domain: %+v", cfg.ModelVersionRevisionURL, host)
-	}
-
-	domain := host[1]
-	return fmt.Sprintf("%s-%s.%s.%s", cfg.Name, cfg.RevisionID, cfg.Namespace, domain), nil
+	return fmt.Sprintf("%s-%s.%s.%s", cfg.ModelName, cfg.VersionID, cfg.Namespace, domain), nil
 }
 
 func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersionRevisionPath string) []*istiov1beta1.HTTPRoute {
@@ -141,32 +127,65 @@ func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersi
 		}
 
 	default:
-		// TODO: Remove setting Content-Type header after all clients are updated to set the header
-		routeDestinations[0].Headers.Request.Add = map[string]string{
-			"Content-Type": "application/json",
+		// Default to application/json if Content-Type header is empty
+		routeDestinationsWithContentType, err := copyRouteDestinations(routeDestinations)
+		if err != nil {
+			log.Errorf("failed to copy routeDestinations: %+v", err)
+			return nil
+		}
+		routeDestinationsWithContentType[0].Headers.Request.Set["Content-Type"] = "application/json"
+
+		uri := &istiov1beta1.StringMatch{
+			MatchType: &istiov1beta1.StringMatch_Exact{
+				Exact: fmt.Sprintf("/v1/models/%s-%s:predict", cfg.ModelName, cfg.VersionID),
+			},
+		}
+		rewrite := &istiov1beta1.HTTPRewrite{
+			Uri: fmt.Sprintf("%s:predict", modelVersionRevisionPath),
 		}
 
 		return []*istiov1beta1.HTTPRoute{
 			{
-				Route: routeDestinations,
 				Match: []*istiov1beta1.HTTPMatchRequest{
 					{
-						Uri: &istiov1beta1.StringMatch{
-							MatchType: &istiov1beta1.StringMatch_Exact{
-								Exact: fmt.Sprintf("/v1/models/%s:predict", cfg.Name),
-							},
+						Uri: uri,
+						Headers: map[string]*istiov1beta1.StringMatch{
+							"content-type": {},
 						},
 					},
 				},
-				Rewrite: &istiov1beta1.HTTPRewrite{
-					Uri: fmt.Sprintf("%s:predict", modelVersionRevisionPath),
+				Route:   routeDestinationsWithContentType,
+				Rewrite: rewrite,
+			},
+			{
+				Match: []*istiov1beta1.HTTPMatchRequest{
+					{
+						Uri: uri,
+					},
 				},
+				Route:   routeDestinations,
+				Rewrite: rewrite,
 			},
 			{
 				Route: routeDestinations,
 			},
 		}
 	}
+}
+
+// copyTopologySpreadConstraints copies the topology spread constraints using the service builder's as a template
+func copyRouteDestinations(src []*istiov1beta1.HTTPRouteDestination) ([]*istiov1beta1.HTTPRouteDestination, error) {
+	destRaw, err := copystructure.Copy(src)
+	if err != nil {
+		return nil, fmt.Errorf("error copying []*HTTPRouteDestination: %w", err)
+	}
+
+	dest, ok := destRaw.([]*istiov1beta1.HTTPRouteDestination)
+	if !ok {
+		return nil, fmt.Errorf("error in type assertion of copied []*HTTPRouteDestination interface: %w", err)
+	}
+
+	return dest, nil
 }
 
 func (c *controller) deployVirtualService(ctx context.Context, vsCfg *VirtualService) (*v1beta1.VirtualService, error) {
@@ -180,7 +199,11 @@ func (c *controller) deployVirtualService(ctx context.Context, vsCfg *VirtualSer
 		return nil, err
 	}
 
-	return c.istioClient.VirtualServices(vsSpec.Namespace).Patch(ctx, vsCfg.Name, types.ApplyPatchType, vsJSON, metav1.PatchOptions{FieldManager: "application/apply-patch"})
+	forceEnabled := true
+
+	return c.istioClient.
+		VirtualServices(vsSpec.Namespace).
+		Patch(ctx, vsCfg.Name, types.ApplyPatchType, vsJSON, metav1.PatchOptions{FieldManager: "application/apply-patch", Force: &forceEnabled})
 }
 
 func (c *controller) deleteVirtualService(ctx context.Context, name, namespace string) error {

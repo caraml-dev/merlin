@@ -30,6 +30,7 @@ const (
 	PredictorComponentType        = "predictor"
 	TransformerComponentType      = "transformer"
 	PDBComponentType              = "pdb" // Pod disruption budget
+	VirtualServiceComponentType   = "vs"
 	BatchJobDriverComponentType   = "batch_job_driver"
 	BatchJobExecutorComponentType = "batch_job_executor"
 )

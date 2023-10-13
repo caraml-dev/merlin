@@ -207,16 +207,13 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	if modelService.RevisionID > 1 {
 		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-			prevRevisionID := modelService.RevisionID - 1
-			prevIsvcName := models.CreateInferenceServiceName(modelService.ModelName, modelService.ModelVersion, prevRevisionID.String())
-
-			prevIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(prevIsvcName, metav1.GetOptions{})
+			currentIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.CurrentIsvcName, metav1.GetOptions{})
 			if err != nil && !kerrors.IsNotFound(err) {
 				log.Errorf("unable to check status of inference service %s %v", isvcName, err)
 				return nil, ErrUnableToGetInferenceServiceStatus
 			}
 
-			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, prevIsvc.Status.Components)
+			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, currentIsvc.Status.Components)
 		}
 	}
 
@@ -253,7 +250,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 
 	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
 
-	// Deploy virtual service
+	// Create / update virtual service
 	vsCfg, err := NewVirtualService(modelService, inferenceURL)
 	if err != nil {
 		log.Errorf("unable to initialize virtual service builder: %v", err)
@@ -270,13 +267,10 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		inferenceURL = fmt.Sprintf("http://%s/v1/models/%s-%s:predict", vs.Spec.Hosts[0], modelService.ModelName, modelService.ModelVersion)
 	}
 
-	if modelService.RevisionID > 1 {
-		prevRevisionID := modelService.RevisionID - 1
-		prevModelServiceName := models.CreateInferenceServiceName(modelService.ModelName, modelService.ModelVersion, prevRevisionID.String())
-		if err := c.deleteInferenceService(prevModelServiceName, modelService.Namespace); err != nil {
-			log.Warnf("unable to delete prevision revision %s with error %v", prevModelServiceName, err)
-			return nil, ErrUnableToDeleteInferenceService
-		}
+	// Delete previous inference service
+	if err := c.deleteInferenceService(modelService.CurrentIsvcName, modelService.Namespace); err != nil {
+		log.Warnf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
+		return nil, ErrUnableToDeleteInferenceService
 	}
 
 	return &models.Service{
@@ -309,7 +303,7 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 		}
 	}
 
-	vsName := fmt.Sprintf("%s-%s", modelService.ModelName, modelService.ModelVersion)
+	vsName := fmt.Sprintf("%s-%s-%s", modelService.ModelName, modelService.ModelVersion, models.VirtualServiceComponentType)
 	if err := c.deleteVirtualService(ctx, vsName, modelService.Namespace); err != nil {
 		log.Errorf("unable to delete virtual service %v", err)
 		return nil, ErrUnableToDeleteVirtualService

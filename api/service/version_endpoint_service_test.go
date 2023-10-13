@@ -22,9 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caraml-dev/merlin/pkg/autoscaling"
-	"github.com/caraml-dev/merlin/pkg/deployment"
-	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/google/uuid"
@@ -41,7 +38,10 @@ import (
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
 	imageBuilderMock "github.com/caraml-dev/merlin/pkg/imagebuilder/mocks"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer"
 	feastmocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
@@ -79,7 +79,7 @@ func TestDeployEndpoint(t *testing.T) {
 	model := &models.Model{Name: "model", Project: project}
 	version := &models.Version{ID: 1}
 
-	iSvcName := fmt.Sprintf("%s-%d", model.Name, version.ID)
+	iSvcName := fmt.Sprintf("%s-%d-0", model.Name, version.ID)
 
 	tests := []struct {
 		name             string

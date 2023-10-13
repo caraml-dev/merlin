@@ -128,6 +128,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		endpoint.Status = models.EndpointRunning
 	}
 	endpoint.ServiceName = svc.ServiceName
+	endpoint.InferenceServiceName = svc.Name
 	return nil
 }
 

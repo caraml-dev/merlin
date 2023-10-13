@@ -95,7 +95,7 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		VersionID:            version.ID,
 		RevisionID:           ID(0),
 		Namespace:            project.Name,
-		InferenceServiceName: fmt.Sprintf("%s-%s", model.Name, version.ID.String()),
+		InferenceServiceName: fmt.Sprintf("%s-%s-0", model.Name, version.ID.String()),
 		Status:               EndpointPending,
 		EnvironmentName:      env.Name,
 		Environment:          env,

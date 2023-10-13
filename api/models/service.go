@@ -46,6 +46,8 @@ type Service struct {
 	DeploymentMode    deployment.Mode
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy
 	Protocol          protocol.Protocol
+	// CurrentIsvcName is the name of the current running/serving InferenceService's revision
+	CurrentIsvcName string
 }
 
 func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
@@ -72,6 +74,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		DeploymentMode:    endpoint.DeploymentMode,
 		AutoscalingPolicy: endpoint.AutoscalingPolicy,
 		Protocol:          endpoint.Protocol,
+		CurrentIsvcName:   endpoint.InferenceServiceName,
 	}
 }
 
@@ -102,7 +105,10 @@ func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.L
 }
 
 func CreateInferenceServiceName(modelName, versionID, revisionID string) string {
-	return fmt.Sprintf("%s-%s-%s", modelName, versionID, revisionID)
+	if revisionID != "" && revisionID != "0" {
+		return fmt.Sprintf("%s-%s-%s", modelName, versionID, revisionID)
+	}
+	return fmt.Sprintf("%s-%s", modelName, versionID)
 }
 
 func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue protocol.Protocol) string {
