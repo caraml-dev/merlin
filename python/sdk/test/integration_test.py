@@ -1080,6 +1080,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     # Deploy using raw_deployment with CPU autoscaling policy
     endpoint = merlin.deploy(
         v1,
+        resource_request=merlin.ResourceRequest(1, 1, "123m", "234Mi"),
+        env_vars={"green": "TRUE"},
         autoscaling_policy=merlin.AutoscalingPolicy(
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
@@ -1091,6 +1093,12 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check the deployment configs of v1
+    assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.memory_request == "234Mi"
+    assert endpoint.env_vars == {"green": "TRUE"}
+    assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
 
     # Check the autoscaling policy of v1
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
@@ -1115,6 +1123,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     # Check that the endpoint remains the same
     assert endpoint.url == new_endpoint.url
+
+    # Check that the deployment configs of v2 have remained the same as those used in v1
+    assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.memory_request == "234Mi"
+    assert endpoint.env_vars == {"green": "TRUE"}
+    assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
+
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert new_endpoint.autoscaling_policy.target_value == 90
@@ -1124,3 +1139,60 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
 def deployment_mode_suffix(deployment_mode: DeploymentMode):
     return deployment_mode.value.lower()[0:1]
+
+
+@pytest.mark.integration
+def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
+    """
+    Test the `simulate` method of the `StandardTransformer` class.
+    """
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+
+    transformer_config_path = os.path.join(
+        "test/transformer", "standard_transformer_no_feast.yaml"
+    )
+    transformer = StandardTransformer(
+        config_file=transformer_config_path, enabled=False
+    )
+
+    payload = {
+        "drivers": [
+            # 1 Feb 2022, 00:00:00
+            {
+                "id": 1,
+                "name": "driver-1",
+                "vehicle": "motorcycle",
+                "previous_vehicle": "suv",
+                "rating": 4,
+                "ep_time": 1643673600,
+            },
+            # 30 Jan 2022, 00:00:00
+            {
+                "id": 2,
+                "name": "driver-2",
+                "vehicle": "sedan",
+                "previous_vehicle": "mpv",
+                "rating": 3,
+                "ep_time": 1643500800,
+            },
+        ],
+        "customer": {"id": 1111},
+    }
+
+    resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
+    resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
+
+    with open("test/transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
+        exp_resp_valid_wo_tracing = json.load(f)
+
+    with open("test/transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
+        exp_resp_valid_w_tracing = json.load(f)
+
+    assert isinstance(resp_wo_tracing, dict)
+    assert isinstance(resp_w_tracing, dict)
+    assert "response" in resp_wo_tracing.keys()
+    assert "response" in resp_w_tracing.keys()
+    assert "operation_tracing" not in resp_wo_tracing.keys()
+    assert "operation_tracing" in resp_w_tracing.keys()
+    assert resp_wo_tracing == exp_resp_valid_wo_tracing
+    assert resp_w_tracing == exp_resp_valid_w_tracing

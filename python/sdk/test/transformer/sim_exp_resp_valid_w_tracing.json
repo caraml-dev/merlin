@@ -1,0 +1,224 @@
+{
+  "response": {
+    "instances": {
+      "columns": [
+        "customer_id",
+        "name",
+        "rank",
+        "rating",
+        "vehicle",
+        "previous_vehicle",
+        "ep_time_x",
+        "ep_time_y"
+      ],
+      "data": [
+        [1111, "driver-2", 2.5, 0.5, 2, 3, 1, -4.100007228307977e-13],
+        [1111, "driver-1", -2.5, 0.75, 0, 1, 1, -6.364838707220068e-12]
+      ]
+    }
+  },
+  "operation_tracing": {
+    "preprocess": [
+      {
+        "input": null,
+        "output": { "customer_id": 1111 },
+        "spec": { "name": "customer_id", "jsonPath": "$.customer.id" },
+        "operation_type": "variable_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "driver_table": [
+            {
+              "ep_time": 1643673600,
+              "id": 1,
+              "name": "driver-1",
+              "previous_vehicle": "suv",
+              "rating": 4,
+              "row_number": 0,
+              "vehicle": "motorcycle"
+            },
+            {
+              "ep_time": 1643500800,
+              "id": 2,
+              "name": "driver-2",
+              "previous_vehicle": "mpv",
+              "rating": 3,
+              "row_number": 1,
+              "vehicle": "sedan"
+            }
+          ]
+        },
+        "spec": {
+          "name": "driver_table",
+          "baseTable": {
+            "fromJson": { "jsonPath": "$.drivers[*]", "addRowNumber": true }
+          }
+        },
+        "operation_type": "create_table_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "vehicle_mapping": "The result of this operation is on the transformer step that use this encoder"
+        },
+        "spec": {
+          "name": "vehicle_mapping",
+          "ordinalEncoderConfig": {
+            "defaultValue": "0",
+            "targetValueType": "INT",
+            "mapping": { "mpv": "3", "sedan": "2", "suv": "1" }
+          }
+        },
+        "operation_type": "encoder_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "daily_cycle": "The result of this operation is on the transformer step that use this encoder"
+        },
+        "spec": {
+          "name": "daily_cycle",
+          "cyclicalEncoderConfig": { "byEpochTime": { "periodType": "DAY" } }
+        },
+        "operation_type": "encoder_op"
+      },
+      {
+        "input": {
+          "driver_table": [
+            {
+              "ep_time": 1643673600,
+              "id": 1,
+              "name": "driver-1",
+              "previous_vehicle": "suv",
+              "rating": 4,
+              "row_number": 0,
+              "vehicle": "motorcycle"
+            },
+            {
+              "ep_time": 1643500800,
+              "id": 2,
+              "name": "driver-2",
+              "previous_vehicle": "mpv",
+              "rating": 3,
+              "row_number": 1,
+              "vehicle": "sedan"
+            }
+          ]
+        },
+        "output": {
+          "transformed_driver_table": [
+            {
+              "customer_id": 1111,
+              "ep_time_x": 1,
+              "ep_time_y": -4.100007228307977e-13,
+              "name": "driver-2",
+              "previous_vehicle": 3,
+              "rank": 2.5,
+              "rating": 0.5,
+              "vehicle": 2
+            },
+            {
+              "customer_id": 1111,
+              "ep_time_x": 1,
+              "ep_time_y": -6.364838707220068e-12,
+              "name": "driver-1",
+              "previous_vehicle": 1,
+              "rank": -2.5,
+              "rating": 0.75,
+              "vehicle": 0
+            }
+          ]
+        },
+        "spec": {
+          "inputTable": "driver_table",
+          "outputTable": "transformed_driver_table",
+          "steps": [
+            { "dropColumns": ["id"] },
+            { "sort": [{ "column": "row_number", "order": "DESC" }] },
+            { "renameColumns": { "row_number": "rank" } },
+            {
+              "updateColumns": [
+                { "column": "customer_id", "expression": "customer_id" }
+              ]
+            },
+            {
+              "scaleColumns": [
+                {
+                  "column": "rank",
+                  "standardScalerConfig": { "mean": 0.5, "std": 0.2 }
+                }
+              ]
+            },
+            {
+              "scaleColumns": [
+                {
+                  "column": "rating",
+                  "minMaxScalerConfig": { "min": 1, "max": 5 }
+                }
+              ]
+            },
+            {
+              "encodeColumns": [
+                {
+                  "columns": ["vehicle", "previous_vehicle"],
+                  "encoder": "vehicle_mapping"
+                },
+                { "columns": ["ep_time"], "encoder": "daily_cycle" }
+              ]
+            },
+            {
+              "selectColumns": [
+                "customer_id",
+                "name",
+                "rank",
+                "rating",
+                "vehicle",
+                "previous_vehicle",
+                "ep_time_x",
+                "ep_time_y"
+              ]
+            }
+          ]
+        },
+        "operation_type": "table_transform_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "instances": {
+            "columns": [
+              "customer_id",
+              "name",
+              "rank",
+              "rating",
+              "vehicle",
+              "previous_vehicle",
+              "ep_time_x",
+              "ep_time_y"
+            ],
+            "data": [
+              [1111, "driver-2", 2.5, 0.5, 2, 3, 1, -4.100007228307977e-13],
+              [1111, "driver-1", -2.5, 0.75, 0, 1, 1, -6.364838707220068e-12]
+            ]
+          }
+        },
+        "spec": {
+          "jsonTemplate": {
+            "fields": [
+              {
+                "fieldName": "instances",
+                "fromTable": {
+                  "tableName": "transformed_driver_table",
+                  "format": "SPLIT"
+                }
+              }
+            ]
+          }
+        },
+        "operation_type": "json_output_op"
+      }
+    ],
+    "postprocess": []
+  }
+}

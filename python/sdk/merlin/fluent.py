@@ -133,9 +133,9 @@ def set_model(model_name, model_type: ModelType = None):
     """
     _check_active_project()
     active_project_name = _active_project.name  # type: ignore
-    mdl = _merlin_client.get_or_create_model(model_name,  # type: ignore
-                                             active_project_name,
-                                             model_type)
+    mdl = _merlin_client.get_or_create_model(  # type: ignore
+        model_name, active_project_name, model_type
+    )
     global _active_model
     _active_model = mdl
 
@@ -276,12 +276,15 @@ def log_artifact(local_path: str, artifact_path: str = None):
     :param artifact_path: destination directory in artifact store
     """
     _check_active_model_version()
-    _active_model_version.log_artifact(local_path,  # type: ignore
-                                       artifact_path)
+    _active_model_version.log_artifact(local_path, artifact_path)  # type: ignore
 
 
-def log_pyfunc_model(model_instance: Any, conda_env: str, code_dir: List[str] = None,
-                     artifacts: Dict[str, str] = None):
+def log_pyfunc_model(
+    model_instance: Any,
+    conda_env: str,
+    code_dir: List[str] = None,
+    artifacts: Dict[str, str] = None,
+):
     """
     Upload PyFunc based model into artifact storage.
 
@@ -298,9 +301,9 @@ def log_pyfunc_model(model_instance: Any, conda_env: str, code_dir: List[str] = 
     :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
     """
     _check_active_model_version()
-    _active_model_version.log_pyfunc_model(model_instance,  # type: ignore
-                                           conda_env,
-                                           code_dir, artifacts)
+    _active_model_version.log_pyfunc_model(  # type: ignore
+        model_instance, conda_env, code_dir, artifacts
+    )
 
 
 def log_pytorch_model(model_dir: str, model_class_name: str = None):
@@ -311,8 +314,7 @@ def log_pytorch_model(model_dir: str, model_class_name: str = None):
     :param model_class_name: class name of PyTorch model. By default the model class name is 'PyTorchModel'
     """
     _check_active_model_version()
-    _active_model_version.log_pytorch_model(model_dir,  # type: ignore
-                                            model_class_name)
+    _active_model_version.log_pytorch_model(model_dir, model_class_name)  # type: ignore
 
 
 def log_model(model_dir):
@@ -326,10 +328,9 @@ def log_model(model_dir):
     _active_model_version.log_model(model_dir)  # type: ignore
 
 
-def log_custom_model(image: str,
-                     model_dir: str = None,
-                     command: str = "",
-                     args: str = ""):
+def log_custom_model(
+    image: str, model_dir: str = None, command: str = "", args: str = ""
+):
     """
     Upload model to artifact storage.
     This method is used to upload model for custom model type.
@@ -340,21 +341,22 @@ def log_custom_model(image: str,
     :param args: Arguments that needs to be specified when running docker
     """
     _check_active_model_version()
-    _active_model_version.log_custom_model(image=image, # type: ignore
-                                           model_dir=model_dir,
-                                           command=command,
-                                           args=args)
+    _active_model_version.log_custom_model(  # type: ignore
+        image=image, model_dir=model_dir, command=command, args=args
+    )
 
-def deploy(model_version: ModelVersion = None,
-           environment_name: str = None,
-           resource_request: ResourceRequest = None,
-           env_vars: Dict[str, str] = None,
-           transformer: Transformer = None,
-           logger: Logger = None,
-           deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
-           autoscaling_policy: AutoscalingPolicy = None,
-           protocol: Protocol = Protocol.HTTP_JSON
-           ) -> VersionEndpoint:
+
+def deploy(
+    model_version: ModelVersion = None,
+    environment_name: str = None,
+    resource_request: ResourceRequest = None,
+    env_vars: Dict[str, str] = None,
+    transformer: Transformer = None,
+    logger: Logger = None,
+    deployment_mode: DeploymentMode = None,
+    autoscaling_policy: AutoscalingPolicy = None,
+    protocol: Protocol = None,
+) -> VersionEndpoint:
     """
     Deploy a model version.
 
@@ -372,28 +374,31 @@ def deploy(model_version: ModelVersion = None,
     _check_active_client()
     if model_version is None:
         _check_active_model_version()
-        return _active_model_version.deploy(environment_name,  # type: ignore
-                                            resource_request,
-                                            env_vars,
-                                            transformer,
-                                            logger,
-                                            deployment_mode,
-                                            autoscaling_policy,
-                                            protocol)
+        return _active_model_version.deploy(  # type: ignore
+            environment_name,
+            resource_request,
+            env_vars,
+            transformer,
+            logger,
+            deployment_mode,
+            autoscaling_policy,
+            protocol,
+        )
 
-    return _merlin_client.deploy(model_version,  # type: ignore
-                                 environment_name,
-                                 resource_request,
-                                 env_vars,
-                                 transformer,
-                                 logger,
-                                 deployment_mode,
-                                 autoscaling_policy,
-                                 protocol)
+    return _merlin_client.deploy(  # type: ignore
+        model_version,
+        environment_name,
+        resource_request,
+        env_vars,
+        transformer,
+        logger,
+        deployment_mode,
+        autoscaling_policy,
+        protocol,
+    )
 
 
-def undeploy(model_version=None,
-             environment_name: str = None):
+def undeploy(model_version=None, environment_name: str = None):
     """
     Delete deployment of a model version.
 
@@ -408,8 +413,9 @@ def undeploy(model_version=None,
     _merlin_client.undeploy(model_version, environment_name)  # type: ignore
 
 
-def serve_traffic(traffic_rule: Dict['VersionEndpoint', int],
-                  environment_name: str = None) -> ModelEndpoint:
+def serve_traffic(
+    traffic_rule: Dict["VersionEndpoint", int], environment_name: str = None
+) -> ModelEndpoint:
     """
     Update traffic rule of the active model.
 
@@ -418,8 +424,7 @@ def serve_traffic(traffic_rule: Dict['VersionEndpoint', int],
     :return: ModelEndpoint
     """
     _check_active_model()
-    return _active_model.serve_traffic(traffic_rule,  # type: ignore
-                                       environment_name)
+    return _active_model.serve_traffic(traffic_rule, environment_name)  # type: ignore
 
 
 def stop_serving_traffic(environment_name: str = None):
@@ -453,7 +458,9 @@ def list_model_endpoints() -> List[ModelEndpoint]:
     return _active_model.list_endpoint()  # type: ignore
 
 
-def create_prediction_job(job_config: PredictionJobConfig, sync: bool = True) -> PredictionJob:
+def create_prediction_job(
+    job_config: PredictionJobConfig, sync: bool = True
+) -> PredictionJob:
     """
 
     :param sync:
@@ -470,14 +477,12 @@ def create_prediction_job(job_config: PredictionJobConfig, sync: bool = True) ->
 
 def _check_active_project():
     if _active_project is None:
-        raise Exception(
-            "Active project isn't set, use set_project(...) to set it")
+        raise Exception("Active project isn't set, use set_project(...) to set it")
 
 
 def _check_active_client():
     if _merlin_client is None:
-        raise Exception(
-            "URL is not set, use set_url(...) to set it")
+        raise Exception("URL is not set, use set_url(...) to set it")
 
 
 def _check_active_model():
@@ -488,5 +493,5 @@ def _check_active_model():
 def _check_active_model_version():
     if _active_model_version is None:
         raise Exception(
-            "Active model version isn't set, use new_model_version(...) to "
-            "create it")
+            "Active model version isn't set, use new_model_version(...) to " "create it"
+        )
