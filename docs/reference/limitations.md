@@ -40,7 +40,8 @@ Autoscaling is enabled for both staging and production environment. User can set
 
 This feature is only applicable when your autoscaling policy is set to either `RPS` or `Concurrency`."
 
-This feature is enabled for both production and staging environments. However, in the production environment, the default minimum number of replicas is set to 2. To utilize the "scaling down to zero" feature, users must explicitly set the minimum replica count to 0 during deployment.
+This feature is enabled for both production and staging environments. However, in the production environment, the default minimum number of replicas is set to 2. Note that, to utilise this feature, the minimum replicas for the deployment should be set to `0`.
+
 
 ### Logs
 
