@@ -106,7 +106,23 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig, currentReplicas DeploymentScale) (*kservev1beta1.InferenceService, error) {
 	applyDefaults(modelService, config)
 
-	annotations, err := createAnnotations(modelService, config, nil)
+	// Identify the desired initial scale of the new deployment
+	var initialScale *int
+	if currentReplicas.Predictor != nil {
+		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
+		// Set the desired scale of the new deployment by taking the max of the 2 values.
+		// Consider the transformer's scale only if it is also enabled in the new spec.
+		if modelService.Transformer != nil &&
+			modelService.Transformer.Enabled &&
+			currentReplicas.Transformer != nil &&
+			*currentReplicas.Transformer > *currentReplicas.Predictor {
+			initialScale = currentReplicas.Transformer
+		} else {
+			initialScale = currentReplicas.Predictor
+		}
+	}
+
+	annotations, err := createAnnotations(modelService, config, initialScale)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
 	}

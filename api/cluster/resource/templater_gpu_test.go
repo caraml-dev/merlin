@@ -143,6 +143,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -210,6 +211,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -337,6 +339,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -452,6 +455,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -511,6 +515,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -569,6 +574,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -634,6 +640,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -696,6 +703,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -765,6 +773,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -827,6 +836,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -985,6 +995,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.CPU,
 						knautoscaling.TargetAnnotationKey:                     "30",
@@ -1052,6 +1063,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
 						knautoscaling.TargetAnnotationKey:                     "150",
@@ -1119,6 +1131,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
 						knautoscaling.TargetAnnotationKey:                     "100",
@@ -1186,6 +1199,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
 						knautoscaling.TargetAnnotationKey:                     "2",
@@ -1253,6 +1267,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.RPS,
 						knautoscaling.TargetAnnotationKey:                     "10",
@@ -1315,6 +1330,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1379,6 +1395,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1438,6 +1455,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1509,6 +1527,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
