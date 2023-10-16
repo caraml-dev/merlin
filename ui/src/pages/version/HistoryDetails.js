@@ -3,6 +3,8 @@ import {
   EuiBadge,
   EuiButtonIcon,
   EuiCodeBlock,
+  EuiFlexGroup,
+  EuiFlexItem,
   EuiHealth,
   EuiInMemoryTable,
   EuiScreenReaderOnly,
@@ -20,19 +22,24 @@ const DeploymentStatus = ({ status, deployment, deployedRevision }) => {
   }
 
   if (status === "running" || status === "serving") {
-    if (deployment.idx === deployedRevision) {
+    if (deployment.idx === deployedRevision.idx) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
     return <EuiHealth color="default">Not Deployed</EuiHealth>;
+  } else if (status === "pending") {
+    return <EuiHealth color="gray">Pending</EuiHealth>;
   }
 };
 
-const RevisionPanel = ({ endpoint, deployments, deploymentsLoaded }) => {
+const RevisionPanel = ({ deployments, deploymentsLoaded }) => {
   const orderedDeployments = deployments
     .sort((a, b) => b.id - a.id)
     .map((d, idx) => ({ ...d, idx: deployments.length - idx - 1 }));
 
-  const deployedRevision = endpoint.revision_id;
+  const deployedRevision = orderedDeployments.find(
+    (deployment) =>
+      deployment.status === "running" || deployment.status === "serving"
+  );
 
   const canBeExpanded = (deployment) => {
     return deployment.error !== "";
@@ -70,23 +77,21 @@ const RevisionPanel = ({ endpoint, deployments, deploymentsLoaded }) => {
 
   const columns = [
     {
-      field: "idx",
-      name: "Revision",
-      render: (idx) => (
-        <EuiText
-          size={defaultTextSize}
-          style={{ display: "flex", alignItems: "center" }}
-        >
-          {idx}&nbsp;&nbsp;
-          {idx === deployedRevision && (
+      field: "updated_at",
+      name: "Deployment Time",
+      render: (date, deployment) => (
+        <>
+          <DateFromNow date={date} size={defaultTextSize} />
+          &nbsp;&nbsp;
+          {deployment.idx === deployedRevision.idx && (
             <EuiBadge color="default">Current</EuiBadge>
           )}
-        </EuiText>
+        </>
       ),
     },
     {
       field: "status",
-      name: "Status",
+      name: "Deployment Status",
       render: (status, deployment) => (
         <DeploymentStatus
           status={status}
@@ -94,11 +99,6 @@ const RevisionPanel = ({ endpoint, deployments, deploymentsLoaded }) => {
           deployedRevision={deployedRevision}
         />
       ),
-    },
-    {
-      field: "updated_at",
-      name: "Deployment Time",
-      render: (date) => <DateFromNow date={date} size={defaultTextSize} />,
     },
     {
       align: "right",
@@ -160,10 +160,14 @@ export const HistoryDetails = ({ model, version, endpoint }) => {
   );
 
   return (
-    <RevisionPanel
-      endpoint={endpoint}
-      deployments={deployments}
-      deploymentsLoaded={deploymentsLoaded}
-    />
+    <EuiFlexGroup>
+      <EuiFlexItem grow={3}>
+        <RevisionPanel
+          deployments={deployments}
+          deploymentsLoaded={deploymentsLoaded}
+        />
+      </EuiFlexItem>
+      <EuiFlexItem grow={1}></EuiFlexItem>
+    </EuiFlexGroup>
   );
 };
