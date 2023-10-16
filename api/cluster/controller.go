@@ -268,9 +268,11 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	// Delete previous inference service
-	if err := c.deleteInferenceService(modelService.CurrentIsvcName, modelService.Namespace); err != nil {
-		log.Warnf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
-		return nil, errors.Wrapf(ErrUnableToDeleteInferenceService, "unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
+	if modelService.CurrentIsvcName != "" {
+		if err := c.deleteInferenceService(modelService.CurrentIsvcName, modelService.Namespace); err != nil {
+			log.Warnf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
+			return nil, errors.Wrapf(ErrUnableToDeleteInferenceService, "unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
+		}
 	}
 
 	return &models.Service{
@@ -315,6 +317,10 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 
 func (c *controller) deleteInferenceService(serviceName string, namespace string) error {
 	gracePeriod := int64(deletionGracePeriodSecond)
+
+	if serviceName == "" {
+	}
+
 	err := c.kserveClient.InferenceServices(namespace).Delete(serviceName, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
 	if client.IgnoreNotFound(err) != nil {
 		return errors.Wrapf(err, "unable to delete inference service: %s %v", serviceName, err)
