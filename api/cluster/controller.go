@@ -317,10 +317,6 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 
 func (c *controller) deleteInferenceService(serviceName string, namespace string) error {
 	gracePeriod := int64(deletionGracePeriodSecond)
-
-	if serviceName == "" {
-	}
-
 	err := c.kserveClient.InferenceServices(namespace).Delete(serviceName, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
 	if client.IgnoreNotFound(err) != nil {
 		return errors.Wrapf(err, "unable to delete inference service: %s %v", serviceName, err)
