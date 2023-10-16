@@ -1080,6 +1080,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     # Deploy using raw_deployment with CPU autoscaling policy
     endpoint = merlin.deploy(
         v1,
+        resource_request=merlin.ResourceRequest(1, 1, "123m", "234Mi"),
+        env_vars={"green": "TRUE"},
         autoscaling_policy=merlin.AutoscalingPolicy(
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
@@ -1091,6 +1093,12 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check the deployment configs of v1
+    assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.memory_request == "234Mi"
+    assert endpoint.env_vars == {"green": "TRUE"}
+    assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
 
     # Check the autoscaling policy of v1
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
@@ -1115,6 +1123,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     # Check that the endpoint remains the same
     assert endpoint.url == new_endpoint.url
+
+    # Check that the deployment configs of v2 have remained the same as those used in v1
+    assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.memory_request == "234Mi"
+    assert endpoint.env_vars == {"green": "TRUE"}
+    assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
+
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert new_endpoint.autoscaling_policy.target_value == 90
