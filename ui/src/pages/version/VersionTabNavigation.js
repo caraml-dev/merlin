@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import { EuiIcon } from "@elastic/eui";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { EuiIcon } from "@elastic/eui";
 import { TabNavigation } from "../../components/TabNavigation";
 
 export const VersionTabNavigation = ({ endpoint, actions, selectedTab }) => {
@@ -24,11 +24,15 @@ export const VersionTabNavigation = ({ endpoint, actions, selectedTab }) => {
   const tabs = [
     {
       id: "details",
-      name: "Configuration"
+      name: "Configuration",
+    },
+    {
+      id: "history",
+      name: "History",
     },
     {
       id: "logs",
-      name: "Logs"
+      name: "Logs",
     },
     {
       id: "monitoring_dashboard_link",
@@ -39,8 +43,8 @@ export const VersionTabNavigation = ({ endpoint, actions, selectedTab }) => {
         </span>
       ),
       href: endpoint.monitoring_url,
-      target: "_blank"
-    }
+      target: "_blank",
+    },
   ];
 
   return (

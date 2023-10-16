@@ -105,10 +105,11 @@ func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.L
 }
 
 func CreateInferenceServiceName(modelName, versionID, revisionID string) string {
-	if revisionID != "" && revisionID != "0" {
-		return fmt.Sprintf("%s-%s-%s", modelName, versionID, revisionID)
+	if revisionID == "" || revisionID == "0" {
+		// This is for backward compatibility, when the endpoint / isvc name didn't include the revision number
+		return fmt.Sprintf("%s-%s", modelName, versionID)
 	}
-	return fmt.Sprintf("%s-%s", modelName, versionID)
+	return fmt.Sprintf("%s-%s-%s", modelName, versionID, revisionID)
 }
 
 func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue protocol.Protocol) string {

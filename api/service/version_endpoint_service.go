@@ -21,7 +21,6 @@ import (
 
 	"github.com/caraml-dev/merlin/cluster"
 	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -110,11 +109,13 @@ func (k *endpointService) FindByID(ctx context.Context, endpointUuid uuid.UUID) 
 }
 
 func (k *endpointService) DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
+	redeploy := true
 	// get existing endpoint or create a new one with default config
 	endpoint, _ := version.GetEndpointByEnvironmentName(environment.Name)
 	if endpoint == nil {
 		// create endpoint with default configurations
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig, newEndpoint.DeploymentMode)
+		redeploy = false
 	}
 
 	// override existing endpoint configuration with the user request
@@ -126,13 +127,17 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 	// Increment endpoint revision id
 	endpoint.RevisionID++
 
+	// save endpoint if not redeployment and set status to pending
+	if !redeploy {
+		endpoint.Status = models.EndpointPending
+		err = k.storage.Save(endpoint)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Copy to avoid race condition
 	tobeDeployedEndpoint := *endpoint
-	endpoint.Status = models.EndpointPending
-	err = k.storage.Save(endpoint)
-	if err != nil {
-		return nil, err
-	}
 
 	if err := k.jobProducer.EnqueueJob(&queue.Job{
 		Name: ModelServiceDeployment,
@@ -145,12 +150,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 			},
 		},
 	}); err != nil {
-		// if error enqueue job, mark endpoint status to failed
-		endpoint.Status = models.EndpointFailed
-		if err := k.storage.Save(endpoint); err != nil {
-			log.Errorf("error to update endpoint %s status to failed: %v", endpoint.ID, err)
-		}
-		return nil, err
+		return nil, fmt.Errorf("failed to enqueue model service deployment job: %v", err)
 	}
 
 	return endpoint, nil

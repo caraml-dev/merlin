@@ -15,7 +15,6 @@
 package models
 
 import (
-	"fmt"
 	"net/url"
 
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
@@ -90,20 +89,19 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 	}
 
 	ve := &VersionEndpoint{
-		ID:                   id,
-		VersionModelID:       version.ModelID,
-		VersionID:            version.ID,
-		RevisionID:           ID(0),
-		Namespace:            project.Name,
-		InferenceServiceName: fmt.Sprintf("%s-%s-0", model.Name, version.ID.String()),
-		Status:               EndpointPending,
-		EnvironmentName:      env.Name,
-		Environment:          env,
-		ResourceRequest:      env.DefaultResourceRequest,
-		DeploymentMode:       deploymentMode,
-		AutoscalingPolicy:    autoscalingPolicy,
-		EnvVars:              envVars,
-		Protocol:             protocol.HttpJson,
+		ID:                id,
+		VersionModelID:    version.ModelID,
+		VersionID:         version.ID,
+		RevisionID:        ID(0),
+		Namespace:         project.Name,
+		Status:            EndpointPending,
+		EnvironmentName:   env.Name,
+		Environment:       env,
+		ResourceRequest:   env.DefaultResourceRequest,
+		DeploymentMode:    deploymentMode,
+		AutoscalingPolicy: autoscalingPolicy,
+		EnvVars:           envVars,
+		Protocol:          protocol.HttpJson,
 	}
 
 	if monitoringConfig.MonitoringEnabled {

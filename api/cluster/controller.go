@@ -204,7 +204,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 
 	// Get current scale of the existing deployment
 	deploymentScale := resource.DeploymentScale{}
-	if modelService.RevisionID > 1 {
+	if modelService.CurrentIsvcName != "" {
 		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 			currentIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.CurrentIsvcName, metav1.GetOptions{})
@@ -274,11 +274,12 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	return &models.Service{
-		Name:        s.Name,
-		Namespace:   s.Namespace,
-		ServiceName: s.Status.URL.Host,
-		URL:         inferenceURL,
-		Metadata:    modelService.Metadata,
+		Name:            s.Name,
+		Namespace:       s.Namespace,
+		ServiceName:     s.Status.URL.Host,
+		URL:             inferenceURL,
+		Metadata:        modelService.Metadata,
+		CurrentIsvcName: s.Name,
 	}, nil
 }
 

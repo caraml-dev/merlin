@@ -23,7 +23,7 @@ var deploymentCounter = prometheus.NewCounterVec(
 		Namespace: "merlin_api",
 		Help:      "Number of deployment",
 	},
-	[]string{"project", "model", "status"},
+	[]string{"project", "model", "status", "redeploy"},
 )
 
 var dataArgKey = "data"
@@ -80,10 +80,19 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	model.Project = project
 	log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.ID)
 
+	deploymentStatus := models.EndpointFailed
+	isRedeployment := false
+
 	// copy endpoint to avoid race condition
 	endpoint.Status = models.EndpointFailed
+	// if inference service name is not empty, it means we are redeploying the endpoint and the endpoint is already running/serving
+	if endpoint.InferenceServiceName != "" {
+		isRedeployment = true
+		endpoint.Status = endpointArg.Status
+	}
+
 	defer func() {
-		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(endpoint.Status)).Inc()
+		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(deploymentStatus), fmt.Sprint(isRedeployment)).Inc()
 
 		// record the deployment result
 		if _, err := depl.DeploymentStorage.Save(&models.Deployment{
@@ -97,6 +106,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 			log.Warnf("unable to insert deployment history", err)
 		}
 
+		// record the version endpoint result
 		if err := depl.Storage.Save(endpoint); err != nil {
 			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 		}
@@ -128,7 +138,9 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		endpoint.Status = models.EndpointRunning
 	}
 	endpoint.ServiceName = svc.ServiceName
-	endpoint.InferenceServiceName = svc.Name
+	endpoint.InferenceServiceName = svc.CurrentIsvcName
+
+	deploymentStatus = endpoint.Status
 	return nil
 }
 
