@@ -516,6 +516,14 @@ class TestModelVersion:
 
     @responses.activate
     def test_deploy_default_env(self, version):
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         # no default environment
         responses.add(
             "GET",
@@ -622,6 +630,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -688,6 +704,14 @@ class TestModelVersion:
 
     @responses.activate
     def test_undeploy_default_env(self, version):
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         # no default environment
         responses.add(
             "GET",
