@@ -145,6 +145,7 @@ func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersi
 		}
 
 		return []*istiov1beta1.HTTPRoute{
+			// For request to the Predict API without Content-Type header, set the header to application/json
 			{
 				Match: []*istiov1beta1.HTTPMatchRequest{
 					{
@@ -157,6 +158,7 @@ func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersi
 				Route:   routeDestinationsWithContentType,
 				Rewrite: rewrite,
 			},
+			// For request to the Predict API with Content-Type header, forward the request to the model version revision
 			{
 				Match: []*istiov1beta1.HTTPMatchRequest{
 					{
@@ -166,6 +168,9 @@ func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersi
 				Route:   routeDestinations,
 				Rewrite: rewrite,
 			},
+			// For other request (e.g. List Models API), forward the request
+			// Note that we are currently using Kserve V1 Inference protocol (https://kserve.github.io/website/0.11/modelserving/data_plane/v1_protocol/),
+			// and we are not using API other than Predict API, this route is used as fallback.
 			{
 				Route: routeDestinations,
 			},
