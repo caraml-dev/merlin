@@ -2211,7 +2211,7 @@ func TestListContainers(t *testing.T) {
 				[]*models.Container{
 					{
 						Name:       "user-container",
-						PodName:    "mymodel-2-predictor-hlqgv-deployment-6f478cbc67-mp7zf",
+						PodName:    "mymodel-2-r1-predictor-hlqgv-deployment-6f478cbc67-mp7zf",
 						Namespace:  project.Name,
 						Cluster:    env.Cluster,
 						GcpProject: env.GcpProject,
@@ -2243,7 +2243,7 @@ func TestListContainers(t *testing.T) {
 				[]*models.Container{
 					{
 						Name:       "user-container",
-						PodName:    "mymodel-2-predictor-hlqgv-deployment-6f478cbc67-mp7zf",
+						PodName:    "mymodel-2-r1-predictor-hlqgv-deployment-6f478cbc67-mp7zf",
 						Namespace:  project.Name,
 						Cluster:    env.Cluster,
 						GcpProject: env.GcpProject,
@@ -2260,7 +2260,7 @@ func TestListContainers(t *testing.T) {
 			Return(tt.mock.imageBuilderContainer, nil)
 
 		envController := &clusterMock.Controller{}
-		envController.On("GetContainers", context.Background(), "my-project", "serving.kserve.io/inferenceservice=model-1-1").
+		envController.On("GetContainers", context.Background(), "my-project", "serving.kserve.io/inferenceservice=model-1-r1").
 			Return(tt.mock.modelContainers, nil)
 
 		controllers := map[string]cluster.Controller{env.Name: envController}

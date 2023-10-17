@@ -26,7 +26,7 @@ func TestOnlineInferencePodLabelSelector(t *testing.T) {
 	versionID := "1"
 	revisionID := "1"
 	result := OnlineInferencePodLabelSelector(modelName, versionID, revisionID)
-	assert.Equal(t, "serving.kserve.io/inferenceservice=my-model-1-1", result)
+	assert.Equal(t, "serving.kserve.io/inferenceservice=my-model-1-r1", result)
 }
 
 func TestBatchInferencePodLabelSelector(t *testing.T) {

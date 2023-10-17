@@ -27,6 +27,10 @@ import (
 	"knative.dev/pkg/apis"
 )
 
+const (
+	revisionPrefix = "r"
+)
+
 type Service struct {
 	Name              string
 	ModelName         string
@@ -109,7 +113,7 @@ func CreateInferenceServiceName(modelName, versionID, revisionID string) string 
 		// This is for backward compatibility, when the endpoint / isvc name didn't include the revision number
 		return fmt.Sprintf("%s-%s", modelName, versionID)
 	}
-	return fmt.Sprintf("%s-%s-%s", modelName, versionID, revisionID)
+	return fmt.Sprintf("%s-%s-%s%s", modelName, versionID, revisionPrefix, revisionID)
 }
 
 func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue protocol.Protocol) string {
