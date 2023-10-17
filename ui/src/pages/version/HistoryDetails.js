@@ -16,13 +16,21 @@ import { useMerlinApi } from "../../hooks/useMerlinApi";
 
 const defaultTextSize = "s";
 
-const DeploymentStatus = ({ status, deployment, deployedRevision }) => {
+const DeploymentStatus = ({
+  status,
+  deployment,
+  deployedRevision,
+  endpointStatus,
+}) => {
   if (deployment.error !== "") {
     return <EuiHealth color="danger">Failed</EuiHealth>;
   }
 
   if (status === "running" || status === "serving") {
-    if (deployment.id === deployedRevision.id) {
+    if (
+      deployment.id === deployedRevision.id &&
+      (endpointStatus === "running" || endpointStatus === "serving")
+    ) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
     return <EuiHealth color="default">Not Deployed</EuiHealth>;
@@ -31,7 +39,7 @@ const DeploymentStatus = ({ status, deployment, deployedRevision }) => {
   }
 };
 
-const RevisionPanel = ({ deployments, deploymentsLoaded }) => {
+const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
   const orderedDeployments = deployments.sort((a, b) => b.id - a.id);
 
   const deployedRevision = orderedDeployments.find(
@@ -96,6 +104,7 @@ const RevisionPanel = ({ deployments, deploymentsLoaded }) => {
           status={status}
           deployment={deployment}
           deployedRevision={deployedRevision}
+          endpointStatus={endpoint.status}
         />
       ),
     },
@@ -164,6 +173,7 @@ export const HistoryDetails = ({ model, version, endpoint }) => {
         <RevisionPanel
           deployments={deployments}
           deploymentsLoaded={deploymentsLoaded}
+          endpoint={endpoint}
         />
       </EuiFlexItem>
       <EuiFlexItem grow={1}></EuiFlexItem>
