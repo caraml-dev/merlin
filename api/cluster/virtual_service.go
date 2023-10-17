@@ -178,6 +178,18 @@ func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersi
 	}
 }
 
+func (cfg *VirtualService) getInferenceURL(vs *v1beta1.VirtualService) string {
+	modelVersionHost := vs.Spec.Hosts[0]
+
+	switch cfg.Protocol {
+	case protocol.UpiV1:
+		// return only host name
+		return modelVersionHost
+	default:
+		return fmt.Sprintf("http://%s/v1/models/%s-%s:predict", modelVersionHost, cfg.ModelName, cfg.VersionID)
+	}
+}
+
 // copyTopologySpreadConstraints copies the topology spread constraints using the service builder's as a template
 func copyRouteDestinations(src []*istiov1beta1.HTTPRouteDestination) ([]*istiov1beta1.HTTPRouteDestination, error) {
 	destRaw, err := copystructure.Copy(src)

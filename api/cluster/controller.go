@@ -263,8 +263,8 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		return nil, errors.Wrapf(ErrUnableToCreateVirtualService, "unable to create virtual service: %v", err)
 	}
 
-	if len(vs.Spec.Hosts) > 0 {
-		inferenceURL = fmt.Sprintf("http://%s/v1/models/%s-%s:predict", vs.Spec.Hosts[0], modelService.ModelName, modelService.ModelVersion)
+	if vs != nil && len(vs.Spec.Hosts) > 0 {
+		inferenceURL = vsCfg.getInferenceURL(vs)
 	}
 
 	// Delete previous inference service

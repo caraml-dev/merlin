@@ -22,7 +22,7 @@ const DeploymentStatus = ({ status, deployment, deployedRevision }) => {
   }
 
   if (status === "running" || status === "serving") {
-    if (deployment.idx === deployedRevision.idx) {
+    if (deployment.id === deployedRevision.id) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
     return <EuiHealth color="default">Not Deployed</EuiHealth>;
@@ -32,14 +32,12 @@ const DeploymentStatus = ({ status, deployment, deployedRevision }) => {
 };
 
 const RevisionPanel = ({ deployments, deploymentsLoaded }) => {
-  const orderedDeployments = deployments
-    .sort((a, b) => b.id - a.id)
-    .map((d, idx) => ({ ...d, idx: deployments.length - idx - 1 }));
+  const orderedDeployments = deployments.sort((a, b) => b.id - a.id);
 
   const deployedRevision = orderedDeployments.find(
     (deployment) =>
       deployment.status === "running" || deployment.status === "serving"
-  );
+  ) || { id: null };
 
   const canBeExpanded = (deployment) => {
     return deployment.error !== "";
@@ -83,9 +81,10 @@ const RevisionPanel = ({ deployments, deploymentsLoaded }) => {
         <>
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
-          {deployment.idx === deployedRevision.idx && (
+          {deployment.id === deployedRevision.id && (
             <EuiBadge color="default">Current</EuiBadge>
           )}
+          {/* {JSON.stringify(deployment.id)} */}
         </>
       ),
     },
