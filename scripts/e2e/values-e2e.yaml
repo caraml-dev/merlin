@@ -81,7 +81,7 @@ environmentConfigs:
       min_replica: 0
       max_replica: 1
       cpu_request: "50m"
-      memory_request: "128Mi"
+      memory_request: "200Mi"
     default_transformer_config:
       min_replica: 0
       max_replica: 1

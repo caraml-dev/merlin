@@ -209,8 +209,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 			currentIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.CurrentIsvcName, metav1.GetOptions{})
 			if err != nil && !kerrors.IsNotFound(err) {
-				log.Errorf("unable to check status of inference service %s %v", isvcName, err)
-				return nil, ErrUnableToGetInferenceServiceStatus
+				return nil, errors.Wrapf(ErrUnableToGetInferenceServiceStatus, "unable to check status of inference service %s: %v", isvcName, err)
 			}
 
 			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, currentIsvc.Status.Components)
@@ -245,7 +244,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			log.Warnf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
-		return nil, errors.Wrapf(ErrUnableToCreatePDB, "unable to get inference service status %s: %v", isvcName, err)
+		return nil, errors.Wrapf(ErrUnableToGetInferenceServiceStatus, "unable to get inference service status %s: %v", isvcName, err)
 	}
 
 	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
