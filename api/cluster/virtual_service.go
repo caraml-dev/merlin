@@ -127,7 +127,6 @@ func (cfg *VirtualService) createHttpRoutes(modelVersionRevisionHost, modelVersi
 		}
 
 	default:
-		// Default to application/json if Content-Type header is empty
 		routeDestinationsWithContentType, err := copyRouteDestinations(routeDestinations)
 		if err != nil {
 			log.Errorf("failed to copy routeDestinations: %+v", err)

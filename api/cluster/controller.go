@@ -197,7 +197,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	_, err := c.namespaceCreator.CreateNamespace(ctx, modelService.Namespace)
 	if err != nil {
 		log.Errorf("unable to create namespace %s %v", modelService.Namespace, err)
-		return nil, ErrUnableToCreateNamespace
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateNamespace, modelService.Namespace))
 	}
 
 	isvcName := modelService.Name
@@ -209,7 +209,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 			currentIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.CurrentIsvcName, metav1.GetOptions{})
 			if err != nil && !kerrors.IsNotFound(err) {
-				return nil, errors.Wrapf(ErrUnableToGetInferenceServiceStatus, "unable to check status of inference service %s: %v", isvcName, err)
+				return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToGetInferenceServiceStatus, isvcName))
 			}
 
 			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, currentIsvc.Status.Components)
@@ -220,20 +220,20 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	spec, err := c.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, c.deploymentConfig, deploymentScale)
 	if err != nil {
 		log.Errorf("unable to create inference service spec %s: %v", isvcName, err)
-		return nil, errors.Wrapf(ErrUnableToCreateInferenceService, "unable to create inference service spec %s: %v", isvcName, err)
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
 	}
 
 	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
 	if err != nil {
 		log.Errorf("unable to create inference service %s: %v", isvcName, err)
-		return nil, errors.Wrapf(ErrUnableToCreateInferenceService, "unable to create inference service %s: %v", isvcName, err)
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
 	}
 
 	if c.deploymentConfig.PodDisruptionBudget.Enabled {
 		pdbs := createPodDisruptionBudgets(modelService, c.deploymentConfig.PodDisruptionBudget)
 		if err := c.deployPodDisruptionBudgets(ctx, pdbs); err != nil {
 			log.Errorf("unable to create pdb: %v", err)
-			return nil, errors.Wrapf(ErrUnableToCreatePDB, "unable to create pdb: %v", err)
+			return nil, errors.Wrapf(err, fmt.Sprintf("%v", ErrUnableToCreatePDB))
 		}
 	}
 
@@ -241,10 +241,10 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	if err != nil {
 		// remove created inferenceservice when got error
 		if err := c.deleteInferenceService(isvcName, modelService.Namespace); err != nil {
-			log.Warnf("unable to delete inference service %s with error %v", isvcName, err)
+			log.Errorf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
-		return nil, errors.Wrapf(ErrUnableToGetInferenceServiceStatus, "unable to get inference service status %s: %v", isvcName, err)
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToGetInferenceServiceStatus, isvcName))
 	}
 
 	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
@@ -253,13 +253,13 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	vsCfg, err := NewVirtualService(modelService, inferenceURL)
 	if err != nil {
 		log.Errorf("unable to initialize virtual service builder: %v", err)
-		return nil, errors.Wrapf(ErrUnableToCreateVirtualService, "unable to initialize virtual service builder: %v", err)
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v", ErrUnableToCreateVirtualService))
 	}
 
 	vs, err := c.deployVirtualService(ctx, vsCfg)
 	if err != nil {
 		log.Errorf("unable to create virtual service: %v", err)
-		return nil, errors.Wrapf(ErrUnableToCreateVirtualService, "unable to create virtual service: %v", err)
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateVirtualService, vsCfg.Name))
 	}
 
 	if vs != nil && len(vs.Spec.Hosts) > 0 {
@@ -269,8 +269,8 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	// Delete previous inference service
 	if modelService.CurrentIsvcName != "" {
 		if err := c.deleteInferenceService(modelService.CurrentIsvcName, modelService.Namespace); err != nil {
-			log.Warnf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
-			return nil, errors.Wrapf(ErrUnableToDeleteInferenceService, "unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
+			log.Errorf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
+			return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToDeletePreviousInferenceService, modelService.CurrentIsvcName))
 		}
 	}
 
@@ -305,10 +305,12 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 		}
 	}
 
-	vsName := fmt.Sprintf("%s-%s-%s", modelService.ModelName, modelService.ModelVersion, models.VirtualServiceComponentType)
-	if err := c.deleteVirtualService(ctx, vsName, modelService.Namespace); err != nil {
-		log.Errorf("unable to delete virtual service %v", err)
-		return nil, ErrUnableToDeleteVirtualService
+	if modelService.RevisionID > 1 {
+		vsName := fmt.Sprintf("%s-%s-%s", modelService.ModelName, modelService.ModelVersion, models.VirtualServiceComponentType)
+		if err := c.deleteVirtualService(ctx, vsName, modelService.Namespace); err != nil {
+			log.Errorf("unable to delete virtual service %v", err)
+			return nil, ErrUnableToDeleteVirtualService
+		}
 	}
 
 	return modelService, nil

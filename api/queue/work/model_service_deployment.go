@@ -85,8 +85,9 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	endpoint.RevisionID++
 	endpoint.Status = models.EndpointFailed
 
-	// if inference service name is not empty, it means we are redeploying the endpoint and the endpoint is already running/serving
-	if endpoint.InferenceServiceName != "" {
+	// for backward compatibility, if inference service name is not empty, it means we are redeploying the "legacy" endpoint that created prior to model version revision introduction
+	// for future compatibility, if endpoint.RevisionID > 1, it means we are redeploying the endpoint that created after model version revision introduction
+	if endpoint.InferenceServiceName != "" || endpoint.RevisionID > 1 {
 		isRedeployment = true
 		endpoint.Status = endpointArg.Status
 	}

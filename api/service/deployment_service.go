@@ -20,5 +20,6 @@ type deploymentService struct {
 }
 
 func (service *deploymentService) ListDeployments(modelID, versionID, endpointUUID string) ([]*models.Deployment, error) {
+	// TODO: Add pagination
 	return service.storage.ListInModelVersion(modelID, versionID, endpointUUID)
 }
