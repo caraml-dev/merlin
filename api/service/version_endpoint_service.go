@@ -21,7 +21,6 @@ import (
 
 	"github.com/caraml-dev/merlin/cluster"
 	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -50,7 +49,7 @@ type EndpointsService interface {
 	// CountEndpoints count number of endpoint created from a model in an environment
 	CountEndpoints(ctx context.Context, environment *models.Environment, model *models.Model) (int, error)
 	// ListContainers list all container associated with an endpoint
-	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpointUuid uuid.UUID) ([]*models.Container, error)
+	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) ([]*models.Container, error)
 	// DeleteEndpoint hard delete endpoint data, including the relation from deployment
 	DeleteEndpoint(version *models.Version, endpoint *models.VersionEndpoint) error
 }
@@ -142,12 +141,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 			},
 		},
 	}); err != nil {
-		// if error enqueue job, mark endpoint status to failed
-		endpoint.Status = models.EndpointFailed
-		if err := k.storage.Save(endpoint); err != nil {
-			log.Errorf("error to update endpoint %s status to failed: %v", endpoint.ID, err)
-		}
-		return nil, err
+		return nil, fmt.Errorf("failed to enqueue model service deployment job: %w", err)
 	}
 
 	return endpoint, nil
@@ -251,7 +245,10 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	}
 
 	modelService := &models.Service{
-		Name:            models.CreateInferenceServiceName(model.Name, version.ID.String()),
+		Name:            models.CreateInferenceServiceName(model.Name, version.ID.String(), endpoint.RevisionID.String()),
+		ModelName:       model.Name,
+		ModelVersion:    version.ID.String(),
+		RevisionID:      endpoint.RevisionID,
 		Namespace:       model.Project.Name,
 		ResourceRequest: endpoint.ResourceRequest,
 		Transformer:     endpoint.Transformer,
@@ -277,8 +274,8 @@ func (k *endpointService) CountEndpoints(ctx context.Context, environment *model
 }
 
 // ListContainers list all containers belong to the given version endpoint
-func (k *endpointService) ListContainers(ctx context.Context, model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error) {
-	ve, err := k.storage.Get(id)
+func (k *endpointService) ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) ([]*models.Container, error) {
+	ve, err := k.storage.Get(endpoint.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -298,14 +295,16 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 		containers = append(containers, imgBuilderContainers...)
 	}
 
-	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String()))
+	labelSelector := models.OnlineInferencePodLabelSelector(model.Name, version.ID.String(), endpoint.RevisionID.String())
+
+	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, labelSelector)
 	if err != nil {
 		return nil, err
 	}
 	containers = append(containers, modelContainers...)
 
 	for _, container := range containers {
-		container.VersionEndpointID = id
+		container.VersionEndpointID = endpoint.ID
 	}
 
 	return containers, nil

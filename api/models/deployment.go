@@ -20,8 +20,8 @@ import "github.com/google/uuid"
 type Deployment struct {
 	ID                ID             `json:"id"`
 	ProjectID         ID             `json:"project_id"`
-	VersionID         ID             `json:"version_id"`
 	VersionModelID    ID             `json:"model_id"`
+	VersionID         ID             `json:"version_id"`
 	VersionEndpointID uuid.UUID      `json:"version_endpoint_id"`
 	Status            EndpointStatus `json:"status"`
 	Error             string         `json:"error"`

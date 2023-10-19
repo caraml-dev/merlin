@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/caraml-dev/merlin/cluster"
 	"github.com/caraml-dev/merlin/log"
@@ -23,7 +24,7 @@ var deploymentCounter = prometheus.NewCounterVec(
 		Namespace: "merlin_api",
 		Help:      "Number of deployment",
 	},
-	[]string{"project", "model", "status"},
+	[]string{"project", "model", "status", "redeploy"},
 )
 
 var dataArgKey = "data"
@@ -49,6 +50,7 @@ type EndpointJob struct {
 
 func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	ctx := context.Background()
+
 	data := job.Arguments[dataArgKey]
 	byte, _ := json.Marshal(data)
 	var jobArgs EndpointJob
@@ -71,32 +73,51 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	version := jobArgs.Version
 	project := jobArgs.Project
 	model := jobArgs.Model
+	model.Project = project
+
+	isRedeployment := false
 
 	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
 	if endpoint.Logger != nil {
 		endpoint.Logger.DestinationURL = depl.LoggerDestinationURL
 	}
 
-	model.Project = project
-	log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.ID)
-
-	// copy endpoint to avoid race condition
+	endpoint.RevisionID++
 	endpoint.Status = models.EndpointFailed
+
+	// for backward compatibility, if inference service name is not empty, it means we are redeploying the "legacy" endpoint that created prior to model version revision introduction
+	// for future compatibility, if endpoint.RevisionID > 1, it means we are redeploying the endpoint that created after model version revision introduction
+	if endpoint.InferenceServiceName != "" || endpoint.RevisionID > 1 {
+		isRedeployment = true
+		endpoint.Status = endpointArg.Status
+	}
+
+	log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
+
+	// record the deployment process
+	deployment, err := depl.DeploymentStorage.Save(&models.Deployment{
+		ProjectID:         model.ProjectID,
+		VersionModelID:    model.ID,
+		VersionID:         endpoint.VersionID,
+		VersionEndpointID: endpoint.ID,
+		Status:            models.EndpointPending,
+	})
+	if err != nil {
+		log.Warnf("unable to create deployment history", err)
+	}
+
 	defer func() {
-		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(endpoint.Status)).Inc()
+		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, fmt.Sprint(endpoint.Status), fmt.Sprint(isRedeployment)).Inc()
 
 		// record the deployment result
-		if _, err := depl.DeploymentStorage.Save(&models.Deployment{
-			ProjectID:         model.ProjectID,
-			VersionModelID:    model.ID,
-			VersionID:         endpoint.VersionID,
-			VersionEndpointID: endpoint.ID,
-			Status:            endpoint.Status,
-			Error:             endpoint.Message,
-		}); err != nil {
-			log.Warnf("unable to insert deployment history", err)
+		deployment.Status = endpoint.Status
+		deployment.Error = endpoint.Message
+		deployment.UpdatedAt = time.Now()
+		if _, err := depl.DeploymentStorage.Save(deployment); err != nil {
+			log.Warnf("unable to update deployment history", err)
 		}
 
+		// record the version endpoint result
 		if err := depl.Storage.Save(endpoint); err != nil {
 			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 		}
@@ -113,6 +134,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	if !ok {
 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
 	}
+
 	svc, err := ctl.Deploy(ctx, modelService)
 	if err != nil {
 		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
@@ -120,6 +142,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return err
 	}
 
+	// By reaching this point, the deployment is successful
 	endpoint.URL = svc.URL
 	previousStatus := endpointArg.Status
 	if previousStatus == models.EndpointServing {
@@ -128,6 +151,9 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		endpoint.Status = models.EndpointRunning
 	}
 	endpoint.ServiceName = svc.ServiceName
+	endpoint.InferenceServiceName = svc.CurrentIsvcName
+	endpoint.Message = "" // reset message
+
 	return nil
 }
 

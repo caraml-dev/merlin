@@ -116,6 +116,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 		name               string
 		modelSvc           *models.Service
 		resourcePercentage string
+		deploymentScale    DeploymentScale
 		exp                *kservev1beta1.InferenceService
 		wantErr            bool
 	}{
@@ -134,6 +135,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -141,6 +143,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -200,6 +203,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -207,6 +211,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -266,6 +271,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -325,6 +331,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -332,6 +339,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -439,6 +447,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -446,6 +455,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -497,6 +507,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -504,6 +515,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -554,6 +566,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -561,6 +574,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -616,6 +630,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -625,6 +640,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -677,6 +693,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -686,6 +703,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -747,6 +765,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -754,6 +773,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -808,6 +828,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				Protocol:        protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -815,6 +836,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -875,6 +897,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -941,6 +964,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			wantErr:            true,
 		},
 		{
@@ -963,6 +987,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -970,6 +995,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.CPU,
 						knautoscaling.TargetAnnotationKey:                     "30",
@@ -1029,6 +1055,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1036,6 +1063,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
 						knautoscaling.TargetAnnotationKey:                     "150",
@@ -1095,6 +1123,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1102,6 +1131,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
 						knautoscaling.TargetAnnotationKey:                     "100",
@@ -1161,6 +1191,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1168,6 +1199,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
 						knautoscaling.TargetAnnotationKey:                     "2",
@@ -1227,6 +1259,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1234,6 +1267,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.RPS,
 						knautoscaling.TargetAnnotationKey:                     "10",
@@ -1288,6 +1322,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1295,6 +1330,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1349,6 +1385,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1358,6 +1395,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1409,6 +1447,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1416,6 +1455,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1479,6 +1519,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				ResourceRequest: modelSvc.ResourceRequest,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1486,6 +1527,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1533,7 +1575,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

@@ -97,6 +97,13 @@ var (
 		},
 	}
 
+	testPredictorScale, testTransformerScale = 3, 5
+
+	defaultDeploymentScale = DeploymentScale{
+		Predictor:   &testPredictorScale,
+		Transformer: &testTransformerScale,
+	}
+
 	oneMinuteDuration         = time.Minute * 1
 	twoMinuteDuration         = time.Minute * 2
 	standardTransformerConfig = config.StandardTransformerConfig{
@@ -158,7 +165,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	project := mlp.Project{
 		Name: "project",
 	}
-
 	modelSvc := &models.Service{
 		Name:         "my-model-1",
 		ModelName:    "my-model",
@@ -190,6 +196,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 		name               string
 		modelSvc           *models.Service
 		resourcePercentage string
+		deploymentScale    DeploymentScale
 		exp                *kservev1beta1.InferenceService
 		wantErr            bool
 	}{
@@ -207,6 +214,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:     protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -214,6 +222,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -268,6 +277,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -275,6 +285,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -329,6 +340,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:       protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -383,6 +395,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:       protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -390,6 +403,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -435,12 +449,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:     modelSvc.Metadata,
 				Protocol:     protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
 					Namespace: project.Name,
 					Annotations: map[string]string{
-						kserveconstant.DeploymentMode: string(kserveconstant.Serverless),
+						kserveconstant.DeploymentMode:           string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey: fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -487,6 +503,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:     protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -494,6 +511,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -540,6 +558,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:     protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -547,6 +566,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -592,6 +612,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:     protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -599,6 +620,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -649,6 +671,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -658,6 +681,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -707,6 +731,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -716,6 +741,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -761,6 +787,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:        protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -768,6 +795,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -825,6 +853,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -832,6 +861,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -884,6 +914,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:        protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -891,6 +922,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -948,6 +980,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1030,6 +1063,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1040,6 +1074,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.CPU,
 						knautoscaling.TargetAnnotationKey:                     "30",
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1091,6 +1126,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1101,6 +1137,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
 						knautoscaling.TargetAnnotationKey:                     "150", // 30% * default memory request (500Mi) = 150Mi
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1153,6 +1190,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				ResourceRequest: userResourceRequests,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1163,6 +1201,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
 						knautoscaling.TargetAnnotationKey:                     "205", // 20% * (1Gi) ~= 205Mi
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1214,6 +1253,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1224,6 +1264,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
 						knautoscaling.TargetAnnotationKey:                     "2",
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1275,6 +1316,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1285,6 +1327,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.RPS,
 						knautoscaling.TargetAnnotationKey:                     "10",
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1331,6 +1374,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:     protocol.UpiV1,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1338,6 +1382,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1387,6 +1432,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.UpiV1,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1396,6 +1442,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1444,6 +1491,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:     protocol.UpiV1,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1451,6 +1499,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1509,6 +1558,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol: protocol.UpiV1,
 			},
 			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1516,6 +1566,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1560,7 +1611,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -1638,10 +1689,11 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
 	transformerProbeConfigUPI := createLivenessProbeSpec(protocol.UpiV1, "/")
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "custom transformer with default resource request",
@@ -1667,6 +1719,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1674,6 +1727,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1752,6 +1806,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1759,6 +1814,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1834,6 +1890,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 				Protocol: protocol.UpiV1,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1841,6 +1898,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1924,6 +1982,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -1931,6 +1990,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2027,6 +2087,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 				Protocol: protocol.UpiV1,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2034,6 +2095,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2140,6 +2202,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 				Protocol: protocol.UpiV1,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2149,6 +2212,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
 						annotationPrometheusScrapeFlag:                        "true",
 						annotationPrometheusScrapePort:                        "8080",
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2239,7 +2303,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -2295,10 +2359,11 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
 
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "model logger enabled",
@@ -2320,6 +2385,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2327,6 +2393,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2389,6 +2456,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2396,6 +2464,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2477,6 +2546,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2484,6 +2554,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2561,6 +2632,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2568,6 +2640,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2649,6 +2722,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2656,6 +2730,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2718,7 +2793,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -2772,10 +2847,11 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
 
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "predictor with unspecified deployment mode (serverless)",
@@ -2790,6 +2866,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Metadata:     modelSvc.Metadata,
 				Protocol:     protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2797,6 +2874,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2892,6 +2970,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.ServerlessDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -2899,6 +2978,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2994,6 +3074,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.RawDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -3101,6 +3182,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				},
 				Protocol: protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -3108,6 +3190,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -3275,6 +3358,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.ServerlessDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -3282,6 +3366,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -3449,6 +3534,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.RawDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -3652,1961 +3738,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
-			if tt.wantErr {
-				assert.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
-			assert.Equal(t, tt.exp, infSvcSpec)
-		})
-	}
-}
-
-func TestPatchInferenceServiceSpec(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
-	assert.NoError(t, err)
-
-	defer func() {
-		_ = models.InitKubernetesLabeller("", "")
-	}()
-
-	project := mlp.Project{
-		Name: "project",
-	}
-
-	modelSvc := &models.Service{
-		Name:         "model-1",
-		ModelName:    "model",
-		ModelVersion: "1",
-		Namespace:    project.Name,
-		ArtifactURI:  "gs://my-artifacet",
-		Metadata: models.Metadata{
-			App:       "model",
-			Component: models.ComponentModelVersion,
-			Stream:    "dsp",
-			Team:      "dsp",
-			Labels: mlp.Labels{
-				{
-					Key:   "sample",
-					Value: "true",
-				},
-			},
-		},
-		Protocol: protocol.HttpJson,
-	}
-
-	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
-
-	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
-
-	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
-
-	one := 1
-	minReplica := 1
-	maxReplica := 10
-	cpuRequest := resource.MustParse("1")
-	memoryRequest := resource.MustParse("1Gi")
-	cpuLimit := cpuRequest.DeepCopy()
-	cpuLimit.Add(cpuRequest)
-	memoryLimit := memoryRequest.DeepCopy()
-	memoryLimit.Add(memoryRequest)
-	queueResourcePercentage := "2"
-
-	resourceRequests := corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuRequest,
-			corev1.ResourceMemory: memoryRequest,
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuLimit,
-			corev1.ResourceMemory: memoryLimit,
-		},
-	}
-
-	testPredictorScale, testTransformerScale := 3, 5
-
-	tests := []struct {
-		name            string
-		modelSvc        *models.Service
-		deploymentScale DeploymentScale
-		original        *kservev1beta1.InferenceService
-		exp             *kservev1beta1.InferenceService
-		wantErr         bool
-	}{
-		{
-			name: "tensorflow spec",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeTensorflow,
-				Options:      &models.ModelOption{},
-				Metadata:     modelSvc.Metadata,
-				Protocol:     protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "tensorflow + transformer spec",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeTensorflow,
-				Options:      &models.ModelOption{},
-				Metadata:     modelSvc.Metadata,
-				Transformer: &models.Transformer{
-					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
-					Command: "python",
-					Args:    "main.py",
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    1,
-						MaxReplica:    1,
-						CPURequest:    cpuRequest,
-						MemoryRequest: memoryRequest,
-					},
-				},
-				Protocol: protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-					Transformer: &kservev1beta1.TransformerSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
-									Command: []string{"python"},
-									Args:    []string{"main.py"},
-									Env:     createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuRequest,
-											corev1.ResourceMemory: memoryRequest,
-										},
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuLimit,
-											corev1.ResourceMemory: memoryLimit,
-										},
-									},
-									LivenessProbe: transformerProbeConfig,
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &one,
-							MaxReplicas: one,
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "tensorflow + transformer spec to tensorflow spec only",
-			modelSvc: &models.Service{
-				Name:        modelSvc.Name,
-				Namespace:   project.Name,
-				ArtifactURI: modelSvc.ArtifactURI,
-				Type:        models.ModelTypeTensorflow,
-				Options:     &models.ModelOption{},
-				Metadata:    modelSvc.Metadata,
-				Transformer: &models.Transformer{
-					Enabled: false,
-				},
-				Protocol: protocol.HttpJson,
-			},
-			deploymentScale: DeploymentScale{
-				Predictor:   &testPredictorScale,
-				Transformer: &testTransformerScale,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-					Transformer: &kservev1beta1.TransformerSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
-									Command: []string{"python"},
-									Args:    []string{"main.py"},
-									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
-										{Name: envTransformerModelName, Value: "model-1"},
-										{Name: envTransformerPredictURL, Value: "model-1-predictor.project"},
-									},
-									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuRequest,
-											corev1.ResourceMemory: memoryRequest,
-										},
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuLimit,
-											corev1.ResourceMemory: memoryLimit,
-										},
-									},
-									LivenessProbe: transformerProbeConfig,
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &one,
-							MaxReplicas: one,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.InitialScaleAnnotationKey:               "3",
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-					Transformer: nil,
-				},
-			},
-		},
-		{
-			name: "custom spec",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeCustom,
-				Options: &models.ModelOption{
-					CustomPredictor: &models.CustomPredictor{
-						Image:   "gcr.io/custom-model:v0.2",
-						Command: "./run-1.sh",
-						Args:    "firstArg secondArg",
-					},
-				},
-				Metadata:        modelSvc.Metadata,
-				ResourceRequest: userResourceRequests,
-				Protocol:        protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gcr.io/custom-model:v0.1",
-									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: expUserResourceRequests,
-									Command: []string{
-										"./run.sh",
-									},
-									Args: []string{
-										"firstArg",
-										"secondArg",
-									},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &userResourceRequests.MinReplica,
-							MaxReplicas: userResourceRequests.MaxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gcr.io/custom-model:v0.2",
-									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: expUserResourceRequests,
-									Command: []string{
-										"./run-1.sh",
-									},
-									Args: []string{
-										"firstArg",
-										"secondArg",
-									},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &userResourceRequests.MinReplica,
-							MaxReplicas: userResourceRequests.MaxReplica,
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "patch deployment mode from serverless to raw_deployment",
-			modelSvc: &models.Service{
-				Name:           modelSvc.Name,
-				Namespace:      project.Name,
-				ArtifactURI:    modelSvc.ArtifactURI,
-				Type:           models.ModelTypeTensorflow,
-				Options:        &models.ModelOption{},
-				Metadata:       modelSvc.Metadata,
-				DeploymentMode: deployment.RawDeploymentMode,
-				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
-					MetricsType: autoscaling.CPUUtilization,
-					TargetValue: 30,
-				},
-				Protocol: protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
-						kserveconstant.AutoscalerClass:                        string(kserveconstant.AutoscalerClassHPA),
-						kserveconstant.AutoscalerMetrics:                      string(kserveconstant.AutoScalerMetricsCPU),
-						kserveconstant.TargetUtilizationPercentage:            "30",
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "patch deployment mode from raw_deployment to serverless_deployment",
-			modelSvc: &models.Service{
-				Name:           modelSvc.Name,
-				Namespace:      project.Name,
-				ArtifactURI:    modelSvc.ArtifactURI,
-				Type:           models.ModelTypeTensorflow,
-				Options:        &models.ModelOption{},
-				Metadata:       modelSvc.Metadata,
-				DeploymentMode: deployment.ServerlessDeploymentMode,
-				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
-					MetricsType: autoscaling.Concurrency,
-					TargetValue: 2,
-				},
-				Protocol: protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
-						kserveconstant.AutoscalerClass:                        string(kserveconstant.AutoscalerClassHPA),
-						kserveconstant.AutoscalerMetrics:                      string(kserveconstant.AutoScalerMetricsCPU),
-						kserveconstant.TargetUtilizationPercentage:            "30",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
-						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
-						knautoscaling.TargetAnnotationKey:                     "2",
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			deployConfig := &config.DeploymentConfig{
-				DefaultModelResourceRequests: &config.ResourceRequests{
-					MinReplica:    minReplica,
-					MaxReplica:    maxReplica,
-					CPURequest:    cpuRequest,
-					MemoryRequest: memoryRequest,
-				},
-				QueueResourcePercentage: queueResourcePercentage,
-			}
-
-			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig, tt.deploymentScale)
-			if tt.wantErr {
-				assert.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
-			assert.Equal(t, tt.exp, infSvcSpec)
-		})
-	}
-}
-
-func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
-	assert.NoError(t, err)
-
-	defer func() {
-		_ = models.InitKubernetesLabeller("", "")
-	}()
-
-	project := mlp.Project{
-		Name: "project",
-	}
-
-	modelSvc := &models.Service{
-		Name:         "model-1",
-		ModelName:    "model",
-		ModelVersion: "1",
-		Namespace:    project.Name,
-		ArtifactURI:  "gs://my-artifacet",
-		Metadata: models.Metadata{
-			App:       "model",
-			Component: models.ComponentModelVersion,
-			Stream:    "dsp",
-			Team:      "dsp",
-			Labels: mlp.Labels{
-				{
-					Key:   "sample",
-					Value: "true",
-				},
-			},
-		},
-		Protocol: protocol.HttpJson,
-	}
-
-	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
-
-	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
-
-	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
-
-	one := 1
-	minReplica := 1
-	maxReplica := 10
-	cpuRequest := resource.MustParse("1")
-	memoryRequest := resource.MustParse("1Gi")
-	cpuLimit := cpuRequest.DeepCopy()
-	cpuLimit.Add(cpuRequest)
-	memoryLimit := memoryRequest.DeepCopy()
-	memoryLimit.Add(memoryRequest)
-	queueResourcePercentage := "2"
-
-	resourceRequests := corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuRequest,
-			corev1.ResourceMemory: memoryRequest,
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuLimit,
-			corev1.ResourceMemory: memoryLimit,
-		},
-	}
-
-	testPredictorScale, testTransformerScale := 3, 5
-
-	tests := []struct {
-		name            string
-		modelSvc        *models.Service
-		deploymentScale DeploymentScale
-		original        *kservev1beta1.InferenceService
-		exp             *kservev1beta1.InferenceService
-		wantErr         bool
-	}{
-		{
-			name: "predictor with unspecified deployment mode (serverless)",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeTensorflow,
-				Options:      &models.ModelOption{},
-				Metadata:     modelSvc.Metadata,
-				Protocol:     protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-						PodSpec: kservev1beta1.PodSpec{
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "predictor with serverless deployment mode",
-			modelSvc: &models.Service{
-				Name:           modelSvc.Name,
-				ModelName:      modelSvc.ModelName,
-				ModelVersion:   modelSvc.ModelVersion,
-				Namespace:      project.Name,
-				ArtifactURI:    modelSvc.ArtifactURI,
-				Type:           models.ModelTypeTensorflow,
-				Options:        &models.ModelOption{},
-				Metadata:       modelSvc.Metadata,
-				DeploymentMode: deployment.ServerlessDeploymentMode,
-				Protocol:       protocol.HttpJson,
-			},
-			deploymentScale: DeploymentScale{
-				Predictor: &testPredictorScale,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.InitialScaleAnnotationKey:               "3",
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-						PodSpec: kservev1beta1.PodSpec{
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "predictor with raw deployment mode",
-			modelSvc: &models.Service{
-				Name:           modelSvc.Name,
-				ModelName:      modelSvc.ModelName,
-				ModelVersion:   modelSvc.ModelVersion,
-				Namespace:      project.Name,
-				ArtifactURI:    modelSvc.ArtifactURI,
-				Type:           models.ModelTypeTensorflow,
-				Options:        &models.ModelOption{},
-				Metadata:       modelSvc.Metadata,
-				DeploymentMode: deployment.RawDeploymentMode,
-				Protocol:       protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-						PodSpec: kservev1beta1.PodSpec{
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "isvc.model-1-predictor",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "isvc.model-1-predictor",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "isvc.model-1-predictor",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "predictor and transformer with unspecified deployment mode (serverless)",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeTensorflow,
-				Options:      &models.ModelOption{},
-				Metadata:     modelSvc.Metadata,
-				Transformer: &models.Transformer{
-					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
-					Command: "python",
-					Args:    "main.py",
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    1,
-						MaxReplica:    1,
-						CPURequest:    cpuRequest,
-						MemoryRequest: memoryRequest,
-					},
-				},
-				Protocol: protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-						PodSpec: kservev1beta1.PodSpec{
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					Transformer: &kservev1beta1.TransformerSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
-									Command: []string{"python"},
-									Args:    []string{"main.py"},
-									Env:     createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuRequest,
-											corev1.ResourceMemory: memoryRequest,
-										},
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuLimit,
-											corev1.ResourceMemory: memoryLimit,
-										},
-									},
-									LivenessProbe: transformerProbeConfig,
-								},
-							},
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-transformer-00001",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-transformer-00001",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "model-1-transformer-00001",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &one,
-							MaxReplicas: one,
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "predictor and transformer with serverless deployment mode",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeTensorflow,
-				Options:      &models.ModelOption{},
-				Metadata:     modelSvc.Metadata,
-				Transformer: &models.Transformer{
-					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
-					Command: "python",
-					Args:    "main.py",
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    1,
-						MaxReplica:    1,
-						CPURequest:    cpuRequest,
-						MemoryRequest: memoryRequest,
-					},
-				},
-				DeploymentMode: deployment.ServerlessDeploymentMode,
-				Protocol:       protocol.HttpJson,
-			},
-			deploymentScale: DeploymentScale{
-				Predictor:   &testPredictorScale,
-				Transformer: &testTransformerScale,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.InitialScaleAnnotationKey:               "5",
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-						PodSpec: kservev1beta1.PodSpec{
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "model-1-predictor-00002",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					Transformer: &kservev1beta1.TransformerSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
-									Command: []string{"python"},
-									Args:    []string{"main.py"},
-									Env:     createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuRequest,
-											corev1.ResourceMemory: memoryRequest,
-										},
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuLimit,
-											corev1.ResourceMemory: memoryLimit,
-										},
-									},
-									LivenessProbe: transformerProbeConfig,
-								},
-							},
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-transformer-00001",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "model-1-transformer-00001",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "model-1-transformer-00001",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &one,
-							MaxReplicas: one,
-						},
-					},
-				},
-				Status: kservev1beta1.InferenceServiceStatus{
-					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
-						kservev1beta1.PredictorComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-predictor-00001", modelSvc.Name),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "predictor and transformer with raw deployment mode",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypeTensorflow,
-				Options:      &models.ModelOption{},
-				Metadata:     modelSvc.Metadata,
-				Transformer: &models.Transformer{
-					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
-					Command: "python",
-					Args:    "main.py",
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    1,
-						MaxReplica:    1,
-						CPURequest:    cpuRequest,
-						MemoryRequest: memoryRequest,
-					},
-				},
-				DeploymentMode: deployment.RawDeploymentMode,
-				Protocol:       protocol.HttpJson,
-			},
-			original: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-					},
-				},
-			},
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						Tensorflow: &kservev1beta1.TFServingSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &minReplica,
-							MaxReplicas: maxReplica,
-						},
-						PodSpec: kservev1beta1.PodSpec{
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "isvc.model-1-predictor",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "isvc.model-1-predictor",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "isvc.model-1-predictor",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					Transformer: &kservev1beta1.TransformerSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
-									Command: []string{"python"},
-									Args:    []string{"main.py"},
-									Env:     createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuRequest,
-											corev1.ResourceMemory: memoryRequest,
-										},
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    cpuLimit,
-											corev1.ResourceMemory: memoryLimit,
-										},
-									},
-									LivenessProbe: transformerProbeConfig,
-								},
-							},
-							TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-								{
-									MaxSkew:           1,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.ScheduleAnyway,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "isvc.model-1-transformer",
-										},
-									},
-								},
-								{
-									MaxSkew:           2,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app": "isvc.model-1-transformer",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-								{
-									MaxSkew:           3,
-									TopologyKey:       "kubernetes.io/hostname",
-									WhenUnsatisfiable: corev1.DoNotSchedule,
-									LabelSelector: &metav1.LabelSelector{
-										MatchLabels: map[string]string{
-											"app-label": "spread",
-											"app":       "isvc.model-1-transformer",
-										},
-										MatchExpressions: []metav1.LabelSelectorRequirement{
-											{
-												Key:      "app-expression",
-												Operator: metav1.LabelSelectorOpIn,
-												Values:   []string{"1"},
-											},
-										},
-									},
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &one,
-							MaxReplicas: one,
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			deployConfig := &config.DeploymentConfig{
-				DefaultModelResourceRequests: &config.ResourceRequests{
-					MinReplica:    minReplica,
-					MaxReplica:    maxReplica,
-					CPURequest:    cpuRequest,
-					MemoryRequest: memoryRequest,
-				},
-				QueueResourcePercentage: queueResourcePercentage,
-				TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
-					{
-						MaxSkew:           1,
-						TopologyKey:       "kubernetes.io/hostname",
-						WhenUnsatisfiable: corev1.ScheduleAnyway,
-					},
-					{
-						MaxSkew:           2,
-						TopologyKey:       "kubernetes.io/hostname",
-						WhenUnsatisfiable: corev1.DoNotSchedule,
-						LabelSelector: &metav1.LabelSelector{
-							MatchExpressions: []metav1.LabelSelectorRequirement{
-								{
-									Key:      "app-expression",
-									Operator: metav1.LabelSelectorOpIn,
-									Values:   []string{"1"},
-								},
-							},
-						},
-					},
-					{
-						MaxSkew:           3,
-						TopologyKey:       "kubernetes.io/hostname",
-						WhenUnsatisfiable: corev1.DoNotSchedule,
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"app-label": "spread",
-							},
-							MatchExpressions: []metav1.LabelSelectorRequirement{
-								{
-									Key:      "app-expression",
-									Operator: metav1.LabelSelectorOpIn,
-									Values:   []string{"1"},
-								},
-							},
-						},
-					},
-				},
-			}
-
-			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig, tt.deploymentScale)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -5801,7 +3933,7 @@ func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue p
 	envVars := models.EnvVars{
 		models.EnvVar{
 			Name:  envPyFuncModelName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envModelName,
@@ -5813,7 +3945,7 @@ func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue p
 		},
 		models.EnvVar{
 			Name:  envModelFullName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envHTTPPort,

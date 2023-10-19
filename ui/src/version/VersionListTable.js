@@ -426,7 +426,7 @@ const VersionListTable = ({
                       <EuiLink
                         onClick={() =>
                           navigate(
-                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`
                           )
                         }
                       >

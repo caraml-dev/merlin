@@ -80,8 +80,8 @@ environmentConfigs:
     default_deployment_config:
       min_replica: 0
       max_replica: 1
-      cpu_request: "50m"
-      memory_request: "128Mi"
+      cpu_request: "100m"
+      memory_request: "256Mi"
     default_transformer_config:
       min_replica: 0
       max_replica: 1
