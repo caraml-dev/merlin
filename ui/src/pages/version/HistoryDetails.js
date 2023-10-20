@@ -46,7 +46,8 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
 
   const deployedRevision = orderedDeployments.find(
     (deployment) =>
-      deployment.status === "running" || deployment.status === "serving"
+      (deployment.status === "running" || deployment.status === "serving") &&
+      deployment.error === ""
   ) || { id: null };
 
   const canBeExpanded = (deployment) => {
