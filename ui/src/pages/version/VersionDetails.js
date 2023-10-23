@@ -234,6 +234,7 @@ const VersionDetails = () => {
                       projectId={projectId}
                       model={model}
                       versionId={versionId}
+                      revisionId={endpoint.revision_id}
                       fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
                     />
                   }
