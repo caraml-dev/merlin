@@ -29,7 +29,9 @@ const DeploymentStatus = ({
   if (status === "running" || status === "serving") {
     if (
       deployment.id === deployedRevision.id &&
-      (endpointStatus === "running" || endpointStatus === "serving")
+      (endpointStatus === "pending" ||
+        endpointStatus === "running" ||
+        endpointStatus === "serving")
     ) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
@@ -44,7 +46,8 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
 
   const deployedRevision = orderedDeployments.find(
     (deployment) =>
-      deployment.status === "running" || deployment.status === "serving"
+      (deployment.status === "running" || deployment.status === "serving") &&
+      deployment.error === ""
   ) || { id: null };
 
   const canBeExpanded = (deployment) => {
@@ -92,7 +95,6 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
           {deployment.id === deployedRevision.id && (
             <EuiBadge color="default">Current</EuiBadge>
           )}
-          {/* {JSON.stringify(deployment.id)} */}
         </>
       ),
     },
