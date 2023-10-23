@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	revisionPrefix = "r"
+	RevisionPrefix = "r"
 )
 
 type Service struct {
@@ -113,7 +113,7 @@ func CreateInferenceServiceName(modelName, versionID, revisionID string) string 
 		// This is for backward compatibility, when the endpoint / isvc name didn't include the revision number
 		return fmt.Sprintf("%s-%s", modelName, versionID)
 	}
-	return fmt.Sprintf("%s-%s-%s%s", modelName, versionID, revisionPrefix, revisionID)
+	return fmt.Sprintf("%s-%s-%s%s", modelName, versionID, RevisionPrefix, revisionID)
 }
 
 func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue protocol.Protocol) string {

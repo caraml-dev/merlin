@@ -21,14 +21,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caraml-dev/merlin/cluster"
+	"github.com/caraml-dev/merlin/cluster/mocks"
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/caraml-dev/merlin/cluster"
-	"github.com/caraml-dev/merlin/cluster/mocks"
 )
 
 func TestLogLine_generateText(t *testing.T) {
@@ -137,6 +136,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 		ModelID:     "1",
 		ModelName:   "test-model",
 		VersionID:   "1",
+		RevisionID:  2,
 
 		Cluster:       "test-cluster",
 		Namespace:     "test-namespace",
@@ -150,15 +150,15 @@ func Test_logService_StreamLogs(t *testing.T) {
 		"test-cluster": mockController,
 	}
 
-	mockController.On("ListPods", context.Background(), "test-namespace", "component=predictor,serving.kserve.io/inferenceservice=test-model-1").
+	mockController.On("ListPods", context.Background(), "test-namespace", "component=predictor,serving.kserve.io/inferenceservice in (test-model-1,test-model-1-r1,test-model-1-r2)").
 		Return(&v1.PodList{
 			Items: []v1.Pod{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-model-1-predictor-a",
+						Name: "test-model-1-r2-predictor-a",
 						Labels: map[string]string{
 							"component":                          "predictor",
-							"serving.kserve.io/inferenceservice": "test-model-1",
+							"serving.kserve.io/inferenceservice": "test-model-1-r2",
 						},
 					},
 					Spec: v1.PodSpec{
@@ -174,10 +174,10 @@ func Test_logService_StreamLogs(t *testing.T) {
 				},
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-model-1-predictor-b",
+						Name: "test-model-1-r2-predictor-b",
 						Labels: map[string]string{
 							"component":                          "predictor",
-							"serving.kserve.io/inferenceservice": "test-model-1",
+							"serving.kserve.io/inferenceservice": "test-model-1-r2",
 						},
 					},
 					Spec: v1.PodSpec{
@@ -194,7 +194,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 			},
 		}, nil)
 
-	pods := []string{"test-model-1-predictor-a", "test-model-1-predictor-b"}
+	pods := []string{"test-model-1-r2-predictor-a", "test-model-1-r2-predictor-b"}
 	containers := []string{"storage-initializer", "kfserving-container", "inferenceservice-logger"}
 
 	for _, pod := range pods {
@@ -225,4 +225,126 @@ func Test_logService_StreamLogs(t *testing.T) {
 	err := l.StreamLogs(context.Background(), logLineCh, stopCh, options)
 	assert.Nil(t, err)
 	assert.Equal(t, 6, len(got))
+}
+
+func Test_logService_getLabelSelector(t *testing.T) {
+	type fields struct {
+		clusterControllers map[string]cluster.Controller
+	}
+	type args struct {
+		query LogQuery
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			name:   "model without revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "model",
+				ProjectName:   "test-project",
+				ModelName:     "test-model",
+				VersionID:     "1",
+				RevisionID:    0,
+			}},
+			want: "component=predictor,serving.kserve.io/inferenceservice in (test-model-1)",
+		},
+		{
+			name:   "model name with number without revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "model",
+				ProjectName:   "test-project",
+				ModelName:     "test-model-0-1-2",
+				VersionID:     "10",
+				RevisionID:    0,
+			}},
+			want: "component=predictor,serving.kserve.io/inferenceservice in (test-model-0-1-2-10)",
+		},
+		{
+			name:   "model with revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "model",
+				ProjectName:   "test-project",
+				ModelName:     "test-model",
+				VersionID:     "1",
+				RevisionID:    3,
+			}},
+			want: "component=predictor,serving.kserve.io/inferenceservice in (test-model-1,test-model-1-r1,test-model-1-r2,test-model-1-r3)",
+		},
+		{
+			name:   "model name with number with revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "model",
+				ProjectName:   "test-project",
+				ModelName:     "test-model-0-1-2",
+				VersionID:     "10",
+				RevisionID:    2,
+			}},
+			want: "component=predictor,serving.kserve.io/inferenceservice in (test-model-0-1-2-10,test-model-0-1-2-10-r1,test-model-0-1-2-10-r2)",
+		},
+		{
+			name:   "transformer without revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "transformer",
+				ProjectName:   "test-project",
+				ModelName:     "test-model",
+				VersionID:     "1",
+				RevisionID:    0,
+			}},
+			want: "component=transformer,serving.kserve.io/inferenceservice in (test-model-1)",
+		},
+		{
+			name:   "transformer name with number without revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "transformer",
+				ProjectName:   "test-project",
+				ModelName:     "test-model-0-1-2",
+				VersionID:     "10",
+				RevisionID:    0,
+			}},
+			want: "component=transformer,serving.kserve.io/inferenceservice in (test-model-0-1-2-10)",
+		},
+		{
+			name:   "transformer with revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "transformer",
+				ProjectName:   "test-project",
+				ModelName:     "test-model",
+				VersionID:     "1",
+				RevisionID:    3,
+			}},
+			want: "component=transformer,serving.kserve.io/inferenceservice in (test-model-1,test-model-1-r1,test-model-1-r2,test-model-1-r3)",
+		},
+		{
+			name:   "transformer name with number with revision",
+			fields: fields{},
+			args: args{query: LogQuery{
+				ComponentType: "transformer",
+				ProjectName:   "test-project",
+				ModelName:     "test-model-0-1-2",
+				VersionID:     "10",
+				RevisionID:    2,
+			}},
+			want: "component=transformer,serving.kserve.io/inferenceservice in (test-model-0-1-2-10,test-model-0-1-2-10-r1,test-model-0-1-2-10-r2)",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := logService{
+				clusterControllers: tt.fields.clusterControllers,
+			}
+			if got := l.getLabelSelector(tt.args.query); got != tt.want {
+				t.Errorf("logService.getLabelSelector() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
