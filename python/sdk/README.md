@@ -24,11 +24,11 @@ gcloud auth application-default login
 
 The easiest way to get started is to explore example notebook:
 
-1. [Deploying xgboost model](sample/xgboost/Sample.ipynb)
-2. [Deploying sklearn model](sample/sklearn/Sample.ipynb)
-3. [Deploying tensorflow model](sample/tensorflow/Sample.ipynb)
-4. [Deploying pytorch model](sample/pytorch/Sample.ipynb)
-5. [Deploying user defined model](sample/pyfunc/Sample.ipynb)
+1. [Deploying xgboost model](../../examples/xgboost/XGBoost.ipynb)
+2. [Deploying sklearn model](../../examples/sklearn/SKLearn.ipynb)
+3. [Deploying tensorflow model](../../examples/tensorflow/Tensorflow.ipynb)
+4. [Deploying pytorch model](../../examples/pytorch/Pytorch.ipynb)
+5. [Deploying user defined model](../../examples/pyfunc/Pyfunc.ipynb)
 
 # Development
 
