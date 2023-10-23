@@ -16,7 +16,7 @@ Merlin attempts to do so by:
 
 ## Getting Started
 
-To install Merlin in your local machine, click [Local Development](./docs/getting-started/deploying-merlin/local_development.md).
+To install Merlin in your local machine, click [Local Development](./docs/dev-guide/deploying-merlin/local_development.md).
 
 ## Documentation
 
