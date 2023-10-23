@@ -107,11 +107,9 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	}
 
 	defer func() {
-		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, fmt.Sprint(endpoint.Status), fmt.Sprint(isRedeployment)).Inc()
+		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, fmt.Sprint(deployment.Status), fmt.Sprint(isRedeployment)).Inc()
 
 		// record the deployment result
-		deployment.Status = endpoint.Status
-		deployment.Error = endpoint.Message
 		deployment.UpdatedAt = time.Now()
 		if _, err := depl.DeploymentStorage.Save(deployment); err != nil {
 			log.Warnf("unable to update deployment history", err)
@@ -125,6 +123,8 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 	modelOpt, err := depl.generateModelOptions(ctx, model, version)
 	if err != nil {
+		deployment.Status = models.EndpointFailed
+		deployment.Error = err.Error()
 		endpoint.Message = err.Error()
 		return err
 	}
@@ -132,12 +132,17 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	modelService := models.NewService(model, version, modelOpt, endpoint)
 	ctl, ok := depl.ClusterControllers[endpoint.EnvironmentName]
 	if !ok {
+		deployment.Status = models.EndpointFailed
+		deployment.Error = err.Error()
+		endpoint.Message = err.Error()
 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
 	}
 
 	svc, err := ctl.Deploy(ctx, modelService)
 	if err != nil {
 		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+		deployment.Status = models.EndpointFailed
+		deployment.Error = err.Error()
 		endpoint.Message = err.Error()
 		return err
 	}
@@ -153,6 +158,8 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	endpoint.ServiceName = svc.ServiceName
 	endpoint.InferenceServiceName = svc.CurrentIsvcName
 	endpoint.Message = "" // reset message
+
+	deployment.Status = endpoint.Status
 
 	return nil
 }
