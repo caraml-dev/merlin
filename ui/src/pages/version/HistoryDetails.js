@@ -3,8 +3,6 @@ import {
   EuiBadge,
   EuiButtonIcon,
   EuiCodeBlock,
-  EuiFlexGroup,
-  EuiFlexItem,
   EuiHealth,
   EuiInMemoryTable,
   EuiScreenReaderOnly,
@@ -22,10 +20,6 @@ const DeploymentStatus = ({
   deployedRevision,
   endpointStatus,
 }) => {
-  if (deployment.error !== "") {
-    return <EuiHealth color="danger">Failed</EuiHealth>;
-  }
-
   if (status === "running" || status === "serving") {
     if (
       deployment.id === deployedRevision.id &&
@@ -38,6 +32,10 @@ const DeploymentStatus = ({
     return <EuiHealth color="default">Not Deployed</EuiHealth>;
   } else if (status === "pending") {
     return <EuiHealth color="gray">Pending</EuiHealth>;
+  }
+
+  if (deployment.error !== "") {
+    return <EuiHealth color="danger">Failed</EuiHealth>;
   }
 };
 
@@ -170,15 +168,10 @@ export const HistoryDetails = ({ model, version, endpoint }) => {
   );
 
   return (
-    <EuiFlexGroup>
-      <EuiFlexItem grow={3}>
-        <RevisionPanel
-          deployments={deployments}
-          deploymentsLoaded={deploymentsLoaded}
-          endpoint={endpoint}
-        />
-      </EuiFlexItem>
-      <EuiFlexItem grow={1}></EuiFlexItem>
-    </EuiFlexGroup>
+    <RevisionPanel
+      deployments={deployments}
+      deploymentsLoaded={deploymentsLoaded}
+      endpoint={endpoint}
+    />
   );
 };
