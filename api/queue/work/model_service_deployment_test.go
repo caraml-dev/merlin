@@ -8,7 +8,6 @@ import (
 
 	"github.com/caraml-dev/merlin/cluster"
 	clusterMock "github.com/caraml-dev/merlin/cluster/mocks"
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	imageBuilderMock "github.com/caraml-dev/merlin/pkg/imagebuilder/mocks"
@@ -34,6 +33,7 @@ func TestExecuteDeployment(t *testing.T) {
 			MaxReplica:    1,
 			CPURequest:    resource.MustParse("1"),
 			MemoryRequest: resource.MustParse("1Gi"),
+			GPURequest:    resource.MustParse("0"),
 		},
 	}
 
@@ -79,6 +79,7 @@ func TestExecuteDeployment(t *testing.T) {
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -89,13 +90,6 @@ func TestExecuteDeployment(t *testing.T) {
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
 				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:     env,
-					EnvironmentName: env.Name,
-					ResourceRequest: env.DefaultResourceRequest,
-					VersionID:       version.ID,
-					Namespace:       project.Name,
-				}, nil)
 				return mockStorage
 			},
 			controller: func() *clusterMock.Controller {
@@ -123,6 +117,7 @@ func TestExecuteDeployment(t *testing.T) {
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -133,13 +128,6 @@ func TestExecuteDeployment(t *testing.T) {
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
 				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:     env,
-					EnvironmentName: env.Name,
-					ResourceRequest: env.DefaultResourceRequest,
-					VersionID:       version.ID,
-					Namespace:       project.Name,
-				}, nil)
 				return mockStorage
 			},
 			controller: func() *clusterMock.Controller {
@@ -167,6 +155,7 @@ func TestExecuteDeployment(t *testing.T) {
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -177,13 +166,6 @@ func TestExecuteDeployment(t *testing.T) {
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
 				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:     env,
-					EnvironmentName: env.Name,
-					ResourceRequest: env.DefaultResourceRequest,
-					VersionID:       version.ID,
-					Namespace:       project.Name,
-				}, nil)
 				return mockStorage
 			},
 			controller: func() *clusterMock.Controller {
@@ -213,6 +195,7 @@ func TestExecuteDeployment(t *testing.T) {
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -223,13 +206,6 @@ func TestExecuteDeployment(t *testing.T) {
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
 				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:     env,
-					EnvironmentName: env.Name,
-					ResourceRequest: env.DefaultResourceRequest,
-					VersionID:       version.ID,
-					Namespace:       project.Name,
-				}, nil)
 				return mockStorage
 			},
 			controller: func() *clusterMock.Controller {
@@ -252,14 +228,21 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 		},
 		{
-			name:      "Failed: deployment failed",
-			model:     model,
-			version:   version,
-			deployErr: errors.New("Failed to deploy"),
+			name:    "Success: Default With GPU",
+			model:   model,
+			version: version,
 			endpoint: &models.VersionEndpoint{
 				EnvironmentName: env.Name,
-				ResourceRequest: env.DefaultResourceRequest,
-				VersionID:       version.ID,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    0,
+					MaxReplica:    1,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+					GPUName:       "NVIDIA P4",
+					GPURequest:    resource.MustParse("1"),
+				},
+				VersionID: version.ID,
+				Namespace: project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -270,13 +253,45 @@ func TestExecuteDeployment(t *testing.T) {
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
 				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:     env,
-					EnvironmentName: env.Name,
-					ResourceRequest: env.DefaultResourceRequest,
-					VersionID:       version.ID,
-					Namespace:       project.Name,
-				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				return mockImgBuilder
+			},
+		},
+		{
+			name:      "Failed: deployment failed",
+			model:     model,
+			version:   version,
+			deployErr: errors.New("Failed to deploy"),
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName: env.Name,
+				ResourceRequest: env.DefaultResourceRequest,
+				VersionID:       version.ID,
+				Namespace:       project.Name,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			controller: func() *clusterMock.Controller {
@@ -299,6 +314,7 @@ func TestExecuteDeployment(t *testing.T) {
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -309,13 +325,6 @@ func TestExecuteDeployment(t *testing.T) {
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
 				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:     env,
-					EnvironmentName: env.Name,
-					ResourceRequest: env.DefaultResourceRequest,
-					VersionID:       version.ID,
-					Namespace:       project.Name,
-				}, nil)
 				return mockStorage
 			},
 			controller: func() *clusterMock.Controller {
@@ -367,7 +376,7 @@ func TestExecuteDeployment(t *testing.T) {
 			mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 2)
 
-			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
+			savedEndpoint := mockStorage.Calls[0].Arguments[0].(*models.VersionEndpoint)
 			assert.Equal(t, tt.model.ID, savedEndpoint.VersionModelID)
 			assert.Equal(t, tt.version.ID, savedEndpoint.VersionID)
 			assert.Equal(t, tt.model.Project.Name, savedEndpoint.Namespace)
@@ -405,6 +414,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			MaxReplica:    1,
 			CPURequest:    resource.MustParse("1"),
 			MemoryRequest: resource.MustParse("1Gi"),
+			GPURequest:    resource.MustParse("0"),
 		},
 	}
 
@@ -428,9 +438,6 @@ func TestExecuteRedeployment(t *testing.T) {
 	model := &models.Model{Name: "model", Project: project}
 	version := &models.Version{ID: 1, Labels: versionLabels}
 
-	// currentIsvcName := fmt.Sprintf("%s-%d-1", model.Name, version.ID)
-	// currentSvcName := fmt.Sprintf("%s-%d-1.project.svc.cluster.local", model.Name, version.ID)
-	// currentUrl := fmt.Sprintf("%s-%d-1.example.com", model.Name, version.ID)
 	modelSvcName := fmt.Sprintf("%s-%d-2", model.Name, version.ID)
 	svcName := fmt.Sprintf("%s-%d-2.project.svc.cluster.local", model.Name, version.ID)
 	url := fmt.Sprintf("%s-%d-2.example.com", model.Name, version.ID)
@@ -452,10 +459,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			model:   model,
 			version: version,
 			endpoint: &models.VersionEndpoint{
+				Environment:     env,
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				RevisionID:      models.ID(1),
 				Status:          models.EndpointRunning,
+				Namespace:       project.Name,
 			},
 			expectedEndpointStatus: models.EndpointRunning,
 			deploymentStorage: func() *mocks.DeploymentStorage {
@@ -466,16 +476,6 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:          env,
-					EnvironmentName:      env.Name,
-					ResourceRequest:      env.DefaultResourceRequest,
-					VersionID:            version.ID,
-					Namespace:            project.Name,
-					RevisionID:           models.ID(1),
-					InferenceServiceName: fmt.Sprintf("%s-%d-1", model.Name, version.ID),
-					Status:               models.EndpointRunning,
-				}, nil)
 				mockStorage.On("Save", &models.VersionEndpoint{
 					Environment:          env,
 					EnvironmentName:      env.Name,
@@ -514,10 +514,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			model:   model,
 			version: version,
 			endpoint: &models.VersionEndpoint{
+				Environment:     env,
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				RevisionID:      models.ID(1),
 				Status:          models.EndpointServing,
+				Namespace:       project.Name,
 			},
 			expectedEndpointStatus: models.EndpointServing,
 			deploymentStorage: func() *mocks.DeploymentStorage {
@@ -528,16 +531,6 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:          env,
-					EnvironmentName:      env.Name,
-					ResourceRequest:      env.DefaultResourceRequest,
-					VersionID:            version.ID,
-					Namespace:            project.Name,
-					RevisionID:           models.ID(1),
-					InferenceServiceName: fmt.Sprintf("%s-%d-1", model.Name, version.ID),
-					Status:               models.EndpointServing,
-				}, nil)
 				mockStorage.On("Save", &models.VersionEndpoint{
 					Environment:          env,
 					EnvironmentName:      env.Name,
@@ -576,10 +569,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			model:   model,
 			version: version,
 			endpoint: &models.VersionEndpoint{
+				Environment:     env,
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
+				RevisionID:      models.ID(1),
 				Status:          models.EndpointFailed,
+				Namespace:       project.Name,
 			},
 			expectedEndpointStatus: models.EndpointRunning,
 			deploymentStorage: func() *mocks.DeploymentStorage {
@@ -590,16 +586,6 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			storage: func() *mocks.VersionEndpointStorage {
 				mockStorage := &mocks.VersionEndpointStorage{}
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:          env,
-					EnvironmentName:      env.Name,
-					ResourceRequest:      env.DefaultResourceRequest,
-					VersionID:            version.ID,
-					Namespace:            project.Name,
-					RevisionID:           models.ID(1),
-					InferenceServiceName: fmt.Sprintf("%s-%d-1", model.Name, version.ID),
-					Status:               models.EndpointFailed,
-				}, nil)
 				mockStorage.On("Save", &models.VersionEndpoint{
 					Environment:          env,
 					EnvironmentName:      env.Name,
@@ -672,8 +658,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 2)
 
-			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
-			log.Infof("savedEndpoint: %+v", savedEndpoint)
+			savedEndpoint := mockStorage.Calls[0].Arguments[0].(*models.VersionEndpoint)
 			assert.Equal(t, tt.model.ID, savedEndpoint.VersionModelID)
 			assert.Equal(t, tt.version.ID, savedEndpoint.VersionID)
 			assert.Equal(t, tt.model.Project.Name, savedEndpoint.Namespace)

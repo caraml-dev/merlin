@@ -146,7 +146,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		return nil, fmt.Errorf("failed to enqueue model service deployment job: %w", err)
 	}
 
-	return &currentEndpoint, nil
+	return endpoint, nil
 }
 
 // override left version endpoint with values on the right version endpoint
