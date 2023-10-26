@@ -23,7 +23,9 @@ const DeploymentStatus = ({
   if (status === "running" || status === "serving") {
     if (
       deployment.revision_id === endpointRevisionId &&
-      (endpointStatus === "running" || endpointStatus === "serving")
+      (endpointStatus === "pending" ||
+        endpointStatus === "running" ||
+        endpointStatus === "serving")
     ) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
@@ -99,7 +101,8 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
           {deployment.revision_id === endpoint.revision_id &&
-            (endpoint.status === "running" ||
+            (endpoint.status === "pending" ||
+              endpoint.status === "running" ||
               endpoint.status === "serving") && (
               <EuiBadge color="default">Current</EuiBadge>
             )}
