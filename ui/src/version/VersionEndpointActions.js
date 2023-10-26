@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import React, { Fragment, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useToggle } from "@caraml-dev/ui-lib";
 import {
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiText
+  EuiText,
 } from "@elastic/eui";
-import { useToggle } from "@caraml-dev/ui-lib";
+import React, { Fragment, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { StopServeVersionEndpointModal } from "../components/modals";
 
 const VersionEndpointActions = ({
@@ -32,8 +32,8 @@ const VersionEndpointActions = ({
   fetchVersions,
   ...props
 }) => {
-  const openModal = toggleFn => {
-    return event => {
+  const openModal = (toggleFn) => {
+    return (event) => {
       event.preventDefault();
       props.setActiveVersionEndpoint(versionEndpoint);
       props.setActiveVersion(activeVersion);
@@ -44,14 +44,14 @@ const VersionEndpointActions = ({
 
   const [
     isStopServeModelEndpointModalVisible,
-    toggleStopServeModelEndpointModal
+    toggleStopServeModelEndpointModal,
   ] = useToggle();
   const [modelEndpoint, setModelEndpoint] = useState({});
 
   useEffect(() => {
     if (activeModel.endpoints && versionEndpoint.status === "serving") {
       const modelEndpoint = activeModel.endpoints.find(
-        endpoint =>
+        (endpoint) =>
           endpoint.environment_name === versionEndpoint.environment_name
       );
       setModelEndpoint(modelEndpoint);
@@ -64,7 +64,8 @@ const VersionEndpointActions = ({
         <EuiButtonEmpty
           onClick={openModal(props.toggleServeEndpointModal)}
           iconType="play"
-          size="xs">
+          size="xs"
+        >
           <EuiText size="xs">Start Serving</EuiText>
         </EuiButtonEmpty>
       </EuiFlexItem>
@@ -76,7 +77,8 @@ const VersionEndpointActions = ({
           onClick={() => toggleStopServeModelEndpointModal()}
           color="danger"
           iconType="minusInCircle"
-          size="xs">
+          size="xs"
+        >
           <EuiText size="xs">Stop serving</EuiText>
         </EuiButtonEmpty>
       </EuiFlexItem>
@@ -88,8 +90,9 @@ const VersionEndpointActions = ({
           to={`${activeVersion.id}/endpoints/${versionEndpoint.id}/redeploy`}
           state={{
             model: activeModel,
-            version: activeVersion
-          }}>
+            version: activeVersion,
+          }}
+        >
           <EuiButtonEmpty iconType="importAction" size="xs">
             <EuiText size="xs">Redeploy</EuiText>
           </EuiButtonEmpty>
@@ -103,7 +106,8 @@ const VersionEndpointActions = ({
           onClick={openModal(props.toggleUndeployEndpointModal)}
           color="danger"
           iconType="exportAction"
-          size="xs">
+          size="xs"
+        >
           <EuiText size="xs">Undeploy</EuiText>
         </EuiButtonEmpty>
       </EuiFlexItem>
@@ -115,7 +119,8 @@ const VersionEndpointActions = ({
           href={versionEndpoint.monitoring_url}
           iconType="visLine"
           size="xs"
-          target="_blank">
+          target="_blank"
+        >
           <EuiText size="xs">Monitoring</EuiText>
         </EuiButtonEmpty>
       </EuiFlexItem>
@@ -139,10 +144,10 @@ const VersionEndpointActions = ({
           </EuiButtonEmpty>
         </Link>
       </EuiFlexItem>
-    )
+    ),
   };
 
-  const tailorActions = actions => {
+  const tailorActions = (actions) => {
     let list = [];
 
     // Start serving
@@ -166,7 +171,6 @@ const VersionEndpointActions = ({
 
     // Undeploy
     if (
-      versionEndpoint.status === "pending" ||
       versionEndpoint.status === "running" ||
       versionEndpoint.status === "failed"
     ) {

@@ -3,14 +3,12 @@ import {
   EuiBadge,
   EuiButtonIcon,
   EuiCodeBlock,
-  EuiFlexGroup,
-  EuiFlexItem,
   EuiHealth,
   EuiInMemoryTable,
   EuiScreenReaderOnly,
   EuiText,
 } from "@elastic/eui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 
@@ -19,16 +17,12 @@ const defaultTextSize = "s";
 const DeploymentStatus = ({
   status,
   deployment,
-  deployedRevision,
+  endpointRevisionId,
   endpointStatus,
 }) => {
-  if (deployment.error !== "") {
-    return <EuiHealth color="danger">Failed</EuiHealth>;
-  }
-
   if (status === "running" || status === "serving") {
     if (
-      deployment.id === deployedRevision.id &&
+      deployment.revision_id === endpointRevisionId &&
       (endpointStatus === "pending" ||
         endpointStatus === "running" ||
         endpointStatus === "serving")
@@ -39,16 +33,30 @@ const DeploymentStatus = ({
   } else if (status === "pending") {
     return <EuiHealth color="gray">Pending</EuiHealth>;
   }
+
+  if (deployment.error !== "") {
+    return <EuiHealth color="danger">Failed</EuiHealth>;
+  }
 };
 
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
-  const orderedDeployments = deployments.sort((a, b) => b.id - a.id);
+  const [orderedDeployments, setOrderedDeployments] = useState([]);
+  useEffect(() => {
+    let orderedDeployments = deployments.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-  const deployedRevision = orderedDeployments.find(
-    (deployment) =>
-      (deployment.status === "running" || deployment.status === "serving") &&
-      deployment.error === ""
-  ) || { id: null };
+    let idx = 0;
+    orderedDeployments.forEach((deployment) => {
+      if (deployment.status === "running" || deployment.status === "serving") {
+        deployment.revision_id = idx + 1;
+        idx++;
+      }
+    });
+
+    orderedDeployments = orderedDeployments.sort((a, b) =>
+      a.id < b.id ? 1 : -1
+    );
+    setOrderedDeployments(orderedDeployments);
+  }, [deployments]);
 
   const canBeExpanded = (deployment) => {
     return deployment.error !== "";
@@ -92,9 +100,12 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <>
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
-          {deployment.id === deployedRevision.id && (
-            <EuiBadge color="default">Current</EuiBadge>
-          )}
+          {deployment.revision_id === endpoint.revision_id &&
+            (endpoint.status === "pending" ||
+              endpoint.status === "running" ||
+              endpoint.status === "serving") && (
+              <EuiBadge color="default">Current</EuiBadge>
+            )}
         </>
       ),
     },
@@ -105,7 +116,7 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <DeploymentStatus
           status={status}
           deployment={deployment}
-          deployedRevision={deployedRevision}
+          endpointRevisionId={endpoint.revision_id}
           endpointStatus={endpoint.status}
         />
       ),
@@ -170,15 +181,12 @@ export const HistoryDetails = ({ model, version, endpoint }) => {
   );
 
   return (
-    <EuiFlexGroup>
-      <EuiFlexItem grow={3}>
-        <RevisionPanel
-          deployments={deployments}
-          deploymentsLoaded={deploymentsLoaded}
-          endpoint={endpoint}
-        />
-      </EuiFlexItem>
-      <EuiFlexItem grow={1}></EuiFlexItem>
-    </EuiFlexGroup>
+    <>
+      <RevisionPanel
+        deployments={deployments}
+        deploymentsLoaded={deploymentsLoaded}
+        endpoint={endpoint}
+      />
+    </>
   );
 };

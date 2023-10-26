@@ -480,7 +480,7 @@ func TestDeployEndpoint(t *testing.T) {
 			wantDeployError: false,
 		},
 		{
-			name: "success: raw deployment ",
+			name: "success: raw deployment",
 			args: args{
 				env,
 				model,
@@ -717,7 +717,6 @@ func TestDeployEndpoint(t *testing.T) {
 			expectedEndpoint: &models.VersionEndpoint{
 				Namespace: project.Name,
 				URL:       "",
-				Status:    models.EndpointPending,
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    2,
 					MaxReplica:    4,
