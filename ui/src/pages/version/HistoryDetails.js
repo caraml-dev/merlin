@@ -23,9 +23,7 @@ const DeploymentStatus = ({
   if (status === "running" || status === "serving") {
     if (
       deployment.revision_id === endpointRevisionId &&
-      (endpointStatus === "pending" ||
-        endpointStatus === "running" ||
-        endpointStatus === "serving")
+      (endpointStatus === "running" || endpointStatus === "serving")
     ) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
@@ -42,15 +40,19 @@ const DeploymentStatus = ({
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
   const [orderedDeployments, setOrderedDeployments] = useState([]);
   useEffect(() => {
+    let orderedDeployments = deployments.sort((a, b) => (a.id > b.id ? 1 : -1));
+
     let idx = 0;
-    deployments.forEach((deployment) => {
+    orderedDeployments.forEach((deployment) => {
       if (deployment.status === "running" || deployment.status === "serving") {
         deployment.revision_id = idx + 1;
         idx++;
       }
     });
 
-    const orderedDeployments = deployments.sort((a, b) => b.id - a.id);
+    orderedDeployments = orderedDeployments.sort((a, b) =>
+      a.id < b.id ? 1 : -1
+    );
     setOrderedDeployments(orderedDeployments);
   }, [deployments]);
 
@@ -97,8 +99,7 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
           {deployment.revision_id === endpoint.revision_id &&
-            (endpoint.status === "pending" ||
-              endpoint.status === "running" ||
+            (endpoint.status === "running" ||
               endpoint.status === "serving") && (
               <EuiBadge color="default">Current</EuiBadge>
             )}
