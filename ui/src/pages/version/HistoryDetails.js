@@ -8,7 +8,7 @@ import {
   EuiScreenReaderOnly,
   EuiText,
 } from "@elastic/eui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 
@@ -17,12 +17,12 @@ const defaultTextSize = "s";
 const DeploymentStatus = ({
   status,
   deployment,
-  deployedRevision,
+  endpointRevisionId,
   endpointStatus,
 }) => {
   if (status === "running" || status === "serving") {
     if (
-      deployment.id === deployedRevision.id &&
+      deployment.revision_id === endpointRevisionId &&
       (endpointStatus === "pending" ||
         endpointStatus === "running" ||
         endpointStatus === "serving")
@@ -40,13 +40,19 @@ const DeploymentStatus = ({
 };
 
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
-  const orderedDeployments = deployments.sort((a, b) => b.id - a.id);
+  const [orderedDeployments, setOrderedDeployments] = useState([]);
+  useEffect(() => {
+    let idx = 0;
+    deployments.forEach((deployment) => {
+      if (deployment.status === "running" || deployment.status === "serving") {
+        deployment.revision_id = idx + 1;
+        idx++;
+      }
+    });
 
-  const deployedRevision = orderedDeployments.find(
-    (deployment) =>
-      (deployment.status === "running" || deployment.status === "serving") &&
-      deployment.error === ""
-  ) || { id: null };
+    const orderedDeployments = deployments.sort((a, b) => b.id - a.id);
+    setOrderedDeployments(orderedDeployments);
+  }, [deployments]);
 
   const canBeExpanded = (deployment) => {
     return deployment.error !== "";
@@ -90,9 +96,12 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <>
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
-          {deployment.id === deployedRevision.id && (
-            <EuiBadge color="default">Current</EuiBadge>
-          )}
+          {deployment.revision_id === endpoint.revision_id &&
+            (endpoint.status === "pending" ||
+              endpoint.status === "running" ||
+              endpoint.status === "serving") && (
+              <EuiBadge color="default">Current</EuiBadge>
+            )}
         </>
       ),
     },
@@ -103,7 +112,7 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <DeploymentStatus
           status={status}
           deployment={deployment}
-          deployedRevision={deployedRevision}
+          endpointRevisionId={endpoint.revision_id}
           endpointStatus={endpoint.status}
         />
       ),
@@ -168,10 +177,12 @@ export const HistoryDetails = ({ model, version, endpoint }) => {
   );
 
   return (
-    <RevisionPanel
-      deployments={deployments}
-      deploymentsLoaded={deploymentsLoaded}
-      endpoint={endpoint}
-    />
+    <>
+      <RevisionPanel
+        deployments={deployments}
+        deploymentsLoaded={deploymentsLoaded}
+        endpoint={endpoint}
+      />
+    </>
   );
 };
