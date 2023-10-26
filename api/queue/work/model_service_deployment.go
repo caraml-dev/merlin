@@ -3,6 +3,7 @@ package work
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/prometheus/client_golang/prometheus"
+	"gorm.io/gorm"
 )
 
 var deploymentCounter = prometheus.NewCounterVec(
@@ -64,6 +66,17 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	model := jobArgs.Model
 	model.Project = project
 
+	prevEndpoint, err := depl.Storage.Get(endpoint.ID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Errorf("could not found version endpoint with id %s and error: %v", endpoint.ID, err)
+		return err
+	}
+	if err != nil {
+		log.Errorf("could not fetch version endpoint with id %s and error: %v", endpoint.ID, err)
+		// If error getting record from db, return err as RetryableError to enable retry
+		return queue.RetryableError{Message: err.Error()}
+	}
+
 	isRedeployment := false
 
 	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
@@ -102,16 +115,18 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 			log.Warnf("unable to update deployment history", err)
 		}
 
-		// if this is a redeployment, we don't want to update the endpoint status
-		// otherwise, we want to update the first endpoint status with the deployment status
-		if !isRedeployment {
-			endpoint.Status = deployment.Status
-			endpoint.Message = deployment.Error
-		}
+		// if redeployment failed, we only update the previous endpoint status from pending to previous status
+		if deployment.Error != "" {
+			prevEndpoint.Status = previousStatus
+			// but if it's not redeployment (first deployment), we set the status to failed
+			if !isRedeployment {
+				prevEndpoint.Status = models.EndpointFailed
+			}
 
-		// record the version endpoint result
-		if err := depl.Storage.Save(endpoint); err != nil {
-			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+			// record the version endpoint result if deployment
+			if err := depl.Storage.Save(prevEndpoint); err != nil {
+				log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+			}
 		}
 	}()
 
@@ -150,6 +165,11 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		endpoint.Status = models.EndpointRunning
 	}
 	deployment.Status = endpoint.Status
+
+	// record the new endpoint result if deployment is successful
+	if err := depl.Storage.Save(endpoint); err != nil {
+		log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+	}
 
 	return nil
 }
