@@ -267,6 +267,18 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 		return nil, err
 	}
 
+	// record the undeployment process
+	_, err = k.deploymentStorage.Save(&models.Deployment{
+		ProjectID:         model.ProjectID,
+		VersionModelID:    model.ID,
+		VersionID:         endpoint.VersionID,
+		VersionEndpointID: endpoint.ID,
+		Status:            models.EndpointTerminated,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return endpoint, nil
 }
 

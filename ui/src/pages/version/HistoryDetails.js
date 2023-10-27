@@ -17,21 +17,25 @@ const defaultTextSize = "s";
 const DeploymentStatus = ({
   status,
   deployment,
-  endpointRevisionId,
+  deployedRevision,
   endpointStatus,
+  isTerminated,
 }) => {
   if (status === "running" || status === "serving") {
     if (
-      deployment.revision_id === endpointRevisionId &&
+      deployment.id === deployedRevision.id &&
       (endpointStatus === "pending" ||
         endpointStatus === "running" ||
-        endpointStatus === "serving")
+        endpointStatus === "serving") &&
+      !isTerminated
     ) {
       return <EuiHealth color="success">Deployed</EuiHealth>;
     }
     return <EuiHealth color="default">Not Deployed</EuiHealth>;
   } else if (status === "pending") {
     return <EuiHealth color="gray">Pending</EuiHealth>;
+  } else if (status === "terminated") {
+    return <EuiHealth color="danger">Terminated</EuiHealth>;
   }
 
   if (deployment.error !== "") {
@@ -41,21 +45,26 @@ const DeploymentStatus = ({
 
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
   const [orderedDeployments, setOrderedDeployments] = useState([]);
-  useEffect(() => {
-    let orderedDeployments = deployments.sort((a, b) => (a.id > b.id ? 1 : -1));
+  const [deployedRevision, setDeployedRevision] = useState({ id: null });
+  const [isTerminated, setIsTerminated] = useState(false);
 
-    let idx = 0;
-    orderedDeployments.forEach((deployment) => {
-      if (deployment.status === "running" || deployment.status === "serving") {
-        deployment.revision_id = idx + 1;
-        idx++;
-      }
+  useEffect(() => {
+    const ordered = deployments.sort((a, b) => (a.id < b.id ? 1 : -1));
+    setOrderedDeployments(ordered);
+
+    const lastTerminatedIdx = ordered.findIndex((deployment) => {
+      return deployment.status === "terminated";
     });
 
-    orderedDeployments = orderedDeployments.sort((a, b) =>
-      a.id < b.id ? 1 : -1
-    );
-    setOrderedDeployments(orderedDeployments);
+    const lastSuccessIdx = ordered.findIndex((deployment) => {
+      return (
+        (deployment.status === "running" || deployment.status === "serving") &&
+        deployment.error === ""
+      );
+    });
+
+    setDeployedRevision(ordered[lastSuccessIdx]);
+    setIsTerminated(lastTerminatedIdx < lastSuccessIdx);
   }, [deployments]);
 
   const canBeExpanded = (deployment) => {
@@ -100,12 +109,11 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <>
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
-          {deployment.revision_id === endpoint.revision_id &&
+          {deployment.id === deployedRevision.id &&
             (endpoint.status === "pending" ||
               endpoint.status === "running" ||
-              endpoint.status === "serving") && (
-              <EuiBadge color="default">Current</EuiBadge>
-            )}
+              endpoint.status === "serving") &&
+            !isTerminated && <EuiBadge color="default">Current</EuiBadge>}
         </>
       ),
     },
@@ -116,8 +124,9 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <DeploymentStatus
           status={status}
           deployment={deployment}
-          endpointRevisionId={endpoint.revision_id}
+          deployedRevision={deployedRevision}
           endpointStatus={endpoint.status}
+          isTerminated={isTerminated}
         />
       ),
     },
