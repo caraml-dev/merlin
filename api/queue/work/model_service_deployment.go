@@ -157,6 +157,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	endpoint.URL = svc.URL
 	endpoint.ServiceName = svc.ServiceName
 	endpoint.InferenceServiceName = svc.CurrentIsvcName
+	endpoint.UpdatedAt = time.Now()
 	endpoint.Message = "" // reset message
 
 	if previousStatus == models.EndpointServing {
