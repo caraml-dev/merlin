@@ -77,6 +77,10 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return queue.RetryableError{Message: err.Error()}
 	}
 
+	// Use CreatedUpdated value from DB so that jobArgs.Endpoint's CreatedUpdated are not default value (0001-01-01 00:00:00 +0000 UTC)
+	endpoint.CreatedAt = prevEndpoint.CreatedAt
+	endpoint.UpdatedAt = prevEndpoint.UpdatedAt
+
 	isRedeployment := false
 
 	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
@@ -157,7 +161,6 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	endpoint.URL = svc.URL
 	endpoint.ServiceName = svc.ServiceName
 	endpoint.InferenceServiceName = svc.CurrentIsvcName
-	endpoint.UpdatedAt = time.Now()
 	endpoint.Message = "" // reset message
 
 	if previousStatus == models.EndpointServing {
