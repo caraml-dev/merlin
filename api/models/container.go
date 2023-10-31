@@ -30,6 +30,7 @@ const (
 	PredictorComponentType        = "predictor"
 	TransformerComponentType      = "transformer"
 	PDBComponentType              = "pdb" // Pod disruption budget
+	VirtualServiceComponentType   = "vs"
 	BatchJobDriverComponentType   = "batch_job_driver"
 	BatchJobExecutorComponentType = "batch_job_executor"
 )
@@ -76,8 +77,8 @@ func componentType(containerName, podName string) string {
 	return componentType
 }
 
-func OnlineInferencePodLabelSelector(modelName string, versionID string) string {
-	serviceName := CreateInferenceServiceName(modelName, versionID)
+func OnlineInferencePodLabelSelector(modelName, versionID, revisionID string) string {
+	serviceName := CreateInferenceServiceName(modelName, versionID, revisionID)
 	return fmt.Sprintf(onlineInferenceLabelTemplate, serviceName)
 }
 

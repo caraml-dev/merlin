@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -269,9 +270,22 @@ func getModelNameAndVersion(inferenceServiceName string) (modelName string, mode
 		return inferenceServiceName, "1"
 	}
 
-	idx := strings.LastIndex(inferenceServiceName, "-")
-	modelName = inferenceServiceName[:idx]
-	modelVersion = inferenceServiceName[idx+1:]
+	// regex to match string that contains revision number at the end
+	// e.g. my-model-1-r1
+	re := regexp.MustCompile(`-r\d+$`)
+
+	// for backward compatibility
+	if !re.MatchString(inferenceServiceName) {
+		idx := strings.LastIndex(inferenceServiceName, "-")
+		modelName = inferenceServiceName[:idx]
+		modelVersion = inferenceServiceName[idx+1:]
+		return
+	}
+
+	withoutRevision := re.ReplaceAllString(inferenceServiceName, "")
+	idx := strings.LastIndex(withoutRevision, "-")
+	modelName = withoutRevision[:idx]
+	modelVersion = withoutRevision[idx+1:]
 	return
 }
 

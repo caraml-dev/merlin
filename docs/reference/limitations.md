@@ -36,9 +36,12 @@ Autoscaling is enabled for both staging and production environment. User can set
 
 ### Scale Down to Zero
 
-Scale-down-to-zero is a feature in Merlin where model deployment that doesn’t receive traffic within 10 minutes windows will be scaled down and have 0 replicas. The model needs to receive HTTP traffic to scale up and become available again.
+"Scaling down to zero" is a feature in Merlin, which automatically reduces the number of model deployments to zero when they haven't received any traffic for 10 minutes. To make the model available again, it must receive HTTP traffic, which triggers a scale-up.
 
-This feature is enabled for both production and staging, however in production the default minimum number of replica is set to 2, so user need to explicitly set the minimum replica to 0 during deployment in order to opt-in for this feature.
+This feature is only applicable when your autoscaling policy is set to either `RPS` or `Concurrency`."
+
+Note that, to utilise this feature, the minimum replicas for the deployment should be set to `0`.
+
 
 ### Logs
 

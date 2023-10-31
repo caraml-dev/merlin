@@ -256,9 +256,9 @@ class MerlinClient:
         env_vars: Dict[str, str] = None,
         transformer: Transformer = None,
         logger: Logger = None,
-        deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+        deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
-        protocol: Protocol = Protocol.HTTP_JSON,
+        protocol: Protocol = None,
     ) -> VersionEndpoint:
         return model_version.deploy(
             environment_name,

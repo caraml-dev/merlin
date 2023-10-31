@@ -82,28 +82,13 @@ const (
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
-var (
-	// list of configuration stored as annotations
-	configAnnotationKeys = []string{
-		annotationPrometheusScrapeFlag,
-		annotationPrometheusScrapePort,
-		knserving.QueueSidecarResourcePercentageAnnotationKey,
-		kserveconstant.AutoscalerClass,
-		kserveconstant.AutoscalerMetrics,
-		kserveconstant.TargetUtilizationPercentage,
-		knautoscaling.ClassAnnotationKey,
-		knautoscaling.MetricAnnotationKey,
-		knautoscaling.TargetAnnotationKey,
-	}
-
-	grpcContainerPorts = []corev1.ContainerPort{
-		{
-			ContainerPort: defaultGRPCPort,
-			Name:          "h2c",
-			Protocol:      corev1.ProtocolTCP,
-		},
-	}
-)
+var grpcContainerPorts = []corev1.ContainerPort{
+	{
+		ContainerPort: defaultGRPCPort,
+		Name:          "h2c",
+		Protocol:      corev1.ProtocolTCP,
+	},
+}
 
 type DeploymentScale struct {
 	Predictor   *int
@@ -118,10 +103,26 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 	return &InferenceServiceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig, currentReplicas DeploymentScale) (*kservev1beta1.InferenceService, error) {
 	applyDefaults(modelService, config)
 
-	annotations, err := createAnnotations(modelService, config, nil)
+	// Identify the desired initial scale of the new deployment
+	var initialScale *int
+	if currentReplicas.Predictor != nil {
+		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
+		// Set the desired scale of the new deployment by taking the max of the 2 values.
+		// Consider the transformer's scale only if it is also enabled in the new spec.
+		if modelService.Transformer != nil &&
+			modelService.Transformer.Enabled &&
+			currentReplicas.Transformer != nil &&
+			*currentReplicas.Transformer > *currentReplicas.Predictor {
+			initialScale = currentReplicas.Transformer
+		} else {
+			initialScale = currentReplicas.Predictor
+		}
+	}
+
+	annotations, err := createAnnotations(modelService, config, initialScale)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
 	}
@@ -166,73 +167,6 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	}
 
 	return inferenceService, nil
-}
-
-func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(
-	orig *kservev1beta1.InferenceService,
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-	currentReplicas DeploymentScale,
-) (*kservev1beta1.InferenceService, error) {
-	// Identify the desired initial scale of the new deployment
-	var initialScale *int
-	if currentReplicas.Predictor != nil {
-		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
-		// Set the desired scale of the new deployment by taking the max of the 2 values.
-		// Consider the transformer's scale only if it is also enabled in the new spec.
-		if modelService.Transformer != nil &&
-			modelService.Transformer.Enabled &&
-			currentReplicas.Transformer != nil &&
-			*currentReplicas.Transformer > *currentReplicas.Predictor {
-			initialScale = currentReplicas.Transformer
-		} else {
-			initialScale = currentReplicas.Predictor
-		}
-	}
-
-	applyDefaults(modelService, config)
-
-	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
-	annotations, err := createAnnotations(modelService, config, initialScale)
-	if err != nil {
-		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
-	}
-	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
-
-	orig.Spec.Predictor = createPredictorSpec(modelService, config)
-	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-		orig,
-		modelService,
-		config,
-		kservev1beta1.PredictorComponent,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
-	}
-
-	orig.Spec.Transformer = nil
-	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		if _, ok := orig.Status.Components[kservev1beta1.TransformerComponent]; !ok ||
-			orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
-			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
-				modelService,
-				config,
-				kservev1beta1.TransformerComponent,
-			)
-		} else {
-			orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-				orig,
-				modelService,
-				config,
-				kservev1beta1.TransformerComponent,
-			)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
-		}
-	}
-	return orig, nil
 }
 
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
@@ -684,39 +618,6 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	)
 }
 
-// updateExistingInferenceServiceTopologySpreadConstraints creates topology spread constraints for a component of a new
-// inference service
-func updateExistingInferenceServiceTopologySpreadConstraints(
-	orig *kservev1beta1.InferenceService,
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-	component kservev1beta1.ComponentType,
-) ([]corev1.TopologySpreadConstraint, error) {
-	if len(config.TopologySpreadConstraints) == 0 {
-		var topologySpreadConstraints []corev1.TopologySpreadConstraint
-		return topologySpreadConstraints, nil
-	}
-	var newRevisionName string
-	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s", modelService.Name, component)
-	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
-		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-		var err error
-		newRevisionName, err = getNewRevisionNameForExistingServerlessDeployment(
-			orig.Status.Components[component].LatestCreatedRevision,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("unable to generate new revision name: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
-	}
-	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
-		config.TopologySpreadConstraints,
-		newRevisionName,
-	)
-}
-
 // appendPodSpreadingLabelSelectorsToTopologySpreadConstraints makes a deep copy of the config topology spread
 // constraints and then adds the given revisionName as a label to the match labels of each topology spread constraint
 // to spread out all the pods across the specified topologyKey
@@ -756,24 +657,6 @@ func copyTopologySpreadConstraints(
 		return nil, fmt.Errorf("Error in type assertion of copied topology spread constraints interface: %w", err)
 	}
 	return topologySpreadConstraints, nil
-}
-
-// getNewRevisionNameForExistingServerlessDeployment examines the current revision name of an inference service (
-// serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
-// sklearn-sample-predictor-00001 -> sklearn-sample-predictor-00002
-func getNewRevisionNameForExistingServerlessDeployment(currentRevisionName string) (string, error) {
-	revisionNameElements := strings.Split(currentRevisionName, "-")
-	if len(revisionNameElements) < 4 {
-		return "", fmt.Errorf("unexpected revision name format that is not in at least 3 parts: %s",
-			currentRevisionName)
-	}
-	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])
-	if err != nil {
-		return "", err
-	}
-
-	revisionNameElements[len(revisionNameElements)-1] = fmt.Sprintf("%05d", currentRevisionNumber+1)
-	return strings.Join(revisionNameElements, "-"), nil
 }
 
 func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
@@ -869,7 +752,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 	envVars := models.EnvVars{
 		models.EnvVar{
 			Name:  envPyFuncModelName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envModelName,
@@ -881,7 +764,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 		},
 		models.EnvVar{
 			Name:  envModelFullName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envHTTPPort,

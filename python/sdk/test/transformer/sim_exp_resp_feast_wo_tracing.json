@@ -1,0 +1,17 @@
+{
+  "response": {
+    "instances": {
+      "columns": [
+        "rank",
+        "driver_id",
+        "customer_id",
+        "merlin_test_driver_features:test_int32",
+        "merlin_test_driver_features:test_float"
+      ],
+      "data": [
+        [0, "1234", 1111, -1, 0],
+        [1, "5678", 1111, -1, 0]
+      ]
+    }
+  }
+}

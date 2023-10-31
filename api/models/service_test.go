@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -179,7 +180,10 @@ func TestNewService(t *testing.T) {
 	project := mlp.Project{Name: "project", Labels: mlpLabels}
 	model := &Model{Name: "model", Project: project}
 	version := &Version{ID: 1, Labels: versionLabels}
-	endpoint := &VersionEndpoint{}
+	revisionID := ID(1)
+	endpoint := &VersionEndpoint{
+		RevisionID: revisionID,
+	}
 
 	type args struct {
 		model    *Model
@@ -201,9 +205,10 @@ func TestNewService(t *testing.T) {
 				endpoint: endpoint,
 			},
 			want: &Service{
-				Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
+				Name:            fmt.Sprintf("%s-%s-r%s", model.Name, version.ID.String(), revisionID),
 				ModelName:       model.Name,
 				ModelVersion:    version.ID.String(),
+				RevisionID:      revisionID,
 				Namespace:       model.Project.Name,
 				ArtifactURI:     version.ArtifactURI,
 				Type:            model.Type,

@@ -279,7 +279,8 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		// Should not allow changing the deployment mode of a pending/running/serving model for 2 reasons:
 		// * For "serving" models it's risky as, we can't guarantee graceful re-deployment
 		// * Kserve uses slightly different deployment resource naming under the hood and doesn't clean up the older deployment
-		if (endpoint.IsRunning() || endpoint.IsServing()) && newEndpoint.DeploymentMode != endpoint.DeploymentMode {
+		if (endpoint.IsRunning() || endpoint.IsServing()) && newEndpoint.DeploymentMode != "" &&
+			newEndpoint.DeploymentMode != endpoint.DeploymentMode {
 			return BadRequest(fmt.Sprintf("Changing deployment type of a %s model is not allowed, please terminate it first.",
 				endpoint.Status))
 		}
@@ -379,12 +380,16 @@ func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]st
 	if err != nil {
 		return NotFound(fmt.Sprintf("Version not found: %v", err))
 	}
+	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
+	if err != nil {
+		return NotFound(fmt.Sprintf("Endpoint not found: %v", err))
+	}
 
-	endpoint, err := c.EndpointsService.ListContainers(ctx, model, version, endpointID)
+	containers, err := c.EndpointsService.ListContainers(ctx, model, version, endpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint: %v", err))
 	}
-	return Ok(endpoint)
+	return Ok(containers)
 }
 
 func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndpoint) error {

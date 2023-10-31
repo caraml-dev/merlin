@@ -98,10 +98,7 @@ def test_sklearn(
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
 
-    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-    endpoint = merlin.deploy(
-        v, deployment_mode=deployment_mode, resource_request=resource_request
-    )
+    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -133,10 +130,7 @@ def test_xgboost(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-    endpoint = merlin.deploy(
-        v, deployment_mode=deployment_mode, resource_request=resource_request
-    )
+    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -240,8 +234,7 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth, requests)
 
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
-        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-        endpoint = merlin.deploy(v, resource_request=resource_request)
+        endpoint = merlin.deploy(v)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -265,9 +258,8 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth, reque
 
     with merlin.new_model_version() as v:
         # Upload the serialized model to MLP
-        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v, resource_request=resource_request)
+        endpoint = merlin.deploy(v)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -307,9 +299,8 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
 
     with merlin.new_model_version() as v:
         # Upload the serialized model to MLP
-        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v, resource_request=resource_request)
+        endpoint = merlin.deploy(v)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -355,10 +346,7 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth, request
     with merlin.new_model_version() as v:
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
-        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-        endpoint = merlin.deploy(
-            v, environment_name=default_env.name, resource_request=resource_request
-        )
+        endpoint = merlin.deploy(v, environment_name=default_env.name)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -395,7 +383,7 @@ def test_resource_request(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+        resource_request = ResourceRequest(1, 1, "100m", "256Mi")
         endpoint = merlin.deploy(
             v,
             environment_name=default_env.name,
@@ -444,7 +432,7 @@ def test_resource_request_with_gpu(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-        resource_request = ResourceRequest(1, 1, "100m", "200Mi", **gpu_config)
+        resource_request = ResourceRequest(1, 1, "100m", "256Mi", **gpu_config)
         endpoint = merlin.deploy(
             v,
             environment_name=default_env.name,
@@ -1080,6 +1068,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     # Deploy using raw_deployment with CPU autoscaling policy
     endpoint = merlin.deploy(
         v1,
+        resource_request=merlin.ResourceRequest(1, 1, "123m", "234Mi"),
+        env_vars={"green": "TRUE"},
         autoscaling_policy=merlin.AutoscalingPolicy(
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
@@ -1091,6 +1081,12 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check the deployment configs of v1
+    assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.memory_request == "234Mi"
+    assert endpoint.env_vars == {"green": "TRUE"}
+    assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
 
     # Check the autoscaling policy of v1
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
@@ -1115,6 +1111,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     # Check that the endpoint remains the same
     assert endpoint.url == new_endpoint.url
+
+    # Check that the deployment configs of v2 have remained the same as those used in v1
+    assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.memory_request == "234Mi"
+    assert endpoint.env_vars == {"green": "TRUE"}
+    assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
+
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert new_endpoint.autoscaling_policy.target_value == 90
@@ -1181,3 +1184,47 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     assert "operation_tracing" in resp_w_tracing.keys()
     assert resp_wo_tracing == exp_resp_valid_wo_tracing
     assert resp_w_tracing == exp_resp_valid_w_tracing
+
+
+@pytest.mark.feast
+@pytest.mark.integration
+def test_standard_transformer_simulate_feast(integration_test_url, use_google_oauth):
+    """
+    Test the `simulate` method of the `StandardTransformer` class with Feast enricher.
+    """
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+
+    transformer_config_path = os.path.join(
+        "test/transformer", "standard_transformer_with_feast.yaml"
+    )
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+
+    request_json = {
+        "drivers": [
+            {"id": "1234", "name": "driver-1"},
+            {"id": "5678", "name": "driver-2"},
+        ],
+        "customer": {"id": 1111},
+    }
+
+    response_w_tracing = transformer.simulate(
+        payload=request_json, exclude_tracing=True
+    )
+    response_wo_tracing = transformer.simulate(
+        payload=request_json, exclude_tracing=False
+    )
+
+    with open("test/transformer/sim_exp_resp_feast_w_tracing.json", "r") as f:
+        exp_resp_w_tracing = json.load(f)
+
+    with open("test/transformer/sim_exp_resp_feast_wo_tracing.json", "r") as f:
+        exp_resp_wo_tracing = json.load(f)
+
+    assert isinstance(response_w_tracing, dict)
+    assert isinstance(response_wo_tracing, dict)
+    assert "response" in response_w_tracing.keys()
+    assert "response" in response_wo_tracing.keys()
+    assert "operation_tracing" not in response_wo_tracing.keys()
+    assert "operation_tracing" in response_w_tracing.keys()
+    assert response_w_tracing == exp_resp_w_tracing
+    assert response_wo_tracing == exp_resp_wo_tracing
