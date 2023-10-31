@@ -16,6 +16,7 @@ package models
 
 import (
 	"net/url"
+	"time"
 
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -102,6 +103,9 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		AutoscalingPolicy: autoscalingPolicy,
 		EnvVars:           envVars,
 		Protocol:          protocol.HttpJson,
+		CreatedUpdated: CreatedUpdated{
+			CreatedAt: time.Now(),
+		},
 	}
 
 	if monitoringConfig.MonitoringEnabled {
