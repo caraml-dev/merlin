@@ -30,6 +30,7 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "google-cloud-storage>=1.19.0",
+    "protobuf>=3.0.0,<5.0.0",
     "mlflow>=1.26.1,<2.0.0",
     "PyPrind>=2.11.2",
     "python_dateutil>=2.5.3",

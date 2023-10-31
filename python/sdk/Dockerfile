@@ -10,7 +10,5 @@ RUN apt-get update && apt-get install build-essential curl vim wget -y
 
 COPY . .${WORKDIR}
 
-ARG VERSION
-
 RUN pip install .
 RUN pip install ".[test]"

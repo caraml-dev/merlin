@@ -61,8 +61,7 @@ jobs:
         working-directory: ./python/sdk
         run: |
           IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-sdk:py${{ matrix.python-version }}-${{ inputs.version }}"
-          SDK_VERSION="$(sed 's/^v\(.*\)-/\1/' <<< "${{ inputs.version }}")"
-          docker build -t ${IMAGE_TAG} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg VERSION=${SDK_VERSION} .
+          docker build -t ${IMAGE_TAG} --build-arg PYTHON_VERSION=${{ matrix.python-version }} .
           docker push ${IMAGE_TAG}
 
   publish-api:
