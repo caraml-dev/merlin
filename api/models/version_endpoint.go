@@ -105,6 +105,7 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		Protocol:          protocol.HttpJson,
 		CreatedUpdated: CreatedUpdated{
 			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 	}
 
