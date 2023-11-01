@@ -12,7 +12,7 @@ TEST_TAGS?=
 GOLANGCI_LINT_VERSION="v1.51.2"
 PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
 PROTOC_GEN_GO_VERSION="v1.26"
-PYTHON_VERSION ?= "37"	#set as 37 38 39 310 for 3.7-3.10 respectively
+PYTHON_VERSION ?= "39"	#set as 38 39 310 for 3.8-3.10 respectively
 
 all: setup init-dep lint test clean build run
 

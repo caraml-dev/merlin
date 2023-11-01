@@ -53,7 +53,7 @@ TEST_REQUIRES = [
     "pytest",
     "recursive-diff>=1.0.0",
     "requests",
-    "scikit-learn==1.0.2", #TODO: >=1.1.2 upon python 3.7 deprecation
+    "scikit-learn>=1.1.2",
     "types-python-dateutil",
     "types-PyYAML",
     "types-six",
