@@ -14,48 +14,41 @@ import { useMerlinApi } from "../../hooks/useMerlinApi";
 
 const defaultTextSize = "s";
 
-const DeploymentStatus = ({
-  status,
-  deployment,
-  endpointRevisionId,
-  endpointStatus,
-}) => {
-  if (status === "running" || status === "serving") {
-    if (
-      deployment.revision_id === endpointRevisionId &&
-      (endpointStatus === "pending" ||
-        endpointStatus === "running" ||
-        endpointStatus === "serving")
-    ) {
+const DeploymentStatus = ({ status }) => {
+  switch (status) {
+    case "pending":
+      return <EuiHealth color="gray">Pending</EuiHealth>;
+    case "running":
+    case "serving":
       return <EuiHealth color="success">Deployed</EuiHealth>;
-    }
-    return <EuiHealth color="default">Not Deployed</EuiHealth>;
-  } else if (status === "pending") {
-    return <EuiHealth color="gray">Pending</EuiHealth>;
-  }
-
-  if (deployment.error !== "") {
-    return <EuiHealth color="danger">Failed</EuiHealth>;
+    case "terminated":
+      return <EuiHealth color="default">Not Deployed</EuiHealth>;
+    case "failed":
+      return <EuiHealth color="danger">Failed</EuiHealth>;
+    default:
+      return <EuiHealth color="subdued">-</EuiHealth>;
   }
 };
 
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
   const [orderedDeployments, setOrderedDeployments] = useState([]);
-  useEffect(() => {
-    let orderedDeployments = deployments.sort((a, b) => (a.id > b.id ? 1 : -1));
+  const [currentDeployment, setCurrentDeployment] = useState({ id: null });
 
-    let idx = 0;
-    orderedDeployments.forEach((deployment) => {
-      if (deployment.status === "running" || deployment.status === "serving") {
-        deployment.revision_id = idx + 1;
-        idx++;
-      }
+  useEffect(() => {
+    const ordered = deployments.sort((a, b) => (a.id < b.id ? 1 : -1));
+    setOrderedDeployments(ordered);
+
+    const currentDeployment = ordered.find((deployment) => {
+      return (
+        (deployment.status === "running" ||
+          deployment.status === "serving" ||
+          deployment.status === "terminated") &&
+        deployment.error === ""
+      );
     });
 
-    orderedDeployments = orderedDeployments.sort((a, b) =>
-      a.id < b.id ? 1 : -1
-    );
-    setOrderedDeployments(orderedDeployments);
+    console.log("currentDeployment", currentDeployment);
+    setCurrentDeployment(currentDeployment);
   }, [deployments]);
 
   const canBeExpanded = (deployment) => {
@@ -100,26 +93,16 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         <>
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
-          {deployment.revision_id === endpoint.revision_id &&
-            (endpoint.status === "pending" ||
-              endpoint.status === "running" ||
-              endpoint.status === "serving") && (
-              <EuiBadge color="default">Current</EuiBadge>
-            )}
+          {deployment.id === currentDeployment.id && (
+            <EuiBadge color="default">Current</EuiBadge>
+          )}
         </>
       ),
     },
     {
       field: "status",
       name: "Deployment Status",
-      render: (status, deployment) => (
-        <DeploymentStatus
-          status={status}
-          deployment={deployment}
-          endpointRevisionId={endpoint.revision_id}
-          endpointStatus={endpoint.status}
-        />
-      ),
+      render: (status) => <DeploymentStatus status={status} />,
     },
     {
       align: "right",

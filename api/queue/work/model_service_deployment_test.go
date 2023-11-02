@@ -84,7 +84,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -129,7 +129,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -174,7 +174,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -221,7 +221,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -275,7 +275,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -328,7 +328,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -368,7 +368,7 @@ func TestExecuteDeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -430,7 +430,6 @@ func TestExecuteDeployment(t *testing.T) {
 			}
 
 			mockStorage.AssertNumberOfCalls(t, "Save", 1)
-			mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 2)
 
 			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
 			assert.Equal(t, tt.model.ID, savedEndpoint.VersionModelID)
@@ -527,7 +526,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -592,7 +591,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -657,7 +656,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -723,7 +722,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -798,7 +797,6 @@ func TestExecuteRedeployment(t *testing.T) {
 			}
 
 			mockStorage.AssertNumberOfCalls(t, "Save", 1)
-			mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 2)
 
 			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
 			assert.Equal(t, tt.model.ID, savedEndpoint.VersionModelID)

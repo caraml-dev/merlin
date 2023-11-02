@@ -90,13 +90,13 @@ func (d *deploymentStorage) Delete(modelID models.ID, versionID models.ID) error
 	return d.db.Where("version_id = ? AND version_model_id = ?", versionID, modelID).Delete(models.Deployment{}).Error
 }
 
-// OnDeploymentSuccess updates the new deployment status to successful on DB and update all previous deployment status for that version endpoint to terminated.
+// OnDeploymentSuccess updates the new deployment status to successful on DB and update all previous successful deployment status for that version endpoint to terminated.
 func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment) error {
 	if newDeployment.ID == 0 {
 		return fmt.Errorf("newDeployment.ID must not be empty")
 	}
 
-	if newDeployment.Status != models.EndpointRunning && newDeployment.Status != models.EndpointServing {
+	if !newDeployment.IsSuccess() {
 		return fmt.Errorf("newDeployment.Status must be running or serving")
 	}
 
@@ -115,13 +115,20 @@ func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment
 	}()
 
 	var deployments []*models.Deployment
-	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ?",
+	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('pending', 'running', 'serving')",
 		newDeployment.VersionModelID, newDeployment.VersionID, newDeployment.VersionEndpointID).Find(&deployments).Error
 	if err != nil {
 		return err
 	}
 
 	for i := range deployments {
+		// Update the new deployment
+		if deployments[i].ID == newDeployment.ID {
+			deployments[i] = newDeployment
+			continue
+		}
+
+		// Set older successful deployment to terminated
 		if deployments[i].IsSuccess() {
 			deployments[i].Status = models.EndpointTerminated
 		}
