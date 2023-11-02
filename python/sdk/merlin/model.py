@@ -77,6 +77,7 @@ import mlflow
 #
 PyFuncModel = pyfunc.PyFuncModel
 PyFuncV2Model = pyfunc.PyFuncV2Model
+PyFuncV3Model = pyfunc.PyFuncV3Model
 PYFUNC_EXTRA_ARGS_KEY = pyfunc.PYFUNC_EXTRA_ARGS_KEY
 PYFUNC_MODEL_INPUT_KEY = pyfunc.PYFUNC_MODEL_INPUT_KEY
 

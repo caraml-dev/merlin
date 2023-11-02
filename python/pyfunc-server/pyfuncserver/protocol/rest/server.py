@@ -25,6 +25,7 @@ async def sig_handler(server):
 class HTTPServer:
     def __init__(self, model: PyFuncModel, config: Config, metrics_registry: CollectorRegistry):
         self.workers = config.workers
+        self.publisher = config.publisher
         self.http_port = config.http_port
         self.metrics_registry = metrics_registry
         self.registered_models: dict = {}
@@ -38,7 +39,7 @@ class HTTPServer:
             (r"/v1/models/([a-zA-Z0-9_-]+)",
              HealthHandler, dict(models=self.registered_models)),
             (r"/v1/models/([a-zA-Z0-9_-]+):predict",
-             PredictHandler, dict(models=self.registered_models)),
+             PredictHandler, dict(models=self.registered_models, publisher_config=self.publisher)),
             (r"/metrics", MetricsHandler, dict(metrics_registry=self.metrics_registry))
         ])
 

@@ -1,11 +1,16 @@
 from abc import abstractmethod
-from typing import Union
+from typing import Union, List, Optional
+from dataclasses import dataclass
+
 
 import grpc
 import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
+from caraml.upi.v1 import prediction_log_pb2
+from google.protobuf.struct_pb2 import Struct
 from mlflow.pyfunc import PythonModel
+
 
 from merlin.protocol import Protocol
 
@@ -109,7 +114,152 @@ class PyFuncModel(PythonModel):
         :return: Prediction result as PredictValuesResponse proto
         """
         raise NotImplementedError("upiv1_infer is not implemented")
+    
+@dataclass
+class Values:
+    columns: List[str]
+    data: List[List]
 
+    def to_dict(self):
+        return {
+            "columns": self.columns,
+            "data": self.data
+        }
+
+
+@dataclass
+class ModelInput:
+    prediction_ids: List[str]
+    features: Values
+    entities: Optional[Values] = None
+
+    def features_dict(self) -> Optional[dict]:
+        if self.features is None:
+            return None
+        return self.features.to_dict()
+    
+    def entities_dict(self) -> Optional[dict]:
+        if self.entities is None:
+            return None
+        return self.entities.to_dict()
+    
+
+@dataclass
+class ModelOutput:
+    predictions: Values
+
+    def predictions_dict(self) -> dict:
+        if self.predictions is None:
+            return None
+        return self.predictions.to_dict()
+
+@dataclass
+class PyFuncOutput:
+    http_response: Optional[dict] = None
+    upi_response: Optional[upi_pb2.PredictValuesResponse] = None
+    model_input: Optional[ModelInput] = None
+    model_output: Optional[ModelOutput] = None
+
+    def contains_prediction_log(self):
+        return self.model_input is not None and self.model_output is not None
+    
+
+    def _new_struct(self, dictionary: Optional[dict]):
+        struct = None
+        if dictionary is not None:
+            struct = Struct()
+            struct.update(dictionary)
+
+        return struct
+
+    def to_model_input_proto(self) -> prediction_log_pb2.ModelInput:
+        # Setup model input struct
+        
+        features_table = self._new_struct(self.model_input.features_dict()) if self.model_input is not None else None
+        entities_table = self._new_struct(self.model_input.entities_dict()) if self.model_input is not None else None
+      
+        return prediction_log_pb2.ModelInput(features_table=features_table, entities_table=entities_table)
+        
+    def to_model_output_proto(self) -> prediction_log_pb2.ModelOutput:
+        prediction_results_table =  self._new_struct(self.model_output.predictions_dict()) if self.model_output is not None else None
+        return prediction_log_pb2.ModelOutput(prediction_results_table=prediction_results_table)
+              
+
+class PyFuncV3Model(PythonModel):
+    def load_context(self, context):
+        """
+        Override method of PythonModel `load_context`. This method load artifacts from context
+        that can be used in predict function. This method is called by internal MLflow when an MLflow
+        is loaded.
+
+        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
+                        can use to perform inference
+        """
+        self.initialize(context.artifacts)
+
+    def predict(self, context, model_input):
+        """
+        Implementation of PythonModel `predict` method. This method evaluates model input and produces model output.
+
+        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
+                        can use to perform inference
+        :param model_input: A pyfunc-compatible input for the model to evaluate.
+        """
+        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
+        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
+        protocol = model_input.get(PYFUNC_PROTOCOL_KEY, Protocol.HTTP_JSON)
+
+        if protocol == Protocol.HTTP_JSON:
+            if extra_args is not None:
+                return self._do_http_predict(input, **extra_args)
+            return self._do_http_predict(input)
+        elif protocol == Protocol.UPI_V1:
+            grpc_context = model_input.get(PYFUNC_GRPC_CONTEXT, None)
+            ml_model_input = self.upiv1_preprocess(input, grpc_context)
+            ml_model_output = self.ml_predict(model_input)
+            final_output = self.upiv1_postprocess(ml_model_output, input)
+            return PyFuncOutput(upi_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
+        else:
+            raise NotImplementedError(f"protocol {protocol} is not supported")
+
+    def _do_http_predict(self, model_input, **kwargs):
+        ml_model_input = self.preprocess(model_input, **kwargs)
+        ml_model_output = self.ml_predict(model_input)
+        final_output = self.postprocess(ml_model_output, model_input)
+
+        return PyFuncOutput(http_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
+
+    @abstractmethod
+    def initialize(self, artifacts: dict):
+        """
+        Implementation of PyFuncModel can specify initialization step which
+        will be called one time during model initialization.
+
+        :param artifacts: dictionary of artifacts passed to log_model method
+        """
+        pass
+
+
+    @abstractmethod
+    def preprocess(self, request: dict, **kwargs) -> ModelInput:
+        raise NotImplementedError("preprocess is not implemented")
+
+    @abstractmethod
+    def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+        raise NotImplementedError("ml_predict is not implemented")
+    
+    @abstractmethod
+    def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
+        raise NotImplementedError("postprocess is not implemented")
+
+    @abstractmethod
+    def upiv1_preprocess(self, request: upi_pb2.PredictValuesRequest,
+                    context: grpc.ServicerContext) -> ModelInput:
+        raise NotImplementedError("upiv1_preprocess is not implemented")
+    
+    @abstractmethod
+    def upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
+        raise NotImplementedError("upiv1_postprocess is not implemented")
 
 
 class PyFuncV2Model(PythonModel):
