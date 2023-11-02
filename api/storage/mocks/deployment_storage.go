@@ -104,6 +104,20 @@ func (_m *DeploymentStorage) ListInModelVersion(modelID string, versionID string
 	return r0, r1
 }
 
+// OnDeploymentSuccess provides a mock function with given fields: newDeployment
+func (_m *DeploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment) error {
+	ret := _m.Called(newDeployment)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*models.Deployment) error); ok {
+		r0 = rf(newDeployment)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Save provides a mock function with given fields: deployment
 func (_m *DeploymentStorage) Save(deployment *models.Deployment) (*models.Deployment, error) {
 	ret := _m.Called(deployment)
@@ -128,6 +142,20 @@ func (_m *DeploymentStorage) Save(deployment *models.Deployment) (*models.Deploy
 	}
 
 	return r0, r1
+}
+
+// Undeploy provides a mock function with given fields: modelID, versionID, endpointUUID
+func (_m *DeploymentStorage) Undeploy(modelID string, versionID string, endpointUUID string) error {
+	ret := _m.Called(modelID, versionID, endpointUUID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(modelID, versionID, endpointUUID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewDeploymentStorage interface {

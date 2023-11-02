@@ -27,3 +27,7 @@ type Deployment struct {
 	Error             string         `json:"error"`
 	CreatedUpdated
 }
+
+func (d *Deployment) IsSuccess() bool {
+	return d.Status == EndpointRunning || d.Status == EndpointServing
+}
