@@ -20,7 +20,6 @@ import {
   EuiDescriptionList,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiIcon,
   EuiLink,
   EuiBadge
 } from "@elastic/eui";
