@@ -102,7 +102,7 @@ func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment
 
 	tx := d.db.Begin()
 	if tx.Error != nil {
-		return fmt.Errorf("failed to begin transaction: %s", tx.Error)
+		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
 
 	var err error
@@ -145,7 +145,7 @@ func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment
 func (d *deploymentStorage) Undeploy(modelID, versionID, endpointUUID string) error {
 	tx := d.db.Begin()
 	if tx.Error != nil {
-		return fmt.Errorf("failed to begin transaction: %s", tx.Error)
+		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
 
 	var err error
