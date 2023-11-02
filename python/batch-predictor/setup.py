@@ -21,12 +21,11 @@ with open('requirements_test.txt') as f:
 with open('requirements.txt') as f:
     REQUIRE = f.read().splitlines()
 
-# TODO: Uncomment below lines after Pyfunc server stops supporting Python 3.7
-# merlin_path = os.path.join(os.getcwd(), "../sdk")
-# merlin_sdk_package = "merlin-sdk"
-# for index, item in enumerate(REQUIRE):
-#     if merlin_sdk_package in item:
-#         REQUIRE[index] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
+merlin_path = os.path.join(os.getcwd(), "../sdk")
+merlin_sdk_package = "merlin-sdk"
+for index, item in enumerate(REQUIRE):
+    if merlin_sdk_package in item:
+        REQUIRE[index] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
 
 setup(
     name='merlin-pyspark-app',
@@ -34,7 +33,7 @@ setup(
     author_email='merlin-dev@gojek.com',
     description='Base pyspark application for running merlin prediction job',
     long_description=open('README.md').read(),
-    python_requires='>=3.7,<3.11',
+    python_requires='>=3.8,<3.11',
     packages=find_packages("merlinpyspark"),
     install_requires=REQUIRE,
     tests_require=TEST_REQUIRE,
