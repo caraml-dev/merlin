@@ -6,5 +6,5 @@ prometheus_client==0.14.1
 uvloop>=0.15.2,<0.18.0
 orjson>=2.6.8
 tornado
-caraml-upi-protos>=0.3.7
+caraml-upi-protos
 file:${SDK_PATH}#egg=merlin-sdk
