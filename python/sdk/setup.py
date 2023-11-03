@@ -44,7 +44,6 @@ REQUIRES = [
 TEST_REQUIRES = [
     "google-cloud-bigquery-storage>=0.7.0",
     "google-cloud-bigquery>=1.18.0",
-    "grpcio>=1.31.0,<1.49.0",
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
     "pytest-cov",

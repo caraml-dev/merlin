@@ -3,5 +3,4 @@ pyspark==3.0.1
 mlflow>=1.26.1,<2.0.0
 cloudpickle==2.0.0
 pyarrow>=0.14.1,<=9.0.0
-protobuf>=3.0,<5.0.0
 file:${SDK_PATH}#egg=merlin-sdk
