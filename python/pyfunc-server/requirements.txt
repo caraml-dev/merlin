@@ -6,10 +6,5 @@ prometheus_client==0.14.1
 uvloop>=0.15.2,<0.18.0
 orjson>=2.6.8
 tornado
-caraml-upi-protos
-# Starting 1.49.0, grpc uses protobuf 4.X which are incompatible with most of our dependencies
-grpcio<1.49.0
-grpcio-reflection<1.49.0
-grpcio-tools<1.49.0
-grpcio-health-checking<1.49.0
+caraml-upi-protos>=0.3.7
 file:${SDK_PATH}#egg=merlin-sdk

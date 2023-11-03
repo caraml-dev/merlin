@@ -23,7 +23,7 @@ version = imp.load_source(
 
 REQUIRES = [
     "boto3>=1.9.84",
-    "caraml-upi-protos>=0.3.1",
+    "caraml-upi-protos>=0.3.7",
     "certifi>=2017.4.17",
     "Click>=7.0,<8.1.4",
     "cloudpickle==2.0.0",  # used by mlflow
@@ -44,7 +44,6 @@ REQUIRES = [
 TEST_REQUIRES = [
     "google-cloud-bigquery-storage>=0.7.0",
     "google-cloud-bigquery>=1.18.0",
-    "grpcio>=1.31.0,<1.49.0",
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
     "pytest-cov",
