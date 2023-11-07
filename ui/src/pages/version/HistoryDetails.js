@@ -3,42 +3,31 @@ import {
   EuiBadge,
   EuiButtonIcon,
   EuiCodeBlock,
-  EuiHealth,
   EuiInMemoryTable,
   EuiScreenReaderOnly,
   EuiText,
 } from "@elastic/eui";
 import { useEffect, useState } from "react";
+import { DeploymentStatus } from "../../components/DeploymentStatus";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 
 const defaultTextSize = "s";
-
-const DeploymentStatus = ({ status }) => {
-  switch (status) {
-    case "pending":
-      return <EuiHealth color="gray">Pending</EuiHealth>;
-    case "running":
-    case "serving":
-      return <EuiHealth color="success">Deployed</EuiHealth>;
-    case "terminated":
-      return <EuiHealth color="default">Terminated</EuiHealth>;
-    case "failed":
-      return <EuiHealth color="danger">Failed</EuiHealth>;
-    default:
-      return <EuiHealth color="subdued">-</EuiHealth>;
-  }
-};
 
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
   const [orderedDeployments, setOrderedDeployments] = useState([]);
   const [currentDeployment, setCurrentDeployment] = useState({ id: null });
 
   useEffect(() => {
+    if (deployments.length < 1) {
+      return;
+    }
+
+    // Sort deployments by id descending (newest first)
     const ordered = deployments.sort((a, b) => (a.id < b.id ? 1 : -1));
     setOrderedDeployments(ordered);
 
-    const currentDeployment = ordered.find((deployment) => {
+    let currentDeployment = ordered.find((deployment) => {
       return (
         (deployment.status === "running" ||
           deployment.status === "serving" ||
@@ -46,6 +35,11 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
         deployment.error === ""
       );
     });
+
+    // If no successful deployment, use the first deployment as current
+    if (!currentDeployment) {
+      currentDeployment = ordered[0];
+    }
 
     setCurrentDeployment(currentDeployment);
   }, [deployments]);
@@ -93,7 +87,7 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
           <DateFromNow date={date} size={defaultTextSize} />
           &nbsp;&nbsp;
           {deployment.id === currentDeployment.id && (
-            <EuiBadge color="default">Current</EuiBadge>
+            <EuiBadge color="default">current</EuiBadge>
           )}
         </>
       ),
