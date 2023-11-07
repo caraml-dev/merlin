@@ -23,8 +23,6 @@ import (
 	"testing"
 	"time"
 
-	cfg "github.com/caraml-dev/merlin/config"
-
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -39,6 +37,7 @@ import (
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
 
+	cfg "github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )

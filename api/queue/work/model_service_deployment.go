@@ -58,22 +58,24 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return err
 	}
 
-	endpointArg := jobArgs.Endpoint
-	endpoint, err := depl.Storage.Get(endpointArg.ID)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		log.Errorf("could not found version endpoint with id %s and error: %v", endpointArg.ID, err)
-		return err
-	}
-	if err != nil {
-		log.Errorf("could not fetch version endpoint with id %s and error: %v", endpointArg.ID, err)
-		// If error getting record from db, return err as RetryableError to enable retry
-		return queue.RetryableError{Message: err.Error()}
-	}
+	endpoint := jobArgs.Endpoint
+	previousStatus := endpoint.Status
 
 	version := jobArgs.Version
 	project := jobArgs.Project
 	model := jobArgs.Model
 	model.Project = project
+
+	prevEndpoint, err := depl.Storage.Get(endpoint.ID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Errorf("could not found version endpoint with id %s and error: %v", endpoint.ID, err)
+		return err
+	}
+	if err != nil {
+		log.Errorf("could not fetch version endpoint with id %s and error: %v", endpoint.ID, err)
+		// If error getting record from db, return err as RetryableError to enable retry
+		return queue.RetryableError{Message: err.Error()}
+	}
 
 	isRedeployment := false
 
@@ -83,13 +85,11 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	}
 
 	endpoint.RevisionID++
-	endpoint.Status = models.EndpointFailed
 
 	// for backward compatibility, if inference service name is not empty, it means we are redeploying the "legacy" endpoint that created prior to model version revision introduction
 	// for future compatibility, if endpoint.RevisionID > 1, it means we are redeploying the endpoint that created after model version revision introduction
 	if endpoint.InferenceServiceName != "" || endpoint.RevisionID > 1 {
 		isRedeployment = true
-		endpoint.Status = endpointArg.Status
 	}
 
 	log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
@@ -115,9 +115,18 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 			log.Warnf("unable to update deployment history", err)
 		}
 
-		// record the version endpoint result
-		if err := depl.Storage.Save(endpoint); err != nil {
-			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+		// if redeployment failed, we only update the previous endpoint status from pending to previous status
+		if deployment.Error != "" {
+			prevEndpoint.Status = previousStatus
+			// but if it's not redeployment (first deployment), we set the status to failed
+			if !isRedeployment {
+				prevEndpoint.Status = models.EndpointFailed
+			}
+
+			// record the version endpoint result if deployment
+			if err := depl.Storage.Save(prevEndpoint); err != nil {
+				log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+			}
 		}
 	}()
 
@@ -125,7 +134,6 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	if err != nil {
 		deployment.Status = models.EndpointFailed
 		deployment.Error = err.Error()
-		endpoint.Message = err.Error()
 		return err
 	}
 
@@ -134,7 +142,6 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	if !ok {
 		deployment.Status = models.EndpointFailed
 		deployment.Error = err.Error()
-		endpoint.Message = err.Error()
 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
 	}
 
@@ -143,23 +150,26 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 		deployment.Status = models.EndpointFailed
 		deployment.Error = err.Error()
-		endpoint.Message = err.Error()
 		return err
 	}
 
 	// By reaching this point, the deployment is successful
 	endpoint.URL = svc.URL
-	previousStatus := endpointArg.Status
+	endpoint.ServiceName = svc.ServiceName
+	endpoint.InferenceServiceName = svc.CurrentIsvcName
+	endpoint.Message = "" // reset message
+
 	if previousStatus == models.EndpointServing {
 		endpoint.Status = models.EndpointServing
 	} else {
 		endpoint.Status = models.EndpointRunning
 	}
-	endpoint.ServiceName = svc.ServiceName
-	endpoint.InferenceServiceName = svc.CurrentIsvcName
-	endpoint.Message = "" // reset message
-
 	deployment.Status = endpoint.Status
+
+	// record the new endpoint result if deployment is successful
+	if err := depl.Storage.Save(endpoint); err != nil {
+		log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+	}
 
 	return nil
 }

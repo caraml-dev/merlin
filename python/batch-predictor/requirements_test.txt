@@ -2,9 +2,7 @@ pytest
 pytest-cov
 mypy
 google-cloud-bigquery
-scikit-learn==1.0.2  #TODO: >=1.1.2 upon python 3.7 deprecation
+scikit-learn>=1.1.2
 joblib>=0.13.0,<1.2.0  # >=1.2.0 upon upgrade of kserve's version
 mypy-protobuf>=1.19
 types-PyYAML
-protobuf<4.0.0
-grpcio<1.49.0

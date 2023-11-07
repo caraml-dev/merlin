@@ -16,6 +16,7 @@ package models
 
 import (
 	"net/url"
+	"time"
 
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -45,9 +46,9 @@ type VersionEndpoint struct {
 	// ServiceName service name
 	ServiceName string `json:"service_name" gorm:"service_name"`
 	// InferenceServiceName name of inference service
-	InferenceServiceName string `json:"-" gorm:"inference_service_name"`
+	InferenceServiceName string `json:"inference_service_name" gorm:"inference_service_name"`
 	// Namespace namespace where the version is deployed at
-	Namespace string `json:"-" gorm:"namespace"`
+	Namespace string `json:"namespace" gorm:"namespace"`
 	// MonitoringURL URL pointing to the version endpoint's dashboard
 	MonitoringURL string `json:"monitoring_url,omitempty" gorm:"-"`
 	// Environment environment where the version endpoint is deployed
@@ -102,6 +103,10 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		AutoscalingPolicy: autoscalingPolicy,
 		EnvVars:           envVars,
 		Protocol:          protocol.HttpJson,
+		CreatedUpdated: CreatedUpdated{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
 	}
 
 	if monitoringConfig.MonitoringEnabled {

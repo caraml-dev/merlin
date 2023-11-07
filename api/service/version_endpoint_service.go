@@ -116,19 +116,21 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig, newEndpoint.DeploymentMode)
 	}
 
+	currentEndpoint := *endpoint
+	currentEndpoint.Status = models.EndpointPending
+	err := k.storage.Save(&currentEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	// override existing endpoint configuration with the user request
-	err := k.override(endpoint, newEndpoint, environment)
+	err = k.override(endpoint, newEndpoint, environment)
 	if err != nil {
 		return nil, err
 	}
 
 	// Copy to avoid race condition
 	tobeDeployedEndpoint := *endpoint
-	endpoint.Status = models.EndpointPending
-	err = k.storage.Save(endpoint)
-	if err != nil {
-		return nil, err
-	}
 
 	if err := k.jobProducer.EnqueueJob(&queue.Job{
 		Name: ModelServiceDeployment,

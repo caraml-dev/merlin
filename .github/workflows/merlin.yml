@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"] #TODO: Remove Python 3.7 support
+        python-version: ["3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"] #TODO: Remove Python 3.7 support
+        python-version: ["3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -263,7 +263,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["37", "38", "39", "310"]
+        python-version: ["38", "39", "310"]
     needs:
       - create-version
     steps:
@@ -284,7 +284,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["37", "38", "39", "310"]
+        python-version: ["38", "39", "310"]
     needs:
       - create-version
     steps:

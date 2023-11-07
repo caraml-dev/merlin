@@ -139,7 +139,7 @@ export const ContainerLogsView = ({
             model_id: model.id,
             model_name: model.name,
             version_id: versionId,
-            revision_id: revisionId,
+            revision_id: revisionId ? revisionId : "",
             prediction_job_id: jobId ? jobId : "",
           };
           const logParams = new URLSearchParams(containerQuery).toString();

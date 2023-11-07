@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import React, { Fragment, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useToggle } from "@caraml-dev/ui-lib";
 import {
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiText
+  EuiText,
 } from "@elastic/eui";
-import { useToggle } from "@caraml-dev/ui-lib";
-import config from "../../config";
+import React, { Fragment, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ServeVersionEndpointModal,
   StopServeVersionEndpointModal,
-  UndeployVersionEndpointModal
+  UndeployVersionEndpointModal,
 } from "../../components/modals";
+import config from "../../config";
 
 const ActionButton = ({ action }) => (
   <EuiButtonEmpty
@@ -36,7 +36,8 @@ const ActionButton = ({ action }) => (
     iconType={action.iconType}
     flush="left"
     size="xs"
-    onClick={() => action.onClick()}>
+    onClick={() => action.onClick()}
+  >
     <EuiText size="xs">{action.name}</EuiText>
   </EuiButtonEmpty>
 );
@@ -44,20 +45,16 @@ const ActionButton = ({ action }) => (
 export const DeploymentActions = ({ model, version, endpoint }) => {
   const navigate = useNavigate();
   const [isServeEndpointModalVisible, toggleServeEndpointModal] = useToggle();
-  const [
-    isStopServeEndpointModalVisible,
-    toggleStopServeEndpointModal
-  ] = useToggle();
-  const [
-    isUndeployEndpointModalVisible,
-    toggleUndeployEndpointModal
-  ] = useToggle();
+  const [isStopServeEndpointModalVisible, toggleStopServeEndpointModal] =
+    useToggle();
+  const [isUndeployEndpointModalVisible, toggleUndeployEndpointModal] =
+    useToggle();
 
   const [modelEndpoint, setModelEndpoint] = useState({});
   useEffect(() => {
     if (model.endpoints && endpoint.status === "serving") {
       const modelEndpoint = model.endpoints.find(
-        modelEndpoint =>
+        (modelEndpoint) =>
           modelEndpoint.environment_name === endpoint.environment_name
       );
       setModelEndpoint(modelEndpoint);
@@ -69,7 +66,7 @@ export const DeploymentActions = ({ model, version, endpoint }) => {
       name: "Start serving",
       iconType: "play",
       enabled: endpoint.status === "running",
-      onClick: () => toggleServeEndpointModal()
+      onClick: () => toggleServeEndpointModal(),
     },
     {
       name: "Redeploy",
@@ -78,32 +75,29 @@ export const DeploymentActions = ({ model, version, endpoint }) => {
       onClick: () =>
         navigate(
           `${config.HOMEPAGE}/projects/${model.project_id}/models/${model.id}/versions/${version.id}/endpoints/${endpoint.id}/redeploy`
-        )
+        ),
     },
     {
       name: "Undeploy",
       iconType: "exportAction",
       color: "danger",
-      enabled:
-        endpoint.status === "pending" ||
-        endpoint.status === "running" ||
-        endpoint.status === "failed",
-      onClick: () => toggleUndeployEndpointModal()
+      enabled: endpoint.status === "running" || endpoint.status === "failed",
+      onClick: () => toggleUndeployEndpointModal(),
     },
     {
       name: "Stop serving",
       iconType: "minusInCircle",
       color: "danger",
       enabled: endpoint.status === "serving",
-      onClick: () => toggleStopServeEndpointModal()
-    }
+      onClick: () => toggleStopServeEndpointModal(),
+    },
   ];
 
   return (
     <Fragment>
       <EuiFlexGroup alignItems="flexStart" direction="column" gutterSize="s">
         {actions.map(
-          action =>
+          (action) =>
             action.enabled && (
               <EuiFlexItem grow={false} key={`${action.name}-${endpoint.id}`}>
                 <ActionButton action={action} />
