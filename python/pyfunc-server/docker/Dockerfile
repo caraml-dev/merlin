@@ -22,10 +22,14 @@ WORKDIR /pyfunc-server
 
 # Run docker build using the credentials if provided
 RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
+
+RUN gsutil cp ${MODEL_URL}/model/conda.yaml /pyfunc-server/model/conda.yaml
+RUN /bin/bash -c ". activate merlin-model && \
+    sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' /pyfunc-server/model/conda.yaml && \
+    conda env update --name merlin-model --file /pyfunc-server/model/conda.yaml"
+
 RUN gsutil cp -r ${MODEL_URL} .
 RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' model/conda.yaml && \
-    conda env update --name merlin-model --file model/conda.yaml && \
     python -m pyfuncserver --model_dir model --dry_run"
 
 CMD ["/bin/bash", "./run.sh"]
