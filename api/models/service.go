@@ -27,10 +27,15 @@ import (
 	"knative.dev/pkg/apis"
 )
 
+const (
+	RevisionPrefix = "r"
+)
+
 type Service struct {
 	Name              string
 	ModelName         string
 	ModelVersion      string
+	RevisionID        ID
 	Namespace         string
 	ServiceName       string
 	URL               string
@@ -45,13 +50,16 @@ type Service struct {
 	DeploymentMode    deployment.Mode
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy
 	Protocol          protocol.Protocol
+	// CurrentIsvcName is the name of the current running/serving InferenceService's revision
+	CurrentIsvcName string
 }
 
 func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
 	return &Service{
-		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
+		Name:            CreateInferenceServiceName(model.Name, version.ID.String(), endpoint.RevisionID.String()),
 		ModelName:       model.Name,
 		ModelVersion:    version.ID.String(),
+		RevisionID:      endpoint.RevisionID,
 		Namespace:       model.Project.Name,
 		ArtifactURI:     version.ArtifactURI,
 		Type:            model.Type,
@@ -70,6 +78,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		DeploymentMode:    endpoint.DeploymentMode,
 		AutoscalingPolicy: endpoint.AutoscalingPolicy,
 		Protocol:          endpoint.Protocol,
+		CurrentIsvcName:   endpoint.InferenceServiceName,
 	}
 }
 
@@ -99,8 +108,12 @@ func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.L
 	return projectLabels
 }
 
-func CreateInferenceServiceName(modelName string, versionID string) string {
-	return fmt.Sprintf("%s-%s", modelName, versionID)
+func CreateInferenceServiceName(modelName, versionID, revisionID string) string {
+	if revisionID == "" || revisionID == "0" {
+		// This is for backward compatibility, when the endpoint / isvc name didn't include the revision number
+		return fmt.Sprintf("%s-%s", modelName, versionID)
+	}
+	return fmt.Sprintf("%s-%s-%s%s", modelName, versionID, RevisionPrefix, revisionID)
 }
 
 func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue protocol.Protocol) string {

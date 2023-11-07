@@ -21,23 +21,22 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/caraml-dev/merlin/pkg/protocol"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/autoscaling"
-	"github.com/caraml-dev/merlin/pkg/deployment"
-	prt "github.com/caraml-dev/merlin/pkg/protocol"
-	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/mitchellh/copystructure"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
 	knserving "knative.dev/serving/pkg/apis/serving"
 
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/caraml-dev/merlin/utils"
 )
 
@@ -83,28 +82,13 @@ const (
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
-var (
-	// list of configuration stored as annotations
-	configAnnotationKeys = []string{
-		annotationPrometheusScrapeFlag,
-		annotationPrometheusScrapePort,
-		knserving.QueueSidecarResourcePercentageAnnotationKey,
-		kserveconstant.AutoscalerClass,
-		kserveconstant.AutoscalerMetrics,
-		kserveconstant.TargetUtilizationPercentage,
-		knautoscaling.ClassAnnotationKey,
-		knautoscaling.MetricAnnotationKey,
-		knautoscaling.TargetAnnotationKey,
-	}
-
-	grpcContainerPorts = []corev1.ContainerPort{
-		{
-			ContainerPort: defaultGRPCPort,
-			Name:          "h2c",
-			Protocol:      corev1.ProtocolTCP,
-		},
-	}
-)
+var grpcContainerPorts = []corev1.ContainerPort{
+	{
+		ContainerPort: defaultGRPCPort,
+		Name:          "h2c",
+		Protocol:      corev1.ProtocolTCP,
+	},
+}
 
 type DeploymentScale struct {
 	Predictor   *int
@@ -119,10 +103,26 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 	return &InferenceServiceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig, currentReplicas DeploymentScale) (*kservev1beta1.InferenceService, error) {
 	applyDefaults(modelService, config)
 
-	annotations, err := createAnnotations(modelService, config, nil)
+	// Identify the desired initial scale of the new deployment
+	var initialScale *int
+	if currentReplicas.Predictor != nil {
+		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
+		// Set the desired scale of the new deployment by taking the max of the 2 values.
+		// Consider the transformer's scale only if it is also enabled in the new spec.
+		if modelService.Transformer != nil &&
+			modelService.Transformer.Enabled &&
+			currentReplicas.Transformer != nil &&
+			*currentReplicas.Transformer > *currentReplicas.Predictor {
+			initialScale = currentReplicas.Transformer
+		} else {
+			initialScale = currentReplicas.Predictor
+		}
+	}
+
+	annotations, err := createAnnotations(modelService, config, initialScale)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
 	}
@@ -169,73 +169,6 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	return inferenceService, nil
 }
 
-func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(
-	orig *kservev1beta1.InferenceService,
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-	currentReplicas DeploymentScale,
-) (*kservev1beta1.InferenceService, error) {
-	// Identify the desired initial scale of the new deployment
-	var initialScale *int
-	if currentReplicas.Predictor != nil {
-		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
-		// Set the desired scale of the new deployment by taking the max of the 2 values.
-		// Consider the transformer's scale only if it is also enabled in the new spec.
-		if modelService.Transformer != nil &&
-			modelService.Transformer.Enabled &&
-			currentReplicas.Transformer != nil &&
-			*currentReplicas.Transformer > *currentReplicas.Predictor {
-			initialScale = currentReplicas.Transformer
-		} else {
-			initialScale = currentReplicas.Predictor
-		}
-	}
-
-	applyDefaults(modelService, config)
-
-	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
-	annotations, err := createAnnotations(modelService, config, initialScale)
-	if err != nil {
-		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
-	}
-	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
-
-	orig.Spec.Predictor = createPredictorSpec(modelService, config)
-	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-		orig,
-		modelService,
-		config,
-		kservev1beta1.PredictorComponent,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
-	}
-
-	orig.Spec.Transformer = nil
-	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		if _, ok := orig.Status.Components[kservev1beta1.TransformerComponent]; !ok ||
-			orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
-			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
-				modelService,
-				config,
-				kservev1beta1.TransformerComponent,
-			)
-		} else {
-			orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-				orig,
-				modelService,
-				config,
-				kservev1beta1.TransformerComponent,
-			)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
-		}
-	}
-	return orig, nil
-}
-
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
@@ -254,6 +187,26 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			corev1.ResourceCPU:    cpuLimit,
 			corev1.ResourceMemory: memoryLimit,
 		},
+	}
+
+	nodeSelector := map[string]string{}
+	tolerations := []corev1.Toleration{}
+	if modelService.ResourceRequest.GPUName != "" && !modelService.ResourceRequest.GPURequest.IsZero() {
+		// Look up to the GPU resource type and quantity from DeploymentConfig
+		for _, gpuConfig := range config.GPUs {
+			if gpuConfig.Name == modelService.ResourceRequest.GPUName {
+				// Declare and initialize resourceType and resourceQuantity variables
+				resourceType := corev1.ResourceName(gpuConfig.ResourceType)
+				resourceQuantity := modelService.ResourceRequest.GPURequest
+
+				// Set the resourceType as the key in the maps, with resourceQuantity as the value
+				resources.Requests[resourceType] = resourceQuantity
+				resources.Limits[resourceType] = resourceQuantity
+
+				nodeSelector = gpuConfig.NodeSelector
+				tolerations = gpuConfig.Tolerations
+			}
+		}
 	}
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
@@ -348,7 +301,15 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			},
 		}
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, resources)
+		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector, tolerations)
+	}
+
+	if len(nodeSelector) > 0 {
+		predictorSpec.NodeSelector = nodeSelector
+	}
+
+	if len(tolerations) > 0 {
+		predictorSpec.Tolerations = tolerations
 	}
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -556,7 +517,7 @@ func createLivenessProbeSpec(protocol prt.Protocol, httpPath string) *corev1.Pro
 }
 
 func createPredictorHost(modelService *models.Service) string {
-	return fmt.Sprintf("%s-predictor-default.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
+	return fmt.Sprintf("%s-predictor.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
 }
 
 func createAnnotations(modelService *models.Service, config *config.DeploymentConfig, initialScale *int) (map[string]string, error) {
@@ -644,43 +605,10 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-default", modelService.Name, component)
+		newRevisionName = fmt.Sprintf("isvc.%s-%s", modelService.Name, component)
 	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-		newRevisionName = fmt.Sprintf("%s-%s-default-00001", modelService.Name, component)
-	} else {
-		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
-	}
-	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
-		config.TopologySpreadConstraints,
-		newRevisionName,
-	)
-}
-
-// updateExistingInferenceServiceTopologySpreadConstraints creates topology spread constraints for a component of a new
-// inference service
-func updateExistingInferenceServiceTopologySpreadConstraints(
-	orig *kservev1beta1.InferenceService,
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-	component kservev1beta1.ComponentType,
-) ([]corev1.TopologySpreadConstraint, error) {
-	if len(config.TopologySpreadConstraints) == 0 {
-		var topologySpreadConstraints []corev1.TopologySpreadConstraint
-		return topologySpreadConstraints, nil
-	}
-	var newRevisionName string
-	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-default", modelService.Name, component)
-	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
-		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-		var err error
-		newRevisionName, err = getNewRevisionNameForExistingServerlessDeployment(
-			orig.Status.Components[component].LatestCreatedRevision,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("unable to generate new revision name: %w", err)
-		}
+		newRevisionName = fmt.Sprintf("%s-%s-00001", modelService.Name, component)
 	} else {
 		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
 	}
@@ -731,24 +659,6 @@ func copyTopologySpreadConstraints(
 	return topologySpreadConstraints, nil
 }
 
-// getNewRevisionNameForExistingServerlessDeployment examines the current revision name of an inference service (
-// serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
-// sklearn-sample-predictor-default-00001 -> sklearn-sample-predictor-default-00002
-func getNewRevisionNameForExistingServerlessDeployment(currentRevisionName string) (string, error) {
-	revisionNameElements := strings.Split(currentRevisionName, "-")
-	if len(revisionNameElements) < 5 {
-		return "", fmt.Errorf("unexpected revision name format that is not in at least 4 parts: %s",
-			currentRevisionName)
-	}
-	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])
-	if err != nil {
-		return "", err
-	}
-
-	revisionNameElements[len(revisionNameElements)-1] = fmt.Sprintf("%05d", currentRevisionNumber+1)
-	return strings.Join(revisionNameElements, "-"), nil
-}
-
 func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
 	defaultEnvVars := models.EnvVars{}
 
@@ -786,7 +696,7 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 	return defaultEnvVars
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string, tolerations []corev1.Toleration) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Add default env var (Overwrite by user not allowed)
@@ -811,7 +721,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
-	return kservev1beta1.PredictorSpec{
+	spec := kservev1beta1.PredictorSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
 				{
@@ -826,6 +736,15 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 			},
 		},
 	}
+	if len(nodeSelector) > 0 {
+		spec.NodeSelector = nodeSelector
+	}
+
+	if len(tolerations) > 0 {
+		spec.Tolerations = tolerations
+	}
+
+	return spec
 }
 
 // createPyFuncDefaultEnvVars return default env vars for Pyfunc model.
@@ -833,7 +752,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 	envVars := models.EnvVars{
 		models.EnvVar{
 			Name:  envPyFuncModelName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envModelName,
@@ -845,7 +764,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 		},
 		models.EnvVar{
 			Name:  envModelFullName,
-			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion, svc.RevisionID.String()),
 		},
 		models.EnvVar{
 			Name:  envHTTPPort,

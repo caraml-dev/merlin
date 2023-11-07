@@ -148,6 +148,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", 1.1},
 						},
@@ -238,6 +239,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INT32, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{int32(1001), 1.1},
 						},
@@ -343,6 +345,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0, 1},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", 1.1},
 							transTypes.ValueRow{"2002", 2.2},
@@ -446,6 +449,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0, 1},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", 1.1},
 							transTypes.ValueRow{"2002", nil},
@@ -551,6 +555,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0, 1},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", 1.1},
 							transTypes.ValueRow{"2002", 0.5},
@@ -699,6 +704,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", 1.1},
 						},
@@ -714,6 +720,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"customer_id", "customer_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"2002", 2.2},
 						},
@@ -877,6 +884,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"jsonextract", "geohash_statistics:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"9001", 3.2},
 						},
@@ -967,6 +975,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"s2id", "geohash_statistics:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1154732743855177728", 3.2},
 						},
@@ -1058,6 +1067,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"s2id", "geohash_statistics:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1154732743855177728", 3.2},
 						},
@@ -1163,6 +1173,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "driver_trips:average_daily_rides"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+						indexRows:   []int{0, 1},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", 1.1},
 							transTypes.ValueRow{"2002", 2.2},
@@ -1260,6 +1271,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "double_list_feature"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
 						},
@@ -1409,6 +1421,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						},
 						columnNames: []string{"driver_id", "double_list_feature"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
+						indexRows:   []int{0},
 						valueRows: transTypes.ValueRows{
 							transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
 						},
@@ -1852,6 +1865,158 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 		}
 		mockFeastClient.AssertExpectations(t)
 	}
+}
+
+func TestFeatureRetriever_RetrieveFeatureOfEntityFromCache(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
+	mockFeastClient := &mocks.Client{}
+	feastClients := Clients{
+		spec.ServingSource_REDIS: mockFeastClient,
+	}
+	featureTableSpecs := []*spec.FeatureTable{
+		{
+			TableName: "my-table",
+			Project:   "default",
+			Source:    spec.ServingSource_REDIS,
+			Entities: []*spec.Entity{
+				{
+					Name:      "merchant_id",
+					ValueType: "STRING",
+					Extractor: &spec.Entity_JsonPath{
+						JsonPath: "$.merchants[*]",
+					},
+				},
+			},
+			Features: []*spec.Feature{
+				{
+					Name:         "restaurant_features:sales_volume",
+					DefaultValue: "1",
+					ValueType:    "INT32",
+				},
+			},
+		},
+	}
+	compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs, jsonpath.Map)
+	if err != nil {
+		panic(err)
+	}
+
+	compiledExpressions, err := CompileExpressions(featureTableSpecs, symbol.NewRegistry())
+	if err != nil {
+		panic(err)
+	}
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
+	options := &Options{
+		FeastClientHystrixCommandName: "TestFeatureRetriever_RetrieveFeatureOfEntityFromCache",
+		FeastTimeout:                  1 * time.Second,
+		BatchSize:                     100,
+		CacheEnabled:                  true,
+		CacheSizeInMB:                 100,
+		CacheTTL:                      10 * time.Minute,
+	}
+	fr := NewFeastRetriever(feastClients, entityExtractor, featureTableSpecs, options, logger)
+	mockFeastClient.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
+		if len(req.Entities) != 2 {
+			return false
+		}
+		for i, merchantId := range []string{"0", "3"} {
+			if req.Entities[i]["merchant_id"].GetStringVal() != merchantId {
+				return false
+			}
+		}
+		return true
+	})).Return(&feast.OnlineFeaturesResponse{
+		RawResponse: &serving.GetOnlineFeaturesResponseV2{
+			Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+				FieldNames: &serving.FieldList{Val: []string{"merchant_id", "restaurant_features:sales_volume"}},
+			},
+			Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+				{
+					Values: []*feastTypes.Value{
+						feast.StrVal("0"),
+						feast.Int32Val(100),
+					},
+					Statuses: []serving.FieldStatus{
+						serving.FieldStatus_PRESENT,
+						serving.FieldStatus_PRESENT,
+					},
+				},
+				{
+					Values: []*feastTypes.Value{
+						feast.StrVal("3"),
+						feast.Int32Val(200),
+					},
+					Statuses: []serving.FieldStatus{
+						serving.FieldStatus_PRESENT,
+						serving.FieldStatus_PRESENT,
+					},
+				},
+			},
+		},
+	}, nil)
+	mockFeastClient.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
+		if len(req.Entities) != 2 {
+			return false
+		}
+		for i, merchantId := range []string{"1", "2"} {
+			if req.Entities[i]["merchant_id"].GetStringVal() != merchantId {
+				return false
+			}
+		}
+		return true
+	})).Return(&feast.OnlineFeaturesResponse{
+		RawResponse: &serving.GetOnlineFeaturesResponseV2{
+			Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+				FieldNames: &serving.FieldList{Val: []string{"merchant_id", "restaurant_features:sales_volume"}},
+			},
+			Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+				{
+					Values: []*feastTypes.Value{
+						feast.StrVal("1"),
+						feast.Int32Val(200),
+					},
+					Statuses: []serving.FieldStatus{
+						serving.FieldStatus_PRESENT,
+						serving.FieldStatus_PRESENT,
+					},
+				},
+				{
+					Values: []*feastTypes.Value{
+						feast.StrVal("2"),
+						feast.Int32Val(300),
+					},
+					Statuses: []serving.FieldStatus{
+						serving.FieldStatus_PRESENT,
+						serving.FieldStatus_PRESENT,
+					},
+				},
+			},
+		},
+	}, nil)
+
+	var requestJsonUncached transTypes.JSONObject
+	requestUncached := []byte(`{"merchants": ["0", "3"]}`)
+	_ = json.Unmarshal(requestUncached, &requestJsonUncached)
+	_, err = fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJsonUncached)
+	assert.NoError(t, err)
+	var requestJsonPartialCached transTypes.JSONObject
+	requestPartialCached := []byte(`{"merchants": ["0", "1", "2", "3"]}`)
+	_ = json.Unmarshal(requestPartialCached, &requestJsonPartialCached)
+	tablePartialCache, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJsonPartialCached)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(tablePartialCache))
+	expectedFeatureTable := transTypes.FeatureTable{
+		Name:        "my-table",
+		Columns:     []string{"merchant_id", "restaurant_features:sales_volume"},
+		ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_INT32},
+		Data:        []transTypes.ValueRow{{"0", int32(100)}, {"1", int32(200)}, {"2", int32(300)}, {"3", int32(200)}},
+	}
+	assert.Equal(t, expectedFeatureTable, *tablePartialCache[0])
 }
 
 func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {

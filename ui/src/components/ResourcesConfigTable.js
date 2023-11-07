@@ -14,31 +14,52 @@
  * limitations under the License.
  */
 
-import React from "react";
-import PropTypes from "prop-types";
 import { EuiDescriptionList } from "@elastic/eui";
+import PropTypes from "prop-types";
+import React from "react";
 
 export const ResourcesConfigTable = ({
-  resourceRequest: { cpu_request, memory_request, min_replica, max_replica }
+  resourceRequest: {
+    cpu_request,
+    memory_request,
+    min_replica,
+    max_replica,
+    gpu_name,
+    gpu_request,
+  },
 }) => {
   const items = [
     {
       title: "CPU Request",
-      description: cpu_request
+      description: cpu_request,
     },
     {
       title: "Memory Request",
-      description: memory_request
+      description: memory_request,
     },
     {
       title: "Min Replicas",
-      description: min_replica
+      description: min_replica,
     },
     {
       title: "Max Replicas",
-      description: max_replica
-    }
+      description: max_replica,
+    },
   ];
+
+  if (gpu_name !== undefined && gpu_name !== "") {
+    items.push({
+      title: "GPU Name",
+      description: gpu_name,
+    });
+  }
+
+  if (gpu_request !== undefined && gpu_request !== "0") {
+    items.push({
+      title: "GPU Request",
+      description: gpu_request,
+    });
+  }
 
   return (
     <EuiDescriptionList
@@ -51,5 +72,5 @@ export const ResourcesConfigTable = ({
 };
 
 ResourcesConfigTable.propTypes = {
-  resourceRequest: PropTypes.object.isRequired
+  resourceRequest: PropTypes.object.isRequired,
 };

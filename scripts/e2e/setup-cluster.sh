@@ -6,32 +6,34 @@ set -o pipefail
 set -o nounset
 
 # Software requirements:
-# - yq 4.24.2
-# - helm 3
+# - yq
+# - helm
 # - k3d
 # - kubectl
 
 # Prerequisites:
 # - cluster have been created using k3d
+# - cluster have enabled load balancer
 
 CLUSTER_NAME=$1
-INGRESS_HOST=$2
 
-ISTIO_VERSION=1.16.3
-# queue proxy version in config/knative/overlay.yaml should also be modified to upgrade knative
-KNATIVE_VERSION=1.8.6
-KNATIVE_NET_ISTIO_VERSION=1.9.2
-CERT_MANAGER_VERSION=1.7.2
+ISTIO_VERSION=1.18.2
+KNATIVE_VERSION=1.10.2
+KNATIVE_NET_ISTIO_VERSION=1.10.1
+CERT_MANAGER_VERSION=1.12.2
 MINIO_VERSION=3.6.3
-KSERVE_VERSION=0.9.0
+KSERVE_VERSION=0.11.0
 TIMEOUT=180s
 
 
 add_helm_repo() {
-    helm repo add hashicorp https://helm.releases.hashicorp.com
+    echo "::group::Add Helm repo"
+
     helm repo add istio https://istio-release.storage.googleapis.com/charts
     helm repo add minio https://charts.min.io/
     helm repo update
+
+    echo "::endgroup::"
 }
 
 store_cluster_secret() {
@@ -47,9 +49,13 @@ store_cluster_secret() {
     }
 }
 EOF
+
+    echo "::endgroup::"
 }
+
 install_istio() {
     echo "::group::Istio Deployment"
+
     helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
     helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
         -f config/istio/istiod.yaml --timeout=${TIMEOUT}
@@ -65,10 +71,24 @@ install_istio() {
     kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
 
     kubectl apply -f config/istio/ingress-class.yaml
+
+    sleep 30
+
+    echo "::endgroup::"
+}
+
+set_ingress_host() {
+    echo "::group::Set Ingress Host"
+    if [[ -z "${INGRESS_HOST}" ]]; then
+        export INGRESS_HOST="$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}').nip.io"
+    fi
+    echo "INGRESS_HOST=${INGRESS_HOST}"
+    echo "::endgroup::"
 }
 
 install_knative() {
     echo "::group::Knative Deployment"
+
     # Install CRD
     kubectl apply -f https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-crds.yaml
 
@@ -89,45 +109,57 @@ install_knative() {
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
 
-    sleep 30
+    echo "::endgroup::"
 }
 
 install_cert_manager() {
     echo "::group::Cert Manager Deployment"
+
     kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
 
     kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/cert-manager-cainjector -n cert-manager -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/cert-manager -n cert-manager -w --timeout=${TIMEOUT}
+
+    echo "::endgroup::"
 }
 
 install_minio() {
     echo "::group::Minio Deployment"
+
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
         --namespace=minio --create-namespace --timeout=${TIMEOUT} \
-        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
         --set "ingress.hosts[0]=minio.minio.${INGRESS_HOST}" \
         --set "consoleIngress.hosts[0]=console.minio.${INGRESS_HOST}"
 
     kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
+
+    echo "::endgroup::"
 }
 
 install_kserve() {
     echo "::group::KServe Deployment"
+
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
     kubectl apply -k config/kserve
     kubectl rollout status deployment/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
     kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
+
+    echo "::endgroup::"
 }
 
 patch_coredns() {
     echo "::group::Patching CoreDNS"
+
     kubectl patch cm coredns -n kube-system --patch-file config/coredns/patch.yaml
     kubectl get cm coredns -n kube-system -o yaml
+
+    echo "::endgroup::"
 }
 
 add_helm_repo
 install_istio
+set_ingress_host
 install_knative
 install_minio
 install_cert_manager

@@ -12,32 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
+from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.util import autostr
+from merlin import fluent
+
 from enum import Enum
 
-from client import EnvironmentApi
 import client
 import yaml
 import json
 
-class TransformerType(Enum):
-    CUSTOM_TRANSFORMER = 'custom'
-    STANDARD_TRANSFORMER = 'standard'
 
+class TransformerType(Enum):
+    CUSTOM_TRANSFORMER = "custom"
+    STANDARD_TRANSFORMER = "standard"
 
 
 @autostr
 class Transformer:
     StandardTransformerConfigKey = "STANDARD_TRANSFORMER_CONFIG"
 
-    def __init__(self, image: str, enabled: bool = True,
-                 command: str = None, args: str = None,
-                 resource_request: ResourceRequest = None,
-                 env_vars: Dict[str, str] = None,
-                 transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER):
+    def __init__(
+        self,
+        image: str,
+        enabled: bool = True,
+        command: str = None,
+        args: str = None,
+        resource_request: ResourceRequest = None,
+        env_vars: Dict[str, str] = None,
+        transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER,
+    ):
         self._image = image
         self._enabled = enabled
         self._command = command
@@ -76,20 +83,56 @@ class Transformer:
 
 
 class StandardTransformer(Transformer):
-    def __init__(self, config_file: str, enabled: bool = True,
-                 resource_request: ResourceRequest = None,
-                 env_vars: Dict[str, str] = None):
-
-        transformer_config = self._load_transformer_config(config_file)
+    def __init__(
+        self,
+        config_file: str,
+        enabled: bool = True,
+        resource_request: ResourceRequest = None,
+        env_vars: Dict[str, str] = None,
+    ):
+        self._load_transformer_config(config_file)
+        transformer_env_var = self._transformer_config_env_var()
         merged_env_vars = env_vars or {}
-        merged_env_vars = {**merged_env_vars, **transformer_config}
-        super().__init__(image="", enabled=enabled, resource_request=resource_request,
-                         env_vars=merged_env_vars, transformer_type=TransformerType.STANDARD_TRANSFORMER)
+        merged_env_vars = {**merged_env_vars, **transformer_env_var}
+        super().__init__(
+            image="",
+            enabled=enabled,
+            resource_request=resource_request,
+            env_vars=merged_env_vars,
+            transformer_type=TransformerType.STANDARD_TRANSFORMER,
+        )
 
     def _load_transformer_config(self, config_file: str):
         with open(config_file, "r") as stream:
-            transformer_config = yaml.safe_load(stream)
+            self.transformer_config = yaml.safe_load(stream)
 
-        config_json_string = json.dumps(transformer_config)
+    def _transformer_config_env_var(self):
+        config_json_string = json.dumps(self.transformer_config)
         return {self.StandardTransformerConfigKey: config_json_string}
 
+    def simulate(
+        self,
+        payload: Dict,
+        headers: Optional[Dict[Any, Any]] = None,
+        model_prediction_config: Optional[Dict[Any, Any]] = None,
+        protocol: str = "HTTP_JSON",
+        exclude_tracing: bool = False,
+    ) -> Dict:
+        fluent._check_active_client()
+        if not fluent._merlin_client:
+            raise Exception("Merlin client is not initialized")
+
+        response = fluent._merlin_client.standard_transformer_simulate(
+            payload=payload,
+            headers=headers,
+            config=self.transformer_config,
+            model_prediction_config=model_prediction_config,
+            protocol=protocol,
+        )
+
+        # if exclude tracing delete key operation_tracing
+        response = response.to_dict()
+        if exclude_tracing:
+            del response["operation_tracing"]
+
+        return response

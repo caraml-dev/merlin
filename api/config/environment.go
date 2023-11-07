@@ -40,6 +40,8 @@ type EnvironmentConfig struct {
 	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
 	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
 
+	GPUs []GPUConfig `yaml:"gpus"`
+
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
 	TopologySpreadConstraints TopologySpreadConstraints `yaml:"topology_spread_constraints"`
@@ -110,6 +112,29 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
+type GPUConfig struct {
+	// Name is used as the key to identify the GPU configuration.
+	// It also specifies how the accelerator type will be written in the UI.
+	// Example: "NVIDIA T4"
+	Name string `yaml:"name"`
+	// Values limits how many GPUs can be requested by users.
+	// Example: "None", "1", "2", "4"
+	Values []string `yaml:"values"`
+	// Specifies how the accelerator type will be translated to
+	// K8s resource type. Example: nvidia.com/gpu
+	ResourceType string `yaml:"resource_type"`
+	// To deploy the models on a specific GPU node.
+	NodeSelector map[string]string `yaml:"node_selector"`
+	// To deploy the models on a specific GPU node via taints and tolerations.
+	Tolerations []corev1.Toleration `yaml:"tolerations"`
+	// MinMonthlyCostPerGPU is the minimum monthly cost per GPU, for example, if you enable time-sharing GPUs with 8 max shared clients,
+	// the minimum monthly cost per GPU is max_monthly_cost_per_gpu divided by 8.
+	// MaxMonthlyCostPerGPU is the maximum monthly cost if you use the whole GPU.
+	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
+	MinMonthlyCostPerGPU float64 `yaml:"min_monthly_cost_per_gpu"`
+	MaxMonthlyCostPerGPU float64 `yaml:"max_monthly_cost_per_gpu"`
+}
+
 func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
@@ -156,5 +181,6 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 		QueueResourcePercentage:   cfg.QueueResourcePercentage,
 		PyfuncGRPCOptions:         pyfuncGRPCOptions,
 		PodDisruptionBudget:       cfg.PodDisruptionBudget,
+		GPUs:                      cfg.GPUs,
 	}
 }

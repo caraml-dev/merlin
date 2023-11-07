@@ -10,7 +10,6 @@ You need following softwares to execute merlin end to end test locally:
 - yq
 - jq
 
-
 ## Steps
 
 To run E2E test locally you can execute
@@ -22,7 +21,7 @@ To run E2E test locally you can execute
 The script will perform following processes:
 
 1. Create K3D cluster and a managed docker registry
-2. Install all infrastructure dependencies (e.g. Istio, Knative, Vault, Kserve, Minio)
+2. Install all infrastructure dependencies (e.g. Istio, Knative, Kserve, Minio)
 3. Build docker image of all Merlin components
 4. Import all the docker images to the k3d managed docker registry
 5. Deploy MLP and Merlin

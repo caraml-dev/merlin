@@ -294,7 +294,7 @@ func TestPredictionJobService_ListContainers(t *testing.T) {
 				[]*models.Container{
 					{
 						Name:       "user-container",
-						PodName:    "mymodel-2-predictor-default-hlqgv-deployment-6f478cbc67-mp7zf",
+						PodName:    "mymodel-2-predictor-hlqgv-deployment-6f478cbc67-mp7zf",
 						Namespace:  project.Name,
 						Cluster:    env.Cluster,
 						GcpProject: env.GcpProject,
@@ -319,7 +319,7 @@ func TestPredictionJobService_ListContainers(t *testing.T) {
 				[]*models.Container{
 					{
 						Name:       "user-container",
-						PodName:    "mymodel-2-predictor-default-hlqgv-deployment-6f478cbc67-mp7zf",
+						PodName:    "mymodel-2-predictor-hlqgv-deployment-6f478cbc67-mp7zf",
 						Namespace:  project.Name,
 						Cluster:    env.Cluster,
 						GcpProject: env.GcpProject,

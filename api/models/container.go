@@ -27,8 +27,10 @@ const (
 
 	ImageBuilderComponentType     = "image_builder"
 	ModelComponentType            = "model"
+	PredictorComponentType        = "predictor"
 	TransformerComponentType      = "transformer"
 	PDBComponentType              = "pdb" // Pod disruption budget
+	VirtualServiceComponentType   = "vs"
 	BatchJobDriverComponentType   = "batch_job_driver"
 	BatchJobExecutorComponentType = "batch_job_executor"
 )
@@ -61,9 +63,9 @@ func NewContainer(name string,
 
 func componentType(containerName, podName string) string {
 	componentType := ""
-	if strings.Contains(podName, "predictor-default") {
+	if strings.Contains(podName, "predictor") {
 		componentType = ModelComponentType
-	} else if strings.Contains(podName, "transformer-default") {
+	} else if strings.Contains(podName, "transformer") {
 		componentType = TransformerComponentType
 	} else if strings.Contains(podName, "driver") || containerName == "spark-kubernetes-driver" {
 		componentType = BatchJobDriverComponentType
@@ -75,8 +77,8 @@ func componentType(containerName, podName string) string {
 	return componentType
 }
 
-func OnlineInferencePodLabelSelector(modelName string, versionID string) string {
-	serviceName := CreateInferenceServiceName(modelName, versionID)
+func OnlineInferencePodLabelSelector(modelName, versionID, revisionID string) string {
+	serviceName := CreateInferenceServiceName(modelName, versionID, revisionID)
 	return fmt.Sprintf(onlineInferenceLabelTemplate, serviceName)
 }
 

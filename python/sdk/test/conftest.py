@@ -136,7 +136,7 @@ def requests():
     retry_strategy = Retry(
         total=5,
         status_forcelist=[429, 500, 502, 503, 504, 404],
-        method_whitelist=["POST"],
+        allowed_methods=["POST"],
         backoff_factor=0.5,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -144,6 +144,13 @@ def requests():
     req.mount("http://", adapter)
 
     return req
+
+@pytest.fixture
+def gpu_config():
+    gpu_request = os.environ.get("E2E_GPU_REQUEST", default="1")
+    gpu_name = os.environ.get("E2E_GPU_NAME", default="nvidia-tesla-p4")
+
+    return {"gpu_request": gpu_request, "gpu_name": gpu_name}
 
 
 @pytest.fixture

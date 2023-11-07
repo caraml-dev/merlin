@@ -295,6 +295,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	versionsService := service.NewVersionsService(db, mlpAPIClient)
 	environmentService := initEnvironmentService(cfg, db)
 	secretService := service.NewSecretService(mlpAPIClient)
+	deploymentService := service.NewDeploymentService(storage.NewDeploymentStorage(db))
 
 	gitlabConfig := cfg.FeatureToggleConfig.AlertConfig.GitlabConfig
 	gitlabClient, err := gitlab.NewClient(gitlabConfig.BaseURL, gitlabConfig.Token)
@@ -327,6 +328,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		DB:       db,
 		Enforcer: authEnforcer,
 
+		DeploymentService:         deploymentService,
 		EnvironmentService:        environmentService,
 		ProjectsService:           projectsService,
 		ModelsService:             modelsService,

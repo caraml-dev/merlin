@@ -23,6 +23,8 @@ import (
 type DeploymentStorage interface {
 	// ListInModel return all deployment within a model
 	ListInModel(model *models.Model) ([]*models.Deployment, error)
+	// ListInModelVersion return all deployment within a model
+	ListInModelVersion(modelID, versionID, endpointUUID string) ([]*models.Deployment, error)
 	// Save save the deployment to underlying storage
 	Save(deployment *models.Deployment) (*models.Deployment, error)
 	// GetFirstSuccessModelVersionPerModel Return mapping of model id and the first model version with a successful model version
@@ -41,6 +43,12 @@ func NewDeploymentStorage(db *gorm.DB) DeploymentStorage {
 func (d *deploymentStorage) ListInModel(model *models.Model) ([]*models.Deployment, error) {
 	var deployments []*models.Deployment
 	err := d.db.Where("version_model_id = ?", model.ID).Find(&deployments).Error
+	return deployments, err
+}
+
+func (d *deploymentStorage) ListInModelVersion(modelID, versionID, endpointUUID string) ([]*models.Deployment, error) {
+	var deployments []*models.Deployment
+	err := d.db.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ?", modelID, versionID, endpointUUID).Find(&deployments).Error
 	return deployments, err
 }
 

@@ -28,6 +28,8 @@ import (
 	"github.com/fatih/color"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 
 	"github.com/caraml-dev/merlin/cluster"
 	"github.com/caraml-dev/merlin/log"
@@ -197,17 +199,31 @@ func (l logService) getPodsLogs(ctx context.Context, clusterController cluster.C
 }
 
 func (l logService) getLabelSelector(query LogQuery) string {
+	modelVersionName := query.ModelName + "-" + query.VersionID
+
+	onlineServingLabelVals := []string{modelVersionName}
+	for i := 1; i <= query.RevisionID; i++ {
+		onlineServingLabelVals = append(onlineServingLabelVals, fmt.Sprintf("%s-%s%d", modelVersionName, models.RevisionPrefix, i))
+	}
+	onlineServingReq, _ := labels.NewRequirement(KserveIsvcLabelKey, selection.In, onlineServingLabelVals)
+
 	switch query.ComponentType {
 	case models.ImageBuilderComponentType:
 		if query.PredictionJobID == "" {
-			return ImageBuilderLabelKey + "=" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
+			return ImageBuilderLabelKey + "=" + query.ProjectName + "-" + modelVersionName
 		} else {
-			return ImageBuilderLabelKey + "=batch-" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
+			return ImageBuilderLabelKey + "=batch-" + query.ProjectName + "-" + modelVersionName
 		}
 	case models.ModelComponentType:
-		return "component=predictor," + KserveIsvcLabelKey + "=" + query.ModelName + "-" + query.VersionID
+		predictorReq, _ := labels.NewRequirement("component", selection.Equals, []string{"predictor"})
+		predictor := labels.NewSelector()
+		predictor = predictor.Add(*predictorReq, *onlineServingReq)
+		return predictor.String()
 	case models.TransformerComponentType:
-		return "component=transformer," + KserveIsvcLabelKey + "=" + query.ModelName + "-" + query.VersionID
+		transformerReq, _ := labels.NewRequirement("component", selection.Equals, []string{"transformer"})
+		transformer := labels.NewSelector()
+		transformer = transformer.Add(*transformerReq, *onlineServingReq)
+		return transformer.String()
 	case models.BatchJobDriverComponentType:
 		return "spark-role=driver," + BatchPredictionJobLabelKey + "=" + query.PredictionJobID
 	case models.BatchJobExecutorComponentType:
@@ -298,6 +314,7 @@ type LogQuery struct {
 	ModelID         string `schema:"model_id"`
 	ModelName       string `schema:"model_name"`
 	VersionID       string `schema:"version_id"`
+	RevisionID      int    `schema:"revision_id"`
 	PredictionJobID string `schema:"prediction_job_id"`
 
 	Cluster       string `schema:"cluster,required"`

@@ -15,7 +15,7 @@ var (
 		Cluster:   "cluster1",
 		IsDefault: &isDefault,
 	}
-	labels = mlp.Labels{
+	mlpLabels = mlp.Labels{
 		{
 			Key:   "sample",
 			Value: "true",
@@ -29,7 +29,7 @@ var (
 			Name:   "project-1",
 			Team:   "dsp",
 			Stream: "dsp",
-			Labels: labels,
+			Labels: mlpLabels,
 		},
 		ExperimentID: 1,
 
@@ -100,7 +100,7 @@ var (
 			Name:   "project-1",
 			Team:   "dsp",
 			Stream: "dsp",
-			Labels: labels,
+			Labels: mlpLabels,
 		},
 		ExperimentID: 1,
 

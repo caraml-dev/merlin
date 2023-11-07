@@ -17,7 +17,7 @@
 const config = {
   container: require("./data/container"),
   containerList: require("./data/containerList"),
-  environmentList: require("./data/environmentList"),
+  environmentList: require("./data/environmentList.json"),
   projectList: require("./data/projectList"),
   project: require("./data/project"),
   modelList: require("./data/modelList"),

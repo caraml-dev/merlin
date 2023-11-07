@@ -1,12 +1,12 @@
-import React from "react";
 import {
-  EuiSpacer,
   EuiCallOut,
-  EuiHorizontalRule,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiHorizontalRule,
+  EuiSpacer,
   EuiText,
 } from "@elastic/eui";
+import React from "react";
 import { calculateCost } from "../../../../../utils/costEstimation";
 
 /**
@@ -18,13 +18,17 @@ export const CostEstimationPanel = ({ versionEndpoint }) => {
   const modelMinCost = calculateCost(
     versionEndpoint.resource_request.min_replica,
     versionEndpoint.resource_request.cpu_request,
-    versionEndpoint.resource_request.memory_request
+    versionEndpoint.resource_request.memory_request,
+    versionEndpoint.resource_request.gpu_request,
+    versionEndpoint.resource_request.min_monthly_cost_per_gpu
   );
 
   const modelMaxCost = calculateCost(
     versionEndpoint.resource_request.max_replica,
     versionEndpoint.resource_request.cpu_request,
-    versionEndpoint.resource_request.memory_request
+    versionEndpoint.resource_request.memory_request,
+    versionEndpoint.resource_request.gpu_request,
+    versionEndpoint.resource_request.max_monthly_cost_per_gpu
   );
 
   const transformerMinCost =
@@ -73,6 +77,9 @@ export const CostEstimationPanel = ({ versionEndpoint }) => {
         <EuiText>
           {versionEndpoint.resource_request.memory_request} Memory
         </EuiText>
+        {versionEndpoint.resource_request.gpu_request !== "0" && (
+          <EuiText>{versionEndpoint.resource_request.gpu_request} GPU</EuiText>
+        )}
         <EuiSpacer size="m" />
       </div>
 

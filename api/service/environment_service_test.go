@@ -30,7 +30,6 @@ import (
 )
 
 func TestSave(t *testing.T) {
-
 	testCases := []struct {
 		desc                string
 		existingEnvironment *models.Environment
@@ -62,6 +61,18 @@ func TestSave(t *testing.T) {
 					ExecutorReplica:       0,
 					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
+				},
+				GPUs: models.GPUs{
+					{
+						Name:         "NVIDIA T4",
+						Values:       []string{"none", "1"},
+						ResourceType: "nvidia.com/gpu",
+						NodeSelector: map[string]string{
+							"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+						},
+						MinMonthlyCostPerGPU: 189.07,
+						MaxMonthlyCostPerGPU: 189.07,
+					},
 				},
 			},
 		},
@@ -166,7 +177,6 @@ func TestSave(t *testing.T) {
 }
 
 func TestGetEnvironment(t *testing.T) {
-
 	testCases := []struct {
 		desc                string
 		name                string
@@ -188,6 +198,7 @@ func TestGetEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -213,6 +224,7 @@ func TestGetEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -309,6 +321,7 @@ func TestGetDefaultEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -334,6 +347,7 @@ func TestGetDefaultEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -430,6 +444,7 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -455,6 +470,7 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -552,6 +568,7 @@ func TestListEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -578,6 +595,7 @@ func TestListEnvironment(t *testing.T) {
 						MaxReplica:    4,
 						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
+						GPURequest:    resource.MustParse("0"),
 					},
 					CreatedUpdated: models.CreatedUpdated{
 						CreatedAt: now,
@@ -610,6 +628,7 @@ func TestListEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GPURequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -636,6 +655,7 @@ func TestListEnvironment(t *testing.T) {
 						MaxReplica:    4,
 						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
+						GPURequest:    resource.MustParse("0"),
 					},
 					CreatedUpdated: models.CreatedUpdated{
 						CreatedAt: now,
@@ -708,7 +728,6 @@ func TestListEnvironment(t *testing.T) {
 				assert.Equal(t, tC.expectedEnvironments[i].IsDefaultPredictionJob, env.IsDefaultPredictionJob)
 				assert.Equal(t, tC.expectedEnvironments[i].DefaultPredictionJobResourceRequest, env.DefaultPredictionJobResourceRequest)
 			}
-
 		})
 	}
 }

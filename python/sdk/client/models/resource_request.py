@@ -31,22 +31,28 @@ class ResourceRequest(object):
         'min_replica': 'int',
         'max_replica': 'int',
         'cpu_request': 'str',
-        'memory_request': 'str'
+        'memory_request': 'str',
+        'gpu_name': 'str',
+        'gpu_request': 'str'
     }
 
     attribute_map = {
         'min_replica': 'min_replica',
         'max_replica': 'max_replica',
         'cpu_request': 'cpu_request',
-        'memory_request': 'memory_request'
+        'memory_request': 'memory_request',
+        'gpu_name': 'gpu_name',
+        'gpu_request': 'gpu_request'
     }
 
-    def __init__(self, min_replica=None, max_replica=None, cpu_request=None, memory_request=None):  # noqa: E501
+    def __init__(self, min_replica=None, max_replica=None, cpu_request=None, memory_request=None, gpu_name=None, gpu_request=None):  # noqa: E501
         """ResourceRequest - a model defined in Swagger"""  # noqa: E501
         self._min_replica = None
         self._max_replica = None
         self._cpu_request = None
         self._memory_request = None
+        self._gpu_name = None
+        self._gpu_request = None
         self.discriminator = None
         if min_replica is not None:
             self.min_replica = min_replica
@@ -56,6 +62,10 @@ class ResourceRequest(object):
             self.cpu_request = cpu_request
         if memory_request is not None:
             self.memory_request = memory_request
+        if gpu_name is not None:
+            self.gpu_name = gpu_name
+        if gpu_request is not None:
+            self.gpu_request = gpu_request
 
     @property
     def min_replica(self):
@@ -140,6 +150,48 @@ class ResourceRequest(object):
         """
 
         self._memory_request = memory_request
+
+    @property
+    def gpu_name(self):
+        """Gets the gpu_name of this ResourceRequest.  # noqa: E501
+
+
+        :return: The gpu_name of this ResourceRequest.  # noqa: E501
+        :rtype: str
+        """
+        return self._gpu_name
+
+    @gpu_name.setter
+    def gpu_name(self, gpu_name):
+        """Sets the gpu_name of this ResourceRequest.
+
+
+        :param gpu_name: The gpu_name of this ResourceRequest.  # noqa: E501
+        :type: str
+        """
+
+        self._gpu_name = gpu_name
+
+    @property
+    def gpu_request(self):
+        """Gets the gpu_request of this ResourceRequest.  # noqa: E501
+
+
+        :return: The gpu_request of this ResourceRequest.  # noqa: E501
+        :rtype: str
+        """
+        return self._gpu_request
+
+    @gpu_request.setter
+    def gpu_request(self, gpu_request):
+        """Sets the gpu_request of this ResourceRequest.
+
+
+        :param gpu_request: The gpu_request of this ResourceRequest.  # noqa: E501
+        :type: str
+        """
+
+        self._gpu_request = gpu_request
 
     def to_dict(self):
         """Returns the model properties as a dict"""

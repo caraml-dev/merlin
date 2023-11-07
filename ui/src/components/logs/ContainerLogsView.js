@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect, useState } from "react";
+import { AuthContext } from "@caraml-dev/ui-lib";
 import {
   EuiEmptyPrompt,
   EuiFlexGroup,
@@ -7,31 +7,32 @@ import {
   EuiPanel,
   EuiSpacer,
   EuiTextColor,
-  EuiTitle
+  EuiTitle,
 } from "@elastic/eui";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import { LazyLog, ScrollFollow } from "react-lazylog";
-import { AuthContext } from "@caraml-dev/ui-lib";
 import config from "../../config";
-import mocks from "../../mocks";
-import { LogsSearchBar } from "./LogsSearchBar";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
-import StackdriverLink from "./StackdriverLink";
+import mocks from "../../mocks";
 import { createStackdriverUrl } from "../../utils/createStackdriverUrl";
+import { LogsSearchBar } from "./LogsSearchBar";
+import StackdriverLink from "./StackdriverLink";
 
 const componentOrder = [
   "image_builder",
   "model",
   "transformer",
   "batch_job_driver",
-  "batch_job_executor"
+  "batch_job_executor",
 ];
 
 export const ContainerLogsView = ({
   projectId,
   model,
   versionId,
+  revisionId,
   jobId,
-  fetchContainerURL
+  fetchContainerURL,
 }) => {
   const [{ data: project, isLoaded: projectLoaded }] = useMerlinApi(
     `/projects/${projectId}`,
@@ -41,20 +42,13 @@ export const ContainerLogsView = ({
 
   const [params, setParams] = useState({
     component_type: "",
-    tail_lines: "1000"
+    tail_lines: "1000",
   });
 
   const [containerHaveBeenLoaded, setContainerHaveBeenLoaded] = useState(false);
 
-  const [
-    { data: containers, isLoaded: containersLoaded },
-    getContainers
-  ] = useMerlinApi(
-    fetchContainerURL,
-    { mock: mocks.containerOptions },
-    [],
-    true
-  );
+  const [{ data: containers, isLoaded: containersLoaded }, getContainers] =
+    useMerlinApi(fetchContainerURL, { mock: mocks.containerOptions }, [], true);
 
   useEffect(() => {
     var handle = setInterval(getContainers, 5000);
@@ -71,25 +65,25 @@ export const ContainerLogsView = ({
       if (containersLoaded && params.component_type === "") {
         if (
           containers.find(
-            container => container.component_type === "image_builder"
+            (container) => container.component_type === "image_builder"
           )
         ) {
           setParams({ ...params, component_type: "image_builder" });
         }
         if (
-          containers.find(container => container.component_type === "model")
+          containers.find((container) => container.component_type === "model")
         ) {
           setParams({ ...params, component_type: "model" });
         } else if (
           containers.find(
-            container => container.component_type === "transformer"
+            (container) => container.component_type === "transformer"
           )
         ) {
           setParams({ ...params, component_type: "transformer" });
         }
         if (
           containers.find(
-            container => container.component_type === "batch_job_driver"
+            (container) => container.component_type === "batch_job_driver"
           )
         ) {
           setParams({ ...params, component_type: "batch_job_driver" });
@@ -109,7 +103,7 @@ export const ContainerLogsView = ({
             componentOrder.indexOf(a.component_type) -
             componentOrder.indexOf(b.component_type)
         )
-        .map(container => container.component_type);
+        .map((container) => container.component_type);
       if (
         JSON.stringify(newComponentTypes) !== JSON.stringify(componentTypes)
       ) {
@@ -121,8 +115,8 @@ export const ContainerLogsView = ({
   const authCtx = useContext(AuthContext);
   const fetchOptions = {
     headers: {
-      Authorization: `Bearer ${authCtx.state.jwt}`
-    }
+      Authorization: `Bearer ${authCtx.state.jwt}`,
+    },
   };
 
   const [logUrl, setLogUrl] = useState("");
@@ -132,7 +126,7 @@ export const ContainerLogsView = ({
     () => {
       if (params.component_type !== "" && projectLoaded) {
         const activeContainers = containers.filter(
-          container => container.component_type === params.component_type
+          (container) => container.component_type === params.component_type
         );
 
         if (activeContainers && activeContainers.length > 0) {
@@ -145,7 +139,8 @@ export const ContainerLogsView = ({
             model_id: model.id,
             model_name: model.name,
             version_id: versionId,
-            prediction_job_id: jobId ? jobId : ""
+            revision_id: revisionId ? revisionId : "",
+            prediction_job_id: jobId ? jobId : "",
           };
           const logParams = new URLSearchParams(containerQuery).toString();
           const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
@@ -155,14 +150,14 @@ export const ContainerLogsView = ({
 
           const pods = [
             ...new Set(
-              activeContainers.map(container => `"${container.pod_name}"`)
-            )
+              activeContainers.map((container) => `"${container.pod_name}"`)
+            ),
           ];
           let stackdriverQuery = {
             gcp_project: activeContainers[0].gcp_project,
             cluster: activeContainers[0].cluster,
             namespace: activeContainers[0].namespace,
-            pod_name: pods.join(" OR ")
+            pod_name: pods.join(" OR "),
           };
           setStackdriverUrl(createStackdriverUrl(stackdriverQuery));
         }

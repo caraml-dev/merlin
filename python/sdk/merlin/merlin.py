@@ -20,7 +20,8 @@ from merlin.model import ModelType
 from cookiecutter.main import cookiecutter
 from merlin.util import valid_name_check
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
+
 
 @click.group()
 def cli():
@@ -32,20 +33,52 @@ def cli():
     """
     pass
 
-@cli.command('deploy', short_help='Deploy the model')
-@click.option('--env', '-e', required=True, help='The environment of model deployment')
-@click.option('--url', '-u', required=True, help='The endpoint of model deployment')
-@click.option('--project', '-p', required=True, help='The project name of model deployment')
-@click.option('--model-dir', '-m', required=True, help='The directory with model for deployment')
-@click.option('--model-name', '-n', required=True, help='The model name for deployment')
-@click.option('--model-type', '-t', required=True, help='The type of machine learning algorithm')
-@click.option('--min-replica', required=False, help='The minimum number of replicas to create for this deployment')
-@click.option('--max-replica', required=False, help='The maximum number of replicas to create for this deployment')
-@click.option('--cpu-request', required=False, help='The CPU resource requirement requests for this deployment. Example: 100m.')
-@click.option('--memory-request', required=False, help='The memory resource requirement requests for this deployment. Example: 256Mi.')
-def deploy(env, model_name, model_type, model_dir, project, url,
-           min_replica, max_replica, cpu_request, memory_request):
 
+@cli.command("deploy", short_help="Deploy the model")
+@click.option("--env", "-e", required=True, help="The environment of model deployment")
+@click.option("--url", "-u", required=True, help="The endpoint of model deployment")
+@click.option(
+    "--project", "-p", required=True, help="The project name of model deployment"
+)
+@click.option(
+    "--model-dir", "-m", required=True, help="The directory with model for deployment"
+)
+@click.option("--model-name", "-n", required=True, help="The model name for deployment")
+@click.option(
+    "--model-type", "-t", required=True, help="The type of machine learning algorithm"
+)
+@click.option(
+    "--min-replica",
+    required=False,
+    help="The minimum number of replicas to create for this deployment",
+)
+@click.option(
+    "--max-replica",
+    required=False,
+    help="The maximum number of replicas to create for this deployment",
+)
+@click.option(
+    "--cpu-request",
+    required=False,
+    help="The CPU resource requirement requests for this deployment. Example: 100m.",
+)
+@click.option(
+    "--memory-request",
+    required=False,
+    help="The memory resource requirement requests for this deployment. Example: 256Mi.",
+)
+def deploy(
+    env,
+    model_name,
+    model_type,
+    model_dir,
+    project,
+    url,
+    min_replica,
+    max_replica,
+    cpu_request,
+    memory_request,
+):
     merlin.set_url(url)
 
     target_env = merlin.get_environment(env)
@@ -69,17 +102,21 @@ def deploy(env, model_name, model_type, model_dir, project, url,
     try:
         endpoint = merlin.deploy(v, env, resource_request)
         if endpoint:
-            print('Model deployed to {}'.format(endpoint))
+            print("Model deployed to {}".format(endpoint))
     except Exception as e:
         print(e)
 
-@cli.command('undeploy', short_help='Undeploy the model')
-@click.option('--url', '-u', required=True, help='The endpoint of model deployment')
-@click.option('--project', '-p', required=True, help='The project name of model deployment')
-@click.option('--model-name', '-n', required=True, help='The model name for deployment')
-@click.option('--model-version', '-v', required=True, help='The model version for deployment')
-def undeploy(model_name, model_version, project, url):
 
+@cli.command("undeploy", short_help="Undeploy the model")
+@click.option("--url", "-u", required=True, help="The endpoint of model deployment")
+@click.option(
+    "--project", "-p", required=True, help="The project name of model deployment"
+)
+@click.option("--model-name", "-n", required=True, help="The model name for deployment")
+@click.option(
+    "--model-version", "-v", required=True, help="The model version for deployment"
+)
+def undeploy(model_name, model_version, project, url):
     merlin.set_url(url)
     merlin.set_project(project)
     merlin.set_model(model_name)
@@ -88,10 +125,14 @@ def undeploy(model_name, model_version, project, url):
     all_versions = merlin_active_model.list_version()
 
     try:
-        wanted_model_info = [model_info for model_info in all_versions if model_info._id == int(model_version)][0]
+        wanted_model_info = [
+            model_info
+            for model_info in all_versions
+            if model_info._id == int(model_version)
+        ][0]
     except Exception as e:
         print(e)
-        print('Model Version {} is not found.'.format(model_version))
+        print("Model Version {} is not found.".format(model_version))
 
     try:
         merlin.undeploy(wanted_model_info)
@@ -99,26 +140,45 @@ def undeploy(model_name, model_version, project, url):
         print(e)
 
 
-@cli.command('scaffold', short_help='Generate PyFunc project')
-@click.option('--project', '-p', required=True, help='The merlin project name of PyFunc server')
-@click.option('--model-name', '-m', required=True, help='The model name which will be listed in merlin')
-@click.option('--env', '-e', required=True, help='The environment which PyFunc server will be deployed, available environment are id and global')
+@cli.command("scaffold", short_help="Generate PyFunc project")
+@click.option(
+    "--project", "-p", required=True, help="The merlin project name of PyFunc server"
+)
+@click.option(
+    "--model-name",
+    "-m",
+    required=True,
+    help="The model name which will be listed in merlin",
+)
+@click.option(
+    "--env",
+    "-e",
+    required=True,
+    help="The environment which PyFunc server will be deployed, available environment are id and global",
+)
 def scaffold(project, model_name, env):
     if not valid_name_check(project) or not valid_name_check(model_name):
         print(
-            '''Your project/model name contains invalid characters.\
+            """Your project/model name contains invalid characters.\
                 \nUse only the following characters\
                 \n- Characters: a-z (Lowercase ONLY)\
                 \n- Numbers: 0-9\
                 \n- Symbols: -
-            '''
+            """
         )
     else:
         try:
-            cookiecutter("git@github.com:caraml-dev/merlin/python/pyfunc-scaffolding",
+            cookiecutter(
+                "git@github.com:caraml-dev/merlin/python/pyfunc-scaffolding",
                 checkout="tags/v0.1",
-                no_input=True, directory="python/pyfunc-scaffolding",
-                extra_context={'project_name': project, 'model_name': model_name, 'environment_name': env})
+                no_input=True,
+                directory="python/pyfunc-scaffolding",
+                extra_context={
+                    "project_name": project,
+                    "model_name": model_name,
+                    "environment_name": env,
+                },
+            )
 
         except Exception as e:
             print(e)

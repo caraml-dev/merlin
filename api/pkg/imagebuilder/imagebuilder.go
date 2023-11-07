@@ -24,6 +24,8 @@ import (
 	"time"
 
 	backoff "github.com/cenkalti/backoff/v4"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -42,6 +44,27 @@ import (
 )
 
 var maxCheckImageRetry uint64 = 2
+
+var (
+	imageBuilderAttempts = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "merlin",
+		Name:      "image_builder_attempts",
+		Help:      "Total of image builder attempts",
+	}, []string{"project", "model", "model_type", "model_version", "python_version"})
+
+	imageBuilderResults = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "merlin",
+		Name:      "image_builder_results",
+		Help:      "Total of image builder results",
+	}, []string{"project", "model", "model_type", "model_version", "python_version", "result"})
+
+	imageBuilderDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "merlin",
+		Name:      "image_builder_duration_seconds",
+		Help:      "Duration of image builder in seconds",
+		Buckets:   []float64{1 * 60, 3 * 60, 5 * 60, 7 * 60, 10 * 60, 15 * 60, 20 * 60, 30 * 60, 45 * 60, 60 * 60},
+	}, []string{"project", "model", "model_type", "model_version", "python_version", "result"})
+)
 
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
@@ -96,7 +119,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
 	if !ok {
-		return "", fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
+		return "", fmt.Errorf("no matching base image for tag %s", version.PythonVersion)
 	}
 
 	if baseImageTag.MainAppPath == "" {
@@ -118,6 +141,24 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 		log.Infof("Image %s already exists. Skipping build.", imageRef)
 		return imageRef, nil
 	}
+
+	startTime := time.Now()
+	result := "failed"
+
+	labelValues := []string{
+		project.Name,
+		model.Name,
+		model.Type,
+		version.ID.String(),
+		version.PythonVersion,
+	}
+	imageBuilderAttempts.WithLabelValues(labelValues...).Inc()
+
+	defer func() {
+		labelValues = append(labelValues, result)
+		imageBuilderResults.WithLabelValues(labelValues...).Inc()
+		imageBuilderDuration.WithLabelValues(labelValues...).Observe(float64(time.Since(startTime).Seconds()))
+	}()
 
 	// check for existing job
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
@@ -182,6 +223,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 		return "", err
 	}
 
+	result = "success"
 	return imageRef, nil
 }
 

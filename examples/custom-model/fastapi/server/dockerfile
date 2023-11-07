@@ -1,0 +1,16 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --upgrade pip
+RUN pip install fastapi uvicorn requests
+RUN pip install xgboost==1.6.2
+
+# Copy source code
+COPY . .
+
+# Add execute permission to boot.sh
+RUN chmod +x boot.sh
+
+ENTRYPOINT ["./boot.sh"]

@@ -1519,8 +1519,8 @@ func Test_getUrl(t *testing.T) {
 		},
 		{
 			name:   "no scheme with port",
-			rawUrl: "std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
-			want:   "http://std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+			rawUrl: "std-transformer-s-1-predictor.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+			want:   "http://std-transformer-s-1-predictor.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
 		},
 	}
 	for _, tt := range tests {

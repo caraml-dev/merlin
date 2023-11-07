@@ -56,34 +56,35 @@ var (
 )
 
 // fetchFeatureTable fetch features of several entities from cache scoped by its project and return it as a feature table
-func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []string, project string) (*internalFeatureTable, []feast.Row) {
-	var entityNotInCache []feast.Row
+func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []string, project string) (*internalFeatureTable, []orderedFeastRow) {
+	var entityNotInCache []orderedFeastRow
 	var entityInCache []feast.Row
 	var featuresFromCache types.ValueRows
+	var indexFromCache []int
 
 	// initialize empty value types
 	columnTypes := make([]feastTypes.ValueType_Enum, len(columnNames))
 
 	columnNameHash := computeHash(columnNames)
-	for _, entity := range entities {
+	for index, entity := range entities {
 		key := CacheKey{Entity: entity, Project: project, ColumnNameHash: columnNameHash}
 		keyByte, err := json.Marshal(key)
 		if err != nil {
-			entityNotInCache = append(entityNotInCache, entity)
+			entityNotInCache = append(entityNotInCache, orderedFeastRow{Index: index, Row: entity})
 			continue
 		}
 
 		feastCacheRetrievalCount.Inc()
 		val, err := fc.cache.Fetch(keyByte)
 		if err != nil {
-			entityNotInCache = append(entityNotInCache, entity)
+			entityNotInCache = append(entityNotInCache, orderedFeastRow{Index: index, Row: entity})
 			continue
 		}
 
 		feastCacheHitCount.Inc()
 		var cacheValue CacheValue
 		if err := json.Unmarshal(val, &cacheValue); err != nil {
-			entityNotInCache = append(entityNotInCache, entity)
+			entityNotInCache = append(entityNotInCache, orderedFeastRow{Index: index, Row: entity})
 			continue
 		}
 
@@ -94,12 +95,14 @@ func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []st
 
 		entityInCache = append(entityInCache, entity)
 		featuresFromCache = append(featuresFromCache, cacheValue.ValueRow)
+		indexFromCache = append(indexFromCache, index)
 	}
 
 	return &internalFeatureTable{
 		columnNames: columnNames,
 		columnTypes: columnTypes,
 		valueRows:   featuresFromCache,
+		indexRows:   indexFromCache,
 		entities:    entityInCache,
 	}, entityNotInCache
 }

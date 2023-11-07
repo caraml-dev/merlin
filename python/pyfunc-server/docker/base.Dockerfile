@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM condaforge/miniforge3:4.14.0-0
+FROM condaforge/miniforge3:23.3.1-1
 
 ARG PYTHON_VERSION
 

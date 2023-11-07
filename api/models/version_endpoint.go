@@ -15,8 +15,8 @@
 package models
 
 import (
-	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -31,12 +31,14 @@ import (
 type VersionEndpoint struct {
 	// ID unique id of the version endpoint
 	ID uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
+	// VersionModelID model id from which the version endpoint is created
+	VersionModelID ID `json:"model_id"`
 	// VersionID model version id from which the version endpoint is created
 	// The field name has to be prefixed with the related struct name
 	// in order for gorm Preload to work with references
 	VersionID ID `json:"version_id"`
-	// VersionModelID model id from which the version endpoint is created
-	VersionModelID ID `json:"model_id"`
+	// RevisionID defines the revision of the current model version
+	RevisionID ID `json:"revision_id"`
 	// Status status of the version endpoint
 	Status EndpointStatus `json:"status"`
 	// URL url of the version endpoint
@@ -44,9 +46,9 @@ type VersionEndpoint struct {
 	// ServiceName service name
 	ServiceName string `json:"service_name" gorm:"service_name"`
 	// InferenceServiceName name of inference service
-	InferenceServiceName string `json:"-" gorm:"inference_service_name"`
+	InferenceServiceName string `json:"inference_service_name" gorm:"inference_service_name"`
 	// Namespace namespace where the version is deployed at
-	Namespace string `json:"-" gorm:"namespace"`
+	Namespace string `json:"namespace" gorm:"namespace"`
 	// MonitoringURL URL pointing to the version endpoint's dashboard
 	MonitoringURL string `json:"monitoring_url,omitempty" gorm:"-"`
 	// Environment environment where the version endpoint is deployed
@@ -88,19 +90,23 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 	}
 
 	ve := &VersionEndpoint{
-		ID:                   id,
-		VersionID:            version.ID,
-		VersionModelID:       version.ModelID,
-		Namespace:            project.Name,
-		InferenceServiceName: fmt.Sprintf("%s-%s", model.Name, version.ID.String()),
-		Status:               EndpointPending,
-		EnvironmentName:      env.Name,
-		Environment:          env,
-		ResourceRequest:      env.DefaultResourceRequest,
-		DeploymentMode:       deploymentMode,
-		AutoscalingPolicy:    autoscalingPolicy,
-		EnvVars:              envVars,
-		Protocol:             protocol.HttpJson,
+		ID:                id,
+		VersionModelID:    version.ModelID,
+		VersionID:         version.ID,
+		RevisionID:        ID(0),
+		Namespace:         project.Name,
+		Status:            EndpointPending,
+		EnvironmentName:   env.Name,
+		Environment:       env,
+		ResourceRequest:   env.DefaultResourceRequest,
+		DeploymentMode:    deploymentMode,
+		AutoscalingPolicy: autoscalingPolicy,
+		EnvVars:           envVars,
+		Protocol:          protocol.HttpJson,
+		CreatedUpdated: CreatedUpdated{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
 	}
 
 	if monitoringConfig.MonitoringEnabled {

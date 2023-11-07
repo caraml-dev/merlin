@@ -1,4 +1,3 @@
 pandas
 cloudpickle==2.0.0
 merlin-sdk
-grpcio==1.22.0

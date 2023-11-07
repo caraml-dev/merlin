@@ -53,6 +53,7 @@ type AppContext struct {
 	DB       *gorm.DB
 	Enforcer enforcer.Enforcer
 
+	DeploymentService         service.DeploymentService
 	EnvironmentService        service.EnvironmentService
 	ProjectsService           service.ProjectsService
 	ModelsService             service.ModelsService
@@ -154,6 +155,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	if err != nil {
 		return nil, err
 	}
+	deploymentController := DeploymentController{&appCtx}
 	environmentController := EnvironmentController{&appCtx}
 	projectsController := ProjectsController{&appCtx}
 	modelEndpointsController := ModelEndpointsController{&appCtx}
@@ -205,6 +207,9 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodPost, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint", models.VersionEndpoint{}, endpointsController.CreateEndpoint, "CreateEndpoint"},
 		// To maintain backward compatibility with SDK v0.1.0
 		{http.MethodDelete, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint", nil, endpointsController.DeleteEndpoint, "DeleteDefaultEndpoint"},
+
+		// Deployments API
+		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoints/{endpoint_id}/deployments", nil, deploymentController.ListDeployments, "ListDeployments"},
 
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint/{endpoint_id}", nil, endpointsController.GetEndpoint, "GetEndpoint"},
 		{http.MethodPut, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint/{endpoint_id}", models.VersionEndpoint{}, endpointsController.UpdateEndpoint, "UpdateEndpoint"},

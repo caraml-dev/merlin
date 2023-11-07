@@ -24,10 +24,14 @@ type PodDisruptionBudget struct {
 }
 
 func NewPodDisruptionBudget(modelService *models.Service, componentType string, pdbConfig config.PodDisruptionBudgetConfig) *PodDisruptionBudget {
+	labels := modelService.Metadata.ToLabel()
+	labels["component"] = componentType
+	labels["serving.kserve.io/inferenceservice"] = modelService.Name
+
 	return &PodDisruptionBudget{
 		Name:                     fmt.Sprintf("%s-%s-%s", modelService.Name, componentType, models.PDBComponentType),
 		Namespace:                modelService.Namespace,
-		Labels:                   modelService.Metadata.ToLabel(),
+		Labels:                   labels,
 		MaxUnavailablePercentage: pdbConfig.MaxUnavailablePercentage,
 		MinAvailablePercentage:   pdbConfig.MinAvailablePercentage,
 	}
@@ -78,7 +82,7 @@ func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.P
 	if modelService.ResourceRequest != nil &&
 		math.Ceil(float64(modelService.ResourceRequest.MinReplica)*
 			minAvailablePercent) < float64(modelService.ResourceRequest.MinReplica) {
-		predictorPdb := NewPodDisruptionBudget(modelService, models.ModelComponentType, pdbConfig)
+		predictorPdb := NewPodDisruptionBudget(modelService, models.PredictorComponentType, pdbConfig)
 		pdbs = append(pdbs, predictorPdb)
 	}
 

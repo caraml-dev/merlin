@@ -192,7 +192,7 @@ const VersionListTable = ({
                           <EuiLink
                             onClick={() =>
                               navigate(
-                                `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${versionEndpoint.id}`
+                                `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${versionEndpoint.id}/details`
                               )
                             }
                           >
@@ -426,7 +426,7 @@ const VersionListTable = ({
                       <EuiLink
                         onClick={() =>
                           navigate(
-                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`
                           )
                         }
                       >
@@ -442,7 +442,7 @@ const VersionListTable = ({
                       <EuiLink
                         onClick={() =>
                           navigate(
-                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`
                           )
                         }
                       >

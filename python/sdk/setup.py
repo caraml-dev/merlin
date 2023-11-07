@@ -30,21 +30,20 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "google-cloud-storage>=1.19.0",
-    "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
-    "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
+    "protobuf>=3.0.0,<5.0.0",
+    "mlflow>=1.26.1,<2.0.0",
     "PyPrind>=2.11.2",
     "python_dateutil>=2.5.3",
     "PyYAML>=5.4",
     "six>=1.10",
-    "urllib3>=1.23",
+    "urllib3>=1.26",
     "numpy<=1.23.5", # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
-    "caraml-auth-google==0.0.0.post6",
+    "caraml-auth-google==0.0.0.post7",
 ]
 
 TEST_REQUIRES = [
     "google-cloud-bigquery-storage>=0.7.0",
     "google-cloud-bigquery>=1.18.0",
-    "grpcio>=1.31.0,<1.49.0",
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
     "pytest-cov",
@@ -53,7 +52,7 @@ TEST_REQUIRES = [
     "pytest",
     "recursive-diff>=1.0.0",
     "requests",
-    "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
+    "scikit-learn>=1.1.2",
     "types-python-dateutil",
     "types-PyYAML",
     "types-six",
@@ -76,7 +75,7 @@ setup(
     setup_requires=["setuptools_scm"],
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
-    python_requires='>=3.7,<3.11',
+    python_requires='>=3.8,<3.11',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     entry_points='''

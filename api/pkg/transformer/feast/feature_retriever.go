@@ -243,9 +243,15 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 	entitySet := getEntitySet(columns, featureTableSpec.Entities)
 
 	var featureTable *internalFeatureTable
-	entityNotInCache := entities
+	var entityNotInCache []orderedFeastRow
 	if fr.options.CacheEnabled {
 		featureTable, entityNotInCache = fr.featureCache.fetchFeatureTable(entities, columns, featureTableSpec.Project)
+	} else {
+		entityNotInCache = make([]orderedFeastRow, len(entities))
+		for i, entity := range entities {
+			entityNotInCache[i] = orderedFeastRow{Index: i, Row: entity}
+		}
+
 	}
 
 	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(fr.options.BatchSize)

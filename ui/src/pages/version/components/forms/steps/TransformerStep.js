@@ -1,22 +1,22 @@
-import React, { useContext } from "react";
-import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,
   get,
-  useOnChangeHandler
+  useOnChangeHandler,
 } from "@caraml-dev/ui-lib";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
+import React, { useContext } from "react";
 import { appConfig } from "../../../../../config";
+import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
-import {PROTOCOL} from "../../../../../services/version_endpoint/VersionEndpoint"
 
 export const TransformerStep = () => {
   const {
-    data: { transformer, logger, protocol},
-    onChangeHandler
+    data: { transformer, logger, protocol },
+    onChangeHandler,
   } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
@@ -35,22 +35,22 @@ export const TransformerStep = () => {
         <>
           <EuiFlexItem grow={false}>
             <ResourcesPanel
+              isGPUEnabled={false}
               resourcesConfig={transformer.resource_request}
               onChangeHandler={onChange("transformer.resource_request")}
               maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
               errors={get(errors, "transformer.resource_request")}
             />
           </EuiFlexItem>
-          { protocol !== PROTOCOL.UPI_V1 && (
-              <EuiFlexItem grow={false}>
-                <LoggerPanel
-                  loggerConfig={logger.transformer || {}}
-                  onChangeHandler={onChange("logger.transformer")}
-                  errors={get(errors, "logger.transformer")}
-                />
-              </EuiFlexItem>
-            )
-          }
+          {protocol !== PROTOCOL.UPI_V1 && (
+            <EuiFlexItem grow={false}>
+              <LoggerPanel
+                loggerConfig={logger.transformer || {}}
+                onChangeHandler={onChange("logger.transformer")}
+                errors={get(errors, "logger.transformer")}
+              />
+            </EuiFlexItem>
+          )}
 
           <EuiFlexItem grow={false}>
             <EnvVariablesPanel

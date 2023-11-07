@@ -30,6 +30,7 @@ with open('requirements.txt') as f:
 
 # replace merlin relative path in requirements.txt into absolute path
 # setuptools could not install relative path requirements
+
 merlin_path = os.path.join(os.getcwd(), "../sdk")
 merlin_sdk_package = "merlin-sdk"
 for index, item in enumerate(REQUIRE):
@@ -43,7 +44,7 @@ setup(
     description='Model Server implementation for mlflow pyfunc model',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    python_requires='>=3.7,<3.11',
+    python_requires='>=3.8,<3.11',
     packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
     tests_require=tests_require,
