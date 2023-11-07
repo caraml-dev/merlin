@@ -129,9 +129,7 @@ func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment
 		}
 
 		// Set older successful deployment to terminated
-		if deployments[i].IsSuccess() {
-			deployments[i].Status = models.EndpointTerminated
-		}
+		deployments[i].Status = models.EndpointTerminated
 	}
 
 	err = tx.Save(deployments).Error
@@ -158,16 +156,14 @@ func (d *deploymentStorage) Undeploy(modelID, versionID, endpointUUID string) er
 	}()
 
 	var deployments []*models.Deployment
-	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('running', 'serving')",
+	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('pending', 'running', 'serving')",
 		modelID, versionID, endpointUUID).Find(&deployments).Error
 	if err != nil {
 		return err
 	}
 
 	for i := range deployments {
-		if deployments[i].IsSuccess() {
-			deployments[i].Status = models.EndpointTerminated
-		}
+		deployments[i].Status = models.EndpointTerminated
 	}
 
 	err = tx.Save(deployments).Error
