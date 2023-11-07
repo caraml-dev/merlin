@@ -31,7 +31,6 @@ const moment = require("moment");
 const defaultTextSize = "s";
 
 const ModelVersionJobsTable = ({ jobs, isLoaded, error }) => {
-
   const healthColor = status => {
     switch (status) {
       case "running":
@@ -39,9 +38,9 @@ const ModelVersionJobsTable = ({ jobs, isLoaded, error }) => {
       case "pending":
         return "gray";
       case "terminating":
-        return "warning";
+        return "default";
       case "terminated":
-        return "warning";
+        return "default";
       case "failed":
         return "danger";
       case "failed_submission":

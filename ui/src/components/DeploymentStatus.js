@@ -28,7 +28,7 @@ export const DeploymentStatus = ({ status, size }) => {
       case "pending":
         return "gray";
       case "terminated":
-        return "danger";
+        return "default";
       case "failed":
         return "danger";
       default:

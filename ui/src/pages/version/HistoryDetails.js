@@ -22,7 +22,7 @@ const DeploymentStatus = ({ status }) => {
     case "serving":
       return <EuiHealth color="success">Deployed</EuiHealth>;
     case "terminated":
-      return <EuiHealth color="default">Not Deployed</EuiHealth>;
+      return <EuiHealth color="default">Terminated</EuiHealth>;
     case "failed":
       return <EuiHealth color="danger">Failed</EuiHealth>;
     default:
@@ -47,7 +47,6 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
       );
     });
 
-    console.log("currentDeployment", currentDeployment);
     setCurrentDeployment(currentDeployment);
   }, [deployments]);
 

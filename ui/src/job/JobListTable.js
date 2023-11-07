@@ -49,9 +49,9 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
       case "pending":
         return "gray";
       case "terminating":
-        return "warning";
+        return "default";
       case "terminated":
-        return "warning";
+        return "default";
       case "failed":
         return "danger";
       case "failed_submission":
