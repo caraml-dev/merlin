@@ -3,16 +3,32 @@ import {
   EuiBadge,
   EuiButtonIcon,
   EuiCodeBlock,
+  EuiHealth,
   EuiInMemoryTable,
   EuiScreenReaderOnly,
   EuiText,
 } from "@elastic/eui";
 import { useEffect, useState } from "react";
-import { DeploymentStatus } from "../../components/DeploymentStatus";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 
 const defaultTextSize = "s";
+
+const DeploymentStatus = ({ status }) => {
+  switch (status) {
+    case "pending":
+      return <EuiHealth color="gray">Pending</EuiHealth>;
+    case "running":
+    case "serving":
+      return <EuiHealth color="success">Deployed</EuiHealth>;
+    case "terminated":
+      return <EuiHealth color="default">Not Deployed</EuiHealth>;
+    case "failed":
+      return <EuiHealth color="danger">Failed</EuiHealth>;
+    default:
+      return <EuiHealth color="subdued">-</EuiHealth>;
+  }
+};
 
 const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
   const [orderedDeployments, setOrderedDeployments] = useState([]);
