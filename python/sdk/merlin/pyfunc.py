@@ -51,14 +51,16 @@ class PyFuncModel(PythonModel):
             return self._do_http_predict(input)
         elif protocol == Protocol.UPI_V1:
             grpc_context = model_input.get(PYFUNC_GRPC_CONTEXT, None)
-            return self.upiv1_infer(input, grpc_context)
+            grpc_response = self.upiv1_infer(input, grpc_context)
+            return PyFuncOutput(upi_response=grpc_response)
         else:
             raise NotImplementedError(f"protocol {protocol} is not supported")
 
     def _do_http_predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
             try:
-                return self.infer(model_input, **kwargs)
+                http_response =  self.infer(model_input, **kwargs)
+                return PyFuncOutput(http_response=http_response)
             except TypeError as e:
                 if "infer() got an unexpected keyword argument" in str(e):
                     print(
@@ -67,7 +69,8 @@ class PyFuncModel(PythonModel):
                 else:
                     raise e
 
-        return self.infer(model_input)
+        http_response = self.infer(model_input)
+        return PyFuncOutput(http_response=http_response)
 
     @abstractmethod
     def initialize(self, artifacts: dict):
@@ -147,6 +150,7 @@ class ModelInput:
 @dataclass
 class ModelOutput:
     predictions: Values
+    prediction_ids: List[str]
 
     def predictions_dict(self) -> dict:
         if self.predictions is None:
@@ -216,7 +220,7 @@ class PyFuncV3Model(PythonModel):
         elif protocol == Protocol.UPI_V1:
             grpc_context = model_input.get(PYFUNC_GRPC_CONTEXT, None)
             ml_model_input = self.upiv1_preprocess(input, grpc_context)
-            ml_model_output = self.ml_predict(model_input)
+            ml_model_output = self.ml_predict(ml_model_input)
             final_output = self.upiv1_postprocess(ml_model_output, input)
             return PyFuncOutput(upi_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
         else:
@@ -224,7 +228,7 @@ class PyFuncV3Model(PythonModel):
 
     def _do_http_predict(self, model_input, **kwargs):
         ml_model_input = self.preprocess(model_input, **kwargs)
-        ml_model_output = self.ml_predict(model_input)
+        ml_model_output = self.ml_predict(ml_model_input)
         final_output = self.postprocess(ml_model_output, model_input)
 
         return PyFuncOutput(http_response=final_output, model_input=ml_model_input, model_output=ml_model_output)

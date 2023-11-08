@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Optional
 
 from merlin.protocol import Protocol
 from dataclasses import dataclass
@@ -23,25 +24,24 @@ PUSHGATEWAY_ENABLED = ("PUSHGATEWAY_ENABLED", "false")
 PUSHGATEWAY_URL = ("PUSHGATEWAY_URL", "localhost:9091")
 PUSHGATEWAY_PUSH_INTERVAL_SEC = ("PUSHGATEWAY_PUSH_INTERVAL_SEC", 30)
 
-PUBLISHER_KAFKA_TOPIC = "PUBLISHER_KAFKA_TOPIC"
-PUBLISHER_KAFKA_BROKERS = "PUBLISHER_KAFKA_BROKERS"
-PUBLISHER_KAKFA_LINGER_MS = ("PUBLISHER_KAFKA_LINGER_MS", 500)
+PUBLISHER_KAFKA_TOPIC = ("PUBLISHER_KAFKA_TOPIC", "")
+PUBLISHER_KAFKA_BROKERS = ("PUBLISHER_KAFKA_BROKERS", "")
+PUBLISHER_KAKFA_LINGER_MS = ("PUBLISHER_KAFKA_LINGER_MS", 1000)
 PUBLISHER_KAFKA_ACKS = ("PUBLISHER_KAFKA_ACKS", 0)
 PUBLISHER_KAFKA_CONFIG = ("PUBLISHER_KAFKA_CONFIG", "{}")
 PUBLISHER_SAMPLING_RATIO = ("PUBLISHER_SAMPLING_RATIO", 0.01)
 PUBLISHER_ENABLED = ("PUBLISHER_ENABLED", "false")
 
+@dataclass
 class ModelManifest:
     """
     Model Manifest
     """
-
-    def __init__(self, model_name: str, model_version: str, model_full_name: str, model_dir: str, project: str):
-        self.model_name = model_name
-        self.model_version = model_version
-        self.model_full_name = model_full_name
-        self.model_dir = model_dir
-        self.project = project
+    model_name: str
+    model_version: str
+    model_full_name: str
+    model_dir: str
+    project: str
 
 
 class PushGateway:
@@ -52,6 +52,9 @@ class PushGateway:
 
 @dataclass
 class Kafka:
+    """
+    Kafka configuration
+    """
     topic: str
     brokers: str
     linger_ms: int
@@ -60,9 +63,12 @@ class Kafka:
 
 @dataclass
 class Publisher:
+    """
+    Publisher configuration
+    """
     # sampling ratio of data that needs to be published
-    sampling_ratio: float = 0.01
-    enabled: bool = False
+    sampling_ratio: float
+    enabled: bool
     kafka: Kafka
 
 
@@ -99,12 +105,23 @@ class Config:
         # Publisher
         sampling_ratio = float(os.getenv(*PUBLISHER_SAMPLING_RATIO))
         publisher_enabled = str_to_bool(os.getenv(*PUBLISHER_ENABLED))
-        kafka_topic = os.getenv(PUBLISHER_KAFKA_TOPIC)
-        kafka_brokers = os.getenv(PUBLISHER_KAFKA_BROKERS)
+        kafka_topic = os.getenv(*PUBLISHER_KAFKA_TOPIC)
+        kafka_brokers = os.getenv(*PUBLISHER_KAFKA_BROKERS)
+        if publisher_enabled:
+            if kafka_topic == "":
+                raise ValueError("kafka topic must be set")
+            if kafka_brokers == "":
+                raise ValueError("kafka brokers must be set")
+        
         kafka_linger_ms = int(os.getenv(*PUBLISHER_KAKFA_LINGER_MS))
         kafka_acks = int(os.getenv(*PUBLISHER_KAFKA_ACKS))
         kafka_cfgs = self._kafka_config()
-        kafka = Kafka(kafka_topic, kafka_brokers, kafka_linger_ms, kafka_acks, kafka_cfgs)
+        kafka = Kafka(
+            kafka_topic, 
+            kafka_brokers,
+            kafka_linger_ms, 
+            kafka_acks, 
+            kafka_cfgs)
         self.publisher = Publisher(sampling_ratio, publisher_enabled, kafka)
     
     def _kafka_config(self):

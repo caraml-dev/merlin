@@ -23,7 +23,6 @@ from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.server import HTTPServer
 from pyfuncserver.protocol.upi.server import UPIServer
 
-
 class PyFuncServer:
     def __init__(self, config: Config):
         self._config = config

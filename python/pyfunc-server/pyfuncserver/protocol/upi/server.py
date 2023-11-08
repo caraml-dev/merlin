@@ -3,6 +3,9 @@ import multiprocessing
 from concurrent import futures
 
 import grpc
+from grpc import aio
+import asyncio
+from typing import Optional
 from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 from grpc_health.v1.health import HealthServicer
@@ -10,15 +13,21 @@ from grpc_health.v1 import health_pb2_grpc
 
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
+from pyfuncserver.publisher.publisher import Publisher
 
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
-    def __init__(self, model: PyFuncModel):
+    def __init__(self, model: PyFuncModel, publisher: Optional[Publisher] = None):
         if not model.ready:
             model.load()
         self._model = model
+        self._publisher = publisher
 
     def PredictValues(self, request, context):
-        return self._model.upiv1_predict(request=request, context=context)
+        output = self._model.upiv1_predict(request=request, context=context)
+        if self._publisher is not None and output.contains_prediction_log:
+            asyncio.create_task(self._publisher(output))
+
+        return output.upi_response
 
 
 class UPIServer:
@@ -38,9 +47,9 @@ class UPIServer:
                 worker.start()
                 workers.append(worker)
 
-        self._run_server()
+        asyncio.get_event_loop().run_until_complete(self._run_server())
 
-    def _run_server(self):
+    async def _run_server(self):
         """
             Start a server in a subprocess.
 
@@ -48,7 +57,7 @@ class UPIServer:
         options = self._config.grpc_options
         options.append(('grpc.so_reuseport', 1))
 
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=self._config.grpc_concurrency),
+        server = aio.server(futures.ThreadPoolExecutor(max_workers=self._config.grpc_concurrency),
                              options=options)
         upi_pb2_grpc.add_UniversalPredictionServiceServicer_to_server(self._predict_service, server)
         health_pb2_grpc.add_HealthServicer_to_server(self._health_service, server)
@@ -63,5 +72,5 @@ class UPIServer:
         logging.info(
             f"Starting grpc service at port {self._config.grpc_port} with options {self._config.grpc_options}")
         server.add_insecure_port(f"[::]:{self._config.grpc_port}")
-        server.start()
-        server.wait_for_termination()
+        await server.start()
+        await server.wait_for_termination()

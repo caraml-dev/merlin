@@ -21,16 +21,11 @@ import orjson
 import tornado.web
 
 from pyfuncserver.model.model import PyFuncModel
-from pyfuncserver.publisher.publisher import Publisher
-
 
 class PredictHandler(tornado.web.RequestHandler):
-    def initialize(self, models, publisher_config, model_manifest):
+    def initialize(self, models, publisher):
         self.models = models  # pylint:disable=attribute-defined-outside-init
-        self.publisher_config = publisher_config
-        self.publisher = None
-        if self.publisher_config.enabled:
-            self.publisher = Publisher(publisher_config)
+        self.publisher = publisher
 
     def get_model(self, full_name: str):
         if full_name not in self.models:

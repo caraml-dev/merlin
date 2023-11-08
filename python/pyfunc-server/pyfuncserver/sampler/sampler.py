@@ -1,7 +1,13 @@
 import random
+from abc import ABC, abstractmethod
+from typing import Optional
 
-class RatioSampling:
-    
+class Sampler(ABC):
+    @abstractmethod
+    def should_sample(self, request_id: Optional[int] = None) -> bool:
+        pass
+
+class RatioSampling(Sampler):
     def __init__(self, ratio: float) -> None:
         if ratio < 0.0 or ratio > 1.0:
             raise ValueError("Valid ratio is on 0 - 1 range")
@@ -18,7 +24,7 @@ class RatioSampling:
     def ratio(self) -> float:
         return self._ratio
     
-    def should_sample(self, request_id: int = None):
+    def should_sample(self, request_id: Optional[int] = None) -> bool :
         if request_id is None:
             request_id = random.getrandbits(128)
         

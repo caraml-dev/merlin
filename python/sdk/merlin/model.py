@@ -696,7 +696,7 @@ class ModelVersion:
         self._labels = version.labels
         self._custom_predictor = version.custom_predictor
         self._python_version = version.python_version
-        mlflow.set_tracking_uri(model.project.mlflow_tracking_url)
+        mlflow.set_tracking_uri(model.project.mlflow_tracking_url) # type: ignore  # noqa
 
     @property
     def id(self) -> int:
@@ -821,7 +821,7 @@ class ModelVersion:
         Get MLFlow Run in a model version
         """
         try:
-            return mlflow.get_run(self._mlflow_run_id)
+            return mlflow.get_run(self._mlflow_run_id) # type: ignore  # noqa
         except MlflowException:
             return None
 
@@ -1024,7 +1024,7 @@ class ModelVersion:
             writer.write(f"args = {args}\n")
 
         validate_model_dir(self._model.type, model_dir)
-        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH) # type: ignore  # noqa
 
         if is_using_temp_dir:
             """

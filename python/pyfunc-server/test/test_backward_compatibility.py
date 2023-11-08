@@ -28,7 +28,7 @@ from prometheus_client import Counter, Gauge
 from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKERS
 from pyfuncserver.model.model import PyFuncModel
 from test.utils import wait_server_ready
-from merlin.pyfunc import PYFUNC_MODEL_INPUT_KEY, PYFUNC_EXTRA_ARGS_KEY
+from merlin.pyfunc import PYFUNC_MODEL_INPUT_KEY, PYFUNC_EXTRA_ARGS_KEY, PyFuncOutput
 
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
@@ -40,9 +40,11 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
         input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
         if extra_args is not None:
-            return self._do_predict(input, **extra_args)
+            response = self._do_predict(input, **extra_args)
+            return PyFuncOutput(http_response=response)
 
-        return self._do_predict(input)
+        response = self._do_predict(input)
+        return PyFuncOutput(http_response=response)
 
     def _do_predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
@@ -90,7 +92,8 @@ class ModelImpl(mlflow.pyfunc.PythonModel):
     def predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
             try:
-                return self.infer(model_input, **kwargs)
+                response = self.infer(model_input, **kwargs)
+                return PyFuncOutput(http_response=response)
             except TypeError as e:
                 if "infer() got an unexpected keyword argument" in str(e):
                     print(
@@ -99,7 +102,8 @@ class ModelImpl(mlflow.pyfunc.PythonModel):
                 else:
                     raise e
 
-        return self.infer(model_input)
+        response = self.infer(model_input)
+        return PyFuncOutput(http_response=response)
 
     @abstractmethod
     def initialize(self, artifacts: dict):
@@ -207,7 +211,8 @@ def test_model(model):
     model_manifest = ModelManifest(model_name="echo-model",
                                    model_version="1",
                                    model_full_name="echo-model-1",
-                                   model_dir=model_path)
+                                   model_dir=model_path,
+                                   project="sample")
 
     model = PyFuncModel(model_manifest)
     model.load()
@@ -216,7 +221,7 @@ def test_model(model):
 
     inputs = [[1, 2, 3], [4, 5, 6]]
     outputs = model.predict(inputs)
-    assert inputs == outputs
+    assert outputs == PyFuncOutput(http_response=inputs)
 
 @pytest.mark.parametrize(
     "model",

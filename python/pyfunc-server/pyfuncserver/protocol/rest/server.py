@@ -11,6 +11,9 @@ from pyfuncserver.config import Config
 from pyfuncserver.metrics.handler import MetricsHandler
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.handler import HealthHandler, LivenessHandler, PredictHandler
+from pyfuncserver.publisher.kafka import KafkaProducer
+from pyfuncserver.publisher.publisher import Publisher
+from pyfuncserver.sampler.sampler import RatioSampling
 
 
 async def sig_handler(server):
@@ -25,11 +28,17 @@ async def sig_handler(server):
 class HTTPServer:
     def __init__(self, model: PyFuncModel, config: Config, metrics_registry: CollectorRegistry):
         self.workers = config.workers
-        self.publisher = config.publisher
+        self.model_manifest = config.model_manifest
         self.http_port = config.http_port
         self.metrics_registry = metrics_registry
         self.registered_models: dict = {}
         self.register_model(model)
+
+        self.publisher = None
+        if config.publisher.enabled:
+            kafka_producer = KafkaProducer(config.publisher, config.model_manifest)
+            sampler = RatioSampling(config.publisher.sampling_ratio)
+            self.publisher = Publisher(kafka_producer, sampler)
 
     def create_application(self):
         return tornado.web.Application([
@@ -39,7 +48,7 @@ class HTTPServer:
             (r"/v1/models/([a-zA-Z0-9_-]+)",
              HealthHandler, dict(models=self.registered_models)),
             (r"/v1/models/([a-zA-Z0-9_-]+):predict",
-             PredictHandler, dict(models=self.registered_models, publisher_config=self.publisher)),
+             PredictHandler, dict(models=self.registered_models, publisher=self.publisher)),
             (r"/metrics", MetricsHandler, dict(metrics_registry=self.metrics_registry))
         ])
 
