@@ -13,7 +13,7 @@ where
 		d.version_endpoint_id = ve.id
 	where
 		ve.status = 'terminated'
-		and d.status in ('pending', 'running', 'serving');
+		and d.status in ('pending', 'running', 'serving'));
 
 -- For running/serving endpoint, update the status for all but the last successful deployment to 'terminated'
 update deployments as d
@@ -28,4 +28,4 @@ where
 	where
 		d.version_endpoint_id = d2.version_endpoint_id
 		and d.id < d2.id
-		and d2.status in ('pending', 'running', 'serving')
+		and d2.status in ('pending', 'running', 'serving'));
