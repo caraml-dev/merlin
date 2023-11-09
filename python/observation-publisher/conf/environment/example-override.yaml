@@ -1,0 +1,31 @@
+model:
+  id: "test-model"
+  type: "BINARY_CLASSIFICATION"
+  version: "0.1.0"
+  schema:
+    prediction_columns:
+      - "accept"
+      - "label"
+    prediction_column_types:
+      - "BOOLEAN"
+      - "STRING"
+    prediction_score_column: "accept"
+    prediction_label_column: "label"
+    timestamp_column: "request_timestamp"
+    feature_columns:
+      - "distance"
+      - "transaction"
+    feature_column_types:
+      - "INT64"
+      - "FLOAT64"
+observability_backend:
+  type: "ARIZE"
+  arize_config:
+    api_key: "SECRET_API_KEY"
+    space_key: "SECRET_SPACE_KEY"
+kafka:
+  topic: "test-topic"
+  bootstrap_servers: "localhost:9092"
+  group_id: "test-group"
+  auto_offset_reset: "latest"
+  batch_size: 100
