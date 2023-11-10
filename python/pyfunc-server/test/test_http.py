@@ -26,7 +26,8 @@ sample_model_input = ModelInput(
             entities=Values(
                 columns=["order_id", "customer_id"],
                 data=[["order1", "1111"], ["order1", "2222"], ["order1", "3333"]]
-            )
+            ),
+            session_id="randomSessionID"
         )
 sample_model_output = ModelOutput(
             prediction_ids=["prediction_1", "prediction_2", "prediction3"],

@@ -25,7 +25,7 @@ def test_kafka_producer(data):
         
         kafka_producer.produce(data)
         exp_prediction_log = prediction_log_pb2.PredictionLog(
-            prediction_id="",
+            prediction_id=sample_model_input.session_id,
             target_name="",
             project_name="project",
             model_name="model_name",
