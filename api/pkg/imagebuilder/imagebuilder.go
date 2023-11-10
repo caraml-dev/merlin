@@ -474,21 +474,33 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		}
 	}
 
+	// resourceRequirements := RequestLimitResources{
+	// 	Request: Resource{
+	// 		CPU: resource.MustParse(
+	// 			c.config.Resources.Requests.CPU,
+	// 		),
+	// 		Memory: resource.MustParse(
+	// 			c.config.Resources.Requests.Memory,
+	// 		),
+	// 	},
+	// 	Limit: Resource{
+	// 		CPU: resource.MustParse(
+	// 			c.config.Resources.Limits.CPU,
+	// 		),
+	// 		Memory: resource.MustParse(
+	// 			c.config.Resources.Limits.Memory,
+	// 		),
+	// 	},
+	// }
+
+	// Get resourceRequirements from version endpoint configuration
 	resourceRequirements := RequestLimitResources{
-		Request: Resource{
+		Requests: Resource{
 			CPU: resource.MustParse(
-				c.config.Resources.Requests.CPU,
+				version.Endpoints.ImageBuilderResource.CPURequest,
 			),
 			Memory: resource.MustParse(
-				c.config.Resources.Requests.Memory,
-			),
-		},
-		Limit: Resource{
-			CPU: resource.MustParse(
-				c.config.Resources.Limits.CPU,
-			),
-			Memory: resource.MustParse(
-				c.config.Resources.Limits.Memory,
+				version.Endpoints.ImageBuilderResource.MemoryRequest,
 			),
 		},
 	}
