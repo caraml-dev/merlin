@@ -135,16 +135,21 @@ class ModelInput:
     prediction_ids: List[str]
     features: Values
     entities: Optional[Values] = None
+    session_id: str = ""
 
     def features_dict(self) -> Optional[dict]:
         if self.features is None:
             return None
-        return self.features.to_dict()
+        result = self.features.to_dict()
+        result["row_ids"] = self.prediction_ids
+        return result
     
     def entities_dict(self) -> Optional[dict]:
         if self.entities is None:
             return None
-        return self.entities.to_dict()
+        result =  self.entities.to_dict()
+        result["row_ids"] = self.prediction_ids
+        return result
     
 
 @dataclass
@@ -155,7 +160,9 @@ class ModelOutput:
     def predictions_dict(self) -> dict:
         if self.predictions is None:
             return None
-        return self.predictions.to_dict()
+        result = self.predictions.to_dict()
+        result["row_ids"] = self.prediction_ids
+        return result
 
 @dataclass
 class PyFuncOutput:
@@ -163,6 +170,11 @@ class PyFuncOutput:
     upi_response: Optional[upi_pb2.PredictValuesResponse] = None
     model_input: Optional[ModelInput] = None
     model_output: Optional[ModelOutput] = None
+
+    def get_session_id(self) -> Optional[str]:
+        if self.model_input is None:
+            return ""
+        return self.model_input.session_id
 
     def contains_prediction_log(self):
         return self.model_input is not None and self.model_output is not None

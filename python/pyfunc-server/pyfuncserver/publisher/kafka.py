@@ -23,9 +23,10 @@ class KafkaProducer(Producer):
         model_output = data.to_model_output_proto()
         
 
+        session_id = data.get_session_id()
         prediction_log = prediction_log_pb2.PredictionLog(
-            prediction_id="",
-            target_name="",
+            prediction_id=session_id,
+            target_name="", # TO-DO update this after schema is introduced
             project_name=self.model_manifest.project,
             model_name=self.model_manifest.model_name,
             model_version=self.model_manifest.model_version,
