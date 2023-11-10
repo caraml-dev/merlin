@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/spark-operator/spark-py:v3.0.0
+FROM apache/spark-py:v3.1.3
 
 # Switch to user root so we can add additional jars and configuration files.
 USER root

@@ -30,8 +30,8 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "google-cloud-storage>=1.19.0",
-    "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
-    "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
+    "protobuf>=3.12.0,<5.0.0", # Determined by the mlflow dependency
+    "mlflow>=1.26.1,<2.0.0",
     "PyPrind>=2.11.2",
     "python_dateutil>=2.5.3",
     "PyYAML>=5.4",
@@ -44,7 +44,6 @@ REQUIRES = [
 TEST_REQUIRES = [
     "google-cloud-bigquery-storage>=0.7.0",
     "google-cloud-bigquery>=1.18.0",
-    "grpcio>=1.31.0,<1.49.0",
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
     "pytest-cov",
@@ -53,7 +52,7 @@ TEST_REQUIRES = [
     "pytest",
     "recursive-diff>=1.0.0",
     "requests",
-    "scikit-learn==1.0.2", #TODO: >=1.1.2 upon python 3.7 deprecation
+    "scikit-learn>=1.1.2",
     "types-python-dateutil",
     "types-PyYAML",
     "types-six",

@@ -17,9 +17,9 @@ package imagebuilder
 import (
 	"time"
 
-	cfg "github.com/caraml-dev/merlin/config"
-
 	v1 "k8s.io/api/core/v1"
+
+	cfg "github.com/caraml-dev/merlin/config"
 )
 
 type Config struct {
