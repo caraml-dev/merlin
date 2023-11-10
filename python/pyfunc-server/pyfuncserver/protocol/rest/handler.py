@@ -23,9 +23,9 @@ import tornado.web
 from pyfuncserver.model.model import PyFuncModel
 
 class PredictHandler(tornado.web.RequestHandler):
-    def initialize(self, models, publisher):
+    def initialize(self, models):
         self.models = models  # pylint:disable=attribute-defined-outside-init
-        self.publisher = publisher
+        self.publisher = self.application.publisher
 
     def get_model(self, full_name: str):
         if full_name not in self.models:

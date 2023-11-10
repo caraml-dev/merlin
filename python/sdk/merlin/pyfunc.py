@@ -187,7 +187,6 @@ class PyFuncOutput:
     def to_model_output_proto(self) -> prediction_log_pb2.ModelOutput:
         prediction_results_table =  self._new_struct(self.model_output.predictions_dict()) if self.model_output is not None else None
         return prediction_log_pb2.ModelOutput(prediction_results_table=prediction_results_table)
-              
 
 class PyFuncV3Model(PythonModel):
     def load_context(self, context):
