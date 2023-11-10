@@ -132,9 +132,14 @@ class Values:
 
 @dataclass
 class ModelInput:
+    # unique identifier of each prediction
     prediction_ids: List[str]
+    # features data for model prediction, the length of data of features must be the same as `prediction_ids` length
     features: Values
+    # entities data is additional data that are not used for prediction, but this data is used to retrieved another features.
+    # The length of data of entities must be the same as `prediction_ids` length
     entities: Optional[Values] = None
+    # session id is identifier for the request
     session_id: str = ""
 
     def features_dict(self) -> Optional[dict]:
@@ -154,7 +159,11 @@ class ModelInput:
 
 @dataclass
 class ModelOutput:
+    # predictions contains prediction output from ml_predict
+    # it may contains multiple columns e.g for multiclass classification or for binary classification that contains prediction score and label
+    # length of the data must be the same as predicion_ids
     predictions: Values
+    # unique identifier of each prediction
     prediction_ids: List[str]
 
     def predictions_dict(self) -> dict:
@@ -166,9 +175,13 @@ class ModelOutput:
 
 @dataclass
 class PyFuncOutput:
+    # final pyfunc response payload when using `HTTP_JSON` protocol
     http_response: Optional[dict] = None
+    # final pyfunc response payload when using `UPI_V!` protocol
     upi_response: Optional[upi_pb2.PredictValuesResponse] = None
+    # model input contains information about features, entities
     model_input: Optional[ModelInput] = None
+    # model output contains information about ml prediction output
     model_output: Optional[ModelOutput] = None
 
     def get_session_id(self) -> Optional[str]:
@@ -257,23 +270,56 @@ class PyFuncV3Model(PythonModel):
 
     @abstractmethod
     def preprocess(self, request: dict, **kwargs) -> ModelInput:
+        """
+        preprocess is the method that doing preprocessing before calling the ml framework for prediction.
+        This method is called when user use HTTP_JSON protocol
+        :param request: raw input to the model (dict)
+        :return: model input, this model input must already have all the features that required for model prediction
+        """
         raise NotImplementedError("preprocess is not implemented")
 
     @abstractmethod
     def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+        """
+        ml_predict is the method that will call the respective ml framework to do prediction.
+        Since there are various types that supported by each ml framework, user must do conversion from the given model input into acceptable input for the model
+        :param model_input: ModelInput that is produced by the `preprocess` method
+        :return: model output
+        """
         raise NotImplementedError("ml_predict is not implemented")
     
     @abstractmethod
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
+        """
+        postprocess is the method that is caled after `ml_predict`, the main function of this method is to do postprocessing
+        that may including build overall pyfunc response payload, additional computation based on the model output
+        :param model_output: the output of the `ml_predict` function
+        :param request: raw request payload
+        :return: final payload in dictionary type
+        """
         raise NotImplementedError("postprocess is not implemented")
 
     @abstractmethod
     def upiv1_preprocess(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> ModelInput:
+        """
+        upiv1_preprocess is the preprocessing method that only applicable for UPI_V1 protocol.
+        basically the method is the same with `preprocess` the difference is on the type of the incoming request
+        for `upiv1_preprocess` the type of request is `PredictValuesRequest`
+        :param request: raw request payload
+        :param context: grpc request context
+        :return: model input
+        """
         raise NotImplementedError("upiv1_preprocess is not implemented")
     
     @abstractmethod
     def upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
+        """
+        upiv1_postprocess is the postprocessing method that only applicable for UPI_V1 protocol.
+        :param model_output: the output of the `ml_predict` function
+        :param request: raw request payload
+        :return: final payload in `PredictValuesResponse` type
+        """
         raise NotImplementedError("upiv1_postprocess is not implemented")
 
 
