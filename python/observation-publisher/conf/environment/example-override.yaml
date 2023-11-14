@@ -23,9 +23,11 @@ observability_backend:
   arize_config:
     api_key: "SECRET_API_KEY"
     space_key: "SECRET_SPACE_KEY"
-kafka:
-  topic: "test-topic"
-  bootstrap_servers: "localhost:9092"
-  group_id: "test-group"
-  auto_offset_reset: "latest"
-  batch_size: 100
+consumer:
+  type: "KAFKA"
+  kafka_config:
+    topic: "test-topic"
+    bootstrap_servers: "localhost:9092"
+    group_id: "test-group"
+    auto_offset_reset: "latest"
+    batch_size: 100

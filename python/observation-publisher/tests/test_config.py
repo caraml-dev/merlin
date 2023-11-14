@@ -13,6 +13,8 @@ from publisher.config import (
     ObservabilityBackendType,
     PublisherConfig,
     ValueType,
+    PredictionLogConsumerConfig,
+    ConsumerType,
 )
 
 
@@ -42,13 +44,16 @@ def test_config_initialization():
                         space_key="SECRET_SPACE_KEY",
                     ),
                 ),
-                kafka=KafkaConsumerConfig(
-                    topic="test-topic",
-                    bootstrap_servers="localhost:9092",
-                    group_id="test-group",
-                    auto_offset_reset="latest",
-                    batch_size=100,
-                    poll_timeout_seconds=1.0,
+                consumer=PredictionLogConsumerConfig(
+                    type=ConsumerType.KAFKA,
+                    kafka_config=KafkaConsumerConfig(
+                        topic="test-topic",
+                        bootstrap_servers="localhost:9092",
+                        group_id="test-group",
+                        auto_offset_reset="latest",
+                        batch_size=100,
+                        poll_timeout_seconds=1.0,
+                    ),
                 ),
             )
         )
@@ -58,6 +63,6 @@ def test_config_initialization():
         assert cfg.environment.observability_backend == dataclasses.asdict(
             expected_cfg.environment.observability_backend
         )
-        assert cfg.environment.kafka == dataclasses.asdict(
-            expected_cfg.environment.kafka
+        assert cfg.environment.consumer == dataclasses.asdict(
+            expected_cfg.environment.consumer
         )

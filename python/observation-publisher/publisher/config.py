@@ -61,6 +61,11 @@ class ObservabilityBackend:
     arize_config: Optional[ArizeConfig] = None
 
 
+@unique
+class ConsumerType(Enum):
+    KAFKA = 1
+
+
 @dataclass
 class KafkaConsumerConfig:
     topic: str
@@ -72,10 +77,16 @@ class KafkaConsumerConfig:
 
 
 @dataclass
+class PredictionLogConsumerConfig:
+    type: ConsumerType
+    kafka_config: Optional[KafkaConsumerConfig] = None
+
+
+@dataclass
 class Environment:
     model: ModelSpec
     observability_backend: ObservabilityBackend
-    kafka: KafkaConsumerConfig
+    consumer: PredictionLogConsumerConfig
 
 
 @dataclass

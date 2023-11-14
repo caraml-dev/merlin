@@ -1,3 +1,4 @@
+import abc
 from typing import List, Optional, Union
 
 import numpy as np
@@ -6,42 +7,88 @@ from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
 from google.protobuf.internal.well_known_types import ListValue
 
-from publisher.config import KafkaConsumerConfig, ModelSchema, ModelSpec, ValueType
+from publisher.config import (
+    KafkaConsumerConfig,
+    ModelSchema,
+    ModelSpec,
+    ValueType,
+    PredictionLogConsumerConfig,
+    ConsumerType,
+)
 from publisher.observability_backend import ObservationSink
 
 
-def parse_message_to_prediction_log(msg: str) -> PredictionLog:
-    log = PredictionLog()
-    log.ParseFromString(msg)
-    return log
+class PredictionLogConsumer(abc.ABC):
+    @abc.abstractmethod
+    def poll_new_logs(self) -> List[PredictionLog]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def commit(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def close(self):
+        raise NotImplementedError
+
+    def start_polling(self, observation_sink: ObservationSink, model_spec: ModelSpec):
+        try:
+            while True:
+                logs = self.poll_new_logs()
+                if len(logs) == 0:
+                    continue
+                df = log_to_dataframe(logs, model_spec.schema)
+                observation_sink.write(dataframe=df)
+                self.commit()
+        finally:
+            self.close()
 
 
-def poll_prediction_logs(
-    kafka_consumer: Consumer,
-    consumer_cfg: KafkaConsumerConfig,
-    observation_sink: ObservationSink,
-    model_cfg: ModelSpec,
-):
-    kafka_consumer.subscribe([consumer_cfg.topic])
-    while True:
-        messages = kafka_consumer.consume(
-            consumer_cfg.batch_size, timeout=consumer_cfg.poll_timeout_seconds
+class KafkaPredictionLogConsumer(PredictionLogConsumer):
+    def __init__(self, config: KafkaConsumerConfig):
+        self._consumer = Consumer(
+            {
+                "bootstrap.servers": config.bootstrap_servers,
+                "group.id": config.group_id,
+                "auto.offset.reset": config.auto_offset_reset,
+            }
         )
+        self._batch_size = config.batch_size
+        self._consumer.subscribe([config.topic])
+        self._poll_timeout = config.poll_timeout_seconds
+
+    def poll_new_logs(self) -> List[PredictionLog]:
+        messages = self._consumer.consume(self._batch_size, timeout=self._poll_timeout)
         errors = [msg.error() for msg in messages if msg.error() is not None]
 
         if len(errors) > 0:
             print(f"Last encountered error: {errors[-1]}")
             raise KafkaException(errors[-1])
 
-        prediction_logs = [
+        return [
             parse_message_to_prediction_log(msg.value().decode("utf-8"))
             for msg in messages
             if (msg is not None and msg.error() is None)
         ]
-        if len(prediction_logs) > 0:
-            df = log_to_dataframe(prediction_logs, model_cfg.schema)
-            observation_sink.write(dataframe=df)
-            kafka_consumer.commit()
+
+    def commit(self):
+        self._consumer.commit()
+
+    def close(self):
+        self._consumer.close()
+
+
+def new_consumer(config: PredictionLogConsumerConfig) -> PredictionLogConsumer:
+    if config.type == ConsumerType.KAFKA:
+        return KafkaPredictionLogConsumer(config.kafka_config)
+    else:
+        raise ValueError(f"Unknown consumer type: {config.type}")
+
+
+def parse_message_to_prediction_log(msg: str) -> PredictionLog:
+    log = PredictionLog()
+    log.ParseFromString(msg)
+    return log
 
 
 def convert_value(
