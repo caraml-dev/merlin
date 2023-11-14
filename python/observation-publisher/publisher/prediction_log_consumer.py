@@ -6,8 +6,7 @@ from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
 from google.protobuf.internal.well_known_types import ListValue
 
-from publisher.config import (KafkaConsumerConfig, ModelSchema, ModelSpec,
-                              ValueType)
+from publisher.config import KafkaConsumerConfig, ModelSchema, ModelSpec, ValueType
 from publisher.observability_backend import ObservationSink
 
 
@@ -33,6 +32,7 @@ def poll_prediction_logs(
         if len(errors) > 0:
             print(f"Last encountered error: {errors[-1]}")
             raise KafkaException(errors[-1])
+
         prediction_logs = [
             parse_message_to_prediction_log(msg.value().decode("utf-8"))
             for msg in messages

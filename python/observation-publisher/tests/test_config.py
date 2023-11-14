@@ -2,10 +2,18 @@ import dataclasses
 
 from hydra import compose, initialize
 
-from publisher.config import (ArizeConfig, Environment, KafkaConsumerConfig,
-                              ModelSchema, ModelSpec, ModelTypes,
-                              ObservabilityBackend, ObservabilityBackendTypes,
-                              PublisherConfig, ValueType)
+from publisher.config import (
+    ArizeConfig,
+    Environment,
+    KafkaConsumerConfig,
+    ModelSchema,
+    ModelSpec,
+    ModelType,
+    ObservabilityBackend,
+    ObservabilityBackendType,
+    PublisherConfig,
+    ValueType,
+)
 
 
 def test_config_initialization():
@@ -16,7 +24,7 @@ def test_config_initialization():
                 model=ModelSpec(
                     id="test-model",
                     version="0.1.0",
-                    type=ModelTypes.BINARY_CLASSIFICATION,
+                    type=ModelType.BINARY_CLASSIFICATION,
                     schema=ModelSchema(
                         prediction_columns=["accept", "label"],
                         prediction_column_types=[ValueType.BOOLEAN, ValueType.STRING],
@@ -28,7 +36,7 @@ def test_config_initialization():
                     ),
                 ),
                 observability_backend=ObservabilityBackend(
-                    type=ObservabilityBackendTypes.ARIZE,
+                    type=ObservabilityBackendType.ARIZE,
                     arize_config=ArizeConfig(
                         api_key="SECRET_API_KEY",
                         space_key="SECRET_SPACE_KEY",

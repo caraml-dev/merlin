@@ -26,7 +26,7 @@ class ModelSchema:
 
 
 @unique
-class ModelTypes(Enum):
+class ModelType(Enum):
     BINARY_CLASSIFICATION = 1
     MULTICLASS_CLASSIFICATION = 2
     REGRESSION = 3
@@ -40,7 +40,7 @@ class ModelTypes(Enum):
 class ModelSpec:
     id: str
     version: str
-    type: ModelTypes
+    type: ModelType
     schema: ModelSchema
 
 
@@ -51,13 +51,13 @@ class ArizeConfig:
 
 
 @unique
-class ObservabilityBackendTypes(Enum):
+class ObservabilityBackendType(Enum):
     ARIZE = 1
 
 
 @dataclass
 class ObservabilityBackend:
-    type: ObservabilityBackendTypes
+    type: ObservabilityBackendType
     arize_config: Optional[ArizeConfig] = None
 
 

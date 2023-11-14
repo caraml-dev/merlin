@@ -4,8 +4,12 @@ import pandas as pd
 from arize.pandas.logger import Client, Schema
 from arize.utils.types import Environments
 
-from publisher.config import (ArizeConfig, ModelSpec, ObservabilityBackend,
-                              ObservabilityBackendTypes)
+from publisher.config import (
+    ArizeConfig,
+    ModelSpec,
+    ObservabilityBackend,
+    ObservabilityBackendType,
+)
 
 
 class ObservationSink(abc.ABC):
@@ -33,7 +37,7 @@ class ArizeSink(ObservationSink):
             environment=Environments.PRODUCTION,
             schema=self._schema,
             model_id=self._model_id,
-            model_type=self._model_type,
+            model_type=self._model_type.as_arize_model_type(),
             model_version=self._model_version,
         )
 
@@ -41,7 +45,7 @@ class ArizeSink(ObservationSink):
 def new_observation_sink(
     config: ObservabilityBackend, model_spec: ModelSpec
 ) -> ObservationSink:
-    if config.type == ObservabilityBackendTypes.ARIZE:
+    if config.type == ObservabilityBackendType.ARIZE:
         return ArizeSink(config=config.arize_config, model_spec=model_spec)
     else:
         raise ValueError(f"Unknown observability backend type: {config.type}")

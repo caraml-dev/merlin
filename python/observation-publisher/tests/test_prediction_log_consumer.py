@@ -6,7 +6,7 @@ import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from pandas._testing import assert_frame_equal
 
-from publisher.config import ModelSchema, ModelSpec, ModelTypes, ValueType
+from publisher.config import ModelSchema, ModelSpec, ModelType, ValueType
 from publisher.prediction_log_consumer import log_to_dataframe
 
 
@@ -57,7 +57,7 @@ def test_log_to_dataframe():
     model_spec = ModelSpec(
         id="test_model",
         version="0.1.0",
-        type=ModelTypes.BINARY_CLASSIFICATION,
+        type=ModelType.BINARY_CLASSIFICATION,
         schema=ModelSchema(
             prediction_columns=["prediction_score", "prediction_label"],
             prediction_column_types=[ValueType.BOOLEAN, ValueType.STRING],
@@ -147,7 +147,7 @@ def test_empty_column_conversion_to_dataframe():
     model_spec = ModelSpec(
         id="test_model",
         version="0.1.0",
-        type=ModelTypes.BINARY_CLASSIFICATION,
+        type=ModelType.BINARY_CLASSIFICATION,
         schema=ModelSchema(
             prediction_columns=["prediction_score"],
             prediction_column_types=[ValueType.BOOLEAN],
