@@ -193,26 +193,6 @@ class PyFuncOutput:
         return self.model_input is not None and self.model_output is not None
     
 
-    def _new_struct(self, dictionary: Optional[dict]):
-        struct = None
-        if dictionary is not None:
-            struct = Struct()
-            struct.update(dictionary)
-
-        return struct
-
-    def to_model_input_proto(self) -> prediction_log_pb2.ModelInput:
-        # Setup model input struct
-        
-        features_table = self._new_struct(self.model_input.features_dict()) if self.model_input is not None else None
-        entities_table = self._new_struct(self.model_input.entities_dict()) if self.model_input is not None else None
-      
-        return prediction_log_pb2.ModelInput(features_table=features_table, entities_table=entities_table)
-        
-    def to_model_output_proto(self) -> prediction_log_pb2.ModelOutput:
-        prediction_results_table =  self._new_struct(self.model_output.predictions_dict()) if self.model_output is not None else None
-        return prediction_log_pb2.ModelOutput(prediction_results_table=prediction_results_table)
-
 class PyFuncV3Model(PythonModel):
     def load_context(self, context):
         """

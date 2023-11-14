@@ -1,9 +1,9 @@
 import uuid
 
 from pyfuncserver.config import Publisher as PublisherConfig, ModelManifest
+from pyfuncserver.utils.converter import build_prediction_log
 from confluent_kafka import Producer
 from merlin.pyfunc import PyFuncOutput
-from caraml.upi.v1 import prediction_log_pb2
 
 
 class KafkaProducer(Producer):
@@ -19,20 +19,6 @@ class KafkaProducer(Producer):
         self.model_manifest = model_manifest
 
     def produce(self, data: PyFuncOutput):
-        model_input = data.to_model_input_proto()
-        model_output = data.to_model_output_proto()
-        
-
-        session_id = data.get_session_id()
-        prediction_log = prediction_log_pb2.PredictionLog(
-            prediction_id=session_id,
-            target_name="", # TO-DO update this after schema is introduced
-            project_name=self.model_manifest.project,
-            model_name=self.model_manifest.model_name,
-            model_version=self.model_manifest.model_version,
-            input=model_input,
-            output=model_output,
-            table_schema_version=1
-        )
+        prediction_log = build_prediction_log(pyfunc_output=data, model_manifest=self.model_manifest)
         serialized_data = prediction_log.SerializeToString() 
         self.producer.produce(topic=self.topic, value=serialized_data)
