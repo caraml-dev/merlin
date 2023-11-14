@@ -46,13 +46,15 @@ class PredictionLogConsumer(abc.ABC):
 
 class KafkaPredictionLogConsumer(PredictionLogConsumer):
     def __init__(self, config: KafkaConsumerConfig):
-        self._consumer = Consumer(
-            {
-                "bootstrap.servers": config.bootstrap_servers,
-                "group.id": config.group_id,
-                "auto.offset.reset": config.auto_offset_reset,
-            }
-        )
+        consumer_config = {
+            "bootstrap.servers": config.bootstrap_servers,
+            "group.id": config.group_id,
+        }
+
+        if config.additional_consumer_config is not None:
+            consumer_config.update(config.additional_consumer_config)
+
+        self._consumer = Consumer(consumer_config)
         self._batch_size = config.batch_size
         self._consumer.subscribe([config.topic])
         self._poll_timeout = config.poll_timeout_seconds

@@ -71,9 +71,9 @@ class KafkaConsumerConfig:
     topic: str
     bootstrap_servers: str
     group_id: str
-    auto_offset_reset: str = "latest"
     batch_size: int = 100
     poll_timeout_seconds: float = 1.0
+    additional_consumer_config: Optional[dict] = None
 
 
 @dataclass

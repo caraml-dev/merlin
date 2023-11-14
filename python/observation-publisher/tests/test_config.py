@@ -50,9 +50,10 @@ def test_config_initialization():
                         topic="test-topic",
                         bootstrap_servers="localhost:9092",
                         group_id="test-group",
-                        auto_offset_reset="latest",
-                        batch_size=100,
                         poll_timeout_seconds=1.0,
+                        additional_consumer_config={
+                            "auto.offset.reset": "latest",
+                        },
                     ),
                 ),
             )
