@@ -23,6 +23,7 @@ class ModelSchema:
     feature_columns: List[str]
     feature_column_types: List[ValueType]
     prediction_label_column: Optional[str] = None
+    prediction_id_column = "prediction_id"
 
 
 @unique

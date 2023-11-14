@@ -11,6 +11,7 @@ model:
       - "STRING"
     prediction_score_column: "accept"
     prediction_label_column: "label"
+    prediction_id_column: "prediction_id"
     timestamp_column: "request_timestamp"
     feature_columns:
       - "distance"

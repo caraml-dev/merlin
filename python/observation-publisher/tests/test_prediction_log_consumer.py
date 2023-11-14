@@ -137,7 +137,7 @@ def test_log_to_dataframe():
             "prediction_score",
             "prediction_label",
             "prediction_id",
-            "request_timestamp",
+            "timestamp",
         ],
     )
     assert_frame_equal(prediction_logs_df, expected_df)
@@ -189,7 +189,7 @@ def test_empty_column_conversion_to_dataframe():
             "acceptance_rate",
             "prediction_score",
             "prediction_id",
-            "request_timestamp",
+            "timestamp",
         ],
     )
     assert_frame_equal(prediction_logs_df, expected_df)

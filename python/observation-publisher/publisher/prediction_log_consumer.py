@@ -134,7 +134,7 @@ def log_to_dataframe(
         column_names = (
             [c for c in log.input.features_table["column_names"]]
             + [c for c in log.output.prediction_results_table["column_names"]]
-            + ["prediction_id", "request_timestamp"]
+            + [model_schema.prediction_id_column, model_schema.timestamp_column]
         )
         combined_records.extend(rows)
     return pd.DataFrame.from_records(combined_records, columns=column_names)

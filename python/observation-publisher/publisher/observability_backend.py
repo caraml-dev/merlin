@@ -25,6 +25,7 @@ class ArizeSink(ObservationSink):
             feature_column_names=model_spec.schema.feature_columns,
             prediction_label_column_name=model_spec.schema.prediction_label_column,
             prediction_score_column_name=model_spec.schema.prediction_score_column,
+            prediction_id_column_name=model_spec.schema.prediction_id_column,
             timestamp_column_name=model_spec.schema.timestamp_column,
         )
         self._model_id = model_spec.id
