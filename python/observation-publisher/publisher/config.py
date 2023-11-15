@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import arize.utils.types
 from hydra.core.config_store import ConfigStore
@@ -16,14 +16,11 @@ class ValueType(Enum):
 
 @dataclass
 class ModelSchema:
-    prediction_columns: List[str]
-    prediction_column_types: List[ValueType]
+    column_types: Dict[str, ValueType]
     prediction_score_column: str
     timestamp_column: str
-    feature_columns: List[str]
-    feature_column_types: List[ValueType]
     prediction_label_column: Optional[str] = None
-    prediction_id_column = "prediction_id"
+    prediction_id_column: Optional[str] = "prediction_id"
 
 
 @unique

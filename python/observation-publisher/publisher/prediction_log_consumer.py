@@ -1,5 +1,5 @@
 import abc
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -107,10 +107,12 @@ def convert_value(
             return np.str_(col_value)
 
 
-def convert_list_value(list_value: ListValue, value_type: List[ValueType]) -> List:
+def convert_list_value(
+    list_value: ListValue, column_names: List[str], column_types: Dict[str, ValueType]
+) -> List:
     return [
-        convert_value(col_value, col_type)
-        for col_value, col_type in zip([v for v in list_value], value_type)
+        convert_value(col_value, column_types[col_name])
+        for col_value, col_name in zip([v for v in list_value], column_names)
     ]
 
 
@@ -122,8 +124,16 @@ def log_to_dataframe(
     for log in logs:
         request_timestamp = log.request_timestamp.ToDatetime()
         rows = [
-            convert_list_value(feature_row, model_schema.feature_column_types)
-            + convert_list_value(prediction_row, model_schema.prediction_column_types)
+            convert_list_value(
+                feature_row,
+                log.input.features_table["columns"],
+                model_schema.column_types,
+            )
+            + convert_list_value(
+                prediction_row,
+                log.output.prediction_results_table["columns"],
+                model_schema.column_types,
+            )
             + [log.prediction_id + row_id, request_timestamp]
             for feature_row, prediction_row, row_id in zip(
                 log.input.features_table["data"],
@@ -132,8 +142,8 @@ def log_to_dataframe(
             )
         ]
         column_names = (
-            [c for c in log.input.features_table["column_names"]]
-            + [c for c in log.output.prediction_results_table["column_names"]]
+            [c for c in log.input.features_table["columns"]]
+            + [c for c in log.output.prediction_results_table["columns"]]
             + [model_schema.prediction_id_column, model_schema.timestamp_column]
         )
         combined_records.extend(rows)

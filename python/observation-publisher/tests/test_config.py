@@ -28,13 +28,15 @@ def test_config_initialization():
                     version="0.1.0",
                     type=ModelType.BINARY_CLASSIFICATION,
                     schema=ModelSchema(
-                        prediction_columns=["accept", "label"],
-                        prediction_column_types=[ValueType.BOOLEAN, ValueType.STRING],
+                        column_types={
+                            "accept": ValueType.BOOLEAN,
+                            "label": ValueType.STRING,
+                            "distance": ValueType.INT64,
+                            "transaction": ValueType.FLOAT64,
+                        },
                         prediction_label_column="label",
                         prediction_score_column="accept",
                         timestamp_column="request_timestamp",
-                        feature_columns=["distance", "transaction"],
-                        feature_column_types=[ValueType.INT64, ValueType.FLOAT64],
                     ),
                 ),
                 observability_backend=ObservabilityBackend(

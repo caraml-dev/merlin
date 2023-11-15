@@ -14,12 +14,12 @@ def new_prediction_log(
     model_spec: ModelSpec,
     prediction_id: str,
     row_ids: List[str],
+    input_columns: List[str],
     input_data: List[List[Any]],
+    output_columns: List[str],
     output_data: List[List[Any]],
     request_timestamp: datetime,
 ) -> PredictionLog:
-    input_columns = model_spec.schema.feature_columns
-    output_columns = model_spec.schema.prediction_columns
     if len(input_data) == 0 or len(output_data) == 0:
         raise ValueError("input/output data cannot have zero length")
     if len(input_columns) != len(input_data[0]):
@@ -31,20 +31,16 @@ def new_prediction_log(
     prediction_log.prediction_id = prediction_id
     prediction_log.model_name = model_spec.id
     prediction_log.model_version = model_spec.version
-    input_column_types = [c.name for c in model_spec.schema.feature_column_types]
     prediction_log.input.features_table.update(
         {
-            "column_types": input_column_types,
-            "column_names": input_columns,
+            "columns": input_columns,
             "data": input_data,
             "row_ids": row_ids,
         }
     )
-    output_column_types = [c.name for c in model_spec.schema.prediction_column_types]
     prediction_log.output.prediction_results_table.update(
         {
-            "column_types": output_column_types,
-            "column_names": output_columns,
+            "columns": output_columns,
             "data": output_data,
             "row_ids": row_ids,
         }
@@ -59,31 +55,34 @@ def test_log_to_dataframe():
         version="0.1.0",
         type=ModelType.BINARY_CLASSIFICATION,
         schema=ModelSchema(
-            prediction_columns=["prediction_score", "prediction_label"],
-            prediction_column_types=[ValueType.BOOLEAN, ValueType.STRING],
+            column_types={
+                "acceptance_rate": ValueType.FLOAT64,
+                "minutes_since_last_order": ValueType.INT64,
+                "service_type": ValueType.STRING,
+                "prediction_score": ValueType.BOOLEAN,
+                "prediction_label": ValueType.STRING,
+            },
             prediction_label_column="prediction_label",
             prediction_score_column="prediction_score",
             timestamp_column="timestamp",
-            feature_columns=[
-                "acceptance_rate",
-                "minutes_since_last_order",
-                "service_type",
-            ],
-            feature_column_types=[
-                ValueType.FLOAT64,
-                ValueType.INT64,
-                ValueType.STRING,
-            ],
         ),
     )
+    input_columns = [
+        "acceptance_rate",
+        "minutes_since_last_order",
+        "service_type",
+    ]
+    output_columns = ["prediction_score", "prediction_label"]
     prediction_logs = [
         new_prediction_log(
             prediction_id="1234",
             model_spec=model_spec,
+            input_columns=input_columns,
             input_data=[
                 [0.8, 24, "FOOD"],
                 [0.5, 2, "RIDE"],
             ],
+            output_columns=output_columns,
             output_data=[
                 [True, "non fraud"],
                 [False, "fraud"],
@@ -94,10 +93,12 @@ def test_log_to_dataframe():
         new_prediction_log(
             prediction_id="5678",
             model_spec=model_spec,
+            input_columns=input_columns,
             input_data=[
                 [1.0, 13, "CAR"],
                 [0.4, 60, "RIDE"],
             ],
+            output_columns=output_columns,
             output_data=[
                 [True, "non fraud"],
                 [False, "non fraud"],
@@ -149,25 +150,23 @@ def test_empty_column_conversion_to_dataframe():
         version="0.1.0",
         type=ModelType.BINARY_CLASSIFICATION,
         schema=ModelSchema(
-            prediction_columns=["prediction_score"],
-            prediction_column_types=[ValueType.BOOLEAN],
             prediction_score_column="prediction_score",
             timestamp_column="timestamp",
-            feature_columns=[
-                "acceptance_rate",
-            ],
-            feature_column_types=[
-                ValueType.FLOAT64,
-            ],
+            column_types={
+                "acceptance_rate": ValueType.FLOAT64,
+                "prediction_score": ValueType.BOOLEAN,
+            },
         ),
     )
     prediction_logs = [
         new_prediction_log(
             prediction_id="1234",
             model_spec=model_spec,
+            input_columns=["acceptance_rate"],
             input_data=[
                 [None],
             ],
+            output_columns=["prediction_score"],
             output_data=[
                 [True],
             ],
