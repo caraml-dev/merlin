@@ -20,6 +20,7 @@ tests_require = [
     'pytest-tornasync',
     'requests',
     'types-requests',
+    'types-protobuf',
     'mypy',
     'pytest-benchmark',
 ]
