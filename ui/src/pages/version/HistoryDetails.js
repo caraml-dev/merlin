@@ -45,16 +45,24 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
 
     let currentDeployment = ordered.find((deployment) => {
       return (
-        (deployment.status === "running" ||
-          deployment.status === "serving" ||
-          deployment.status === "terminated") &&
-        deployment.error === ""
+        deployment.status === "running" ||
+        deployment.status === "serving" ||
+        deployment.status === "terminated"
       );
     });
 
-    // If no successful deployment, use the first deployment as current
+    // If no successful deployment, get the latest failed deployment as current deployment
     if (!currentDeployment) {
-      currentDeployment = ordered[0];
+      currentDeployment = ordered.find((deployment) => {
+        return deployment.status === "failed";
+      });
+    }
+
+    // If no successful and failed deployment, this means, we only have a single deployment
+    // (we already checked if (deployments.length < 1) above)
+    // and it's in the pending state, so we can skip the label for this.
+    if (!currentDeployment) {
+      currentDeployment = { id: null };
     }
 
     setCurrentDeployment(currentDeployment);

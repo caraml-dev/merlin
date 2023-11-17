@@ -115,7 +115,7 @@ func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment
 	}()
 
 	var deployments []*models.Deployment
-	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('pending', 'running', 'serving')",
+	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('running', 'serving')",
 		newDeployment.VersionModelID, newDeployment.VersionID, newDeployment.VersionEndpointID).Find(&deployments).Error
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func (d *deploymentStorage) Undeploy(modelID, versionID, endpointUUID string) er
 	}()
 
 	var deployments []*models.Deployment
-	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('pending', 'running', 'serving')",
+	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('running', 'serving')",
 		modelID, versionID, endpointUUID).Find(&deployments).Error
 	if err != nil {
 		return err
