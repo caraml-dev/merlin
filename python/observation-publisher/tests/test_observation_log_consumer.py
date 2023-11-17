@@ -12,7 +12,7 @@ from publisher.config import (
     ValueType,
     BinaryClassificationPredictionOutput,
 )
-from publisher.prediction_log_consumer import log_to_dataframe
+from publisher.observation_log_consumer import log_to_dataframe
 
 
 def new_prediction_log(

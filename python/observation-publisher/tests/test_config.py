@@ -12,8 +12,8 @@ from publisher.config import (
     ObservabilityBackendType,
     PublisherConfig,
     ValueType,
-    PredictionLogConsumerConfig,
-    ConsumerType,
+    ObservationSourceConfig,
+    ObservationSource,
     BinaryClassificationPredictionOutput,
 )
 
@@ -44,8 +44,8 @@ def test_config_initialization():
                         space_key="SECRET_SPACE_KEY",
                     ),
                 ),
-                consumer=PredictionLogConsumerConfig(
-                    type=ConsumerType.KAFKA,
+                observation_source=ObservationSourceConfig(
+                    type=ObservationSource.KAFKA,
                     kafka_config=KafkaConsumerConfig(
                         topic="test-topic",
                         bootstrap_servers="localhost:9092",
@@ -64,6 +64,6 @@ def test_config_initialization():
         assert cfg.environment.observability_backend == dataclasses.asdict(
             expected_cfg.environment.observability_backend
         )
-        assert cfg.environment.consumer == dataclasses.asdict(
-            expected_cfg.environment.consumer
+        assert cfg.environment.observation_source == dataclasses.asdict(
+            expected_cfg.environment.observation_source
         )

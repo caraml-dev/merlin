@@ -124,7 +124,7 @@ class ObservabilityBackend:
 
 
 @unique
-class ConsumerType(Enum):
+class ObservationSource(Enum):
     KAFKA = 1
 
 
@@ -139,8 +139,8 @@ class KafkaConsumerConfig:
 
 
 @dataclass
-class PredictionLogConsumerConfig:
-    type: ConsumerType
+class ObservationSourceConfig:
+    type: ObservationSource
     kafka_config: Optional[KafkaConsumerConfig] = None
 
 
@@ -148,7 +148,7 @@ class PredictionLogConsumerConfig:
 class Environment:
     model: ModelSpec
     observability_backend: ObservabilityBackend
-    consumer: PredictionLogConsumerConfig
+    observation_source: ObservationSourceConfig
 
 
 @dataclass

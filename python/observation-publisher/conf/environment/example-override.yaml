@@ -58,7 +58,7 @@ observability_backend:
   arize_config:
     api_key: "SECRET_API_KEY"
     space_key: "SECRET_SPACE_KEY"
-consumer:
+observation_source:
   # Supported consumer types:
   #  - KAFKA
   type: "KAFKA"

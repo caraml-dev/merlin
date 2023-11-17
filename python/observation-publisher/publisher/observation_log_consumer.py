@@ -11,8 +11,8 @@ from publisher.config import (
     KafkaConsumerConfig,
     ModelSpec,
     ValueType,
-    PredictionLogConsumerConfig,
-    ConsumerType,
+    ObservationSourceConfig,
+    ObservationSource,
 )
 from publisher.observability_backend import ObservationSink
 
@@ -79,8 +79,8 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         self._consumer.close()
 
 
-def new_consumer(config: PredictionLogConsumerConfig) -> PredictionLogConsumer:
-    if config.type == ConsumerType.KAFKA:
+def new_consumer(config: ObservationSourceConfig) -> PredictionLogConsumer:
+    if config.type == ObservationSource.KAFKA:
         return KafkaPredictionLogConsumer(config.kafka_config)
     else:
         raise ValueError(f"Unknown consumer type: {config.type}")
@@ -92,9 +92,9 @@ def parse_message_to_prediction_log(msg: str) -> PredictionLog:
     return log
 
 
-def convert_value(
+def convert_to_numpy_value(
     col_value: Optional[Union[int, str, float, bool]], value_type: ValueType
-):
+) -> Union[np.int64, np.float64, np.bool_, np.str_]:
     match value_type:
         case ValueType.INT64:
             return np.int64(col_value)
@@ -110,9 +110,9 @@ def convert_value(
 
 def convert_list_value(
     list_value: ListValue, column_names: List[str], column_types: Dict[str, ValueType]
-) -> List:
+) -> List[Union[np.int64, np.float64, np.bool_, np.str_]]:
     return [
-        convert_value(col_value, column_types[col_name])
+        convert_to_numpy_value(col_value, column_types[col_name])
         for col_value, col_name in zip([v for v in list_value], column_names)
     ]
 
