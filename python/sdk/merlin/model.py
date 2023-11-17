@@ -290,6 +290,7 @@ class ModelType(Enum):
     ONNX = "onnx"
     PYFUNC = "pyfunc"
     PYFUNC_V2 = "pyfunc_v2"
+    PYFUNC_V3 = "pyfunc_v3"
     CUSTOM = "custom"
 
 
@@ -1069,6 +1070,7 @@ class ModelVersion:
         deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
+        enable_model_observability: bool = False
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1166,6 +1168,7 @@ class ModelVersion:
             deployment_mode=target_deployment_mode,
             autoscaling_policy=target_autoscaling_policy,
             protocol=target_protocol,
+            enable_model_observability=enable_model_observability
         )
         if current_endpoint is not None:
             # This allows a serving deployment to be updated while it is serving

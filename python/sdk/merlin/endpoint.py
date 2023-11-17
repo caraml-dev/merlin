@@ -68,6 +68,8 @@ class VersionEndpoint:
         if log_url is not None:
             self._log_url = log_url
 
+        self._enable_model_observability = endpoint.enable_model_observability
+
     @property
     def url(self):
         return self._url
@@ -119,7 +121,11 @@ class VersionEndpoint:
     @property
     def resource_request(self) -> ResourceRequest:
         return self._resource_request
-
+    
+    @property
+    def enable_model_observability(self) -> bool:
+        return self._enable_model_observability
+    
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""
 

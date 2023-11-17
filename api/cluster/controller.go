@@ -92,7 +92,7 @@ type controller struct {
 	ContainerFetcher
 }
 
-func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
+func NewController(clusterConfig Config, deployConfig config.DeploymentConfig) (Controller, error) {
 	var cfg *rest.Config
 	var err error
 	if clusterConfig.InClusterConfig {
@@ -139,7 +139,7 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		GcpProject:  clusterConfig.GcpProject,
 	})
 
-	kfServingResourceTemplater := resource.NewInferenceServiceTemplater(standardTransformerConfig)
+	kfServingResourceTemplater := resource.NewInferenceServiceTemplater(deployConfig)
 	return newController(
 		knsClientSet.ServingV1(),
 		kserveClient,
@@ -217,7 +217,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	// create new resource
-	spec, err := c.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, c.deploymentConfig, deploymentScale)
+	spec, err := c.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, deploymentScale)
 	if err != nil {
 		log.Errorf("unable to create inference service spec %s: %v", isvcName, err)
 		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))

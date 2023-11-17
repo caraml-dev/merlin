@@ -237,6 +237,8 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.Protocol = protocol.HttpJson
 	}
 
+	left.EnableModelObservability = right.EnableModelObservability
+
 	return nil
 }
 
