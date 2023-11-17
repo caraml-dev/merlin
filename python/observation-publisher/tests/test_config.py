@@ -6,7 +6,6 @@ from publisher.config import (
     ArizeConfig,
     Environment,
     KafkaConsumerConfig,
-    ModelSchema,
     ModelSpec,
     ModelType,
     ObservabilityBackend,
@@ -15,6 +14,7 @@ from publisher.config import (
     ValueType,
     PredictionLogConsumerConfig,
     ConsumerType,
+    BinaryClassificationPredictionOutput,
 )
 
 
@@ -27,16 +27,14 @@ def test_config_initialization():
                     id="test-model",
                     version="0.1.0",
                     type=ModelType.BINARY_CLASSIFICATION,
-                    schema=ModelSchema(
-                        column_types={
-                            "accept": ValueType.BOOLEAN,
-                            "label": ValueType.STRING,
-                            "distance": ValueType.INT64,
-                            "transaction": ValueType.FLOAT64,
-                        },
+                    feature_types={
+                        "distance": ValueType.INT64,
+                        "transaction": ValueType.FLOAT64,
+                    },
+                    timestamp_column="request_timestamp",
+                    binary_classification=BinaryClassificationPredictionOutput(
                         prediction_label_column="label",
-                        prediction_score_column="accept",
-                        timestamp_column="request_timestamp",
+                        prediction_score_column="score",
                     ),
                 ),
                 observability_backend=ObservabilityBackend(

@@ -6,7 +6,12 @@ import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from pandas._testing import assert_frame_equal
 
-from publisher.config import ModelSchema, ModelSpec, ModelType, ValueType
+from publisher.config import (
+    ModelSpec,
+    ModelType,
+    ValueType,
+    BinaryClassificationPredictionOutput,
+)
 from publisher.prediction_log_consumer import log_to_dataframe
 
 
@@ -54,18 +59,18 @@ def test_log_to_dataframe():
         id="test_model",
         version="0.1.0",
         type=ModelType.BINARY_CLASSIFICATION,
-        schema=ModelSchema(
-            column_types={
-                "acceptance_rate": ValueType.FLOAT64,
-                "minutes_since_last_order": ValueType.INT64,
-                "service_type": ValueType.STRING,
-                "prediction_score": ValueType.BOOLEAN,
-                "prediction_label": ValueType.STRING,
-            },
+        feature_types={
+            "acceptance_rate": ValueType.FLOAT64,
+            "minutes_since_last_order": ValueType.INT64,
+            "service_type": ValueType.STRING,
+            "prediction_score": ValueType.FLOAT64,
+            "prediction_label": ValueType.STRING,
+        },
+        binary_classification=BinaryClassificationPredictionOutput(
             prediction_label_column="prediction_label",
             prediction_score_column="prediction_score",
-            timestamp_column="timestamp",
         ),
+        timestamp_column="timestamp",
     )
     input_columns = [
         "acceptance_rate",
@@ -84,8 +89,8 @@ def test_log_to_dataframe():
             ],
             output_columns=output_columns,
             output_data=[
-                [True, "non fraud"],
-                [False, "fraud"],
+                [0.9, "non fraud"],
+                [0.5, "fraud"],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["a", "b"],
@@ -100,36 +105,20 @@ def test_log_to_dataframe():
             ],
             output_columns=output_columns,
             output_data=[
-                [True, "non fraud"],
-                [False, "non fraud"],
+                [0.4, "non fraud"],
+                [0.2, "non fraud"],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["c", "d"],
         ),
     ]
-    prediction_logs_df = log_to_dataframe(prediction_logs, model_spec.schema)
+    prediction_logs_df = log_to_dataframe(prediction_logs, model_spec)
     expected_df = pd.DataFrame.from_records(
         [
-            [
-                0.8,
-                24,
-                "FOOD",
-                True,
-                "non fraud",
-                "1234a",
-                datetime(2021, 1, 1, 0, 0, 0),
-            ],
-            [0.5, 2, "RIDE", False, "fraud", "1234b", datetime(2021, 1, 1, 0, 0, 0)],
-            [1.0, 13, "CAR", True, "non fraud", "5678c", datetime(2021, 1, 1, 0, 0, 0)],
-            [
-                0.4,
-                60,
-                "RIDE",
-                False,
-                "non fraud",
-                "5678d",
-                datetime(2021, 1, 1, 0, 0, 0),
-            ],
+            [0.8, 24, "FOOD", 0.9, "non fraud", "1234a", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.5, 2, "RIDE", 0.5, "fraud", "1234b", datetime(2021, 1, 1, 0, 0, 0)],
+            [1.0, 13, "CAR", 0.4, "non fraud", "5678c", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.4, 60, "RIDE", 0.2, "non fraud", "5678d", datetime(2021, 1, 1, 0, 0, 0)],
         ],
         columns=[
             "acceptance_rate",
@@ -149,13 +138,13 @@ def test_empty_column_conversion_to_dataframe():
         id="test_model",
         version="0.1.0",
         type=ModelType.BINARY_CLASSIFICATION,
-        schema=ModelSchema(
-            prediction_score_column="prediction_score",
-            timestamp_column="timestamp",
-            column_types={
-                "acceptance_rate": ValueType.FLOAT64,
-                "prediction_score": ValueType.BOOLEAN,
-            },
+        timestamp_column="timestamp",
+        feature_types={
+            "acceptance_rate": ValueType.FLOAT64,
+            "prediction_label": ValueType.STRING,
+        },
+        binary_classification=BinaryClassificationPredictionOutput(
+            prediction_label_column="prediction_label"
         ),
     )
     prediction_logs = [
@@ -166,27 +155,27 @@ def test_empty_column_conversion_to_dataframe():
             input_data=[
                 [None],
             ],
-            output_columns=["prediction_score"],
+            output_columns=["prediction_label"],
             output_data=[
-                [True],
+                ["ACCEPTED"],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["a"],
         ),
     ]
-    prediction_logs_df = log_to_dataframe(prediction_logs, model_spec.schema)
+    prediction_logs_df = log_to_dataframe(prediction_logs, model_spec)
     expected_df = pd.DataFrame.from_records(
         [
             [
                 np.NaN,
-                True,
+                "ACCEPTED",
                 "1234a",
                 datetime(2021, 1, 1, 0, 0, 0),
             ],
         ],
         columns=[
             "acceptance_rate",
-            "prediction_score",
+            "prediction_label",
             "prediction_id",
             "timestamp",
         ],

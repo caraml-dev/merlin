@@ -9,7 +9,6 @@ from google.protobuf.internal.well_known_types import ListValue
 
 from publisher.config import (
     KafkaConsumerConfig,
-    ModelSchema,
     ModelSpec,
     ValueType,
     PredictionLogConsumerConfig,
@@ -37,7 +36,7 @@ class PredictionLogConsumer(abc.ABC):
                 logs = self.poll_new_logs()
                 if len(logs) == 0:
                     continue
-                df = log_to_dataframe(logs, model_spec.schema)
+                df = log_to_dataframe(logs, model_spec)
                 observation_sink.write(dataframe=df)
                 self.commit()
         finally:
@@ -105,6 +104,8 @@ def convert_value(
             return np.bool_(col_value)
         case ValueType.STRING:
             return np.str_(col_value)
+        case _:
+            raise ValueError(f"Unknown value type: {value_type}")
 
 
 def convert_list_value(
@@ -116,9 +117,7 @@ def convert_list_value(
     ]
 
 
-def log_to_dataframe(
-    logs: List[PredictionLog], model_schema: ModelSchema
-) -> pd.DataFrame:
+def log_to_dataframe(logs: List[PredictionLog], model_spec: ModelSpec) -> pd.DataFrame:
     combined_records = []
     column_names = []
     for log in logs:
@@ -127,12 +126,12 @@ def log_to_dataframe(
             convert_list_value(
                 feature_row,
                 log.input.features_table["columns"],
-                model_schema.column_types,
+                model_spec.feature_types,
             )
             + convert_list_value(
                 prediction_row,
                 log.output.prediction_results_table["columns"],
-                model_schema.column_types,
+                model_spec.prediction_types,
             )
             + [log.prediction_id + row_id, request_timestamp]
             for feature_row, prediction_row, row_id in zip(
@@ -144,7 +143,7 @@ def log_to_dataframe(
         column_names = (
             [c for c in log.input.features_table["columns"]]
             + [c for c in log.output.prediction_results_table["columns"]]
-            + [model_schema.prediction_id_column, model_schema.timestamp_column]
+            + [model_spec.prediction_id_column, model_spec.timestamp_column]
         )
         combined_records.extend(rows)
     return pd.DataFrame.from_records(combined_records, columns=column_names)

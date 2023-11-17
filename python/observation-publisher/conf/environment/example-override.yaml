@@ -4,32 +4,57 @@ model:
   #  - BINARY_CLASSIFICATION
   #  - MULTICLASS_CLASSIFICATION
   #  - REGRESSION
-  # - RANKING
+  #  - RANKING
+  # The prediction output schema that is corresponded to the model
+  # type must be provided.
+
+  # Example for binary classification
   type: "BINARY_CLASSIFICATION"
-  version: "0.1.0"
-  schema:
-    # Data types for features and prediction columns. Supported types are:
-    #  - INT64
-    #  - FLOAT64
-    #  - STRING
-    column_types:
-      accept: "BOOLEAN"
-      label: "STRING"
-      distance: "INT64"
-      transaction: "FLOAT64"
-    # Prediction result
-    prediction_score_column: "accept"
-    # Column name to be used for timestamp.
-    timestamp_column: "request_timestamp"
-    # Optional: User defined labels to group predictions
+  binary_classification:
+    # The classification label STRING of this event.
     prediction_label_column: "label"
-    # Optional: Column name to be used for prediction id.
-    # If not provided, it's assumed to be prediction_id.
-    prediction_id_column: "prediction_id"
+    # Optional: The likelihood of the event (Probability between 0 to 1.0).
+    prediction_score_column: "score"
+
+#  # Example for multiclass classification
+#  type: "MULTICLASS_CLASSIFICATION"
+#  multiclass_classification:
+#    # The classification label STRING of this event.
+#    prediction_label_column: "label"
+#    # Optional: The likelihood of the event (Probability between 0 to 1.0).
+#    prediction_score_column: "score"
+
+#  # Example for regression
+#  type: "REGRESSION"
+#  regression:
+#    # FLOAT64 value for the prediction value.
+#    prediction_score_column: "score"
+
+#  # Example for ranking
+#  type: "RANKING"
+#  ranking:
+#    # A group of predictions within which items are ranked..
+#    prediction_group_id_column: "prediction_group"
+#    # INT64 value for the rank of the prediction within the group.
+#    rank_column: "rank"
+  version: "0.1.0"
+  # Column name to data types mapping for feature columns. Supported types are:
+  #  - INT64
+  #  - FLOAT64
+  #  - STRING
+  feature_types:
+    distance: "INT64"
+    transaction: "FLOAT64"
+  # Column name to be used for timestamp.
+  timestamp_column: "request_timestamp"
+  # Optional: Column name to be used for prediction id.
+  # If not provided, it's assumed to be prediction_id.
+  prediction_id_column: "prediction_id"
 observability_backend:
   # Supported backend types:
   #  - ARIZE
   type: "ARIZE"
+  # Required if observability_backend.type is ARIZE
   arize_config:
     api_key: "SECRET_API_KEY"
     space_key: "SECRET_SPACE_KEY"
@@ -37,11 +62,13 @@ consumer:
   # Supported consumer types:
   #  - KAFKA
   type: "KAFKA"
+  # Required if consumer.type is KAFKA
   kafka_config:
     topic: "test-topic"
     bootstrap_servers: "localhost:9092"
     group_id: "test-group"
+    # (Optional) The maximum number of records returned in a single call to poll(). Default: 100
     batch_size: 100
-    # Additional consumer configuration to be passed to KafkaConsumer.
+    # (Optional) Additional consumer configuration to be passed to KafkaConsumer.
     additional_consumer_config:
       "auto.offset.reset": "latest"

@@ -9,6 +9,7 @@ from publisher.config import (
     ModelSpec,
     ObservabilityBackend,
     ObservabilityBackendType,
+    ModelType,
 )
 
 
@@ -21,13 +22,38 @@ class ObservationSink(abc.ABC):
 class ArizeSink(ObservationSink):
     def __init__(self, config: ArizeConfig, model_spec: ModelSpec):
         self._client = Client(space_key=config.space_key, api_key=config.api_key)
-        self._schema = Schema(
-            feature_column_names=model_spec.schema.feature_columns,
-            prediction_label_column_name=model_spec.schema.prediction_label_column,
-            prediction_score_column_name=model_spec.schema.prediction_score_column,
-            prediction_id_column_name=model_spec.schema.prediction_id_column,
-            timestamp_column_name=model_spec.schema.timestamp_column,
-        )
+        match model_spec.type:
+            case ModelType.BINARY_CLASSIFICATION:
+                self._schema = Schema(
+                    feature_column_names=model_spec.feature_columns,
+                    prediction_label_column_name=model_spec.binary_classification.prediction_label_column,
+                    prediction_score_column_name=model_spec.binary_classification.prediction_score_column,
+                    prediction_id_column_name=model_spec.prediction_id_column,
+                    timestamp_column_name=model_spec.timestamp_column,
+                )
+            case ModelType.MULTICLASS_CLASSIFICATION:
+                self._schema = Schema(
+                    feature_column_names=model_spec.feature_columns,
+                    prediction_label_column_name=model_spec.multiclass_classification.prediction_label_column,
+                    prediction_score_column_name=model_spec.multiclass_classification.prediction_score_column,
+                    prediction_id_column_name=model_spec.prediction_id_column,
+                    timestamp_column_name=model_spec.timestamp_column,
+                )
+            case ModelType.REGRESSION:
+                self._schema = Schema(
+                    feature_column_names=model_spec.feature_columns,
+                    prediction_score_column_name=model_spec.regression.prediction_score_column,
+                    prediction_id_column_name=model_spec.prediction_id_column,
+                    timestamp_column_name=model_spec.timestamp_column,
+                )
+            case ModelType.RANKING:
+                self._schema = Schema(
+                    feature_column_names=model_spec.feature_columns,
+                    rank_column_name=model_spec.ranking.rank_column,
+                    prediction_group_id_column_name=model_spec.ranking.prediction_group_id_column,
+                    prediction_id_column_name=model_spec.prediction_id_column,
+                    timestamp_column_name=model_spec.timestamp_column,
+                )
         self._model_id = model_spec.id
         self._model_version = model_spec.version
         self._model_type = model_spec.type

@@ -15,12 +15,51 @@ class ValueType(Enum):
 
 
 @dataclass
-class ModelSchema:
-    column_types: Dict[str, ValueType]
+class RegressionPredictionOutput:
     prediction_score_column: str
-    timestamp_column: str
-    prediction_label_column: Optional[str] = None
-    prediction_id_column: Optional[str] = "prediction_id"
+
+    @property
+    def column_types(self) -> Dict[str, ValueType]:
+        return {self.prediction_score_column: ValueType.FLOAT64}
+
+
+@dataclass
+class BinaryClassificationPredictionOutput:
+    prediction_label_column: str
+    prediction_score_column: Optional[str] = None
+
+    @property
+    def column_types(self) -> Dict[str, ValueType]:
+        ct = {self.prediction_label_column: ValueType.STRING}
+        if self.prediction_score_column is not None:
+            ct[self.prediction_score_column] = ValueType.FLOAT64
+        return ct
+
+
+@dataclass
+class MulticlassClassificationPredictionOutput:
+    prediction_label_column: str
+    prediction_score_column: Optional[str] = None
+
+    @property
+    def column_types(self) -> Dict[str, ValueType]:
+        ct = {self.prediction_label_column: ValueType.STRING}
+        if self.prediction_score_column is not None:
+            ct[self.prediction_score_column] = ValueType.FLOAT64
+        return ct
+
+
+@dataclass
+class RankingPredictionOutput:
+    rank_column: str
+    prediction_group_id_column: str
+
+    @property
+    def column_types(self) -> Dict[str, ValueType]:
+        return {
+            self.rank_column: ValueType.INT64,
+            self.prediction_group_id_column: ValueType.STRING,
+        }
 
 
 @unique
@@ -38,8 +77,33 @@ class ModelType(Enum):
 class ModelSpec:
     id: str
     version: str
+    feature_types: Dict[str, ValueType]
+    timestamp_column: str
     type: ModelType
-    schema: ModelSchema
+    binary_classification: Optional[BinaryClassificationPredictionOutput] = None
+    multiclass_classification: Optional[MulticlassClassificationPredictionOutput] = None
+    regression: Optional[RegressionPredictionOutput] = None
+    ranking: Optional[RankingPredictionOutput] = None
+    prediction_id_column: Optional[str] = "prediction_id"
+    tag_columns: Optional[List[str]] = None
+
+    @property
+    def feature_columns(self) -> List[str]:
+        return list(self.feature_types.keys())
+
+    @property
+    def prediction_types(self) -> Dict[str, ValueType]:
+        match self.type:
+            case ModelType.BINARY_CLASSIFICATION:
+                return self.binary_classification.column_types
+            case ModelType.MULTICLASS_CLASSIFICATION:
+                return self.multiclass_classification.column_types
+            case ModelType.REGRESSION:
+                return self.regression.column_types
+            case ModelType.RANKING:
+                return self.ranking.column_types
+            case _:
+                raise ValueError(f"Unknown model type: {self.type}")
 
 
 @dataclass
