@@ -103,26 +103,27 @@ class Config:
                                         push_interval)
         
         # Publisher
-        sampling_ratio = float(os.getenv(*PUBLISHER_SAMPLING_RATIO))
+        self.publisher = None
         publisher_enabled = str_to_bool(os.getenv(*PUBLISHER_ENABLED))
-        kafka_topic = os.getenv(*PUBLISHER_KAFKA_TOPIC)
-        kafka_brokers = os.getenv(*PUBLISHER_KAFKA_BROKERS)
         if publisher_enabled:
+            sampling_ratio = float(os.getenv(*PUBLISHER_SAMPLING_RATIO))
+            kafka_topic = os.getenv(*PUBLISHER_KAFKA_TOPIC)
+            kafka_brokers = os.getenv(*PUBLISHER_KAFKA_BROKERS)
             if kafka_topic == "":
                 raise ValueError("kafka topic must be set")
             if kafka_brokers == "":
                 raise ValueError("kafka brokers must be set")
-        
-        kafka_linger_ms = int(os.getenv(*PUBLISHER_KAKFA_LINGER_MS))
-        kafka_acks = int(os.getenv(*PUBLISHER_KAFKA_ACKS))
-        kafka_cfgs = self._kafka_config()
-        kafka = Kafka(
-            kafka_topic, 
-            kafka_brokers,
-            kafka_linger_ms, 
-            kafka_acks, 
-            kafka_cfgs)
-        self.publisher = Publisher(sampling_ratio, publisher_enabled, kafka)
+            kafka_linger_ms = int(os.getenv(*PUBLISHER_KAKFA_LINGER_MS))
+            kafka_acks = int(os.getenv(*PUBLISHER_KAFKA_ACKS))
+            kafka_cfgs = self._kafka_config()
+            kafka = Kafka(
+                kafka_topic, 
+                kafka_brokers,
+                kafka_linger_ms, 
+                kafka_acks, 
+                kafka_cfgs)
+            self.publisher = Publisher(sampling_ratio, publisher_enabled, kafka)
+
     
     def _kafka_config(self):
         raw_cfg = os.getenv(*PUBLISHER_KAFKA_CONFIG)

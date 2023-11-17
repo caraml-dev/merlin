@@ -14,13 +14,19 @@ from grpc_health.v1 import health_pb2_grpc
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.publisher.publisher import Publisher
+from pyfuncserver.publisher.kafka import KafkaProducer
+from pyfuncserver.sampler.sampler import RatioSampling
 
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
-    def __init__(self, model: PyFuncModel, publisher: Optional[Publisher] = None):
+    def __init__(self, model: PyFuncModel):
         if not model.ready:
             model.load()
         self._model = model
-        self._publisher = publisher
+        self._publisher: Optional[Publisher] = None
+
+    def set_publisher(self, publisher: Publisher):
+        if self._publisher is None:
+            self._publisher = publisher
 
     def PredictValues(self, request, context):
         output = self._model.upiv1_predict(request=request, context=context)
@@ -46,6 +52,12 @@ class UPIServer:
                 worker = multiprocessing.Process(target=self._run_server)
                 worker.start()
                 workers.append(worker)
+        
+        if self._config.publisher is not None:
+            kafka_producer = KafkaProducer(self._config.publisher, self._config.model_manifest)
+            sampler = RatioSampling(self._config.publisher.sampling_ratio)
+            publisher = Publisher(kafka_producer, sampler)
+            self._predict_service.set_publisher(publisher)
 
         asyncio.get_event_loop().run_until_complete(self._run_server())
 

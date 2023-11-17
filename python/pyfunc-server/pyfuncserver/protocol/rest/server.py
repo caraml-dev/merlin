@@ -64,9 +64,10 @@ class HTTPServer:
         self._http_server.start(self.workers)
 
         # kafka producer must be initialize after fork the process
-        kafka_producer = KafkaProducer(self.config.publisher, self.config.model_manifest)
-        sampler = RatioSampling(self.config.publisher.sampling_ratio)
-        application.publisher = Publisher(kafka_producer, sampler)
+        if self.config.publisher is not None:
+            kafka_producer = KafkaProducer(self.config.publisher, self.config.model_manifest)
+            sampler = RatioSampling(self.config.publisher.sampling_ratio)
+            application.publisher = Publisher(kafka_producer, sampler)
 
         for signame in ('SIGINT', 'SIGTERM'):
             asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),

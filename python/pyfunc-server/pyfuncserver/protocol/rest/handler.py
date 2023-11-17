@@ -62,7 +62,7 @@ class PredictHandler(tornado.web.RequestHandler):
         self.write(response_json)
         self.set_header("Content-Type", "application/json; charset=UTF-8")
 
-        if self.publisher is not None and output.contains_prediction_log:
+        if self.publisher is not None and output.contains_prediction_log():
             tornado.ioloop.IOLoop.current().spawn_callback(self.publisher.publish, output)
 
     def write_error(self, status_code: int, **kwargs: Any) -> None:

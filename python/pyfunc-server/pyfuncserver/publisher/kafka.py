@@ -2,6 +2,7 @@ import uuid
 
 from pyfuncserver.config import Publisher as PublisherConfig, ModelManifest
 from pyfuncserver.utils.converter import build_prediction_log
+
 from confluent_kafka import Producer
 from merlin.pyfunc import PyFuncOutput
 
