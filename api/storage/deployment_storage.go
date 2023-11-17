@@ -115,22 +115,18 @@ func (d *deploymentStorage) OnDeploymentSuccess(newDeployment *models.Deployment
 	}()
 
 	var deployments []*models.Deployment
-	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('running', 'serving')",
-		newDeployment.VersionModelID, newDeployment.VersionID, newDeployment.VersionEndpointID).Find(&deployments).Error
+	err = tx.Where("version_model_id = ? AND version_id = ? AND version_endpoint_id = ? AND status IN ('running', 'serving') AND id != ?",
+		newDeployment.VersionModelID, newDeployment.VersionID, newDeployment.VersionEndpointID, newDeployment.ID).Find(&deployments).Error
 	if err != nil {
 		return err
 	}
 
 	for i := range deployments {
-		// Update the new deployment
-		if deployments[i].ID == newDeployment.ID {
-			deployments[i] = newDeployment
-			continue
-		}
-
 		// Set older successful deployment to terminated
 		deployments[i].Status = models.EndpointTerminated
 	}
+
+	deployments = append(deployments, newDeployment)
 
 	err = tx.Save(deployments).Error
 	if err != nil {
