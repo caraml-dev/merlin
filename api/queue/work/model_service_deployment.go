@@ -111,8 +111,15 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 		// record the deployment result
 		deployment.UpdatedAt = time.Now()
-		if _, err := depl.DeploymentStorage.Save(deployment); err != nil {
-			log.Warnf("unable to update deployment history", err)
+		if deployment.IsSuccess() {
+			if err := depl.DeploymentStorage.OnDeploymentSuccess(deployment); err != nil {
+				log.Errorf("unable to update deployment history on successful deployment (ID: %+v): %s", deployment.ID, err)
+			}
+		} else {
+			// If failed, only update the latest deployment
+			if _, err := depl.DeploymentStorage.Save(deployment); err != nil {
+				log.Errorf("unable to update deployment history for failed deployment (ID: %+v): %s", deployment.ID, err)
+			}
 		}
 
 		// if redeployment failed, we only update the previous endpoint status from pending to previous status

@@ -20,7 +20,6 @@ import {
   EuiDescriptionList,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiIcon,
   EuiLink,
   EuiBadge
 } from "@elastic/eui";
@@ -46,8 +45,7 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
       title: "MLflow Run",
       description: (
         <EuiLink href={version.mlflow_url} target="_blank">
-          {version.mlflow_url}&nbsp;
-          <EuiIcon className="eui-alignBaseline" type="popout" size="s" />
+          {version.mlflow_url}
         </EuiLink>
       )
     },

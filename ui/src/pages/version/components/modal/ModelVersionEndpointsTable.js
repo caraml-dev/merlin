@@ -25,7 +25,6 @@ import {
 import PropTypes from "prop-types";
 
 
-
 const defaultTextSize = "s";
 const defaultIconSize = "s"
 
@@ -38,7 +37,7 @@ const ModelVersionEndpointsTable = ({ endpoints }) => {
       case "pending":
         return "gray";
       case "terminated":
-        return "warning";
+        return "default";
       case "failed":
         return "danger";
       case "serving":

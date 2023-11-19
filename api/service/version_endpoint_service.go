@@ -262,8 +262,12 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	}
 
 	endpoint.Status = models.EndpointTerminated
-	err = k.storage.Save(endpoint)
-	if err != nil {
+
+	if err := k.storage.Save(endpoint); err != nil {
+		return nil, err
+	}
+
+	if err := k.deploymentStorage.Undeploy(model.ID.String(), version.ID.String(), endpoint.ID.String()); err != nil {
 		return nil, err
 	}
 
