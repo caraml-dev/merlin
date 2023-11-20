@@ -2,13 +2,10 @@ from abc import abstractmethod
 from typing import Union, List, Optional
 from dataclasses import dataclass
 
-
 import grpc
 import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
-from caraml.upi.v1 import prediction_log_pb2
-from google.protobuf.struct_pb2 import Struct
 from mlflow.pyfunc import PythonModel
 
 

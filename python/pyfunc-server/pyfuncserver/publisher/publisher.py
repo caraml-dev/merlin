@@ -17,6 +17,5 @@ class Publisher:
     async def publish(self, output: PyFuncOutput):
         if not self.sampler.should_sample():
             return
-        
+
         self.producer.produce(output)
-        
