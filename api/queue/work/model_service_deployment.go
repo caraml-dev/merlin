@@ -178,7 +178,7 @@ func (depl *ModelServiceDeployment) generateModelOptions(ctx context.Context, mo
 	modelOpt := &models.ModelOption{}
 	switch model.Type {
 	case models.ModelTypePyFunc:
-		imageRef, err := depl.ImageBuilder.BuildImage(ctx, model.Project, model, version)
+		imageRef, err := depl.ImageBuilder.BuildImage(ctx, model.Project, model, version, version.ImageBuilderResourceRequest)
 		if err != nil {
 			return modelOpt, err
 		}
