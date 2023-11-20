@@ -8,6 +8,10 @@ class Sampler(ABC):
         pass
 
 class RatioSampling(Sampler):
+    """
+    RatioSampling sampling strategy that mimic implementation of the TraceIDRatioBased in opentelemetry
+    ref: https://github.com/open-telemetry/opentelemetry-python/blob/v1.21.0/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L253
+    """
     REQUEST_ID_LIMIT = (1 << 64) - 1
 
     def __init__(self, ratio: float) -> None:

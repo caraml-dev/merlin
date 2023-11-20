@@ -63,7 +63,7 @@ class SampleUPIPyFuncV3(PyFuncV3Model):
                     context: grpc.ServicerContext) -> ModelInput:
         return sample_model_input
     
-    def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+    def infer(self, model_input: ModelInput) -> ModelOutput:
         return sample_model_output
     
     def upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:

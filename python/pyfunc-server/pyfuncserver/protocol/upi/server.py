@@ -31,6 +31,7 @@ class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
     def PredictValues(self, request, context):
         output = self._model.upiv1_predict(request=request, context=context)
         if self._publisher is not None and output.contains_prediction_log():
+        # need to also check whether the output contains prediction log since the pyfunc server doesn't know which model that is used
             asyncio.create_task(self._publisher.publish(output))
 
         return output.upi_response

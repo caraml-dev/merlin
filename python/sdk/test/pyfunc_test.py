@@ -120,7 +120,7 @@ def test_pyfuncv3_rest():
         "data": [[0.95, "complete"], [0.43, "incomplete"], [0.59, "complete"]]
     }
     pyfunc_model.preprocess = MagicMock(return_value=pyfunc_model_input)
-    pyfunc_model.ml_predict = MagicMock(return_value=pyfunc_model_output)
+    pyfunc_model.infer = MagicMock(return_value=pyfunc_model_output)
     pyfunc_model.postprocess = MagicMock(return_value=http_response)
     context = PythonModelContext(artifacts = {})
 
@@ -138,7 +138,7 @@ def test_pyfuncv3_rest():
     actual_resp = pyfunc_model.predict(context=context, model_input=model_input)
     assert actual_resp == exp_response
     pyfunc_model.preprocess.assert_called_with(model_input[PYFUNC_MODEL_INPUT_KEY])
-    pyfunc_model.ml_predict.assert_called_with(pyfunc_model_input)
+    pyfunc_model.infer.assert_called_with(pyfunc_model_input)
     pyfunc_model.postprocess.assert_called_with(pyfunc_model_output, model_input[PYFUNC_MODEL_INPUT_KEY])
 
 def test_pyfuncv3_upi():
@@ -158,7 +158,7 @@ def test_pyfuncv3_upi():
         )
     )
     pyfunc_model.upiv1_preprocess = MagicMock(return_value=pyfunc_model_input)
-    pyfunc_model.ml_predict = MagicMock(return_value=pyfunc_model_output)
+    pyfunc_model.infer = MagicMock(return_value=pyfunc_model_output)
     pyfunc_model.upiv1_postprocess = MagicMock(return_value=upi_response)
     context = PythonModelContext(artifacts = {})
 
@@ -178,5 +178,5 @@ def test_pyfuncv3_upi():
     actual_resp = pyfunc_model.predict(context=context, model_input=model_input)
     assert actual_resp == exp_response
     pyfunc_model.upiv1_preprocess.assert_called_with(model_input[PYFUNC_MODEL_INPUT_KEY], grpc_context)
-    pyfunc_model.ml_predict.assert_called_with(pyfunc_model_input)
+    pyfunc_model.infer.assert_called_with(pyfunc_model_input)
     pyfunc_model.upiv1_postprocess.assert_called_with(pyfunc_model_output, model_input[PYFUNC_MODEL_INPUT_KEY])

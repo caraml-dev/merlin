@@ -55,7 +55,7 @@ class SamplePyFuncV3Model(PyFuncV3Model):
 
     def preprocess(self, request: dict, **kwargs) -> ModelInput:
         return sample_model_input
-    def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+    def infer(self, model_input: ModelInput) -> ModelOutput:
         return sample_model_output
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
         return model_output.predictions_dict()
@@ -82,7 +82,7 @@ class LoadTestModelV3(PyFuncV3Model):
         )
         return model_input
     
-    def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+    def infer(self, model_input: ModelInput) -> ModelOutput:
         predictions = [random.uniform(0,1) for _ in range(len(model_input.prediction_ids))]
         data = []
         for p in predictions:

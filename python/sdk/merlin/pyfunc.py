@@ -221,7 +221,7 @@ class PyFuncV3Model(PythonModel):
         elif protocol == Protocol.UPI_V1:
             grpc_context = model_input.get(PYFUNC_GRPC_CONTEXT, None)
             ml_model_input = self.upiv1_preprocess(input, grpc_context)
-            ml_model_output = self.ml_predict(ml_model_input)
+            ml_model_output = self.infer(ml_model_input)
             final_output = self.upiv1_postprocess(ml_model_output, input)
             return PyFuncOutput(upi_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
         else:
@@ -229,7 +229,7 @@ class PyFuncV3Model(PythonModel):
 
     def _do_http_predict(self, model_input, **kwargs):
         ml_model_input = self.preprocess(model_input, **kwargs)
-        ml_model_output = self.ml_predict(ml_model_input)
+        ml_model_output = self.infer(ml_model_input)
         final_output = self.postprocess(ml_model_output, model_input)
 
         return PyFuncOutput(http_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
@@ -256,21 +256,21 @@ class PyFuncV3Model(PythonModel):
         raise NotImplementedError("preprocess is not implemented")
 
     @abstractmethod
-    def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+    def infer(self, model_input: ModelInput) -> ModelOutput:
         """
-        ml_predict is the method that will call the respective ml framework to do prediction.
+        infer is the method that will call the respective ml framework to do prediction.
         Since there are various types that supported by each ml framework, user must do conversion from the given model input into acceptable input for the model
         :param model_input: ModelInput that is produced by the `preprocess` method
         :return: model output
         """
-        raise NotImplementedError("ml_predict is not implemented")
+        raise NotImplementedError("infer is not implemented")
     
     @abstractmethod
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
         """
-        postprocess is the method that is caled after `ml_predict`, the main function of this method is to do postprocessing
+        postprocess is the method that is caled after `infer`, the main function of this method is to do postprocessing
         that may including build overall pyfunc response payload, additional computation based on the model output
-        :param model_output: the output of the `ml_predict` function
+        :param model_output: the output of the `infer` function
         :param request: raw request payload
         :return: final payload in dictionary type
         """
@@ -293,7 +293,7 @@ class PyFuncV3Model(PythonModel):
     def upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
         """
         upiv1_postprocess is the postprocessing method that only applicable for UPI_V1 protocol.
-        :param model_output: the output of the `ml_predict` function
+        :param model_output: the output of the `infer` function
         :param request: raw request payload
         :return: final payload in `PredictValuesResponse` type
         """
