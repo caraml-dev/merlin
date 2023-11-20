@@ -3,7 +3,7 @@ from omegaconf import OmegaConf
 
 from publisher.config import PublisherConfig
 from publisher.observability_backend import new_observation_sink
-from publisher.observation_log_consumer import new_consumer
+from publisher.prediction_log_consumer import new_consumer
 
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")

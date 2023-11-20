@@ -1,20 +1,22 @@
 import dataclasses
 
 from hydra import compose, initialize
+from merlin.observability.inference import (
+    BinaryClassificationOutput,
+    InferenceSchema,
+    InferenceType,
+    ValueType,
+)
 
 from publisher.config import (
     ArizeConfig,
     Environment,
     KafkaConsumerConfig,
-    ModelSpec,
-    ModelType,
     ObservabilityBackend,
     ObservabilityBackendType,
-    PublisherConfig,
-    ValueType,
-    ObservationSourceConfig,
     ObservationSource,
-    BinaryClassificationPredictionOutput,
+    ObservationSourceConfig,
+    PublisherConfig,
 )
 
 
@@ -23,16 +25,15 @@ def test_config_initialization():
         cfg = compose(config_name="config", overrides=["+environment=example-override"])
         expected_cfg = PublisherConfig(
             environment=Environment(
-                model=ModelSpec(
-                    id="test-model",
-                    version="0.1.0",
-                    type=ModelType.BINARY_CLASSIFICATION,
+                model_id="test-model",
+                model_version="0.1.0",
+                inference_schema=InferenceSchema(
+                    type=InferenceType.BINARY_CLASSIFICATION,
                     feature_types={
                         "distance": ValueType.INT64,
                         "transaction": ValueType.FLOAT64,
                     },
-                    timestamp_column="request_timestamp",
-                    binary_classification=BinaryClassificationPredictionOutput(
+                    binary_classification=BinaryClassificationOutput(
                         prediction_label_column="label",
                         prediction_score_column="score",
                     ),
@@ -58,8 +59,8 @@ def test_config_initialization():
                 ),
             )
         )
-        assert cfg.environment.model == dataclasses.asdict(
-            expected_cfg.environment.model
+        assert cfg.environment.inference_schema == dataclasses.asdict(
+            expected_cfg.environment.inference_schema
         )
         assert cfg.environment.observability_backend == dataclasses.asdict(
             expected_cfg.environment.observability_backend

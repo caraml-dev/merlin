@@ -4,19 +4,20 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
+from merlin.observability.inference import (
+    BinaryClassificationOutput,
+    InferenceSchema,
+    InferenceType,
+    ValueType,
+)
 from pandas._testing import assert_frame_equal
 
-from publisher.config import (
-    ModelSpec,
-    ModelType,
-    ValueType,
-    BinaryClassificationPredictionOutput,
-)
-from publisher.observation_log_consumer import log_to_dataframe
+from publisher.prediction_log_consumer import log_batch_to_dataframe
 
 
 def new_prediction_log(
-    model_spec: ModelSpec,
+    model_id: str,
+    model_version: str,
     prediction_id: str,
     row_ids: List[str],
     input_columns: List[str],
@@ -34,8 +35,8 @@ def new_prediction_log(
 
     prediction_log = PredictionLog()
     prediction_log.prediction_id = prediction_id
-    prediction_log.model_name = model_spec.id
-    prediction_log.model_version = model_spec.version
+    prediction_log.model_name = model_id
+    prediction_log.model_version = model_version
     prediction_log.input.features_table.update(
         {
             "columns": input_columns,
@@ -55,10 +56,10 @@ def new_prediction_log(
 
 
 def test_log_to_dataframe():
-    model_spec = ModelSpec(
-        id="test_model",
-        version="0.1.0",
-        type=ModelType.BINARY_CLASSIFICATION,
+    model_id = "test_model"
+    model_version = "0.1.0"
+    inference_schema = InferenceSchema(
+        type=InferenceType.BINARY_CLASSIFICATION,
         feature_types={
             "acceptance_rate": ValueType.FLOAT64,
             "minutes_since_last_order": ValueType.INT64,
@@ -66,11 +67,10 @@ def test_log_to_dataframe():
             "prediction_score": ValueType.FLOAT64,
             "prediction_label": ValueType.STRING,
         },
-        binary_classification=BinaryClassificationPredictionOutput(
+        binary_classification=BinaryClassificationOutput(
             prediction_label_column="prediction_label",
             prediction_score_column="prediction_score",
         ),
-        timestamp_column="timestamp",
     )
     input_columns = [
         "acceptance_rate",
@@ -81,7 +81,8 @@ def test_log_to_dataframe():
     prediction_logs = [
         new_prediction_log(
             prediction_id="1234",
-            model_spec=model_spec,
+            model_id=model_id,
+            model_version=model_version,
             input_columns=input_columns,
             input_data=[
                 [0.8, 24, "FOOD"],
@@ -97,7 +98,8 @@ def test_log_to_dataframe():
         ),
         new_prediction_log(
             prediction_id="5678",
-            model_spec=model_spec,
+            model_id=model_id,
+            model_version=model_version,
             input_columns=input_columns,
             input_data=[
                 [1.0, 13, "CAR"],
@@ -112,7 +114,7 @@ def test_log_to_dataframe():
             row_ids=["c", "d"],
         ),
     ]
-    prediction_logs_df = log_to_dataframe(prediction_logs, model_spec)
+    prediction_logs_df = log_batch_to_dataframe(prediction_logs, inference_schema)
     expected_df = pd.DataFrame.from_records(
         [
             [0.8, 24, "FOOD", 0.9, "non fraud", "1234a", datetime(2021, 1, 1, 0, 0, 0)],
@@ -127,48 +129,49 @@ def test_log_to_dataframe():
             "prediction_score",
             "prediction_label",
             "prediction_id",
-            "timestamp",
+            "request_timestamp",
         ],
     )
     assert_frame_equal(prediction_logs_df, expected_df)
 
 
 def test_empty_column_conversion_to_dataframe():
-    model_spec = ModelSpec(
-        id="test_model",
-        version="0.1.0",
-        type=ModelType.BINARY_CLASSIFICATION,
-        timestamp_column="timestamp",
+    model_id = "test_model"
+    model_version = "0.1.0"
+    inference_schema = InferenceSchema(
+        type=InferenceType.BINARY_CLASSIFICATION,
         feature_types={
             "acceptance_rate": ValueType.FLOAT64,
-            "prediction_label": ValueType.STRING,
         },
-        binary_classification=BinaryClassificationPredictionOutput(
-            prediction_label_column="prediction_label"
+        binary_classification=BinaryClassificationOutput(
+            prediction_label_column="prediction_label",
+            prediction_score_column="prediction_score",
         ),
     )
     prediction_logs = [
         new_prediction_log(
             prediction_id="1234",
-            model_spec=model_spec,
+            model_id=model_id,
+            model_version=model_version,
             input_columns=["acceptance_rate"],
             input_data=[
                 [None],
             ],
-            output_columns=["prediction_label"],
+            output_columns=["prediction_label", "prediction_score"],
             output_data=[
-                ["ACCEPTED"],
+                ["ACCEPTED", 0.5],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["a"],
         ),
     ]
-    prediction_logs_df = log_to_dataframe(prediction_logs, model_spec)
+    prediction_logs_df = log_batch_to_dataframe(prediction_logs, inference_schema)
     expected_df = pd.DataFrame.from_records(
         [
             [
                 np.NaN,
                 "ACCEPTED",
+                0.5,
                 "1234a",
                 datetime(2021, 1, 1, 0, 0, 0),
             ],
@@ -176,8 +179,9 @@ def test_empty_column_conversion_to_dataframe():
         columns=[
             "acceptance_rate",
             "prediction_label",
+            "prediction_score",
             "prediction_id",
-            "timestamp",
+            "request_timestamp",
         ],
     )
     assert_frame_equal(prediction_logs_df, expected_df)

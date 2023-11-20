@@ -1,5 +1,6 @@
-model:
-  id: "test-model"
+model_id: "test-model"
+model_version: "0.1.0"
+inference_schema:
   # Supported model types:
   #  - BINARY_CLASSIFICATION
   #  - MULTICLASS_CLASSIFICATION
@@ -37,7 +38,7 @@ model:
 #    prediction_group_id_column: "prediction_group"
 #    # INT64 value for the rank of the prediction within the group.
 #    rank_column: "rank"
-  version: "0.1.0"
+
   # Column name to data types mapping for feature columns. Supported types are:
   #  - INT64
   #  - FLOAT64
@@ -45,8 +46,6 @@ model:
   feature_types:
     distance: "INT64"
     transaction: "FLOAT64"
-  # Column name to be used for timestamp.
-  timestamp_column: "request_timestamp"
   # Optional: Column name to be used for prediction id.
   # If not provided, it's assumed to be prediction_id.
   prediction_id_column: "prediction_id"

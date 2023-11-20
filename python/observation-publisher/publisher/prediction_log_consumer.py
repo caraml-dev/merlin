@@ -1,20 +1,23 @@
 import abc
-from typing import List, Optional, Union, Dict
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
-from google.protobuf.internal.well_known_types import ListValue
+from merlin.observability.inference import InferenceSchema
 
 from publisher.config import (
     KafkaConsumerConfig,
-    ModelSpec,
-    ValueType,
-    ObservationSourceConfig,
     ObservationSource,
+    ObservationSourceConfig,
 )
 from publisher.observability_backend import ObservationSink
+from publisher.prediction_log_parser import (
+    PREDICTION_LOG_TIMESTAMP_COLUMN,
+    parse_struct_to_feature_table,
+    parse_struct_to_result_table,
+)
 
 
 class PredictionLogConsumer(abc.ABC):
@@ -30,13 +33,15 @@ class PredictionLogConsumer(abc.ABC):
     def close(self):
         raise NotImplementedError
 
-    def start_polling(self, observation_sink: ObservationSink, model_spec: ModelSpec):
+    def start_polling(
+        self, observation_sink: ObservationSink, inference_schema: InferenceSchema
+    ):
         try:
             while True:
                 logs = self.poll_new_logs()
                 if len(logs) == 0:
                     continue
-                df = log_to_dataframe(logs, model_spec)
+                df = log_batch_to_dataframe(logs, inference_schema)
                 observation_sink.write(dataframe=df)
                 self.commit()
         finally:
@@ -92,58 +97,41 @@ def parse_message_to_prediction_log(msg: str) -> PredictionLog:
     return log
 
 
-def convert_to_numpy_value(
-    col_value: Optional[Union[int, str, float, bool]], value_type: ValueType
-) -> Union[np.int64, np.float64, np.bool_, np.str_]:
-    match value_type:
-        case ValueType.INT64:
-            return np.int64(col_value)
-        case ValueType.FLOAT64:
-            return np.float64(col_value)
-        case ValueType.BOOLEAN:
-            return np.bool_(col_value)
-        case ValueType.STRING:
-            return np.str_(col_value)
-        case _:
-            raise ValueError(f"Unknown value type: {value_type}")
+def log_to_records(
+    log: PredictionLog, inference_schema: InferenceSchema
+) -> Tuple[List[List[np.int64 | np.float64 | np.bool_ | np.str_]], List[str]]:
+    request_timestamp = log.request_timestamp.ToDatetime()
+    feature_table = parse_struct_to_feature_table(
+        log.input.features_table, inference_schema
+    )
+    prediction_results_table = parse_struct_to_result_table(
+        log.output.prediction_results_table, inference_schema
+    )
 
-
-def convert_list_value(
-    list_value: ListValue, column_names: List[str], column_types: Dict[str, ValueType]
-) -> List[Union[np.int64, np.float64, np.bool_, np.str_]]:
-    return [
-        convert_to_numpy_value(col_value, column_types[col_name])
-        for col_value, col_name in zip([v for v in list_value], column_names)
+    rows = [
+        feature_row + prediction_row + [log.prediction_id + row_id, request_timestamp]
+        for feature_row, prediction_row, row_id in zip(
+            feature_table.rows,
+            prediction_results_table.rows,
+            prediction_results_table.row_ids,
+        )
     ]
 
+    column_names = (
+        feature_table.columns
+        + prediction_results_table.columns
+        + [inference_schema.prediction_id_column, PREDICTION_LOG_TIMESTAMP_COLUMN]
+    )
 
-def log_to_dataframe(logs: List[PredictionLog], model_spec: ModelSpec) -> pd.DataFrame:
+    return rows, column_names
+
+
+def log_batch_to_dataframe(
+    logs: List[PredictionLog], inference_schema: InferenceSchema
+) -> pd.DataFrame:
     combined_records = []
     column_names = []
     for log in logs:
-        request_timestamp = log.request_timestamp.ToDatetime()
-        rows = [
-            convert_list_value(
-                feature_row,
-                log.input.features_table["columns"],
-                model_spec.feature_types,
-            )
-            + convert_list_value(
-                prediction_row,
-                log.output.prediction_results_table["columns"],
-                model_spec.prediction_types,
-            )
-            + [log.prediction_id + row_id, request_timestamp]
-            for feature_row, prediction_row, row_id in zip(
-                log.input.features_table["data"],
-                log.output.prediction_results_table["data"],
-                log.output.prediction_results_table["row_ids"],
-            )
-        ]
-        column_names = (
-            [c for c in log.input.features_table["columns"]]
-            + [c for c in log.output.prediction_results_table["columns"]]
-            + [model_spec.prediction_id_column, model_spec.timestamp_column]
-        )
+        rows, column_names = log_to_records(log, inference_schema)
         combined_records.extend(rows)
     return pd.DataFrame.from_records(combined_records, columns=column_names)

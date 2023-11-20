@@ -23,7 +23,8 @@ make test
 ```
 
 ### Building Docker Image
+The docker build context is <repository-root>/python. From the build context directory, execute
 
 ```bash
-make image
+make observation-publisher
 ```
