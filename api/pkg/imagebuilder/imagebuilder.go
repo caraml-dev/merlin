@@ -29,7 +29,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -402,7 +401,7 @@ func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) err
 	}
 }
 
-func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) (*batchv1.Job, error) {
+func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version, resource *models.ImageBuilderResourceRequest) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
@@ -474,36 +473,35 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		}
 	}
 
-	// resourceRequirements := RequestLimitResources{
-	// 	Request: Resource{
-	// 		CPU: resource.MustParse(
-	// 			c.config.Resources.Requests.CPU,
-	// 		),
-	// 		Memory: resource.MustParse(
-	// 			c.config.Resources.Requests.Memory,
-	// 		),
-	// 	},
-	// 	Limit: Resource{
-	// 		CPU: resource.MustParse(
-	// 			c.config.Resources.Limits.CPU,
-	// 		),
-	// 		Memory: resource.MustParse(
-	// 			c.config.Resources.Limits.Memory,
-	// 		),
-	// 	},
-	// }
-
-	// Get resourceRequirements from version endpoint configuration
-	resourceRequirements := RequestLimitResources{
-		Requests: Resource{
-			CPU: resource.MustParse(
-				version.Endpoints.ImageBuilderResource.CPURequest,
-			),
-			Memory: resource.MustParse(
-				version.Endpoints.ImageBuilderResource.MemoryRequest,
-			),
-		},
-	}
+	if resource != nil {
+		// Get resourceRequirements from version endpoint configuration
+		resourceRequirements := RequestLimitResources{
+			Requests: Resource{
+				CPU:    resource.MustParse(resource.CPURequest),
+				Memory: resource.MustParse(resource.MemoryRequest),
+			},
+		}
+	} else {
+		// default resource requests
+		resourceRequirements := RequestLimitResources{
+			Request: Resource{
+				CPU: resource.MustParse(
+					c.config.Resources.Requests.CPU,
+				),
+				Memory: resource.MustParse(
+					c.config.Resources.Requests.Memory,
+				),
+			},
+			Limit: Resource{
+				CPU: resource.MustParse(
+					c.config.Resources.Limits.CPU,
+				),
+				Memory: resource.MustParse(
+					c.config.Resources.Limits.Memory,
+				),
+			},
+		}
+	}}
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
