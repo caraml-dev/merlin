@@ -170,10 +170,6 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 			CPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.CPURequest),
 			MemoryRequest: resource.MustParse(cfg.DefaultDeploymentConfig.MemoryRequest),
 		},
-		DefaultImageBuilderResource: &ResourceRequests{
-			CPURequest:    resource.MustParse(cfg.DefaultImageBuilderResource.CPURequest),
-			MemoryRequest: resource.MustParse(cfg.DefaultImageBuilderResource.MemoryRequest),
-		},
 		DefaultTransformerResourceRequests: &ResourceRequests{
 			MinReplica:    cfg.DefaultTransformerConfig.MinReplica,
 			MaxReplica:    cfg.DefaultTransformerConfig.MaxReplica,
