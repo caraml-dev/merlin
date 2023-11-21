@@ -207,8 +207,9 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 }
 
 var supportedUPIModelTypes = map[string]bool{
-	models.ModelTypePyFunc: true,
-	models.ModelTypeCustom: true,
+	models.ModelTypePyFunc:   true,
+	models.ModelTypeCustom:   true,
+	models.ModelTypePyFuncV3: true,
 }
 
 func isModelSupportUPI(model *models.Model) bool {
