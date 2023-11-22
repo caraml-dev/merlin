@@ -29,6 +29,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -68,7 +69,7 @@ var (
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
 	// return docker image ref
-	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error)
+	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error)
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
 	GetMainAppPath(version *models.Version) (string, error)
@@ -130,7 +131,7 @@ func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 
 // BuildImage build a docker image for the given model version
 // Returns the docker image ref
-func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error) {
+func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
 	imageExists := c.imageExists(imageName, version.ID.String())
@@ -168,7 +169,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec, err := c.createKanikoJobSpec(project, model, version)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest)
 		if err != nil {
 			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 			return "", ErrUnableToCreateJobSpec{
@@ -198,7 +199,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec, err := c.createKanikoJobSpec(project, model, version)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest)
 			if err != nil {
 				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 				return "", ErrUnableToCreateJobSpec{
@@ -401,7 +402,12 @@ func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) err
 	}
 }
 
-func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version, resource *models.ImageBuilderResourceRequest) (*batchv1.Job, error) {
+func (c *imageBuilder) createKanikoJobSpec(
+	project mlp.Project,
+	model *models.Model,
+	version *models.Version,
+	resourceRequest *models.ResourceRequest,
+) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
@@ -473,48 +479,29 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		}
 	}
 
-	if resource != nil {
+	var resourceRequirements RequestLimitResources
+	cpuRequest := resource.MustParse(c.config.DefaultResourceRequest.CPURequest)
+	memoryRequest := resource.MustParse(c.config.DefaultResourceRequest.MemoryRequest)
 
-		CPU  := resource.MustParse(resource.CPURequest)
-		Memory := resource.MustParse(resource.MemoryRequest)
-		
-		// if cpu or memory is not set, use default resource
-		if resource.CPURequest == "" {
-			CPU = resource.MustParse(c.config.Resources.Requests.CPU)
+	if resourceRequest != nil {
+		if !resourceRequest.CPURequest.IsZero() {
+			cpuRequest = resourceRequest.CPURequest
 		}
+		if !resourceRequest.MemoryRequest.IsZero() {
+			memoryRequest = resourceRequest.MemoryRequest
+		}
+	}
 
-		if resource.MemoryRequest == "" {
-			Memory = resource.MustParse(c.config.Resources.Requests.Memory)
-		}
-
-		// Get resourceRequirements from version endpoint configuration
-		resourceRequirements := RequestLimitResources{
-			Requests: Resource{
-				CPU:    CPU,
-				Memory: Memory,
-			},
-		}
-	} else {
-		// default resource requests
-		resourceRequirements := RequestLimitResources{
-			Request: Resource{
-				CPU: resource.MustParse(
-					c.config.Resources.Requests.CPU,
-				),
-				Memory: resource.MustParse(
-					c.config.Resources.Requests.Memory,
-				),
-			},
-			Limit: Resource{
-				CPU: resource.MustParse(
-					c.config.Resources.Limits.CPU,
-				),
-				Memory: resource.MustParse(
-					c.config.Resources.Limits.Memory,
-				),
-			},
-		}
-	}}
+	resourceRequirements = RequestLimitResources{
+		Request: Resource{
+			CPU:    cpuRequest,
+			Memory: memoryRequest,
+		},
+		Limit: Resource{
+			CPU:    cpuRequest,
+			Memory: memoryRequest,
+		},
+	}
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{

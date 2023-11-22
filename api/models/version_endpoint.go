@@ -60,7 +60,7 @@ type VersionEndpoint struct {
 	// ResourceRequest resource requested by this version endpoint (CPU, Memory, replicas)
 	ResourceRequest *ResourceRequest `json:"resource_request" gorm:"resource_request"`
 	// ImageBuilderResource resource requested by image builder (CPU, Memory)
-	ImageBuilderResourceRequest *ResourceRequest `json:"image_builder_resource" gorm:"image_builder_resource_request"`
+	ImageBuilderResourceRequest *ResourceRequest `json:"image_builder_resource_request" gorm:"image_builder_resource_request"`
 	// EnvVars environment variable to be set in the version endpoints'deployment
 	EnvVars EnvVars `json:"env_vars" gorm:"column:env_vars"`
 	// Transformer transformer configuration
