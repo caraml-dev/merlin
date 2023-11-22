@@ -9,4 +9,6 @@ tornado
 caraml-upi-protos
 grpcio-reflection
 grpcio-health-checking
+confluent-kafka==2.3.0
+
 file:${SDK_PATH}#egg=merlin-sdk

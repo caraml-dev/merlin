@@ -22,10 +22,10 @@ import tornado.web
 
 from pyfuncserver.model.model import PyFuncModel
 
-
 class PredictHandler(tornado.web.RequestHandler):
     def initialize(self, models):
         self.models = models  # pylint:disable=attribute-defined-outside-init
+        self.publisher = self.application.publisher
 
     def get_model(self, full_name: str):
         if full_name not in self.models:
@@ -57,11 +57,13 @@ class PredictHandler(tornado.web.RequestHandler):
         request = self.validate(self.request)
         headers = self.get_headers(self.request)
 
-        response = model.predict(request, headers=headers)
-
-        response_json = orjson.dumps(response)
+        output = model.predict(request, headers=headers)
+        response_json = orjson.dumps(output.http_response)
         self.write(response_json)
         self.set_header("Content-Type", "application/json; charset=UTF-8")
+
+        if self.publisher is not None and output.contains_prediction_log():
+            tornado.ioloop.IOLoop.current().spawn_callback(self.publisher.publish, output)
 
     def write_error(self, status_code: int, **kwargs: Any) -> None:
         logging.error(self._reason)

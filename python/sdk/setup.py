@@ -56,6 +56,7 @@ TEST_REQUIRES = [
     "types-python-dateutil",
     "types-PyYAML",
     "types-six",
+    "types-protobuf",
     "urllib3-mock>=0.3.3",
     "xarray",
     "xgboost==1.6.2",
