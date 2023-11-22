@@ -474,11 +474,24 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	}
 
 	if resource != nil {
+
+		CPU  := resource.MustParse(resource.CPURequest)
+		Memory := resource.MustParse(resource.MemoryRequest)
+		
+		// if cpu or memory is not set, use default resource
+		if resource.CPURequest == "" {
+			CPU = resource.MustParse(c.config.Resources.Requests.CPU)
+		}
+
+		if resource.MemoryRequest == "" {
+			Memory = resource.MustParse(c.config.Resources.Requests.Memory)
+		}
+
 		// Get resourceRequirements from version endpoint configuration
 		resourceRequirements := RequestLimitResources{
 			Requests: Resource{
-				CPU:    resource.MustParse(resource.CPURequest),
-				Memory: resource.MustParse(resource.MemoryRequest),
+				CPU:    CPU,
+				Memory: Memory,
 			},
 		}
 	} else {
