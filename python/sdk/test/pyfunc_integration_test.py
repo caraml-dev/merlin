@@ -75,7 +75,7 @@ class ModelObservabilityModel(PyFuncV3Model):
             )
         )
 
-    def ml_predict(self, model_input: ModelInput) -> ModelOutput:
+    def infer(self, model_input: ModelInput) -> ModelOutput:
         dmatrix = xgb.DMatrix(model_input.features.data)
         outputs = self._model.predict(dmatrix)
         return ModelOutput(
