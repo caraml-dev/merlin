@@ -7,17 +7,12 @@ from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
 from merlin.observability.inference import InferenceSchema
 
-from publisher.config import (
-    KafkaConsumerConfig,
-    ObservationSource,
-    ObservationSourceConfig,
-)
+from publisher.config import (KafkaConsumerConfig, ObservationSource,
+                              ObservationSourceConfig)
 from publisher.observability_backend import ObservationSink
-from publisher.prediction_log_parser import (
-    PREDICTION_LOG_TIMESTAMP_COLUMN,
-    parse_struct_to_feature_table,
-    parse_struct_to_result_table,
-)
+from publisher.prediction_log_parser import (PREDICTION_LOG_TIMESTAMP_COLUMN,
+                                             parse_struct_to_feature_table,
+                                             parse_struct_to_result_table)
 
 
 class PredictionLogConsumer(abc.ABC):

@@ -1,23 +1,14 @@
 import dataclasses
 
 from hydra import compose, initialize
-from merlin.observability.inference import (
-    BinaryClassificationOutput,
-    InferenceSchema,
-    InferenceType,
-    ValueType,
-)
+from merlin.observability.inference import (BinaryClassificationOutput,
+                                            InferenceSchema, InferenceType,
+                                            ValueType)
 
-from publisher.config import (
-    ArizeConfig,
-    Environment,
-    KafkaConsumerConfig,
-    ObservabilityBackend,
-    ObservabilityBackendType,
-    ObservationSource,
-    ObservationSourceConfig,
-    PublisherConfig,
-)
+from publisher.config import (ArizeConfig, Environment, KafkaConsumerConfig,
+                              ObservabilityBackend, ObservabilityBackendType,
+                              ObservationSource, ObservationSourceConfig,
+                              PublisherConfig)
 
 
 def test_config_initialization():

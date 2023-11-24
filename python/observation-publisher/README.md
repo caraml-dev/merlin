@@ -1,5 +1,5 @@
 # Observation Publisher
-Observation publisher consumes observation logs published by Merlin models, then publishes the logs to an observability backend. The backend will then compute the different metrics required to monitor the model's performance and feature distribution. 
+Observation publisher consumes prediction logs published by Merlin models, then publishes the logs to an observability backend. The backend will then compute the different metrics required to monitor the model's performance and feature distribution. 
 
 ## Usage
 

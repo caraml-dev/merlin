@@ -17,7 +17,7 @@ class PredictionLogFeatureTable:
 @dataclass
 class PredictionLogResultsTable:
     columns: List[str]
-    rows: List[List[List[Union[np.int64, np.float64, np.bool_, np.str_]]]]
+    rows: List[List[Union[np.int64, np.float64, np.bool_, np.str_]]]
     row_ids: List[str]
 
 

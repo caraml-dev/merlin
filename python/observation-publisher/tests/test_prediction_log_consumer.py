@@ -4,12 +4,9 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
-from merlin.observability.inference import (
-    BinaryClassificationOutput,
-    InferenceSchema,
-    InferenceType,
-    ValueType,
-)
+from merlin.observability.inference import (BinaryClassificationOutput,
+                                            InferenceSchema, InferenceType,
+                                            ValueType)
 from pandas._testing import assert_frame_equal
 
 from publisher.prediction_log_consumer import log_batch_to_dataframe
