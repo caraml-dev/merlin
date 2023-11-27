@@ -63,7 +63,7 @@ def parse_struct_to_result_table(
     table_struct: Struct, inference_schema: InferenceSchema
 ) -> PredictionLogResultsTable:
     columns = [c for c in table_struct["columns"]]
-    column_types = inference_schema.prediction_column_types
+    column_types = {c: ValueType.FLOAT64 for c in columns}
     return PredictionLogResultsTable(
         columns=columns,
         rows=[

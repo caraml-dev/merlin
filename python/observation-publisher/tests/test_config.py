@@ -1,14 +1,22 @@
 import dataclasses
 
 from hydra import compose, initialize
-from merlin.observability.inference import (BinaryClassificationOutput,
-                                            InferenceSchema, InferenceType,
-                                            ValueType)
+from merlin.observability.inference import (
+    InferenceSchema,
+    ValueType,
+)
+from omegaconf import OmegaConf
 
-from publisher.config import (ArizeConfig, Environment, KafkaConsumerConfig,
-                              ObservabilityBackend, ObservabilityBackendType,
-                              ObservationSource, ObservationSourceConfig,
-                              PublisherConfig)
+from publisher.config import (
+    ArizeConfig,
+    Environment,
+    KafkaConsumerConfig,
+    ObservabilityBackend,
+    ObservabilityBackendType,
+    ObservationSource,
+    ObservationSourceConfig,
+    PublisherConfig,
+)
 
 
 def test_config_initialization():
@@ -18,15 +26,18 @@ def test_config_initialization():
             environment=Environment(
                 model_id="test-model",
                 model_version="0.1.0",
-                inference_schema=InferenceSchema(
-                    type=InferenceType.BINARY_CLASSIFICATION,
+                inference_schema=dict(
                     feature_types={
                         "distance": ValueType.INT64,
                         "transaction": ValueType.FLOAT64,
                     },
-                    binary_classification=BinaryClassificationOutput(
-                        prediction_label_column="label",
+                    model_prediction_output=dict(
+                        output_class="BinaryClassificationOutput",
                         prediction_score_column="score",
+                        actual_label_column="actual_label",
+                        positive_class_label="positive",
+                        negative_class_label="negative",
+                        score_threshold=0.5,
                     ),
                 ),
                 observability_backend=ObservabilityBackend(
@@ -50,7 +61,10 @@ def test_config_initialization():
                 ),
             )
         )
-        assert cfg.environment.inference_schema == dataclasses.asdict(
+        parsed_schema: InferenceSchema = InferenceSchema.from_dict(
+            OmegaConf.to_container(cfg.environment.inference_schema)
+        )
+        assert parsed_schema == InferenceSchema.from_dict(
             expected_cfg.environment.inference_schema
         )
         assert cfg.environment.observability_backend == dataclasses.asdict(

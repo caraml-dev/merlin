@@ -1,70 +1,171 @@
 from datetime import datetime
+from typing import List
 
 import pandas as pd
 import pyarrow as pa
+from arize.pandas.validation.errors import ValidationError
 from arize.pandas.validation.validator import Validator
-from arize.utils.types import Environments
-from arize.utils.types import ModelTypes as ArizeModelType
-from merlin.observability.inference import (BinaryClassificationOutput,
-                                            InferenceSchema, InferenceType,
-                                            ValueType)
+from arize.utils.types import (
+    ModelTypes as ArizeModelType,
+    Environments as ArizeEnvironment,
+    Schema as ArizeSchema,
+)
+from merlin.observability.inference import (
+    BinaryClassificationOutput,
+    InferenceSchema,
+    ValueType,
+    RankingOutput,
+)
+from pandas._testing import assert_frame_equal
 
-from publisher.observability_backend import map_to_arize_schema
+from publisher.config import ArizeConfig
+from publisher.observability_backend import ArizeSink
 
 
-def test_arize_schema_mapping():
+def assert_no_validation_errors(errors: List[ValidationError]):
+    try:
+        assert len(errors) == 0
+    except AssertionError:
+        print(errors)
+        raise
+
+
+def assert_arize_schema_validity(
+    schema: ArizeSchema,
+    dataframe: pd.DataFrame,
+    environment: ArizeEnvironment,
+    model_id: str,
+    model_version: str,
+    model_type: ArizeModelType,
+):
+    errors = Validator.validate_required_checks(
+        dataframe=dataframe,
+        model_id=model_id,
+        environment=environment,
+        schema=schema,
+        model_version=model_version,
+    )
+    assert_no_validation_errors(errors)
+    errors = Validator.validate_params(
+        dataframe=dataframe,
+        model_id=model_id,
+        model_type=model_type,
+        environment=environment,
+        schema=schema,
+        model_version=model_version,
+    )
+    assert_no_validation_errors(errors)
+    Validator.validate_types(
+        model_type=model_type,
+        schema=schema,
+        pyarrow_schema=pa.Schema.from_pandas(dataframe),
+    )
+    assert_no_validation_errors(errors)
+
+
+def test_binary_classification_model_preprocessing_for_arize():
     inference_schema = InferenceSchema(
-        type=InferenceType.BINARY_CLASSIFICATION,
         feature_types={
-            "acceptance_rate": ValueType.FLOAT64,
-            "minutes_since_last_order": ValueType.INT64,
-            "service_type": ValueType.STRING,
-            "prediction_score": ValueType.FLOAT64,
-            "prediction_label": ValueType.STRING,
+            "rating": ValueType.FLOAT64,
         },
-        binary_classification=BinaryClassificationOutput(
-            prediction_label_column="prediction_label",
+        model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="prediction_score",
+            actual_label_column="actual_label",
+            positive_class_label="fraud",
+            negative_class_label="non fraud",
+            score_threshold=0.5,
         ),
     )
-    arize_schemas = map_to_arize_schema(inference_schema)
-    assert len(arize_schemas) == 1
-    input_dataframe = pd.DataFrame.from_records(
+    arize_sink = ArizeSink(
+        ArizeConfig(api_key="test", space_key="test"),
+        inference_schema,
+        "test-model",
+        "0.1.0",
+    )
+    request_timestamp = datetime.now()
+    input_df = pd.DataFrame.from_records(
         [
-            [0.8, 24, "FOOD", 0.9, "non fraud", "1234a", datetime(2021, 1, 1, 0, 0, 0)],
-            [0.5, 2, "RIDE", 0.5, "fraud", "1234b", datetime(2021, 1, 1, 0, 0, 0)],
-            [1.0, 13, "CAR", 0.4, "non fraud", "5678c", datetime(2021, 1, 1, 0, 0, 0)],
-            [0.4, 60, "RIDE", 0.2, "non fraud", "5678d", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.8, 0.4, "1234a", request_timestamp],
+            [0.5, 0.9, "1234b", request_timestamp],
         ],
         columns=[
-            "acceptance_rate",
-            "minutes_since_last_order",
-            "service_type",
+            "rating",
             "prediction_score",
-            "prediction_label",
             "prediction_id",
             "request_timestamp",
         ],
     )
-    errors = Validator.validate_required_checks(
-        dataframe=input_dataframe,
-        model_id="test_model",
-        schema=arize_schemas[0],
-        model_version="0.1.0",
+    processed_df = inference_schema.model_prediction_output.preprocess(input_df)
+    model_type, arize_schema = arize_sink.to_arize_schema()
+    expected_df = pd.DataFrame.from_records(
+        [
+            [0.8, 0.4, "1234a", request_timestamp, "non fraud"],
+            [0.5, 0.9, "1234b", request_timestamp, "fraud"],
+        ],
+        columns=[
+            "rating",
+            "prediction_score",
+            "prediction_id",
+            "request_timestamp",
+            "_prediction_label",
+        ],
     )
-    assert len(errors) == 0
-    errors = Validator.validate_params(
-        dataframe=input_dataframe,
-        model_id="test_model",
-        model_type=ArizeModelType.BINARY_CLASSIFICATION,
-        environment=Environments.PRODUCTION,
-        schema=arize_schemas[0],
-        model_version="0.1.0",
+    assert_frame_equal(processed_df, expected_df, check_like=True)
+    assert_arize_schema_validity(
+        arize_schema,
+        processed_df,
+        ArizeEnvironment.PRODUCTION,
+        "test-model",
+        "0.1.0",
+        model_type,
     )
-    assert len(errors) == 0
-    Validator.validate_types(
-        model_type=ArizeModelType.BINARY_CLASSIFICATION,
-        schema=arize_schemas[0],
-        pyarrow_schema=pa.Schema.from_pandas(input_dataframe),
+
+
+def test_ranking_model_preprocessing_for_arize():
+    inference_schema = InferenceSchema(
+        feature_types={
+            "rating": ValueType.FLOAT64,
+        },
+        model_prediction_output=RankingOutput(
+            rank_column="rank",
+            prediction_group_id_column="driver",
+            relevance_score_column="relevance_score_column",
+        ),
     )
-    assert len(errors) == 0
+    request_timestamp = datetime.now()
+    input_df = pd.DataFrame.from_records(
+        [
+            [5.0, 1, "1234", "driver_1", request_timestamp],
+            [4.0, 2, "1234", "driver_2", request_timestamp],
+            [3.0, 3, "1234", "driver_3", request_timestamp],
+        ],
+        columns=[
+            "rating",
+            "rank",
+            "prediction_id",
+            "driver",
+            "request_timestamp",
+        ],
+    )
+    arize_sink = ArizeSink(
+        ArizeConfig(api_key="test", space_key="test"),
+        inference_schema,
+        "test-model",
+        "0.1.0",
+    )
+    processed_df = inference_schema.model_prediction_output.preprocess(input_df)
+    model_type, arize_schema = arize_sink.to_arize_schema()
+    expected_df = input_df
+    assert_frame_equal(
+        processed_df,
+        expected_df,
+        check_like=True,
+    )
+    assert_arize_schema_validity(
+        arize_schema,
+        processed_df,
+        ArizeEnvironment.PRODUCTION,
+        "test-model",
+        "0.1.0",
+        ArizeModelType.RANKING,
+    )

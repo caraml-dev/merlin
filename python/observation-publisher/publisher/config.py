@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum, unique
+from enum import Enum, auto
 from typing import Optional
 
 from hydra.core.config_store import ConfigStore
-from merlin.observability.inference import InferenceSchema
 
 
 @dataclass
@@ -12,9 +11,8 @@ class ArizeConfig:
     space_key: str
 
 
-@unique
 class ObservabilityBackendType(Enum):
-    ARIZE = 1
+    ARIZE = "arize"
 
 
 @dataclass
@@ -22,10 +20,15 @@ class ObservabilityBackend:
     type: ObservabilityBackendType
     arize_config: Optional[ArizeConfig] = None
 
+    def __post_init__(self):
+        if self.type == ObservabilityBackendType.ARIZE:
+            assert (
+                self.arize_config is not None
+            ), "Arize config must be set for Arize observability backend"
 
-@unique
+
 class ObservationSource(Enum):
-    KAFKA = 1
+    KAFKA = "kafka"
 
 
 @dataclass
@@ -43,12 +46,18 @@ class ObservationSourceConfig:
     type: ObservationSource
     kafka_config: Optional[KafkaConsumerConfig] = None
 
+    def __post_init__(self):
+        if self.type == ObservationSource.KAFKA:
+            assert (
+                self.kafka_config is not None
+            ), "Kafka config must be set for Kafka observation source"
+
 
 @dataclass
 class Environment:
     model_id: str
     model_version: str
-    inference_schema: InferenceSchema
+    inference_schema: dict
     observability_backend: ObservabilityBackend
     observation_source: ObservationSourceConfig
 
