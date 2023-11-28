@@ -88,7 +88,7 @@ func (svc *Service) GetPredictionLogTopic() string {
 	return fmt.Sprintf("caraml-%s-%s-prediction-log", svc.Namespace, svc.ModelName)
 }
 
-func (svc *Service) GetPredictionLogTopicPerVersion() string {
+func (svc *Service) GetPredictionLogTopicForVersion() string {
 	return fmt.Sprintf("caraml-%s-%s-%s-prediction-log", svc.Namespace, svc.ModelName, svc.ModelVersion)
 }
 

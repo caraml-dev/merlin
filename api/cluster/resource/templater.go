@@ -85,6 +85,7 @@ const (
 	envPublisherKafkaLinger   = "PUBLISHER_KAFKA_LINGER_MS"
 	envPublisherKafkaAck      = "PUBLISHER_KAFKA_ACKS"
 	envPublisherSamplingRatio = "PUBLISHER_SAMPLING_RATIO"
+	envPublisherKafkaConfig   = "PUBLISHER_KAFKA_CONFIG"
 
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
@@ -294,10 +295,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		if modelService.EnabledModelObservability && modelService.Type == models.ModelTypePyFuncV3 {
 			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
 			envVars = append(envVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicPerVersion()})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
 			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
 			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
 			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherSamplingRatio, Value: fmt.Sprintf("%f", pyfuncPublisherCfg.SamplingRatioRate)})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaConfig, Value: pyfuncPublisherCfg.Kafka.AdditionalConfig})
 		}
 		predictorSpec = kservev1beta1.PredictorSpec{
 			PodSpec: kservev1beta1.PodSpec{

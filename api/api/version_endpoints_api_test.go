@@ -1139,7 +1139,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "tensorflow model is not supported by UPI"},
+				data: Error{Message: "Request validation failed: tensorflow model is not supported by UPI"},
 			},
 		},
 		{
@@ -1522,7 +1522,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Max deployed endpoint reached. Max: 2 Current: 5, undeploy existing endpoint before continuing"},
+				data: Error{Message: "Request validation failed: max deployed endpoint reached. Max: 2 Current: 5, undeploy existing endpoint before continuing"},
 			},
 		},
 		{
@@ -2026,6 +2026,26 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
+				svc.On("GetDefaultEnvironment").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
@@ -2041,7 +2061,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating custom predictor: custom predictor image must be set"},
+				data: Error{Message: "Request validation failed: custom predictor image must be set"},
 			},
 		},
 		{
@@ -2819,7 +2839,7 @@ func TestCreateEndpoint(t *testing.T) {
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{
-					Message: "Error validating transformer: variable rawFeatures is not registered",
+					Message: "Request validation failed: Error validating transformer: variable rawFeatures is not registered",
 				},
 			},
 		},
@@ -3278,7 +3298,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating transformer: feast source configuration is not valid, servingURL: localhost:6565 source: UNKNOWN"},
+				data: Error{Message: "Request validation failed: Error validating transformer: feast source configuration is not valid, servingURL: localhost:6565 source: UNKNOWN"},
 			},
 		},
 	}
@@ -3660,7 +3680,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating request: Updating endpoint status to running is not allowed when the endpoint is currently in the serving state"},
+				data: Error{Message: "Request validation failed: updating endpoint status to running is not allowed when the endpoint is currently in the serving state"},
 			},
 		},
 		{
@@ -3773,7 +3793,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating request: Updating endpoint status to running is not allowed when the endpoint is currently in the pending state"},
+				data: Error{Message: "Request validation failed: updating endpoint status to running is not allowed when the endpoint is currently in the pending state"},
 			},
 		},
 		{
@@ -3849,6 +3869,16 @@ func TestUpdateEndpoint(t *testing.T) {
 					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
+				svc.On("GetEnvironment", "staging").Return(&models.Environment{
+					ID:         models.ID(2),
+					Name:       "staging",
+					Cluster:    "staging",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "staging-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
@@ -3886,7 +3916,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating request: Updating environment is not allowed, previous: dev, new: staging"},
+				data: Error{Message: "Request validation failed: updating environment is not allowed, previous: dev, new: staging"},
 			},
 		},
 		{
@@ -3999,7 +4029,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating request: Updating endpoint status to pending is not allowed"},
+				data: Error{Message: "Updating endpoint status to pending is not allowed"},
 			},
 		},
 		{
@@ -4521,15 +4551,85 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					URL:                  "http://endpoint.svc",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					}, EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+				}, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					CreatedUpdated: models.CreatedUpdated{},
+				}, nil)
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating custom predictor: custom predictor image must be set"},
+				data: Error{Message: "Request validation failed: custom predictor image must be set"},
 			},
 		},
 		{
@@ -4822,7 +4922,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Changing deployment type of a serving model is not allowed, please terminate it first."},
+				data: Error{Message: "Request validation failed: changing deployment type of a serving model is not allowed, please terminate it first"},
 			},
 		},
 		{
@@ -4937,7 +5037,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Changing deployment type of a running model is not allowed, please terminate it first."},
+				data: Error{Message: "Request validation failed: changing deployment type of a running model is not allowed, please terminate it first"},
 			},
 		},
 		{
@@ -5052,7 +5152,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Error validating request: Updating endpoint status to running is not allowed when the endpoint is currently in the pending state"},
+				data: Error{Message: "Request validation failed: updating endpoint status to running is not allowed when the endpoint is currently in the pending state"},
 			},
 		},
 		{

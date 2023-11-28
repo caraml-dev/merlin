@@ -156,9 +156,10 @@ var (
 
 	pyfuncPublisherConfig = config.PyFuncPublisherConfig{
 		Kafka: config.KafkaConfig{
-			Brokers:  "kafka-broker:1111",
-			LingerMS: 1000,
-			Acks:     0,
+			Brokers:          "kafka-broker:1111",
+			LingerMS:         1000,
+			Acks:             0,
+			AdditionalConfig: "{}",
 		},
 		SamplingRatioRate: 0.01,
 	}
@@ -4115,7 +4116,7 @@ func createPyFuncPublisherEnvVars(svc *models.Service, pyfuncPublisher config.Py
 		},
 		models.EnvVar{
 			Name:  envPublisherKafkaTopic,
-			Value: svc.GetPredictionLogTopicPerVersion(),
+			Value: svc.GetPredictionLogTopicForVersion(),
 		},
 		models.EnvVar{
 			Name:  envPublisherKafkaBrokers,
@@ -4128,6 +4129,14 @@ func createPyFuncPublisherEnvVars(svc *models.Service, pyfuncPublisher config.Py
 		models.EnvVar{
 			Name:  envPublisherKafkaAck,
 			Value: fmt.Sprintf("%d", pyfuncPublisher.Kafka.Acks),
+		},
+		models.EnvVar{
+			Name:  envPublisherSamplingRatio,
+			Value: fmt.Sprintf("%f", pyfuncPublisher.SamplingRatioRate),
+		},
+		models.EnvVar{
+			Name:  envPublisherKafkaConfig,
+			Value: pyfuncPublisher.Kafka.AdditionalConfig,
 		},
 	}
 	return envVars
