@@ -25,6 +25,7 @@ from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.util import autostr, get_url
 from merlin.resource_request import ResourceRequest
+from merlin.transformer import Transformer
 
 
 class Status(Enum):
@@ -64,7 +65,16 @@ class VersionEndpoint:
         else:
             self._autoscaling_policy = AutoscalingPolicy(metrics_type=MetricsType(endpoint.autoscaling_policy.metrics_type),
                                                          target_value=endpoint.autoscaling_policy.target_value)
-
+            
+        
+        if endpoint.transformer is not None:
+            self._transformer = Transformer(
+                endpoint.transformer.image, id=endpoint.transformer.id,
+                enabled=endpoint.transformer.enabled, command=endpoint.transformer.command,
+                args=endpoint.transformer.args, transformer_type=endpoint.transformer.transformer_type,
+                resource_request=endpoint.transformer.resource_request, env_vars=endpoint.transformer.env_vars,
+            )
+            
         if log_url is not None:
             self._log_url = log_url
 
@@ -119,6 +129,10 @@ class VersionEndpoint:
     @property
     def resource_request(self) -> ResourceRequest:
         return self._resource_request
+    
+    @property
+    def transformer(self) -> Transformer:
+        return self._transformer
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""
