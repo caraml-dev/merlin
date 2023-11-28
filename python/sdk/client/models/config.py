@@ -32,6 +32,7 @@ class Config(object):
         'image_ref': 'str',
         'service_account_name': 'str',
         'resource_request': 'PredictionJobResourceRequest',
+        'image_builder_resource_request': 'ResourceRequest',
         'env_vars': 'list[EnvVar]'
     }
 
@@ -40,15 +41,17 @@ class Config(object):
         'image_ref': 'image_ref',
         'service_account_name': 'service_account_name',
         'resource_request': 'resource_request',
+        'image_builder_resource_request': 'image_builder_resource_request',
         'env_vars': 'env_vars'
     }
 
-    def __init__(self, job_config=None, image_ref=None, service_account_name=None, resource_request=None, env_vars=None):  # noqa: E501
+    def __init__(self, job_config=None, image_ref=None, service_account_name=None, resource_request=None, image_builder_resource_request=None, env_vars=None):  # noqa: E501
         """Config - a model defined in Swagger"""  # noqa: E501
         self._job_config = None
         self._image_ref = None
         self._service_account_name = None
         self._resource_request = None
+        self._image_builder_resource_request = None
         self._env_vars = None
         self.discriminator = None
         if job_config is not None:
@@ -59,6 +62,8 @@ class Config(object):
             self.service_account_name = service_account_name
         if resource_request is not None:
             self.resource_request = resource_request
+        if image_builder_resource_request is not None:
+            self.image_builder_resource_request = image_builder_resource_request
         if env_vars is not None:
             self.env_vars = env_vars
 
@@ -145,6 +150,27 @@ class Config(object):
         """
 
         self._resource_request = resource_request
+
+    @property
+    def image_builder_resource_request(self):
+        """Gets the image_builder_resource_request of this Config.  # noqa: E501
+
+
+        :return: The image_builder_resource_request of this Config.  # noqa: E501
+        :rtype: ResourceRequest
+        """
+        return self._image_builder_resource_request
+
+    @image_builder_resource_request.setter
+    def image_builder_resource_request(self, image_builder_resource_request):
+        """Sets the image_builder_resource_request of this Config.
+
+
+        :param image_builder_resource_request: The image_builder_resource_request of this Config.  # noqa: E501
+        :type: ResourceRequest
+        """
+
+        self._image_builder_resource_request = image_builder_resource_request
 
     @property
     def env_vars(self):

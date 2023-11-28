@@ -38,6 +38,7 @@ class VersionEndpoint(object):
         'monitoring_url': 'str',
         'message': 'str',
         'resource_request': 'ResourceRequest',
+        'image_builder_resource_request': 'ResourceRequest',
         'env_vars': 'list[EnvVar]',
         'transformer': 'Transformer',
         'logger': 'Logger',
@@ -59,6 +60,7 @@ class VersionEndpoint(object):
         'monitoring_url': 'monitoring_url',
         'message': 'message',
         'resource_request': 'resource_request',
+        'image_builder_resource_request': 'image_builder_resource_request',
         'env_vars': 'env_vars',
         'transformer': 'transformer',
         'logger': 'logger',
@@ -69,7 +71,7 @@ class VersionEndpoint(object):
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, logger=None, deployment_mode=None, autoscaling_policy=None, protocol=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, image_builder_resource_request=None, env_vars=None, transformer=None, logger=None, deployment_mode=None, autoscaling_policy=None, protocol=None, created_at=None, updated_at=None):  # noqa: E501
         """VersionEndpoint - a model defined in Swagger"""  # noqa: E501
         self._id = None
         self._version_id = None
@@ -81,6 +83,7 @@ class VersionEndpoint(object):
         self._monitoring_url = None
         self._message = None
         self._resource_request = None
+        self._image_builder_resource_request = None
         self._env_vars = None
         self._transformer = None
         self._logger = None
@@ -110,6 +113,8 @@ class VersionEndpoint(object):
             self.message = message
         if resource_request is not None:
             self.resource_request = resource_request
+        if image_builder_resource_request is not None:
+            self.image_builder_resource_request = image_builder_resource_request
         if env_vars is not None:
             self.env_vars = env_vars
         if transformer is not None:
@@ -336,6 +341,27 @@ class VersionEndpoint(object):
         """
 
         self._resource_request = resource_request
+
+    @property
+    def image_builder_resource_request(self):
+        """Gets the image_builder_resource_request of this VersionEndpoint.  # noqa: E501
+
+
+        :return: The image_builder_resource_request of this VersionEndpoint.  # noqa: E501
+        :rtype: ResourceRequest
+        """
+        return self._image_builder_resource_request
+
+    @image_builder_resource_request.setter
+    def image_builder_resource_request(self, image_builder_resource_request):
+        """Sets the image_builder_resource_request of this VersionEndpoint.
+
+
+        :param image_builder_resource_request: The image_builder_resource_request of this VersionEndpoint.  # noqa: E501
+        :type: ResourceRequest
+        """
+
+        self._image_builder_resource_request = image_builder_resource_request
 
     @property
     def env_vars(self):

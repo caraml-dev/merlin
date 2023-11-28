@@ -23,6 +23,7 @@ import numpy as np
 import pytest
 import xgboost as xgb
 from merlin.model import ModelType, PyFuncModel
+from merlin.resource_request import ResourceRequest
 from sklearn import svm
 from sklearn.datasets import load_iris
 
@@ -82,6 +83,40 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
                                       "sklearn_model": sklearn_path})
 
     endpoint = merlin.deploy(v)
+
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(request_json['instances'])
+
+    merlin.undeploy(v)
+
+
+@pytest.mark.pyfunc
+@pytest.mark.integration
+@pytest.mark.dependency()
+def test_pyfunc_image_builder_resource_request(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pyfunc-image-builder-resource", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        iris = load_iris()
+        y = iris['target']
+        X = iris['data']
+        xgb_path = train_xgboost_model(X, y)
+        sklearn_path = train_sklearn_model(X, y)
+
+        v.log_pyfunc_model(model_instance=EnsembleModel(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"],
+                           artifacts={"xgb_model": xgb_path,
+                                      "sklearn_model": sklearn_path})
+
+    image_builder_resource_request = ResourceRequest(cpu_request="1", memory_request="1Gi")
+    endpoint = merlin.deploy(v, image_builder_resource_request=image_builder_resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
