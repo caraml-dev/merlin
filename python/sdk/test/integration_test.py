@@ -1056,7 +1056,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("model-sdk-redeploy", ModelType.TENSORFLOW)
+    merlin.set_model("model-sdk-redeploy", ModelType.CUSTOM)
 
     undeploy_all_version()
 
