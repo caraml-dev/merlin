@@ -203,7 +203,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
+				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything, mock.Anything).
 					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
@@ -250,7 +250,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
+				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything, mock.Anything).
 					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
@@ -387,7 +387,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", context.Background(), mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
+				mockImgBuilder.On("BuildImage", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
 				return mockImgBuilder
 			},
 		},

@@ -17,10 +17,18 @@ from typing import Optional
 
 class ResourceRequest:
     """
-    The resource requirement and replicas requests for model version endpoint.
+    The resource requirement and replicas requests for Merlin components (e.g. version endpoint, batch prediction job, image builder).
     """
 
-    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str=None, gpu_name: str=None):
+    def __init__(
+        self,
+        min_replica: int = None,
+        max_replica: int = None,
+        cpu_request: str = None,
+        memory_request: str = None,
+        gpu_request: str = None,
+        gpu_name: str = None,
+    ):
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
@@ -78,5 +86,8 @@ class ResourceRequest:
         self._gpu_name = gpu_name
 
     def validate(self):
+        if self._min_replica is None and self._max_replica is None:
+            return
+
         if self._min_replica > self._max_replica:
             raise Exception("Min replica must be less or equal to max replica")

@@ -14,7 +14,7 @@
 
 import warnings
 from sys import version_info
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import urllib3
 from caraml_auth.id_token_credentials import get_default_id_token_credentials
@@ -23,14 +23,13 @@ from client import (
     Configuration,
     EndpointApi,
     EnvironmentApi,
+    FreeFormObject,
     ModelsApi,
     ProjectApi,
     StandardTransformerApi,
-    VersionApi,
     StandardTransformerSimulationRequest,
-    FreeFormObject,
+    VersionApi,
 )
-
 from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
@@ -253,6 +252,7 @@ class MerlinClient:
         model_version: ModelVersion,
         environment_name: str = None,
         resource_request: ResourceRequest = None,
+        image_builder_resource_request: ResourceRequest = None,
         env_vars: Dict[str, str] = None,
         transformer: Transformer = None,
         logger: Logger = None,
@@ -263,6 +263,7 @@ class MerlinClient:
         return model_version.deploy(
             environment_name,
             resource_request,
+            image_builder_resource_request,
             env_vars,
             transformer,
             logger,

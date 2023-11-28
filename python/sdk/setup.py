@@ -19,7 +19,8 @@ import os
 from setuptools import find_packages, setup
 
 version = imp.load_source(
-    'merlin.version', os.path.join('merlin', 'version.py')).VERSION
+    "merlin.version", os.path.join("merlin", "version.py")
+).VERSION
 
 REQUIRES = [
     "boto3>=1.9.84",
@@ -30,14 +31,14 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "google-cloud-storage>=1.19.0",
-    "protobuf>=3.12.0,<5.0.0", # Determined by the mlflow dependency
+    "protobuf>=3.12.0,<5.0.0",  # Determined by the mlflow dependency
     "mlflow>=1.26.1,<2.0.0",
     "PyPrind>=2.11.2",
     "python_dateutil>=2.5.3",
     "PyYAML>=5.4",
     "six>=1.10",
     "urllib3>=1.26",
-    "numpy<=1.23.5", # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
+    "numpy<=1.23.5",  # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
     "caraml-auth-google==0.0.0.post7",
 ]
 
@@ -68,18 +69,17 @@ setup(
     url="https://github.com/caraml-dev/merlin",
     author="Merlin",
     packages=find_packages(),
-    package_data={"merlin": [
-        "docker/pyfunc.Dockerfile", "docker/standard.Dockerfile"]},
+    package_data={"merlin": ["docker/pyfunc.Dockerfile", "docker/standard.Dockerfile"]},
     zip_safe=True,
     install_requires=REQUIRES,
     setup_requires=["setuptools_scm"],
     tests_require=TEST_REQUIRES,
-    extras_require={'test': TEST_REQUIRES},
-    python_requires='>=3.8,<3.11',
+    extras_require={"test": TEST_REQUIRES},
+    python_requires=">=3.8,<3.11",
     long_description=open("README.md").read(),
-    long_description_content_type='text/markdown',
-    entry_points='''
+    long_description_content_type="text/markdown",
+    entry_points="""
         [console_scripts]
         merlin=merlin.merlin:cli
-    '''
+    """,
 )
