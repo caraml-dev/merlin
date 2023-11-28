@@ -1150,6 +1150,8 @@ class ModelVersion:
 
         if transformer is not None:
             target_transformer = ModelVersion._create_transformer_spec(transformer, target_env_name, env_list)
+            if current_endpoint is not None and current_endpoint.transformer is not None:
+                target_transformer.id = current_endpoint.transformer.id
 
         if logger is not None:
             target_logger = logger.to_logger_spec()
@@ -1635,9 +1637,10 @@ class ModelVersion:
             target_env_vars = ModelVersion._add_env_vars(target_env_vars, transformer.env_vars)
 
         return client.Transformer(
-            transformer.enabled, transformer.transformer_type.value,
-            transformer.image, transformer.command, transformer.args,
-            target_resource_request, target_env_vars)
+            id=transformer.id, enabled=transformer.enabled,
+            transformer_type=transformer.transformer_type.value, image=transformer.image,
+            command=transformer.command, args=transformer.args,
+            resource_request=target_resource_request, env_vars=target_env_vars)
 
     def delete_model_version(self) -> int:
         """

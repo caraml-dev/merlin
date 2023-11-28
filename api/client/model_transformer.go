@@ -13,6 +13,7 @@ import (
 )
 
 type Transformer struct {
+	Id              string           `json:"id,omitempty"`
 	Enabled         bool             `json:"enabled,omitempty"`
 	TransformerType string           `json:"transformer_type,omitempty"`
 	Image           string           `json:"image,omitempty"`

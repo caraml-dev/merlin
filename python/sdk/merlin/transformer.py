@@ -38,6 +38,7 @@ class Transformer:
     def __init__(
         self,
         image: str,
+        id: str = "",
         enabled: bool = True,
         command: str = None,
         args: str = None,
@@ -45,6 +46,7 @@ class Transformer:
         env_vars: Dict[str, str] = None,
         transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER,
     ):
+        self._id = id
         self._image = image
         self._enabled = enabled
         self._command = command
@@ -56,6 +58,10 @@ class Transformer:
     @property
     def image(self) -> str:
         return self._image
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     @property
     def enabled(self) -> bool:

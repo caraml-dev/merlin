@@ -28,8 +28,7 @@ type ModelsApiService service
 
 /*
 ModelsApiService Lists teams for alert notification channel.
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 @return []string
 */
 func (a *ModelsApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.Response, error) {
@@ -125,9 +124,8 @@ func (a *ModelsApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.
 
 /*
 ModelsApiService Lists alerts for given model.
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
 @return []ModelEndpointAlert
 */
 func (a *ModelsApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId int32) ([]ModelEndpointAlert, *http.Response, error) {
@@ -224,10 +222,9 @@ func (a *ModelsApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId i
 
 /*
 ModelsApiService Gets alert for given model endpoint.
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param modelEndpointId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param modelEndpointId
 @return ModelEndpointAlert
 */
 func (a *ModelsApiService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx context.Context, modelId int32, modelEndpointId string) (ModelEndpointAlert, *http.Response, error) {
@@ -621,10 +618,9 @@ func (a *ModelsApiService) ProjectsProjectIdModelsGet(ctx context.Context, proje
 
 /*
 ModelsApiService Delete model
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param projectId project id of the project to be deleted
-  - @param modelId model id of the model to be deleted
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param projectId project id of the project to be deleted
+ * @param modelId model id of the model to be deleted
 @return int32
 */
 func (a *ModelsApiService) ProjectsProjectIdModelsModelIdDelete(ctx context.Context, projectId int32, modelId int32) (int32, *http.Response, error) {
@@ -722,10 +718,9 @@ func (a *ModelsApiService) ProjectsProjectIdModelsModelIdDelete(ctx context.Cont
 
 /*
 ModelsApiService Get model
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param projectId project id of the project to be retrieved
-  - @param modelId model id of the model to be retrieved
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param projectId project id of the project to be retrieved
+ * @param modelId model id of the model to be retrieved
 @return []Model
 */
 func (a *ModelsApiService) ProjectsProjectIdModelsModelIdGet(ctx context.Context, projectId int32, modelId int32) ([]Model, *http.Response, error) {
