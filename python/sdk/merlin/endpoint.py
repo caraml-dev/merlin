@@ -65,8 +65,7 @@ class VersionEndpoint:
         else:
             self._autoscaling_policy = AutoscalingPolicy(metrics_type=MetricsType(endpoint.autoscaling_policy.metrics_type),
                                                          target_value=endpoint.autoscaling_policy.target_value)
-            
-        
+
         if endpoint.transformer is not None:
             self._transformer = Transformer(
                 endpoint.transformer.image, id=endpoint.transformer.id,

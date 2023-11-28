@@ -1074,6 +1074,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+        transformer = Transformer("gcr.io/kubeflow-ci/kfserving/image-transformer:latest"),
     )
 
     resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
@@ -1092,15 +1093,20 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert endpoint.autoscaling_policy.target_value == 50
 
+    # Check that the transformer id is set
+    assert endpoint.transformer.id != ""
+
     sleep(10)
 
-    # Deploy v2 using raw_deployment with CPU autoscaling policy
+    # Deploy v2 using raw_deployment with CPU autoscaling policy; update transformer specs.
     new_endpoint = merlin.deploy(
         v1,
         autoscaling_policy=merlin.AutoscalingPolicy(
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=90
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+        transformer = Transformer("gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
+                                resource_request=merlin.ResourceRequest(0, 1, "100m", "250Mi")),
     )
 
     resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
@@ -1121,6 +1127,9 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert new_endpoint.autoscaling_policy.target_value == 90
+
+    # Check that the transformer id remains the same
+    assert endpoint.transformer.id == new_endpoint.transformer.id
 
     undeploy_all_version()
 
