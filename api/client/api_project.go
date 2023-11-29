@@ -135,9 +135,8 @@ func (a *ProjectApiService) ProjectsGet(ctx context.Context, localVarOptionals *
 
 /*
 ProjectApiService Create new project
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param body Project object that has to be added
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param body Project object that has to be added
 @return Project
 */
 func (a *ProjectApiService) ProjectsPost(ctx context.Context, body Project) (Project, *http.Response, error) {
@@ -235,9 +234,8 @@ func (a *ProjectApiService) ProjectsPost(ctx context.Context, body Project) (Pro
 
 /*
 ProjectApiService Get project
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param projectId project id of the project to be retrieved
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param projectId project id of the project to be retrieved
 @return Project
 */
 func (a *ProjectApiService) ProjectsProjectIdGet(ctx context.Context, projectId int32) (Project, *http.Response, error) {
@@ -334,10 +332,9 @@ func (a *ProjectApiService) ProjectsProjectIdGet(ctx context.Context, projectId 
 
 /*
 ProjectApiService Update project
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param body Project object that has to be updated
-  - @param projectId project id of the project to be updated
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param body Project object that has to be updated
+ * @param projectId project id of the project to be updated
 @return Project
 */
 func (a *ProjectApiService) ProjectsProjectIdPut(ctx context.Context, body Project, projectId int32) (Project, *http.Response, error) {

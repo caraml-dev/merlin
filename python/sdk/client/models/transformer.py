@@ -28,6 +28,7 @@ class Transformer(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'id': 'str',
         'enabled': 'bool',
         'transformer_type': 'str',
         'image': 'str',
@@ -40,6 +41,7 @@ class Transformer(object):
     }
 
     attribute_map = {
+        'id': 'id',
         'enabled': 'enabled',
         'transformer_type': 'transformer_type',
         'image': 'image',
@@ -51,8 +53,9 @@ class Transformer(object):
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, enabled=None, transformer_type=None, image=None, command=None, args=None, resource_request=None, env_vars=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, enabled=None, transformer_type=None, image=None, command=None, args=None, resource_request=None, env_vars=None, created_at=None, updated_at=None):  # noqa: E501
         """Transformer - a model defined in Swagger"""  # noqa: E501
+        self._id = None
         self._enabled = None
         self._transformer_type = None
         self._image = None
@@ -63,6 +66,8 @@ class Transformer(object):
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
+        if id is not None:
+            self.id = id
         if enabled is not None:
             self.enabled = enabled
         if transformer_type is not None:
@@ -81,6 +86,27 @@ class Transformer(object):
             self.created_at = created_at
         if updated_at is not None:
             self.updated_at = updated_at
+
+    @property
+    def id(self):
+        """Gets the id of this Transformer.  # noqa: E501
+
+
+        :return: The id of this Transformer.  # noqa: E501
+        :rtype: str
+        """
+        return self._id
+
+    @id.setter
+    def id(self, id):
+        """Sets the id of this Transformer.
+
+
+        :param id: The id of this Transformer.  # noqa: E501
+        :type: str
+        """
+
+        self._id = id
 
     @property
     def enabled(self):

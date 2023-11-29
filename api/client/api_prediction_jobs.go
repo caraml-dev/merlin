@@ -28,10 +28,9 @@ type PredictionJobsApiService service
 
 /*
 PredictionJobsApiService List all prediction jobs of a model version
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param versionId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param versionId
 @return []PredictionJob
 */
 func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsGet(ctx context.Context, modelId int32, versionId int32) ([]PredictionJob, *http.Response, error) {
@@ -129,11 +128,10 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsGet(ctx con
 
 /*
 PredictionJobsApiService Get all container belong to a prediction job
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param versionId
-  - @param jobId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param versionId
+ * @param jobId
 @return Container
 */
 func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdContainersGet(ctx context.Context, modelId int32, versionId int32, jobId string) (Container, *http.Response, error) {
@@ -232,11 +230,10 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdContai
 
 /*
 PredictionJobsApiService Get prediction jobs with given id
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param versionId
-  - @param jobId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param versionId
+ * @param jobId
 @return PredictionJob
 */
 func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdGet(ctx context.Context, modelId int32, versionId int32, jobId int32) (PredictionJob, *http.Response, error) {
@@ -335,10 +332,11 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdGet(ct
 
 /*
 PredictionJobsApiService Stop prediction jobs with given id
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param versionId
-  - @param jobId
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param versionId
+ * @param jobId
+
 */
 func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdStopPut(ctx context.Context, modelId int32, versionId int32, jobId int32) (*http.Response, error) {
 	var (

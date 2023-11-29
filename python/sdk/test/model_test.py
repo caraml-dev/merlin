@@ -363,6 +363,13 @@ class TestModelVersion:
         )
         responses.add(
             "GET",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep1.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict()]),
             status=200,
@@ -400,6 +407,13 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(upi_ep.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(upi_ep.to_dict()),
             status=200,
             content_type="application/json",
@@ -449,6 +463,13 @@ class TestModelVersion:
         )
         responses.add(
             "GET",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep3.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep3.to_dict()]),
             status=200,
@@ -486,6 +507,13 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep4.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep4.to_dict()),
             status=200,
             content_type="application/json",
@@ -561,6 +589,13 @@ class TestModelVersion:
         )
         responses.add(
             "GET",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep1.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict()]),
             status=200,
@@ -594,6 +629,13 @@ class TestModelVersion:
         )
         responses.add(
             "PUT",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep4.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep4.to_dict()),
             status=200,
@@ -641,6 +683,13 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep5.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint/789",
             body=json.dumps(ep5.to_dict()),
             status=200,
             content_type="application/json",

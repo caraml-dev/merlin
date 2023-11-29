@@ -30,12 +30,12 @@ class FreeFormObject(dict):
     swagger_types = {
     }
     if hasattr(dict, "swagger_types"):
-        swagger_types.update(dict.swagger_types)  # type: ignore[attr-defined]
+        swagger_types.update(dict.swagger_types) # type: ignore[attr-defined]
 
     attribute_map = {
     }
     if hasattr(dict, "attribute_map"):
-        attribute_map.update(dict.attribute_map)  # type: ignore[attr-defined]
+        attribute_map.update(dict.attribute_map) # type: ignore[attr-defined]
 
     def __init__(self, *args, **kwargs):  # noqa: E501
         """FreeFormObject - a model defined in Swagger"""  # noqa: E501

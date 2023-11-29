@@ -257,10 +257,9 @@ func (a *VersionApiService) ModelsModelIdVersionsPost(ctx context.Context, model
 
 /*
 VersionApiService Delete version by ID from model
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param versionId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param versionId
 @return int32
 */
 func (a *VersionApiService) ModelsModelIdVersionsVersionIdDelete(ctx context.Context, modelId int32, versionId int32) (int32, *http.Response, error) {
@@ -358,10 +357,9 @@ func (a *VersionApiService) ModelsModelIdVersionsVersionIdDelete(ctx context.Con
 
 /*
 VersionApiService Get version by ID from model
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param versionId
-
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param versionId
 @return Version
 */
 func (a *VersionApiService) ModelsModelIdVersionsVersionIdGet(ctx context.Context, modelId int32, versionId int32) (Version, *http.Response, error) {
