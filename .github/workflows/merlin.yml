@@ -72,22 +72,22 @@ jobs:
   test-pyfunc-server:
     runs-on: ubuntu-latest
     env:
-      PIPENV_DEFAULT_PYTHON_VERSION: 3.10
+      PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: ${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-3.10-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-3.10-
+            ${{ runner.os }}-pip-${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-3.10-pipenv-pyfunc-server
+          key: ${{ runner.os }}-python-${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}-pipenv-pyfunc-server
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
