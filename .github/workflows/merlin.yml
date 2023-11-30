@@ -281,19 +281,15 @@ jobs:
 
   build-pyfunc-server:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["38", "39", "310"]
     needs:
       - create-version
     steps:
       - uses: actions/checkout@v2
-      - name: Build Pyfunc Server Docker py${{ matrix.python-version }}
+      - name: Build Pyfunc Server Base Docker
         run: docker build -t merlin-pyfunc-base:${{ needs.create-version.outputs.version }} -f python/pyfunc-server/docker/base.Dockerfile python
-      - name: Save Pyfunc Server Docker py${{ matrix.python-version }}
+      - name: Save Pyfunc Server Base Docker
         run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar merlin-pyfunc-base:${{ needs.create-version.outputs.version }}
-      - name: Publish Pyfunc Server Docker Artifact py${{ matrix.python-version }}
+      - name: Publish Pyfunc Server Base Docker Artifact
         uses: actions/upload-artifact@v2
         with:
           name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
