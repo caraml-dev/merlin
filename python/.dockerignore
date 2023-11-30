@@ -1,0 +1,41 @@
+# Git
+**/.gitignore
+
+# Docker
+**/docker-compose.yml
+**/Dockerfile
+**/.dockerignore
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+**/*.py[cod]
+
+# C extensions
+**/*.so
+
+# Distribution / packaging
+**/env/
+**/build/
+**/develop-eggs/
+**/dist/
+**/eggs/
+**/sdist/
+**/*.egg-info/
+**/*.egg
+
+# Test cache
+**/.pytest_cache
+
+# Virtual environment
+**/.env
+**/.venv/
+**/venv/
+
+# PyCharm
+**/.idea
+
+# Vim swap files
+**/*.swp
+
+# VS Code
+**/.vscode/

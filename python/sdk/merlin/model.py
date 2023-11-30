@@ -1152,6 +1152,8 @@ class ModelVersion:
 
         if transformer is not None:
             target_transformer = ModelVersion._create_transformer_spec(transformer, target_env_name, env_list)
+            if current_endpoint is not None and current_endpoint.transformer is not None:
+                target_transformer.id = current_endpoint.transformer.id
 
         if logger is not None:
             target_logger = logger.to_logger_spec()
@@ -1192,12 +1194,16 @@ class ModelVersion:
             title=f"Deploying model {model.name} version " f"{self.id}",
         )
 
-        while endpoint.status == "pending":
+        while True:
+            # Emulate a do-while loop. Re-get the endpoint so that the API server would have
+            # started acting after the deployment job has been submitted.
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_get(
                 model_id=int(model.id), version_id=int(self.id), endpoint_id=endpoint.id
             )
-            bar.update()
+            if endpoint.status != "pending":
+                break
             sleep(5)
+            bar.update()
         bar.stop()
 
         if endpoint.status != "running" and endpoint.status != "serving":
@@ -1638,9 +1644,10 @@ class ModelVersion:
             target_env_vars = ModelVersion._add_env_vars(target_env_vars, transformer.env_vars)
 
         return client.Transformer(
-            transformer.enabled, transformer.transformer_type.value,
-            transformer.image, transformer.command, transformer.args,
-            target_resource_request, target_env_vars)
+            id=transformer.id, enabled=transformer.enabled,
+            transformer_type=transformer.transformer_type.value, image=transformer.image,
+            command=transformer.command, args=transformer.args,
+            resource_request=target_resource_request, env_vars=target_env_vars)
 
     def delete_model_version(self) -> int:
         """

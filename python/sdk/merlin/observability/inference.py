@@ -26,32 +26,32 @@ class RegressionOutput:
 @dataclass_json
 @dataclass
 class BinaryClassificationOutput:
-    prediction_label_column: str
-    prediction_score_column: Optional[str] = None
+    prediction_score_column: str
+    prediction_label_column: Optional[str] = None
 
     @property
     def column_types(self) -> Dict[str, ValueType]:
-        column_types_mapping = {self.prediction_label_column: ValueType.STRING}
-        if self.prediction_score_column is not None:
-            column_types_mapping[self.prediction_score_column] = ValueType.FLOAT64
+        column_types_mapping = {self.prediction_score_column: ValueType.FLOAT64}
+        if self.prediction_label_column is not None:
+            column_types_mapping[self.prediction_label_column] = ValueType.STRING
         return column_types_mapping
 
 
 @dataclass_json
 @dataclass
 class MulticlassClassificationOutput:
-    prediction_label_columns: List[str]
-    prediction_score_columns: Optional[List[str]] = None
+    prediction_score_columns: List[str]
+    prediction_label_columns: Optional[List[str]] = None
 
     @property
     def column_types(self) -> Dict[str, ValueType]:
         column_types_mapping = {
-            label_column: ValueType.STRING
-            for label_column in self.prediction_label_columns
+            label_column: ValueType.FLOAT64
+            for label_column in self.prediction_score_columns
         }
-        if self.prediction_score_columns is not None:
-            for column_name in self.prediction_score_columns:
-                column_types_mapping[column_name] = ValueType.FLOAT64
+        if self.prediction_label_columns is not None:
+            for column_name in self.prediction_label_columns:
+                column_types_mapping[column_name] = ValueType.STRING
         return column_types_mapping
 
 
