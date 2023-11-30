@@ -56,7 +56,7 @@ def test_http():
     }
 
     actual_resp = pyfunc_model.predict(context=context, model_input=model_input)
-    assert actual_resp == PyFuncOutput(http_response=response)
+    assert actual_resp == response
     pyfunc_model.infer.assert_called_with(request)
 
 
@@ -75,7 +75,7 @@ def test_http_headers():
     }
 
     actual_resp = pyfunc_model.predict(context=context, model_input=model_input)
-    assert actual_resp == PyFuncOutput(http_response=response)
+    assert actual_resp == response
     pyfunc_model.infer.assert_called_with(request, headers=headers)
 
 
@@ -92,7 +92,7 @@ def test_explicit_protocol():
     }
 
     actual_resp = pyfunc_model.predict(context=context, model_input=model_input)
-    assert actual_resp == PyFuncOutput(http_response=response)
+    assert actual_resp == response
     pyfunc_model.infer.assert_called_with(request)
 
 
@@ -110,7 +110,7 @@ def test_upiv1():
     }
 
     actual_resp = pyfunc_model.predict(context=context, model_input=model_input)
-    assert actual_resp == PyFuncOutput(upi_response=upiv1_response)
+    assert actual_resp == upiv1_response
     pyfunc_model.upiv1_infer.assert_called_with(upiv1_request, grpc_context)
 
 def test_pyfuncv3_rest():

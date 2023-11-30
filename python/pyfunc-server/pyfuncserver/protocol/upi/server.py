@@ -16,6 +16,8 @@ from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.publisher.publisher import Publisher
 from pyfuncserver.publisher.kafka import KafkaProducer
 from pyfuncserver.sampler.sampler import RatioSampling
+from merlin.pyfunc import PyFuncOutput
+
 
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
     def __init__(self, model: PyFuncModel):
@@ -30,11 +32,16 @@ class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
 
     def PredictValues(self, request, context):
         output = self._model.upiv1_predict(request=request, context=context)
-        if self._publisher is not None and output.contains_prediction_log():
+        upi_response = output
+        output_is_pyfunc_output = type(upi_response) == PyFuncOutput
+        if output_is_pyfunc_output:
+            upi_response = output.upi_response
+
+        if self._publisher is not None and output_is_pyfunc_output and output.contains_prediction_log():
         # need to also check whether the output contains prediction log since the pyfunc server doesn't know which model that is used
             asyncio.create_task(self._publisher.publish(output))
 
-        return output.upi_response
+        return upi_response
 
 
 class UPIServer:
