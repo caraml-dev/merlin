@@ -27,6 +27,7 @@ RUN /bin/bash -c ". activate merlin-model && \
     sed -i 's/mlflow[><=]\{0,1\}.*$/mlflow==1.26.1/g' model/conda.yaml && \
     sed -i '/merlin-sdk/d' model/conda.yaml && \
     conda env update --name merlin-model --file model/conda.yaml && \
+    pip install ${SDK_PATH} && \
     python -m pyfuncserver --model_dir model --dry_run"
 
 CMD ["/bin/bash", "./run.sh"]

@@ -27,4 +27,5 @@ RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \
     sed -i 's/mlflow[><=]\{0,1\}.*$/mlflow==1.26.1/g' ${HOME}/model/conda.yaml && \
     sed -i '/merlin-sdk/d' ${HOME}/model/conda.yaml && \
     conda env update --name ${CONDA_ENVIRONMENT} --file ${HOME}/model/conda.yaml && \
+    pip install ${SDK_PATH} && \
     python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"
