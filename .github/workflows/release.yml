@@ -126,28 +126,6 @@ jobs:
           docker tag merlin-pyspark-base-py${{ matrix.python-version }}:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
 
-  publish-pyfunc-base:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Log in to the Container registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Download API Docker Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: merlin-pyfunc-base.${{ inputs.version }}.tar
-      - name: Retag and Push Docker Image
-        env:
-          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
-        run: |
-          IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-pyfunc-base:${{ inputs.version }}"
-          docker image load --input merlin-pyfunc-base.${{ inputs.version }}.tar
-          docker tag merlin-pyfunc-base:${{ inputs.version }} ${IMAGE_TAG}
-          docker push ${IMAGE_TAG}
-
   publish-inference-logger:
     runs-on: ubuntu-latest
     permissions:
