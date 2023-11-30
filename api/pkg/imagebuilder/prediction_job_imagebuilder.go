@@ -21,11 +21,12 @@ import (
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gsutil"
 )
 
 // NewPredictionJobImageBuilder create ImageBuilder for building docker image of prediction job (batch)
-func NewPredictionJobImageBuilder(kubeClient kubernetes.Interface, config Config) ImageBuilder {
-	return newImageBuilder(kubeClient, config, &predictionJobNameGenerator{dockerRegistry: config.DockerRegistry})
+func NewPredictionJobImageBuilder(kubeClient kubernetes.Interface, config Config, gsutil gsutil.GSUtil) ImageBuilder {
+	return newImageBuilder(kubeClient, config, &predictionJobNameGenerator{dockerRegistry: config.DockerRegistry}, gsutil)
 }
 
 // predictionJobNameGenerator is name generator that will be used for building docker image of prediction job

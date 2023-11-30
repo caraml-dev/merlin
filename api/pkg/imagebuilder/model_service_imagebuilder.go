@@ -21,11 +21,12 @@ import (
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gsutil"
 )
 
 // NewModelServiceImageBuilder create an ImageBuilder that will be used to build docker image of model service
-func NewModelServiceImageBuilder(kubeClient kubernetes.Interface, config Config) ImageBuilder {
-	return newImageBuilder(kubeClient, config, &modelServiceNameGenerator{dockerRegistry: config.DockerRegistry})
+func NewModelServiceImageBuilder(kubeClient kubernetes.Interface, config Config, gsutil gsutil.GSUtil) ImageBuilder {
+	return newImageBuilder(kubeClient, config, &modelServiceNameGenerator{dockerRegistry: config.DockerRegistry}, gsutil)
 }
 
 // modelServiceNameGenerator is name generator to generate docker image of model service

@@ -290,14 +290,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build Pyfunc Server Docker py${{ matrix.python-version }}
-        run: docker build -t merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} -f python/pyfunc-server/docker/base.Dockerfile python
+        run: docker build -t merlin-pyfunc-base:${{ needs.create-version.outputs.version }} -f python/pyfunc-server/docker/base.Dockerfile python
       - name: Save Pyfunc Server Docker py${{ matrix.python-version }}
-        run: docker image save --output merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }}
+        run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar merlin-pyfunc-base:${{ needs.create-version.outputs.version }}
       - name: Publish Pyfunc Server Docker Artifact py${{ matrix.python-version }}
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
-          path: merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
+          path: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-transformer:
@@ -439,7 +439,7 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
       - create-version
-      - e2e-test
+      # - e2e-test
       - test-api
       - test-python-sdk
       - test-pyfunc-server

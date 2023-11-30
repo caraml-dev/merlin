@@ -23,6 +23,10 @@ import (
 	"testing"
 	"time"
 
+	cfg "github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gsutil"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -36,10 +40,6 @@ import (
 	fakebatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
-
-	cfg "github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/mlp"
-	"github.com/caraml-dev/merlin/models"
 )
 
 const (
@@ -84,6 +84,13 @@ var (
 	timeoutInSecond = int64(timeout / time.Second)
 	jobBackOffLimit = int32(3)
 
+	defaultKanikoAdditionalArgs = []string{
+		"--cache=true",
+		"--compressed-caching=false",
+		"--snapshot-mode=redo",
+		"--use-new-run",
+	}
+
 	config = Config{
 		BuildNamespace: testBuildNamespace,
 		ContextSubPath: "python/pyfunc-server",
@@ -115,6 +122,7 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+		KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
 		Resources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
@@ -169,6 +177,7 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+		KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
 		Resources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
@@ -285,12 +294,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -395,12 +405,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 									},
 									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
@@ -483,12 +494,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -558,6 +570,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+				KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
 				Resources:            config.Resources,
 				NodeSelectors: map[string]string{
 					"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
@@ -621,12 +634,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -701,6 +715,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+				KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
 				Resources:            config.Resources,
 				Tolerations: []v1.Toleration{
 					{
@@ -769,11 +784,12 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
-										"--single-snapshot",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -850,6 +866,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           config.GcpProject,
 				Environment:          config.Environment,
 				KanikoImage:          config.KanikoImage,
+				KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
 				Resources:            config.Resources,
 				MaximumRetry:         config.MaximumRetry,
 				NodeSelectors:        config.NodeSelectors,
@@ -911,12 +928,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -1020,12 +1038,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -1132,12 +1151,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -1232,12 +1252,13 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
 										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
@@ -1340,7 +1361,9 @@ func TestBuildImage(t *testing.T) {
 			})
 
 			imageBuilderCfg := tt.config
-			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg)
+			// TODO(arief)
+			gsutil, _ := gsutil.NewClient(context.Background())
+			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, gsutil)
 
 			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 			var actions []ktesting.Action
@@ -1438,7 +1461,9 @@ func TestGetContainers(t *testing.T) {
 		client.Fake.PrependReactor("list", "pods", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, tt.mock, nil
 		})
-		c := NewModelServiceImageBuilder(kubeClient, config)
+		// TODO(arief)
+		gsutil, _ := gsutil.NewClient(context.Background())
+		c := NewModelServiceImageBuilder(kubeClient, config, gsutil)
 		containers, err := c.GetContainers(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 
 		if !tt.wantError {
@@ -1616,4 +1641,59 @@ func Test_kanikoBuilder_imageExists_noretry(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.Equal(t, 1, retryCounter)
+}
+
+func Test_imageBuilder_getModelDependenciesUrl(t *testing.T) {
+	defaultGSUtil, _ := gsutil.NewClient(context.Background())
+
+	type fields struct {
+		kubeClient    kubernetes.Interface
+		config        Config
+		nameGenerator nameGenerator
+		gsutil        gsutil.GSUtil
+	}
+	type args struct {
+		ctx     context.Context
+		version *models.Version
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "1",
+			fields: fields{
+				gsutil: defaultGSUtil,
+			},
+			args: args{
+				ctx: context.Background(),
+				version: &models.Version{
+					ArtifactURI: "gs://d-gods-mlp/mlflow/2876/c0c1b0d17972417fa434a48761e1b5e2/artifacts",
+				},
+			},
+			want:    "gs://d-gods-mlp/merlin/dependencies/d39cf6b30f87c3fcfeaa12234bc36d505add631d875ee115ed3fbfffe8813df5",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &imageBuilder{
+				kubeClient:    tt.fields.kubeClient,
+				config:        tt.fields.config,
+				nameGenerator: tt.fields.nameGenerator,
+				gsutil:        tt.fields.gsutil,
+			}
+			got, err := c.getModelDependenciesUrl(tt.args.ctx, tt.args.version)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("imageBuilder.getModelDependenciesUrl() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("imageBuilder.getModelDependenciesUrl() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

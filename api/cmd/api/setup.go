@@ -25,6 +25,7 @@ import (
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gsutil"
 	"github.com/caraml-dev/merlin/pkg/imagebuilder"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/queue/work"
@@ -70,6 +71,8 @@ func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool
 }
 
 func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
+	ctx := context.Background()
+
 	clusterCfg := cluster.Config{
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -98,6 +101,11 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		log.Panicf("unable to parse image builder timeout to time.Duration %s", cfg.ImageBuilderConfig.BuildTimeout)
 	}
 
+	gsutil, err := gsutil.NewClient(ctx)
+	if err != nil {
+		log.Panicf("unable to initialize gsutil client: %s", err.Error())
+	}
+
 	webServiceConfig := imagebuilder.Config{
 		BaseImages:           cfg.ImageBuilderConfig.BaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
@@ -106,6 +114,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		BuildTimeoutDuration: timeout,
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
 		KanikoServiceAccount: cfg.ImageBuilderConfig.KanikoServiceAccount,
+		KanikoAdditionalArgs: cfg.ImageBuilderConfig.KanikoAdditionalArgs,
 		Resources:            cfg.ImageBuilderConfig.Resources,
 		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
@@ -117,7 +126,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 
 		Environment: cfg.Environment,
 	}
-	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig)
+	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig, gsutil)
 
 	predJobConfig := imagebuilder.Config{
 		BaseImages:           cfg.ImageBuilderConfig.PredictionJobBaseImages,
@@ -127,6 +136,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		BuildTimeoutDuration: timeout,
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
 		KanikoServiceAccount: cfg.ImageBuilderConfig.KanikoServiceAccount,
+		KanikoAdditionalArgs: cfg.ImageBuilderConfig.KanikoAdditionalArgs,
 		Resources:            cfg.ImageBuilderConfig.Resources,
 		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
@@ -138,7 +148,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 
 		Environment: cfg.Environment,
 	}
-	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig)
+	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig, gsutil)
 
 	ctl, err := cluster.NewController(
 		clusterCfg,

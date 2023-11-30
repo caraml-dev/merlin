@@ -21,9 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caraml-dev/merlin/pkg/transformer/feast"
-	"github.com/caraml-dev/merlin/pkg/transformer/spec"
-	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
@@ -34,6 +31,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 )
 
 const (
@@ -202,16 +203,17 @@ type ImageBuilderConfig struct {
 	ClusterName                 string `validate:"required"`
 	GcpProject                  string
 	ContextSubPath              string
-	DockerfilePath              string           `validate:"required" default:"./Dockerfile"`
-	BaseImages                  BaseImageConfigs `validate:"required"`
+	DockerfilePath              string          `validate:"required" default:"./Dockerfile"`
+	BaseImage                   BaseImageConfig `validate:"required"`
 	PredictionJobContextSubPath string
-	PredictionJobDockerfilePath string           `validate:"required" default:"./Dockerfile"`
-	PredictionJobBaseImages     BaseImageConfigs `validate:"required"`
-	BuildNamespace              string           `validate:"required" default:"mlp"`
-	DockerRegistry              string           `validate:"required"`
-	BuildTimeout                string           `validate:"required" default:"10m"`
-	KanikoImage                 string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	PredictionJobDockerfilePath string          `validate:"required" default:"./Dockerfile"`
+	PredictionJobBaseImage      BaseImageConfig `validate:"required"`
+	BuildNamespace              string          `validate:"required" default:"mlp"`
+	DockerRegistry              string          `validate:"required"`
+	BuildTimeout                string          `validate:"required" default:"10m"`
+	KanikoImage                 string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	KanikoServiceAccount        string
+	KanikoAdditionalArgs        []string
 	Resources                   ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`

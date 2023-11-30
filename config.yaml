@@ -28,7 +28,7 @@ ImageBuilderConfig:
   PredictionJobBaseImages:
     "3.8.*":
       ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.7.0
-      DockerfilePath:  docker/app.Dockerfile
+      DockerfilePath: docker/app.Dockerfile
       BuildContextURI: ""
       MainAppPath: /merlin-spark-app/main.py
   BuildNamespace: mlp
@@ -47,6 +47,11 @@ ImageBuilderConfig:
         command: gke-gcloud-auth-plugin
         interactiveMode: IfAvailable
         provideClusterInfo: true
+  KanikoAdditionalArgs:
+    - "--cache=true"
+    - "--compressed-caching=false"
+    - "--snapshot-mode=redo"
+    - "--use-new-run"
 
 AuthorizationConfig:
   AuthorizationEnabled: false

@@ -16,6 +16,7 @@ package imagebuilder
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
@@ -24,6 +25,11 @@ import (
 	"time"
 
 	backoff "github.com/cenkalti/backoff/v4"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/google"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
@@ -36,11 +42,7 @@ import (
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/google"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	"github.com/caraml-dev/merlin/pkg/gsutil"
 )
 
 var maxCheckImageRetry uint64 = 2
@@ -86,6 +88,7 @@ type imageBuilder struct {
 	kubeClient    kubernetes.Interface
 	config        Config
 	nameGenerator nameGenerator
+	gsutil        gsutil.GSUtil
 }
 
 const (
@@ -100,6 +103,9 @@ const (
 
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
+
+	modelDependenciesUrlEnvKey = "MODEL_DEPENDENCIES_URL"
+	modelArtifactsUrlEnvKey    = "MODEL_ARTIFACTS_URL"
 )
 
 var (
@@ -107,11 +113,12 @@ var (
 	jobCompletions            int32 = 1
 )
 
-func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator) ImageBuilder {
+func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator, gsutil gsutil.GSUtil) ImageBuilder {
 	return &imageBuilder{
 		kubeClient:    kubeClient,
 		config:        config,
 		nameGenerator: nameGenerator,
+		gsutil:        gsutil,
 	}
 }
 
@@ -129,6 +136,31 @@ func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 	return baseImageTag.MainAppPath, nil
 }
 
+func (c *imageBuilder) getModelDependenciesUrl(ctx context.Context, version *models.Version) (string, error) {
+	artifactURL, err := c.gsutil.ParseURL(version.ArtifactURI)
+	if err != nil {
+		return "", err
+	}
+
+	condaEnvUrl := fmt.Sprintf("gs://%s/%s/model/conda.yaml", artifactURL.Bucket, artifactURL.Object)
+
+	condaEnv, err := c.gsutil.ReadFile(ctx, condaEnvUrl)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.New()
+	hash.Write([]byte(condaEnv))
+	hashEnv := hash.Sum(nil)
+
+	dependenciesUrl := fmt.Sprintf("gs://%s/merlin/dependencies/%x", artifactURL.Bucket, hashEnv)
+	if err := c.gsutil.WriteFile(ctx, dependenciesUrl, string(condaEnv)); err != nil {
+		return "", err
+	}
+
+	return dependenciesUrl, nil
+}
+
 // BuildImage build a docker image for the given model version
 // Returns the docker image ref
 func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error) {
@@ -144,6 +176,13 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 
 	startTime := time.Now()
 	result := "failed"
+
+	// TODO(arief): create or get model dependency
+	modelDependenciesUrl, err := c.getModelDependenciesUrl(ctx, version)
+	if err != nil {
+		log.Errorf("unable to get model dependencies url: %v", err)
+		return "", err
+	}
 
 	labelValues := []string{
 		project.Name,
@@ -169,7 +208,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec, err := c.createKanikoJobSpec(project, model, version)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version, modelDependenciesUrl)
 		if err != nil {
 			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 			return "", ErrUnableToCreateJobSpec{
@@ -199,7 +238,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec, err := c.createKanikoJobSpec(project, model, version)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version, modelDependenciesUrl)
 			if err != nil {
 				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 				return "", ErrUnableToCreateJobSpec{
@@ -402,7 +441,7 @@ func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) err
 	}
 }
 
-func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) (*batchv1.Job, error) {
+func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version, modelDependenciesUrl string) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
@@ -424,22 +463,23 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
 	if !ok {
-		return nil, fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
+		return nil, fmt.Errorf("no matching base image for tag %s", version.PythonVersion)
 	}
 
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
-		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
 		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", modelDependenciesUrlEnvKey, modelDependenciesUrl),
+		fmt.Sprintf("--build-arg=%s=%s", modelArtifactsUrlEnvKey, version.ArtifactURI),
 		fmt.Sprintf("--destination=%s", imageRef),
-		"--cache=true",
-		"--single-snapshot",
 	}
 
 	if c.config.ContextSubPath != "" {
 		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath))
 	}
+
+	kanikoArgs = append(kanikoArgs, c.config.KanikoAdditionalArgs...)
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
 	var volume []v1.Volume

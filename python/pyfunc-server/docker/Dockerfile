@@ -15,17 +15,23 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG MODEL_URL
-ARG GOOGLE_APPLICATION_CREDENTIALS
-
 WORKDIR /pyfunc-server
 
-# Run docker build using the credentials if provided
 RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
-RUN gsutil cp -r ${MODEL_URL} .
-RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/mlflow[><=]\{0,1\}.*$/mlflow==1.26.1/g' model/conda.yaml && \
-    conda env update --name merlin-model --file model/conda.yaml && \
-    python -m pyfuncserver --model_dir model --dry_run"
+
+ARG MODEL_DEPENDENCIES_URL
+RUN gsutil cp ${MODEL_DEPENDENCIES_URL} /pyfunc-server/model/conda.yaml
+RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' /pyfunc-server/model/conda.yaml
+RUN conda env create --name merlin-model --file /pyfunc-server/model/conda.yaml
+
+COPY pyfunc-server /pyfunc-server
+COPY sdk /sdk
+ENV SDK_PATH=/sdk
+
+RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
+
+ARG MODEL_ARTIFACTS_URL
+RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
+RUN /bin/bash -c ". activate merlin-model && python -m pyfuncserver --model_dir model --dry_run"
 
 CMD ["/bin/bash", "./run.sh"]

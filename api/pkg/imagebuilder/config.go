@@ -37,6 +37,8 @@ type Config struct {
 	KanikoImage string
 	// Kaniko kubernetes service account
 	KanikoServiceAccount string
+	// Kaniko additional args
+	KanikoAdditionalArgs []string
 	// Kubernetes resource request and limits for kaniko
 	Resources cfg.ResourceRequestsLimits
 	// Tolerations for Jobs Specification
