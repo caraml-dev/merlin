@@ -49,11 +49,10 @@ type EnvironmentConfig struct {
 
 	QueueResourcePercentage string `yaml:"queue_resource_percentage"`
 
-	DefaultPredictionJobConfig  *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
-	DefaultDeploymentConfig     *ResourceRequestConfig              `yaml:"default_deployment_config"`
-	DefaultImageBuilderResource *ResourceRequestConfig              `yaml:"default_image_builder_resource"`
-	DefaultTransformerConfig    *ResourceRequestConfig              `yaml:"default_transformer_config"`
-	K8sConfig                   *mlpcluster.K8sConfig               `validate:"required" yaml:"k8s_config"`
+	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
+	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
+	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
+	K8sConfig                  *mlpcluster.K8sConfig               `validate:"required" yaml:"k8s_config"`
 }
 
 func (e *EnvironmentConfig) Validate() error {
