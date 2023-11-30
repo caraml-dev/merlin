@@ -1791,6 +1791,31 @@ definitions:
       - "HTTP_JSON"
       - "UPI_V1"
 
+  InferenceSchema:
+    type: object
+    properties:
+      prediction_id_column:
+        type: string
+      type:
+        $ref: "#/definitions/InferenceType"
+      binary_classification:
+        $ref: "#/definitions/BinaryClassificationOutput"
+      multiclass_classification:
+        $ref: "#/definitions/MulticlassClassificationOutput"
+      regression:
+        $ref: "#/definitions/RegressionOutput"
+      ranking:
+        $ref: "#/definitions/RankingOutput"
+      
+
+  InferenceType:
+    type: "string"
+    enum:
+      - "BINARY_CLASSIFICATION"
+      - "MULTICLASS_CLASSIFICATION"
+      - "REGRESSION"
+      - "RANKING"
+      
 securityDefinitions:
   Bearer:
     type: apiKey
