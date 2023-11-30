@@ -49,7 +49,7 @@ class PyFuncModel(PythonModel):
         elif protocol == Protocol.UPI_V1:
             grpc_context = model_input.get(PYFUNC_GRPC_CONTEXT, None)
             grpc_response = self.upiv1_infer(input, grpc_context)
-            return PyFuncOutput(upi_response=grpc_response)
+            return grpc_response
         else:
             raise NotImplementedError(f"protocol {protocol} is not supported")
 
@@ -57,7 +57,7 @@ class PyFuncModel(PythonModel):
         if self._use_kwargs_infer:
             try:
                 http_response =  self.infer(model_input, **kwargs)
-                return PyFuncOutput(http_response=http_response)
+                return http_response
             except TypeError as e:
                 if "infer() got an unexpected keyword argument" in str(e):
                     print(
@@ -67,7 +67,7 @@ class PyFuncModel(PythonModel):
                     raise e
 
         http_response = self.infer(model_input)
-        return PyFuncOutput(http_response=http_response)
+        return http_response
 
     @abstractmethod
     def initialize(self, artifacts: dict):

@@ -1370,6 +1370,8 @@ definitions:
   Transformer:
     type: "object"
     properties:
+      id:
+        type: "string"
       enabled:
         type: "boolean"
       transformer_type:
