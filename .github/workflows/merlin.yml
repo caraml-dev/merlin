@@ -281,7 +281,7 @@ jobs:
       - create-version
     env:
       DOCKER_REGISTRY: ghcr.io
-      DOCKER_IMAGE_TAG: "ghcr.io/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}"
+      DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}"
     steps:
       - uses: actions/checkout@v2
       - name: Log in to the Container registry
