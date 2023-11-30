@@ -107,6 +107,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	}
 
 	webServiceConfig := imagebuilder.Config{
+		BaseImage:            cfg.ImageBuilderConfig.BaseImage,
 		BaseImages:           cfg.ImageBuilderConfig.BaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
@@ -129,6 +130,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig, gsutil)
 
 	predJobConfig := imagebuilder.Config{
+		BaseImage:            cfg.ImageBuilderConfig.PredictionJobBaseImage,
 		BaseImages:           cfg.ImageBuilderConfig.PredictionJobBaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,

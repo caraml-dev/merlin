@@ -100,7 +100,7 @@ type BaseImageConfig struct {
 	// GCS URL Containing build context
 	BuildContextURI string `validate:"required" json:"buildContextURI"`
 	// path to main file to run application
-	MainAppPath string `validate:"required" json:"mainAppPath"`
+	MainAppPath string `json:"mainAppPath"`
 }
 
 // Decoder to decode the env variable which is a nested map into a list of BaseImageConfig
@@ -203,15 +203,17 @@ type ImageBuilderConfig struct {
 	ClusterName                 string `validate:"required"`
 	GcpProject                  string
 	ContextSubPath              string
-	DockerfilePath              string          `validate:"required" default:"./Dockerfile"`
-	BaseImage                   BaseImageConfig `validate:"required"`
+	DockerfilePath              string           `validate:"required" default:"./Dockerfile"`
+	BaseImage                   BaseImageConfig  `validate:"required"`
+	BaseImages                  BaseImageConfigs `validate:"required"`
 	PredictionJobContextSubPath string
-	PredictionJobDockerfilePath string          `validate:"required" default:"./Dockerfile"`
-	PredictionJobBaseImage      BaseImageConfig `validate:"required"`
-	BuildNamespace              string          `validate:"required" default:"mlp"`
-	DockerRegistry              string          `validate:"required"`
-	BuildTimeout                string          `validate:"required" default:"10m"`
-	KanikoImage                 string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	PredictionJobDockerfilePath string           `validate:"required" default:"./Dockerfile"`
+	PredictionJobBaseImage      BaseImageConfig  `validate:"required"`
+	PredictionJobBaseImages     BaseImageConfigs `validate:"required"`
+	BuildNamespace              string           `validate:"required" default:"mlp"`
+	DockerRegistry              string           `validate:"required"`
+	BuildTimeout                string           `validate:"required" default:"10m"`
+	KanikoImage                 string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	KanikoServiceAccount        string
 	KanikoAdditionalArgs        []string
 	Resources                   ResourceRequestsLimits `validate:"required"`

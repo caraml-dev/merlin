@@ -16,6 +16,8 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 WORKDIR /pyfunc-server
+RUN pwd
+RUN ls -lah /pyfunc-server
 
 RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
 

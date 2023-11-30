@@ -461,10 +461,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
 	}
 
-	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
-	if !ok {
-		return nil, fmt.Errorf("no matching base image for tag %s", version.PythonVersion)
-	}
+	baseImageTag := c.config.BaseImage
 
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
