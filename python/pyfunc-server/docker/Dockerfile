@@ -15,6 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
+RUN mkdir /pyfunc-server
 WORKDIR /pyfunc-server
 RUN pwd
 RUN ls -lah /pyfunc-server
