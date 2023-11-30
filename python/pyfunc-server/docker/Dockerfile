@@ -15,29 +15,21 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-RUN pwd
-RUN ls -lah
+RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
 
-# RUN mkdir /pyfunc-server
-# WORKDIR /pyfunc-server
-# RUN pwd
-# RUN ls -lah /pyfunc-server
+ARG MODEL_DEPENDENCIES_URL
+RUN gsutil cp ${MODEL_DEPENDENCIES_URL} /pyfunc-server/model/conda.yaml
+RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' /pyfunc-server/model/conda.yaml
+RUN conda env create --name merlin-model --file /pyfunc-server/model/conda.yaml
 
-# RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
+COPY pyfunc-server /pyfunc-server
+COPY sdk /sdk
+ENV SDK_PATH=/sdk
 
-# ARG MODEL_DEPENDENCIES_URL
-# RUN gsutil cp ${MODEL_DEPENDENCIES_URL} /pyfunc-server/model/conda.yaml
-# RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' /pyfunc-server/model/conda.yaml
-# RUN conda env create --name merlin-model --file /pyfunc-server/model/conda.yaml
+RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
 
-# COPY pyfunc-server /pyfunc-server
-# COPY sdk /sdk
-# ENV SDK_PATH=/sdk
+ARG MODEL_ARTIFACTS_URL
+RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
+RUN /bin/bash -c ". activate merlin-model && python -m pyfuncserver --model_dir model --dry_run"
 
-# RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
-
-# ARG MODEL_ARTIFACTS_URL
-# RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
-# RUN /bin/bash -c ". activate merlin-model && python -m pyfuncserver --model_dir model --dry_run"
-
-# CMD ["/bin/bash", "./run.sh"]
+CMD ["/bin/bash", "/pyfunc-server/run.sh"]
