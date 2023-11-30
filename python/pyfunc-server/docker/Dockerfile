@@ -18,9 +18,9 @@ FROM ${BASE_IMAGE}
 RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
 
 ARG MODEL_DEPENDENCIES_URL
-RUN gsutil cp ${MODEL_DEPENDENCIES_URL} /pyfunc-server/model/conda.yaml
-RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' /pyfunc-server/model/conda.yaml
-RUN conda env create --name merlin-model --file /pyfunc-server/model/conda.yaml
+RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
+RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' conda.yaml
+RUN conda env create --name merlin-model --file conda.yaml
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
