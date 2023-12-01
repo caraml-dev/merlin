@@ -15,10 +15,10 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; \
-    then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; \
-    else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command."; \
-    fi
+# RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; \
+#     then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; \
+#     else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command."; \
+#     fi
 
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
