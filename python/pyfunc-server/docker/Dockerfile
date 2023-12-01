@@ -21,18 +21,24 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
     else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
     fi
 
+# Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
-RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' conda.yaml
 RUN conda env create --name merlin-model --file conda.yaml
 
-COPY pyfunc-server /pyfunc-server
-COPY sdk /sdk
+# Copy and install pyfunc-server and merlin-sdk dependencies
+COPY pyfunc-server /pyfunc-server/requirements.txt
+COPY sdk /sdk/setup.py
 ENV SDK_PATH=/sdk
 
 WORKDIR /pyfunc-server
 RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
 
+# Copy pyfunc-server and merlin-sdk code
+COPY pyfunc-server /pyfunc-server
+COPY sdk /sdk
+
+# Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
 RUN /bin/bash -c ". activate merlin-model && python -m pyfuncserver --model_dir model --dry_run"
