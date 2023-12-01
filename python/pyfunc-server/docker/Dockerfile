@@ -28,15 +28,14 @@ RUN conda env create --name merlin-model --file conda.yaml
 
 # Copy and install pyfunc-server and merlin-sdk dependencies
 COPY pyfunc-server/requirements.txt /pyfunc-server/requirements.txt
-COPY sdk/setup.py /sdk/setup.py
+COPY sdk /sdk
 ENV SDK_PATH=/sdk
 
 WORKDIR /pyfunc-server
 RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
 
-# Copy pyfunc-server and merlin-sdk code
+# Copy pyfunc-server code
 COPY pyfunc-server /pyfunc-server
-COPY sdk /sdk
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
