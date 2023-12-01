@@ -468,7 +468,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
 		fmt.Sprintf("--build-arg=%s=%s", modelDependenciesUrlEnvKey, modelDependenciesUrl),
-		fmt.Sprintf("--build-arg=%s=%s", modelArtifactsUrlEnvKey, version.ArtifactURI),
+		fmt.Sprintf("--build-arg=%s=%s/model", modelArtifactsUrlEnvKey, version.ArtifactURI),
 		fmt.Sprintf("--destination=%s", imageRef),
 	}
 
