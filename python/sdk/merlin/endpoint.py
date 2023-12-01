@@ -132,11 +132,12 @@ class VersionEndpoint:
         return self._resource_request
     
     @property
-    def enable_model_observability(self) -> bool:
-        return self._enable_model_observability
-    
     def transformer(self) -> Transformer:
         return self._transformer
+    
+    @property
+    def enable_model_observability(self) -> bool:
+        return self._enable_model_observability
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""

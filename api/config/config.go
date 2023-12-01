@@ -333,13 +333,14 @@ type StandardTransformerConfig struct {
 type KafkaConfig struct {
 	Topic               string
 	Brokers             string `validate:"required"`
+	Acks                int    `default:"0"`
 	CompressionType     string `validate:"required" default:"none"`
 	MaxMessageSizeBytes int    `validate:"required" default:"1048588"`
 	ConnectTimeoutMS    int    `validate:"required" default:"1000"`
 	SerializationFmt    string `validate:"required" default:"protobuf"`
 	LingerMS            int    `validate:"required" default:"100"`
-	Acks                int    `validate:"required" default:"0"`
-	AdditionalConfig    string `validate:"required" default:"{}"`
+
+	AdditionalConfig string `validate:"required" default:"{}"`
 }
 
 type PyFuncPublisherConfig struct {

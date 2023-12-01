@@ -762,6 +762,13 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint/7899",
+            body=json.dumps(observability_enabled_ep.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
 
         endpoint = version.deploy(environment_name=env_3.name, enable_model_observability=True)
 
