@@ -19,8 +19,8 @@ ARG GOOGLE_APPLICATION_CREDENTIALS
 # ARG GOOGLE_APPLICATION_CREDENTIALS=""
 # ENV GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
 RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
-    then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} > gcloud-auth.txt; \
-    else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
+    then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; \
+    else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command."; \
     fi
 
 ARG MODEL_DEPENDENCIES_URL
