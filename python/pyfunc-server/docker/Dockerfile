@@ -27,8 +27,8 @@ RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
 RUN conda env create --name merlin-model --file conda.yaml
 
 # Copy and install pyfunc-server and merlin-sdk dependencies
-COPY pyfunc-server /pyfunc-server/requirements.txt
-COPY sdk /sdk/setup.py
+COPY pyfunc-server/requirements.txt /pyfunc-server/requirements.txt
+COPY sdk/setup.py /sdk/setup.py
 ENV SDK_PATH=/sdk
 
 WORKDIR /pyfunc-server
