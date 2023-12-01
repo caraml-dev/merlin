@@ -22,8 +22,8 @@ RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
 RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' conda.yaml
 RUN conda env create --name merlin-model --file conda.yaml
 
-COPY python/pyfunc-server /pyfunc-server
-COPY python/sdk /sdk
+COPY pyfunc-server /pyfunc-server
+COPY sdk /sdk
 ENV SDK_PATH=/sdk
 
 RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
