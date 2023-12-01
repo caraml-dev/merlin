@@ -84,7 +84,7 @@ func deploymentQuotaValidation(ctx context.Context, model *models.Model, env *mo
 	return newFuncValidate(func() error {
 		deployedModelVersionCount, err := endpointSvc.CountEndpoints(ctx, env, model)
 		if err != nil {
-			return fmt.Errorf("unable to count number of endpoints in env %s: %v", env.Name, err)
+			return fmt.Errorf("unable to count number of endpoints in env %s: %w", env.Name, err)
 		}
 
 		if deployedModelVersionCount >= config.MaxDeployedVersion {
@@ -103,7 +103,7 @@ func transformerValidation(
 		if endpoint.Transformer != nil && endpoint.Transformer.Enabled {
 			err := validateTransformer(ctx, endpoint, stdTransformerCfg, feastCore)
 			if err != nil {
-				return fmt.Errorf("Error validating transformer: %v", err)
+				return fmt.Errorf("Error validating transformer: %w", err)
 			}
 		}
 		return nil
