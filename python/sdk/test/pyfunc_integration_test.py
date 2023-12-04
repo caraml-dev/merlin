@@ -77,7 +77,7 @@ class ModelObservabilityModel(PyFuncV3Model):
 
     def infer(self, model_input: ModelInput) -> ModelOutput:
         dmatrix = xgb.DMatrix(model_input.features.data)
-        outputs = self._model.predict(dmatrix)
+        outputs = self._model.predict(dmatrix).tolist()
         return ModelOutput(
             prediction_ids=model_input.prediction_ids,
             predictions=Values(
@@ -88,7 +88,7 @@ class ModelObservabilityModel(PyFuncV3Model):
 
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
         return {
-            "predictions": model_output.predictions
+            "predictions": model_output.predictions.data
         }
 
 @pytest.mark.pyfunc
