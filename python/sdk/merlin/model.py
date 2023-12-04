@@ -945,8 +945,9 @@ class ModelVersion:
         if (
             self._model.type != ModelType.PYFUNC
             and self._model.type != ModelType.PYFUNC_V2
+            and self._model.type != ModelType.PYFUNC_V3
         ):
-            raise ValueError("log_pyfunc_model is only for PyFunc and PyFuncV2 model")
+            raise ValueError("log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model")
 
         # add/replace python version in conda to match that used to create model version
         conda_env = _process_conda_env(conda_env, self._python_version)
@@ -986,6 +987,7 @@ class ModelVersion:
         if (
             self._model.type == ModelType.PYFUNC
             or self._model.type == ModelType.PYFUNC_V2
+            or self._model.type == ModelType.PYFUNC_V3
         ):
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
