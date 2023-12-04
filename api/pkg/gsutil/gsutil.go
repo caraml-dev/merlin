@@ -38,8 +38,8 @@ func NewClient(ctx context.Context) (GSUtil, error) {
 	}, nil
 }
 
-func (g *gsutil) Close() {
-	defer g.client.Close()
+func (g *gsutil) Close() error {
+	return g.client.Close()
 }
 
 // ReadFile reads the contents of a file located in GCloud Storage returning
@@ -57,7 +57,7 @@ func (g *gsutil) ReadFile(ctx context.Context, url string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read file from %s", url)
 	}
-	defer reader.Close()
+	defer reader.Close() //nolint:errcheck
 
 	bytes, err := io.ReadAll(reader)
 	if err != nil {

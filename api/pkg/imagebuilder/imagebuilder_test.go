@@ -16,6 +16,7 @@ package imagebuilder
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -27,7 +28,9 @@ import (
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/gsutil"
+	"github.com/caraml-dev/merlin/pkg/gsutil/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -48,6 +51,15 @@ const (
 	testProjectName      = "test-project"
 	testModelName        = "mymodel"
 	testArtifactURI      = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
+	testCondaEnvUrl      = testArtifactURI + "/model/conda.yaml"
+	testCondaEnvContent  = `dependencies:
+- python=3.8.*
+- pip:
+	- mlflow
+	- joblib
+	- numpy
+	- scikit-learn
+	- xgboost`
 
 	testBuildContextURL = "gs://bucket/build.tar.gz"
 	testBuildNamespace  = "mynamespace"
@@ -55,6 +67,11 @@ const (
 )
 
 var (
+	testArtifactGsutilURL = &gsutil.URL{
+		Bucket: "bucket-name",
+		Object: "mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts",
+	}
+
 	project = mlp.Project{
 		Name:   testProjectName,
 		Team:   "dsp",
@@ -94,27 +111,10 @@ var (
 	config = Config{
 		BuildNamespace: testBuildNamespace,
 		ContextSubPath: "python/pyfunc-server",
-		BaseImages: cfg.BaseImageConfigs{
-			"3.7.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:1",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
-			"3.8.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:2",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
-			"3.9.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:3",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
-			"3.10.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:4",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
+		BaseImage: cfg.BaseImageConfig{
+			ImageName:       "gojek/base-image:1",
+			BuildContextURI: testBuildContextURL,
+			DockerfilePath:  "./Dockerfile",
 		},
 		DockerRegistry:       testDockerRegistry,
 		BuildTimeoutDuration: timeout,
@@ -149,27 +149,10 @@ var (
 	configWithSa = Config{
 		BuildNamespace: testBuildNamespace,
 		ContextSubPath: "python/pyfunc-server",
-		BaseImages: cfg.BaseImageConfigs{
-			"3.7.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:1",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
-			"3.8.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:2",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
-			"3.9.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:3",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
-			"3.10.*": cfg.BaseImageConfig{
-				ImageName:       "gojek/base-image:4",
-				BuildContextURI: testBuildContextURL,
-				DockerfilePath:  "./Dockerfile",
-			},
+		BaseImage: cfg.BaseImageConfig{
+			ImageName:       "gojek/base-image:1",
+			BuildContextURI: testBuildContextURL,
+			DockerfilePath:  "./Dockerfile",
 		},
 		DockerRegistry:       testDockerRegistry,
 		BuildTimeoutDuration: timeout,
@@ -222,6 +205,11 @@ func TestBuildImage(t *testing.T) {
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
 	}()
+
+	hash := sha256.New()
+	hash.Write([]byte(testCondaEnvContent))
+	hashEnv := hash.Sum(nil)
+	modelDependenciesURL := fmt.Sprintf("gs://%s/merlin/dependencies/%x", testArtifactGsutilURL.Bucket, hashEnv)
 
 	type args struct {
 		project mlp.Project
@@ -292,9 +280,11 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										"--cache=true",
@@ -403,9 +393,11 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										"--cache=true",
@@ -492,9 +484,11 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										"--cache=true",
@@ -542,27 +536,10 @@ func TestBuildImage(t *testing.T) {
 			config: Config{
 				BuildNamespace: testBuildNamespace,
 				ContextSubPath: "python/pyfunc-server",
-				BaseImages: cfg.BaseImageConfigs{
-					"3.7.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:1",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.8.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:2",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.9.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:3",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.10.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:4",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
+				BaseImage: cfg.BaseImageConfig{
+					ImageName:       "gojek/base-image:1",
+					BuildContextURI: testBuildContextURL,
+					DockerfilePath:  "./Dockerfile",
 				},
 				DockerRegistry:       testDockerRegistry,
 				BuildTimeoutDuration: timeout,
@@ -632,9 +609,11 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										"--cache=true",
@@ -687,27 +666,10 @@ func TestBuildImage(t *testing.T) {
 			config: Config{
 				BuildNamespace: testBuildNamespace,
 				ContextSubPath: "python/pyfunc-server",
-				BaseImages: cfg.BaseImageConfigs{
-					"3.7.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:1",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.8.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:2",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.9.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:3",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.10.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:4",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
+				BaseImage: cfg.BaseImageConfig{
+					ImageName:       "gojek/base-image:1",
+					BuildContextURI: testBuildContextURL,
+					DockerfilePath:  "./Dockerfile",
 				},
 				DockerRegistry:       testDockerRegistry,
 				BuildTimeoutDuration: timeout,
@@ -728,585 +690,578 @@ func TestBuildImage(t *testing.T) {
 				MaximumRetry: jobBackOffLimit,
 			},
 		},
-		{
-			name: "success: no existing job, not using context sub path",
-			args: args{
-				project: project,
-				model:   model,
-				version: modelVersion,
-			},
-			existingJob: nil,
-			wantCreateJob: &batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
-					Labels: map[string]string{
-						"gojek.com/app":          model.Name,
-						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       project.Stream,
-						"gojek.com/team":         project.Team,
-						"sample":                 "true",
-						"test":                   "true",
-					},
-					Annotations: map[string]string{
-						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-					},
-				},
-				Spec: batchv1.JobSpec{
-					Completions:             &jobCompletions,
-					BackoffLimit:            &jobBackOffLimit,
-					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
-					ActiveDeadlineSeconds:   &timeoutInSecond,
-					Template: v1.PodTemplateSpec{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: map[string]string{
-								"gojek.com/app":          model.Name,
-								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": testOrchestratorName,
-								"gojek.com/stream":       project.Stream,
-								"gojek.com/team":         project.Team,
-								"sample":                 "true",
-								"test":                   "true",
-							},
-							Annotations: map[string]string{
-								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-							},
-						},
-						Spec: v1.PodSpec{
-							RestartPolicy: v1.RestartPolicyNever,
-							Containers: []v1.Container{
-								{
-									Name:  containerName,
-									Image: "gcr.io/kaniko-project/executor:v1.1.0",
-									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										"--cache=true",
-										"--compressed-caching=false",
-										"--snapshot-mode=redo",
-										"--use-new-run",
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
-									},
-									VolumeMounts: []v1.VolumeMount{
-										{
-											Name:      kanikoSecretName,
-											MountPath: "/secret",
-										},
-									},
-									Env: []v1.EnvVar{
-										{
-											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-											Value: "/secret/kaniko-secret.json",
-										},
-									},
-									Resources:                defaultResourceRequests.Build(),
-									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-								},
-							},
-							Volumes: []v1.Volume{
-								{
-									Name: kanikoSecretName,
-									VolumeSource: v1.VolumeSource{
-										Secret: &v1.SecretVolumeSource{
-											SecretName: kanikoSecretName,
-										},
-									},
-								},
-							},
-							Tolerations: []v1.Toleration{
-								{
-									Key:      "image-build-job",
-									Operator: v1.TolerationOpEqual,
-									Value:    "true",
-									Effect:   v1.TaintEffectNoSchedule,
-								},
-							},
-							NodeSelector: map[string]string{
-								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
-							},
-						},
-					},
-				},
-				Status: batchv1.JobStatus{},
-			},
-			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config: Config{
-				BuildNamespace: config.BuildNamespace,
-				BaseImages: cfg.BaseImageConfigs{
-					"3.7.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:1",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.8.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:2",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.9.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:3",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-					"3.10.*": cfg.BaseImageConfig{
-						ImageName:       "gojek/base-image:4",
-						BuildContextURI: testBuildContextURL,
-						DockerfilePath:  "./Dockerfile",
-					},
-				},
-				DockerRegistry:       config.DockerRegistry,
-				BuildTimeoutDuration: config.BuildTimeoutDuration,
-				ClusterName:          config.ClusterName,
-				GcpProject:           config.GcpProject,
-				Environment:          config.Environment,
-				KanikoImage:          config.KanikoImage,
-				KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
-				Resources:            config.Resources,
-				MaximumRetry:         config.MaximumRetry,
-				NodeSelectors:        config.NodeSelectors,
-				Tolerations:          config.Tolerations,
-			},
-		},
-		{
-			name: "success: existing job is running",
-			args: args{
-				project: project,
-				model:   model,
-				version: modelVersion,
-			},
-			existingJob: &batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
-					Labels: map[string]string{
-						"gojek.com/app":          model.Name,
-						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       project.Stream,
-						"gojek.com/team":         project.Team,
-						"sample":                 "true",
-						"test":                   "true",
-					},
-					Annotations: map[string]string{
-						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-					},
-				},
-				Spec: batchv1.JobSpec{
-					Completions:             &jobCompletions,
-					BackoffLimit:            &jobBackOffLimit,
-					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
-					ActiveDeadlineSeconds:   &timeoutInSecond,
-					Template: v1.PodTemplateSpec{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: map[string]string{
-								"gojek.com/app":          model.Name,
-								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": testOrchestratorName,
-								"gojek.com/stream":       project.Stream,
-								"gojek.com/team":         project.Team,
-								"sample":                 "true",
-								"test":                   "true",
-							},
-							Annotations: map[string]string{
-								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-							},
-						},
-						Spec: v1.PodSpec{
-							RestartPolicy: v1.RestartPolicyNever,
-							Containers: []v1.Container{
-								{
-									Name:  containerName,
-									Image: "gcr.io/kaniko-project/executor:v1.1.0",
-									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
-										"--cache=true",
-										"--compressed-caching=false",
-										"--snapshot-mode=redo",
-										"--use-new-run",
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
-									},
-									VolumeMounts: []v1.VolumeMount{
-										{
-											Name:      kanikoSecretName,
-											MountPath: "/secret",
-										},
-									},
-									Env: []v1.EnvVar{
-										{
-											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-											Value: "/secret/kaniko-secret.json",
-										},
-									},
-									Resources:                defaultResourceRequests.Build(),
-									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-								},
-							},
-							Volumes: []v1.Volume{
-								{
-									Name: kanikoSecretName,
-									VolumeSource: v1.VolumeSource{
-										Secret: &v1.SecretVolumeSource{
-											SecretName: kanikoSecretName,
-										},
-									},
-								},
-							},
-							Tolerations: []v1.Toleration{
-								{
-									Key:      "image-build-job",
-									Operator: v1.TolerationOpEqual,
-									Value:    "true",
-									Effect:   v1.TaintEffectNoSchedule,
-								},
-							},
-							NodeSelector: map[string]string{
-								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
-							},
-						},
-					},
-				},
-				Status: batchv1.JobStatus{},
-			},
-			wantCreateJob: nil,
-			wantImageRef:  fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:        config,
-		},
-		{
-			name: "success: existing job already successful",
-			args: args{
-				project: project,
-				model:   model,
-				version: modelVersion,
-			},
-			existingJob: &batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
-					Labels: map[string]string{
-						"gojek.com/app":          model.Name,
-						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       project.Stream,
-						"gojek.com/team":         project.Team,
-						"sample":                 "true",
-						"test":                   "true",
-					},
-					Annotations: map[string]string{
-						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-					},
-				},
-				Spec: batchv1.JobSpec{
-					Completions:             &jobCompletions,
-					BackoffLimit:            &jobBackOffLimit,
-					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
-					ActiveDeadlineSeconds:   &timeoutInSecond,
-					Template: v1.PodTemplateSpec{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: map[string]string{
-								"gojek.com/app":          model.Name,
-								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": testOrchestratorName,
-								"gojek.com/stream":       project.Stream,
-								"gojek.com/team":         project.Team,
-								"sample":                 "true",
-								"test":                   "true",
-							},
-							Annotations: map[string]string{
-								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-							},
-						},
-						Spec: v1.PodSpec{
-							RestartPolicy: v1.RestartPolicyNever,
-							Containers: []v1.Container{
-								{
-									Name:  containerName,
-									Image: "gcr.io/kaniko-project/executor:v1.1.0",
-									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
-										"--cache=true",
-										"--compressed-caching=false",
-										"--snapshot-mode=redo",
-										"--use-new-run",
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
-									},
-									VolumeMounts: []v1.VolumeMount{
-										{
-											Name:      kanikoSecretName,
-											MountPath: "/secret",
-										},
-									},
-									Env: []v1.EnvVar{
-										{
-											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-											Value: "/secret/kaniko-secret.json",
-										},
-									},
-									Resources:                defaultResourceRequests.Build(),
-									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-								},
-							},
-							Volumes: []v1.Volume{
-								{
-									Name: kanikoSecretName,
-									VolumeSource: v1.VolumeSource{
-										Secret: &v1.SecretVolumeSource{
-											SecretName: kanikoSecretName,
-										},
-									},
-								},
-							},
-							Tolerations: []v1.Toleration{
-								{
-									Key:      "image-build-job",
-									Operator: v1.TolerationOpEqual,
-									Value:    "true",
-									Effect:   v1.TaintEffectNoSchedule,
-								},
-							},
-							NodeSelector: map[string]string{
-								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
-							},
-						},
-					},
-				},
-				Status: batchv1.JobStatus{
-					Succeeded: 1,
-				},
-			},
-			wantCreateJob:     nil,
-			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            config,
-		},
-		{
-			name: "success: existing job failed",
-			args: args{
-				project: project,
-				model:   model,
-				version: modelVersion,
-			},
-			existingJob: &batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
-					Labels: map[string]string{
-						"gojek.com/app":          model.Name,
-						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       project.Stream,
-						"gojek.com/team":         project.Team,
-						"sample":                 "true",
-						"test":                   "true",
-					},
-					Annotations: map[string]string{
-						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-					},
-				},
-				Spec: batchv1.JobSpec{
-					Completions:             &jobCompletions,
-					BackoffLimit:            &jobBackOffLimit,
-					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
-					ActiveDeadlineSeconds:   &timeoutInSecond,
-					Template: v1.PodTemplateSpec{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: map[string]string{
-								"gojek.com/app":          model.Name,
-								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": testOrchestratorName,
-								"gojek.com/stream":       project.Stream,
-								"gojek.com/team":         project.Team,
-								"sample":                 "true",
-								"test":                   "true",
-							},
-							Annotations: map[string]string{
-								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-							},
-						},
-						Spec: v1.PodSpec{
-							RestartPolicy: v1.RestartPolicyNever,
-							Containers: []v1.Container{
-								{
-									Name:  containerName,
-									Image: "gcr.io/kaniko-project/executor:v1.1.0",
-									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
-										"--cache=true",
-										"--compressed-caching=false",
-										"--snapshot-mode=redo",
-										"--use-new-run",
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
-									},
-									VolumeMounts: []v1.VolumeMount{
-										{
-											Name:      kanikoSecretName,
-											MountPath: "/secret",
-										},
-									},
-									Env: []v1.EnvVar{
-										{
-											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-											Value: "/secret/kaniko-secret.json",
-										},
-									},
-									Resources:                defaultResourceRequests.Build(),
-									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-								},
-							},
-							Volumes: []v1.Volume{
-								{
-									Name: kanikoSecretName,
-									VolumeSource: v1.VolumeSource{
-										Secret: &v1.SecretVolumeSource{
-											SecretName: kanikoSecretName,
-										},
-									},
-								},
-							},
-							Tolerations: []v1.Toleration{
-								{
-									Key:      "image-build-job",
-									Operator: v1.TolerationOpEqual,
-									Value:    "true",
-									Effect:   v1.TaintEffectNoSchedule,
-								},
-							},
-							NodeSelector: map[string]string{
-								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
-							},
-						},
-					},
-				},
-				Status: batchv1.JobStatus{
-					Failed: 1,
-				},
-			},
-			wantCreateJob: &batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
-					Labels: map[string]string{
-						"gojek.com/app":          model.Name,
-						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       project.Stream,
-						"gojek.com/team":         project.Team,
-						"sample":                 "true",
-						"test":                   "true",
-					},
-					Annotations: map[string]string{
-						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-					},
-				},
-				Spec: batchv1.JobSpec{
-					Completions:             &jobCompletions,
-					BackoffLimit:            &jobBackOffLimit,
-					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
-					ActiveDeadlineSeconds:   &timeoutInSecond,
-					Template: v1.PodTemplateSpec{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: map[string]string{
-								"gojek.com/app":          model.Name,
-								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": testOrchestratorName,
-								"gojek.com/stream":       project.Stream,
-								"gojek.com/team":         project.Team,
-								"sample":                 "true",
-								"test":                   "true",
-							},
-							Annotations: map[string]string{
-								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
-							},
-						},
-						Spec: v1.PodSpec{
-							RestartPolicy: v1.RestartPolicyNever,
-							Containers: []v1.Container{
-								{
-									Name:  containerName,
-									Image: "gcr.io/kaniko-project/executor:v1.1.0",
-									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
-										"--cache=true",
-										"--compressed-caching=false",
-										"--snapshot-mode=redo",
-										"--use-new-run",
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
-									},
-									VolumeMounts: []v1.VolumeMount{
-										{
-											Name:      kanikoSecretName,
-											MountPath: "/secret",
-										},
-									},
-									Env: []v1.EnvVar{
-										{
-											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-											Value: "/secret/kaniko-secret.json",
-										},
-									},
-									Resources:                defaultResourceRequests.Build(),
-									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-								},
-							},
-							Volumes: []v1.Volume{
-								{
-									Name: kanikoSecretName,
-									VolumeSource: v1.VolumeSource{
-										Secret: &v1.SecretVolumeSource{
-											SecretName: kanikoSecretName,
-										},
-									},
-								},
-							},
-							Tolerations: []v1.Toleration{
-								{
-									Key:      "image-build-job",
-									Operator: v1.TolerationOpEqual,
-									Value:    "true",
-									Effect:   v1.TaintEffectNoSchedule,
-								},
-							},
-							NodeSelector: map[string]string{
-								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
-							},
-						},
-					},
-				},
-				Status: batchv1.JobStatus{},
-			},
-			wantDeleteJobName: fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            config,
-		},
+		// {
+		// 	name: "success: no existing job, not using context sub path",
+		// 	args: args{
+		// 		project: project,
+		// 		model:   model,
+		// 		version: modelVersion,
+		// 	},
+		// 	existingJob: nil,
+		// 	wantCreateJob: &batchv1.Job{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+		// 			Namespace: config.BuildNamespace,
+		// 			Labels: map[string]string{
+		// 				"gojek.com/app":          model.Name,
+		// 				"gojek.com/component":    models.ComponentImageBuilder,
+		// 				"gojek.com/environment":  config.Environment,
+		// 				"gojek.com/orchestrator": testOrchestratorName,
+		// 				"gojek.com/stream":       project.Stream,
+		// 				"gojek.com/team":         project.Team,
+		// 				"sample":                 "true",
+		// 				"test":                   "true",
+		// 			},
+		// 			Annotations: map[string]string{
+		// 				"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 			},
+		// 		},
+		// 		Spec: batchv1.JobSpec{
+		// 			Completions:             &jobCompletions,
+		// 			BackoffLimit:            &jobBackOffLimit,
+		// 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+		// 			ActiveDeadlineSeconds:   &timeoutInSecond,
+		// 			Template: v1.PodTemplateSpec{
+		// 				ObjectMeta: metav1.ObjectMeta{
+		// 					Labels: map[string]string{
+		// 						"gojek.com/app":          model.Name,
+		// 						"gojek.com/component":    models.ComponentImageBuilder,
+		// 						"gojek.com/environment":  config.Environment,
+		// 						"gojek.com/orchestrator": testOrchestratorName,
+		// 						"gojek.com/stream":       project.Stream,
+		// 						"gojek.com/team":         project.Team,
+		// 						"sample":                 "true",
+		// 						"test":                   "true",
+		// 					},
+		// 					Annotations: map[string]string{
+		// 						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 					},
+		// 				},
+		// 				Spec: v1.PodSpec{
+		// 					RestartPolicy: v1.RestartPolicyNever,
+		// 					Containers: []v1.Container{
+		// 						{
+		// 							Name:  containerName,
+		// 							Image: "gcr.io/kaniko-project/executor:v1.1.0",
+		// 							Args: []string{
+		// 								fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+		// 								fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+		// 								fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+		// 								fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+		// 								fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
+		// 								fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+		// 								"--cache=true",
+		// 								"--compressed-caching=false",
+		// 								"--snapshot-mode=redo",
+		// 								"--use-new-run",
+		// 								fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+		// 							},
+		// 							VolumeMounts: []v1.VolumeMount{
+		// 								{
+		// 									Name:      kanikoSecretName,
+		// 									MountPath: "/secret",
+		// 								},
+		// 							},
+		// 							Env: []v1.EnvVar{
+		// 								{
+		// 									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+		// 									Value: "/secret/kaniko-secret.json",
+		// 								},
+		// 							},
+		// 							Resources:                defaultResourceRequests.Build(),
+		// 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		// 						},
+		// 					},
+		// 					Volumes: []v1.Volume{
+		// 						{
+		// 							Name: kanikoSecretName,
+		// 							VolumeSource: v1.VolumeSource{
+		// 								Secret: &v1.SecretVolumeSource{
+		// 									SecretName: kanikoSecretName,
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 					Tolerations: []v1.Toleration{
+		// 						{
+		// 							Key:      "image-build-job",
+		// 							Operator: v1.TolerationOpEqual,
+		// 							Value:    "true",
+		// 							Effect:   v1.TaintEffectNoSchedule,
+		// 						},
+		// 					},
+		// 					NodeSelector: map[string]string{
+		// 						"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 		Status: batchv1.JobStatus{},
+		// 	},
+		// 	wantDeleteJobName: "",
+		// 	wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+		// 	config: Config{
+		// 		BuildNamespace: config.BuildNamespace,
+		// 		BaseImage: cfg.BaseImageConfig{
+		// 			ImageName:       "gojek/base-image:1",
+		// 			BuildContextURI: testBuildContextURL,
+		// 			DockerfilePath:  "./Dockerfile",
+		// 		},
+		// 		DockerRegistry:       config.DockerRegistry,
+		// 		BuildTimeoutDuration: config.BuildTimeoutDuration,
+		// 		ClusterName:          config.ClusterName,
+		// 		GcpProject:           config.GcpProject,
+		// 		Environment:          config.Environment,
+		// 		KanikoImage:          config.KanikoImage,
+		// 		KanikoAdditionalArgs: defaultKanikoAdditionalArgs,
+		// 		Resources:            config.Resources,
+		// 		MaximumRetry:         config.MaximumRetry,
+		// 		NodeSelectors:        config.NodeSelectors,
+		// 		Tolerations:          config.Tolerations,
+		// 	},
+		// },
+		// {
+		// 	name: "success: existing job is running",
+		// 	args: args{
+		// 		project: project,
+		// 		model:   model,
+		// 		version: modelVersion,
+		// 	},
+		// 	existingJob: &batchv1.Job{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+		// 			Namespace: config.BuildNamespace,
+		// 			Labels: map[string]string{
+		// 				"gojek.com/app":          model.Name,
+		// 				"gojek.com/component":    models.ComponentImageBuilder,
+		// 				"gojek.com/environment":  config.Environment,
+		// 				"gojek.com/orchestrator": testOrchestratorName,
+		// 				"gojek.com/stream":       project.Stream,
+		// 				"gojek.com/team":         project.Team,
+		// 				"sample":                 "true",
+		// 				"test":                   "true",
+		// 			},
+		// 			Annotations: map[string]string{
+		// 				"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 			},
+		// 		},
+		// 		Spec: batchv1.JobSpec{
+		// 			Completions:             &jobCompletions,
+		// 			BackoffLimit:            &jobBackOffLimit,
+		// 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+		// 			ActiveDeadlineSeconds:   &timeoutInSecond,
+		// 			Template: v1.PodTemplateSpec{
+		// 				ObjectMeta: metav1.ObjectMeta{
+		// 					Labels: map[string]string{
+		// 						"gojek.com/app":          model.Name,
+		// 						"gojek.com/component":    models.ComponentImageBuilder,
+		// 						"gojek.com/environment":  config.Environment,
+		// 						"gojek.com/orchestrator": testOrchestratorName,
+		// 						"gojek.com/stream":       project.Stream,
+		// 						"gojek.com/team":         project.Team,
+		// 						"sample":                 "true",
+		// 						"test":                   "true",
+		// 					},
+		// 					Annotations: map[string]string{
+		// 						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 					},
+		// 				},
+		// 				Spec: v1.PodSpec{
+		// 					RestartPolicy: v1.RestartPolicyNever,
+		// 					Containers: []v1.Container{
+		// 						{
+		// 							Name:  containerName,
+		// 							Image: "gcr.io/kaniko-project/executor:v1.1.0",
+		// 							Args: []string{
+		// 								fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+		// 								fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+		// 								fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+		// 								fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+		// 								fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
+		// 								fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+		// 								fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+		// 								"--cache=true",
+		// 								"--compressed-caching=false",
+		// 								"--snapshot-mode=redo",
+		// 								"--use-new-run",
+		// 								fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+		// 							},
+		// 							VolumeMounts: []v1.VolumeMount{
+		// 								{
+		// 									Name:      kanikoSecretName,
+		// 									MountPath: "/secret",
+		// 								},
+		// 							},
+		// 							Env: []v1.EnvVar{
+		// 								{
+		// 									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+		// 									Value: "/secret/kaniko-secret.json",
+		// 								},
+		// 							},
+		// 							Resources:                defaultResourceRequests.Build(),
+		// 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		// 						},
+		// 					},
+		// 					Volumes: []v1.Volume{
+		// 						{
+		// 							Name: kanikoSecretName,
+		// 							VolumeSource: v1.VolumeSource{
+		// 								Secret: &v1.SecretVolumeSource{
+		// 									SecretName: kanikoSecretName,
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 					Tolerations: []v1.Toleration{
+		// 						{
+		// 							Key:      "image-build-job",
+		// 							Operator: v1.TolerationOpEqual,
+		// 							Value:    "true",
+		// 							Effect:   v1.TaintEffectNoSchedule,
+		// 						},
+		// 					},
+		// 					NodeSelector: map[string]string{
+		// 						"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 		Status: batchv1.JobStatus{},
+		// 	},
+		// 	wantCreateJob: nil,
+		// 	wantImageRef:  fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+		// 	config:        config,
+		// },
+		// {
+		// 	name: "success: existing job already successful",
+		// 	args: args{
+		// 		project: project,
+		// 		model:   model,
+		// 		version: modelVersion,
+		// 	},
+		// 	existingJob: &batchv1.Job{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+		// 			Namespace: config.BuildNamespace,
+		// 			Labels: map[string]string{
+		// 				"gojek.com/app":          model.Name,
+		// 				"gojek.com/component":    models.ComponentImageBuilder,
+		// 				"gojek.com/environment":  config.Environment,
+		// 				"gojek.com/orchestrator": testOrchestratorName,
+		// 				"gojek.com/stream":       project.Stream,
+		// 				"gojek.com/team":         project.Team,
+		// 				"sample":                 "true",
+		// 				"test":                   "true",
+		// 			},
+		// 			Annotations: map[string]string{
+		// 				"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 			},
+		// 		},
+		// 		Spec: batchv1.JobSpec{
+		// 			Completions:             &jobCompletions,
+		// 			BackoffLimit:            &jobBackOffLimit,
+		// 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+		// 			ActiveDeadlineSeconds:   &timeoutInSecond,
+		// 			Template: v1.PodTemplateSpec{
+		// 				ObjectMeta: metav1.ObjectMeta{
+		// 					Labels: map[string]string{
+		// 						"gojek.com/app":          model.Name,
+		// 						"gojek.com/component":    models.ComponentImageBuilder,
+		// 						"gojek.com/environment":  config.Environment,
+		// 						"gojek.com/orchestrator": testOrchestratorName,
+		// 						"gojek.com/stream":       project.Stream,
+		// 						"gojek.com/team":         project.Team,
+		// 						"sample":                 "true",
+		// 						"test":                   "true",
+		// 					},
+		// 					Annotations: map[string]string{
+		// 						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 					},
+		// 				},
+		// 				Spec: v1.PodSpec{
+		// 					RestartPolicy: v1.RestartPolicyNever,
+		// 					Containers: []v1.Container{
+		// 						{
+		// 							Name:  containerName,
+		// 							Image: "gcr.io/kaniko-project/executor:v1.1.0",
+		// 							Args: []string{
+		// 								fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+		// 								fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+		// 								fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+		// 								fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+		// 								fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
+		// 								fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+		// 								fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+		// 								"--cache=true",
+		// 								"--compressed-caching=false",
+		// 								"--snapshot-mode=redo",
+		// 								"--use-new-run",
+		// 								fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+		// 							},
+		// 							VolumeMounts: []v1.VolumeMount{
+		// 								{
+		// 									Name:      kanikoSecretName,
+		// 									MountPath: "/secret",
+		// 								},
+		// 							},
+		// 							Env: []v1.EnvVar{
+		// 								{
+		// 									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+		// 									Value: "/secret/kaniko-secret.json",
+		// 								},
+		// 							},
+		// 							Resources:                defaultResourceRequests.Build(),
+		// 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		// 						},
+		// 					},
+		// 					Volumes: []v1.Volume{
+		// 						{
+		// 							Name: kanikoSecretName,
+		// 							VolumeSource: v1.VolumeSource{
+		// 								Secret: &v1.SecretVolumeSource{
+		// 									SecretName: kanikoSecretName,
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 					Tolerations: []v1.Toleration{
+		// 						{
+		// 							Key:      "image-build-job",
+		// 							Operator: v1.TolerationOpEqual,
+		// 							Value:    "true",
+		// 							Effect:   v1.TaintEffectNoSchedule,
+		// 						},
+		// 					},
+		// 					NodeSelector: map[string]string{
+		// 						"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 		Status: batchv1.JobStatus{
+		// 			Succeeded: 1,
+		// 		},
+		// 	},
+		// 	wantCreateJob:     nil,
+		// 	wantDeleteJobName: "",
+		// 	wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+		// 	config:            config,
+		// },
+		// {
+		// 	name: "success: existing job failed",
+		// 	args: args{
+		// 		project: project,
+		// 		model:   model,
+		// 		version: modelVersion,
+		// 	},
+		// 	existingJob: &batchv1.Job{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+		// 			Namespace: config.BuildNamespace,
+		// 			Labels: map[string]string{
+		// 				"gojek.com/app":          model.Name,
+		// 				"gojek.com/component":    models.ComponentImageBuilder,
+		// 				"gojek.com/environment":  config.Environment,
+		// 				"gojek.com/orchestrator": testOrchestratorName,
+		// 				"gojek.com/stream":       project.Stream,
+		// 				"gojek.com/team":         project.Team,
+		// 				"sample":                 "true",
+		// 				"test":                   "true",
+		// 			},
+		// 			Annotations: map[string]string{
+		// 				"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 			},
+		// 		},
+		// 		Spec: batchv1.JobSpec{
+		// 			Completions:             &jobCompletions,
+		// 			BackoffLimit:            &jobBackOffLimit,
+		// 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+		// 			ActiveDeadlineSeconds:   &timeoutInSecond,
+		// 			Template: v1.PodTemplateSpec{
+		// 				ObjectMeta: metav1.ObjectMeta{
+		// 					Labels: map[string]string{
+		// 						"gojek.com/app":          model.Name,
+		// 						"gojek.com/component":    models.ComponentImageBuilder,
+		// 						"gojek.com/environment":  config.Environment,
+		// 						"gojek.com/orchestrator": testOrchestratorName,
+		// 						"gojek.com/stream":       project.Stream,
+		// 						"gojek.com/team":         project.Team,
+		// 						"sample":                 "true",
+		// 						"test":                   "true",
+		// 					},
+		// 					Annotations: map[string]string{
+		// 						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 					},
+		// 				},
+		// 				Spec: v1.PodSpec{
+		// 					RestartPolicy: v1.RestartPolicyNever,
+		// 					Containers: []v1.Container{
+		// 						{
+		// 							Name:  containerName,
+		// 							Image: "gcr.io/kaniko-project/executor:v1.1.0",
+		// 							Args: []string{
+		// 								fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+		// 								fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+		// 								fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+		// 								fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+		// 								fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
+		// 								fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+		// 								fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+		// 								"--cache=true",
+		// 								"--compressed-caching=false",
+		// 								"--snapshot-mode=redo",
+		// 								"--use-new-run",
+		// 								fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+		// 							},
+		// 							VolumeMounts: []v1.VolumeMount{
+		// 								{
+		// 									Name:      kanikoSecretName,
+		// 									MountPath: "/secret",
+		// 								},
+		// 							},
+		// 							Env: []v1.EnvVar{
+		// 								{
+		// 									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+		// 									Value: "/secret/kaniko-secret.json",
+		// 								},
+		// 							},
+		// 							Resources:                defaultResourceRequests.Build(),
+		// 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		// 						},
+		// 					},
+		// 					Volumes: []v1.Volume{
+		// 						{
+		// 							Name: kanikoSecretName,
+		// 							VolumeSource: v1.VolumeSource{
+		// 								Secret: &v1.SecretVolumeSource{
+		// 									SecretName: kanikoSecretName,
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 					Tolerations: []v1.Toleration{
+		// 						{
+		// 							Key:      "image-build-job",
+		// 							Operator: v1.TolerationOpEqual,
+		// 							Value:    "true",
+		// 							Effect:   v1.TaintEffectNoSchedule,
+		// 						},
+		// 					},
+		// 					NodeSelector: map[string]string{
+		// 						"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 		Status: batchv1.JobStatus{
+		// 			Failed: 1,
+		// 		},
+		// 	},
+		// 	wantCreateJob: &batchv1.Job{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+		// 			Namespace: config.BuildNamespace,
+		// 			Labels: map[string]string{
+		// 				"gojek.com/app":          model.Name,
+		// 				"gojek.com/component":    models.ComponentImageBuilder,
+		// 				"gojek.com/environment":  config.Environment,
+		// 				"gojek.com/orchestrator": testOrchestratorName,
+		// 				"gojek.com/stream":       project.Stream,
+		// 				"gojek.com/team":         project.Team,
+		// 				"sample":                 "true",
+		// 				"test":                   "true",
+		// 			},
+		// 			Annotations: map[string]string{
+		// 				"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 			},
+		// 		},
+		// 		Spec: batchv1.JobSpec{
+		// 			Completions:             &jobCompletions,
+		// 			BackoffLimit:            &jobBackOffLimit,
+		// 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+		// 			ActiveDeadlineSeconds:   &timeoutInSecond,
+		// 			Template: v1.PodTemplateSpec{
+		// 				ObjectMeta: metav1.ObjectMeta{
+		// 					Labels: map[string]string{
+		// 						"gojek.com/app":          model.Name,
+		// 						"gojek.com/component":    models.ComponentImageBuilder,
+		// 						"gojek.com/environment":  config.Environment,
+		// 						"gojek.com/orchestrator": testOrchestratorName,
+		// 						"gojek.com/stream":       project.Stream,
+		// 						"gojek.com/team":         project.Team,
+		// 						"sample":                 "true",
+		// 						"test":                   "true",
+		// 					},
+		// 					Annotations: map[string]string{
+		// 						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+		// 					},
+		// 				},
+		// 				Spec: v1.PodSpec{
+		// 					RestartPolicy: v1.RestartPolicyNever,
+		// 					Containers: []v1.Container{
+		// 						{
+		// 							Name:  containerName,
+		// 							Image: "gcr.io/kaniko-project/executor:v1.1.0",
+		// 							Args: []string{
+		// 								fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+		// 								fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+		// 								fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+		// 								fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+		// 								fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
+		// 								fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+		// 								fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+		// 								"--cache=true",
+		// 								"--compressed-caching=false",
+		// 								"--snapshot-mode=redo",
+		// 								"--use-new-run",
+		// 								fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+		// 							},
+		// 							VolumeMounts: []v1.VolumeMount{
+		// 								{
+		// 									Name:      kanikoSecretName,
+		// 									MountPath: "/secret",
+		// 								},
+		// 							},
+		// 							Env: []v1.EnvVar{
+		// 								{
+		// 									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+		// 									Value: "/secret/kaniko-secret.json",
+		// 								},
+		// 							},
+		// 							Resources:                defaultResourceRequests.Build(),
+		// 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		// 						},
+		// 					},
+		// 					Volumes: []v1.Volume{
+		// 						{
+		// 							Name: kanikoSecretName,
+		// 							VolumeSource: v1.VolumeSource{
+		// 								Secret: &v1.SecretVolumeSource{
+		// 									SecretName: kanikoSecretName,
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 					Tolerations: []v1.Toleration{
+		// 						{
+		// 							Key:      "image-build-job",
+		// 							Operator: v1.TolerationOpEqual,
+		// 							Value:    "true",
+		// 							Effect:   v1.TaintEffectNoSchedule,
+		// 						},
+		// 					},
+		// 					NodeSelector: map[string]string{
+		// 						"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 		Status: batchv1.JobStatus{},
+		// 	},
+		// 	wantDeleteJobName: fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+		// 	wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+		// 	config:            config,
+		// },
 	}
 
 	for _, tt := range tests {
@@ -1361,9 +1316,13 @@ func TestBuildImage(t *testing.T) {
 			})
 
 			imageBuilderCfg := tt.config
-			// TODO(arief)
-			gsutil, _ := gsutil.NewClient(context.Background())
-			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, gsutil)
+
+			gsutilMock := &mocks.GSUtil{}
+			gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
+			gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+			gsutilMock.On("WriteFile", mock.Anything, modelDependenciesURL, testCondaEnvContent).Return(nil)
+
+			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, gsutilMock)
 
 			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 			var actions []ktesting.Action
