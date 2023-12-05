@@ -115,9 +115,15 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-		DefaultResourceRequest: cfg.ResourceRequestConfig{
-			CPURequest:    "500m",
-			MemoryRequest: "1Gi",
+		DefaultResourceRequest: cfg.ResourceRequestsLimits{
+			Requests: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+			Limits: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
 		},
 		Tolerations: []v1.Toleration{
 			{
@@ -163,9 +169,15 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-		DefaultResourceRequest: cfg.ResourceRequestConfig{
-			CPURequest:    "500m",
-			MemoryRequest: "1Gi",
+		DefaultResourceRequest: cfg.ResourceRequestsLimits{
+			Requests: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+			Limits: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
 		},
 		Tolerations: []v1.Toleration{
 			{
