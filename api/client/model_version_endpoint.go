@@ -30,6 +30,7 @@ type VersionEndpoint struct {
 	DeploymentMode              *DeploymentMode    `json:"deployment_mode,omitempty"`
 	AutoscalingPolicy           *AutoscalingPolicy `json:"autoscaling_policy,omitempty"`
 	Protocol                    *Protocol          `json:"protocol,omitempty"`
+	EnableModelObservability    bool               `json:"enable_model_observability,omitempty"`
 	CreatedAt                   time.Time          `json:"created_at,omitempty"`
 	UpdatedAt                   time.Time          `json:"updated_at,omitempty"`
 }

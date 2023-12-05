@@ -28,8 +28,9 @@ type SecretApiService service
 
 /*
 SecretApiService List secret
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param projectId
+
 @return []Secret
 */
 func (a *SecretApiService) ProjectsProjectIdSecretsGet(ctx context.Context, projectId int32) ([]Secret, *http.Response, error) {
@@ -237,10 +238,9 @@ func (a *SecretApiService) ProjectsProjectIdSecretsPost(ctx context.Context, pro
 
 /*
 SecretApiService Delete secret
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectId
- * @param secretId
-
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param projectId
+  - @param secretId
 */
 func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdDelete(ctx context.Context, projectId int32, secretId int32) (*http.Response, error) {
 	var (
