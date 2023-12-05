@@ -87,7 +87,7 @@ class ResourceRequest:
 
     def validate(self):
         if self._min_replica is None and self._max_replica is None:
-            return
+            return 
 
         if self._min_replica > self._max_replica:
             raise Exception("Min replica must be less or equal to max replica")
