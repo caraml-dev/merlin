@@ -29,8 +29,6 @@ import (
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
-	merror "github.com/caraml-dev/merlin/pkg/errors"
-	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
