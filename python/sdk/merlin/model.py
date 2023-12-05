@@ -1131,10 +1131,8 @@ class ModelVersion:
 
         if image_builder_resource_request is not None:
             target_image_builder_resource_request = client.ResourceRequest(
-                0,
-                0,
-                image_builder_resource_request.cpu_request,
-                image_builder_resource_request.memory_request,
+                cpu_request=image_builder_resource_request.cpu_request,
+                memory_request=image_builder_resource_request.memory_request,
             )
 
         if autoscaling_policy is not None:
