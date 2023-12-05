@@ -1136,8 +1136,6 @@ class ModelVersion:
 
         if image_builder_resource_request is not None:
             target_image_builder_resource_request = client.ResourceRequest(
-                min_replica=0,
-                max_replica=0,
                 cpu_request=image_builder_resource_request.cpu_request,
                 memory_request=image_builder_resource_request.memory_request,
             )

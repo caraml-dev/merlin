@@ -38,7 +38,7 @@ class ResourceRequest:
         self.validate()
 
     @property
-    def min_replica(self) -> int:
+    def min_replica(self) -> Optional[int]:
         return self._min_replica
 
     @min_replica.setter
@@ -46,7 +46,7 @@ class ResourceRequest:
         self._min_replica = min_replica
 
     @property
-    def max_replica(self) -> int:
+    def max_replica(self) -> Optional[int]:
         return self._max_replica
 
     @max_replica.setter
@@ -54,7 +54,7 @@ class ResourceRequest:
         self._max_replica = max_replica
 
     @property
-    def cpu_request(self) -> str:
+    def cpu_request(self) -> Optional[str]:
         return self._cpu_request
 
     @cpu_request.setter
@@ -62,7 +62,7 @@ class ResourceRequest:
         self._cpu_request = cpu_request
 
     @property
-    def memory_request(self) -> str:
+    def memory_request(self) -> Optional[str]:
         return self._memory_request
 
     @memory_request.setter
