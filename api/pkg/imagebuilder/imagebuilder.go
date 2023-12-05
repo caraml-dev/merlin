@@ -482,6 +482,8 @@ func (c *imageBuilder) createKanikoJobSpec(
 	var resourceRequirements RequestLimitResources
 	cpuRequest := resource.MustParse(c.config.DefaultResourceRequest.CPURequest)
 	memoryRequest := resource.MustParse(c.config.DefaultResourceRequest.MemoryRequest)
+	cpuLimit := resource.MustParse(c.config.DefaultResourceRequest.CPULimit)
+	memoryLimit := resource.MustParse(c.config.DefaultResourceRequest.MemoryLimit)
 
 	if resourceRequest != nil {
 		if !resourceRequest.CPURequest.IsZero() {
@@ -490,6 +492,9 @@ func (c *imageBuilder) createKanikoJobSpec(
 		if !resourceRequest.MemoryRequest.IsZero() {
 			memoryRequest = resourceRequest.MemoryRequest
 		}
+
+		cpuLimit = resourceRequest.CPURequest
+		memoryLimit = resourceRequest.MemoryRequest
 	}
 
 	resourceRequirements = RequestLimitResources{
@@ -498,8 +503,8 @@ func (c *imageBuilder) createKanikoJobSpec(
 			Memory: memoryRequest,
 		},
 		Limit: Resource{
-			CPU:    cpuRequest,
-			Memory: memoryRequest,
+			CPU:    cpuLimit,
+			Memory: memoryLimit,
 		},
 	}
 

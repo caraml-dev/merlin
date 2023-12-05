@@ -110,6 +110,8 @@ type ResourceRequestConfig struct {
 	MaxReplica    int    `yaml:"max_replica"`
 	CPURequest    string `yaml:"cpu_request"`
 	MemoryRequest string `yaml:"memory_request"`
+	CPULimit      string `yaml:"cpu_limit"`
+	MemoryLimit   string `yaml:"memory_limit"`
 }
 
 type GPUConfig struct {
