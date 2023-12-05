@@ -13,14 +13,16 @@ import pandas as pd
 import pytest
 import requests
 from caraml.upi.utils import df_to_table
-from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, variable_pb2, type_pb2
+from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, variable_pb2, type_pb2, table_pb2
 from grpc_health.v1 import health_pb2_grpc, health_pb2
-from merlin.model import PyFuncModel
+from merlin.model import PyFuncModel, PyFuncV3Model
+from merlin.pyfunc import ModelInput, ModelOutput, Values
 from merlin.protocol import Protocol
 from prometheus_client import Counter, Gauge
 
 from pyfuncserver.config import GRPC_PORT, HTTP_PORT, MODEL_FULL_NAME, MODEL_NAME, MODEL_VERSION, PROTOCOL, WORKERS
 from test.utils import wait_server_ready
+from test.test_http import sample_model_input, sample_model_output
 
 
 class EchoUPIModel(PyFuncModel):
@@ -51,6 +53,40 @@ class EchoUPIModel(PyFuncModel):
             )
         )
 
+class SampleUPIPyFuncV3(PyFuncV3Model):
+
+    def __init__(self, model_name, model_version):
+        self._model_name = model_name
+        self._model_version = model_version
+
+    def upiv1_preprocess(self, request: upi_pb2.PredictValuesRequest,
+                    context: grpc.ServicerContext) -> ModelInput:
+        return sample_model_input
+    
+    def infer(self, model_input: ModelInput) -> ModelOutput:
+        return sample_model_output
+    
+    def upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
+        return upi_pb2.PredictValuesResponse(
+            target_name=request.target_name,
+            prediction_result_table=table_pb2.Table(
+                name="prediction_result_table",
+                columns=[
+                    table_pb2.Column(name="prediction_score", type=type_pb2.TYPE_DOUBLE),
+                    table_pb2.Column(name="prediction_label", type=type_pb2.TYPE_STRING)
+                ],
+                rows=[
+                    table_pb2.Row(row_id="0", values=[table_pb2.Value(double_value=0.95), table_pb2.Value(string_value="complete")]),
+                    table_pb2.Row(row_id="1", values=[table_pb2.Value(double_value=0.43), table_pb2.Value(string_value="incomplete")]),
+                    table_pb2.Row(row_id="2", values=[table_pb2.Value(double_value=0.59), table_pb2.Value(string_value="complete")]),
+                ]
+            ),
+            prediction_context=request.prediction_context,
+            metadata=upi_pb2.ResponseMetadata(
+                models=[upi_pb2.ModelMetadata(name=self._model_name, version=self._model_version)],
+                prediction_id=request.metadata.prediction_id
+        )
+    )
 
 @pytest.mark.parametrize("workers", [(1), (4), (8)])
 @pytest.mark.benchmark
@@ -63,7 +99,7 @@ def test_benchmark_multiprocess(workers, benchmark):
     metrics_path = "metrics_test"
 
     try:
-        c = start_upi_server(model_name, model_version, http_port, grpc_port, workers, metrics_path)
+        c = start_upi_server(EchoUPIModel(model_name, model_version), model_name, model_version, http_port, grpc_port, workers, metrics_path)
 
         channel = grpc.insecure_channel(f'localhost:{grpc_port}')
         
@@ -118,7 +154,8 @@ def test_upi(workers):
     metrics_path = "metrics_test"
 
     try:
-        c = start_upi_server(model_name, model_version, http_port, grpc_port, workers, metrics_path)
+        
+        c = start_upi_server(EchoUPIModel(model_name, model_version), model_name, model_version, http_port, grpc_port, workers, metrics_path)
 
         channel = grpc.insecure_channel(f'localhost:{grpc_port}')
 
@@ -176,10 +213,65 @@ def test_upi(workers):
         time.sleep(5)
 
 
-def start_upi_server(model_name="my-model", model_version="1", http_port=8080, grpc_port=8081, workers=1, metrics_path="prometheus"):
+def test_pyfuncv3_upi():
+    model_name = "my-model"
+    model_version = "1"
+    grpc_port = 9001
+    http_port = 8081
+    target_name = "echo"
+    metrics_path = "metrics_test"
+
+    try:
+        c = start_upi_server(SampleUPIPyFuncV3(model_name, model_version),model_name, model_version, http_port, grpc_port, 1, metrics_path)
+
+        channel = grpc.insecure_channel(f'localhost:{grpc_port}')
+
+        health_check_stub = health_pb2_grpc.HealthStub(channel)
+        response: health_pb2.HealthCheckResponse = health_check_stub.Check(health_pb2.HealthCheckRequest())
+        assert response.status == health_pb2.HealthCheckResponse.SERVING
+
+        stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
+        df = pd.DataFrame([[4, 1, "hi"]] * 3,
+                          columns=['int_value', 'int_value_2', 'string_value'],
+                          index=["0000", "1111", "2222"])
+        prediction_id = "12345"
+
+        prediction_context = [
+            variable_pb2.Variable(name="int_context", type=type_pb2.TYPE_INTEGER, integer_value=1),
+            variable_pb2.Variable(name="double_context", type=type_pb2.TYPE_DOUBLE, double_value=1.1),
+            variable_pb2.Variable(name="string_context", type=type_pb2.TYPE_STRING, string_value="hello")
+        ]
+        response: upi_pb2.PredictValuesResponse = stub.PredictValues(
+            request=upi_pb2.PredictValuesRequest(prediction_table=df_to_table(df, "predict"),
+                                                 target_name=target_name,
+                                                 prediction_context=prediction_context,
+                                                 metadata=upi_pb2.RequestMetadata(
+                                                     prediction_id=prediction_id, )
+                                                 )
+        )
+
+        assert response.metadata.prediction_id == prediction_id
+        assert response.metadata.models[0].name == model_name
+        assert response.metadata.models[0].version == model_version
+        assert list(response.prediction_context) == prediction_context
+        assert response.target_name == target_name
+
+        # test metrics
+        resp = requests.get(f"http://localhost:{http_port}/metrics")
+        assert resp.status_code == 200
+
+
+    finally:
+        os.killpg(os.getpgid(c.pid), signal.SIGTERM)
+        shutil.rmtree(metrics_path)
+        # Wait until the previous server have been terminated completely
+        time.sleep(5)
+
+
+def start_upi_server(python_model, model_name="my-model", model_version="1", http_port=8080, grpc_port=8081, workers=1, metrics_path="prometheus"):
     model_full_name = f"{model_name}-{model_version}"
 
-    mlflow.pyfunc.log_model("model", python_model=EchoUPIModel(model_name, model_version))
+    mlflow.pyfunc.log_model("model", python_model=python_model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
     env = os.environ.copy()
     mlflow.end_run()

@@ -21,11 +21,13 @@ import orjson
 import tornado.web
 
 from pyfuncserver.model.model import PyFuncModel
+from merlin.pyfunc import PyFuncOutput
 
 
 class PredictHandler(tornado.web.RequestHandler):
     def initialize(self, models):
         self.models = models  # pylint:disable=attribute-defined-outside-init
+        self.publisher = self.application.publisher
 
     def get_model(self, full_name: str):
         if full_name not in self.models:
@@ -57,11 +59,18 @@ class PredictHandler(tornado.web.RequestHandler):
         request = self.validate(self.request)
         headers = self.get_headers(self.request)
 
-        response = model.predict(request, headers=headers)
+        output = model.predict(request, headers=headers)
+        response_json = output
+        output_is_pyfunc_output = type(response_json) == PyFuncOutput
+        if output_is_pyfunc_output:
+            response_json = output.http_response
 
-        response_json = orjson.dumps(response)
+        response_json = orjson.dumps(response_json)
         self.write(response_json)
         self.set_header("Content-Type", "application/json; charset=UTF-8")
+
+        if self.publisher is not None and output_is_pyfunc_output and output.contains_prediction_log():
+            tornado.ioloop.IOLoop.current().spawn_callback(self.publisher.publish, output)
 
     def write_error(self, status_code: int, **kwargs: Any) -> None:
         logging.error(self._reason)

@@ -29,6 +29,7 @@ REQUIRES = [
     "Click>=7.0,<8.1.4",
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
+    "dataclasses-json>=0.5.2", # allow Flyte version 1.2.0 or above to import Merlin SDK
     "docker>=4.2.1",
     "google-cloud-storage>=1.19.0",
     "protobuf>=3.12.0,<5.0.0",  # Determined by the mlflow dependency
@@ -57,6 +58,7 @@ TEST_REQUIRES = [
     "types-python-dateutil",
     "types-PyYAML",
     "types-six",
+    "types-protobuf",
     "urllib3-mock>=0.3.3",
     "xarray",
     "xgboost==1.6.2",

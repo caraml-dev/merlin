@@ -209,6 +209,53 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 		},
 		{
+			name:    "Success: empty pyfunc_v3 model",
+			model:   &models.Model{Name: "model", Project: project, Type: models.ModelTypePyFuncV3},
+			version: &models.Version{ID: 1},
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName: env.Name,
+				ResourceRequest: env.DefaultResourceRequest,
+				VersionID:       version.ID,
+				Namespace:       project.Name,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
+				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
+					Environment:     env,
+					EnvironmentName: env.Name,
+					ResourceRequest: env.DefaultResourceRequest,
+					VersionID:       version.ID,
+					Namespace:       project.Name,
+				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", context.Background(), mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
+					Return("gojek/mymodel-1:latest", nil)
+				return mockImgBuilder
+			},
+		},
+		{
 			name:    "Success: pytorch model with transformer",
 			model:   &models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 			version: &models.Version{ID: 1},

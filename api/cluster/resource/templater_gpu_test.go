@@ -80,6 +80,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 	modelSvc := &models.Service{
 		Name:         "my-model-1",
 		ModelName:    "my-model",
+		Namespace:    "project",
 		ModelVersion: "1",
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
@@ -1572,10 +1573,11 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				QueueResourcePercentage:            tt.resourcePercentage,
 				PyfuncGRPCOptions:                  "{}",
 				GPUs:                               defaultGPUsConfig,
+				StandardTransformer:                standardTransformerConfig,
 			}
 
-			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig, tt.deploymentScale)
+			tpl := NewInferenceServiceTemplater(*deployConfig)
+			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

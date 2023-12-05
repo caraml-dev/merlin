@@ -1123,6 +1123,7 @@ definitions:
           - "pytorch"
           - "pyfunc"
           - "pyfunc_v2"
+          - "pyfunc_v3"
           - "custom"
       mlflow_url:
         type: "string"
@@ -1327,6 +1328,8 @@ definitions:
         $ref: "#/definitions/AutoscalingPolicy"
       protocol:
         $ref: "#/definitions/Protocol"
+      enable_model_observability:
+        type: "boolean"
       created_at:
         type: "string"
         format: "date-time"
@@ -1372,6 +1375,8 @@ definitions:
   Transformer:
     type: "object"
     properties:
+      id:
+        type: "string"
       enabled:
         type: "boolean"
       transformer_type:

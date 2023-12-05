@@ -30,6 +30,7 @@ const (
 	ModelTypeOnnx       = "onnx"
 	ModelTypePyFuncV2   = "pyfunc_v2"
 	ModelTypeCustom     = "custom"
+	ModelTypePyFuncV3   = "pyfunc_v3"
 )
 
 type ID int
@@ -63,4 +64,8 @@ type Model struct {
 	Endpoints []*ModelEndpoint `json:"endpoints" gorm:"foreignkey:ModelID;"`
 
 	CreatedUpdated
+}
+
+func (m *Model) IsPyFuncModelService() bool {
+	return m.Type == ModelTypePyFunc || m.Type == ModelTypePyFuncV3
 }

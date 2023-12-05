@@ -72,7 +72,8 @@ type VersionEndpoint struct {
 	// AutoscalingPolicy controls the conditions when autoscaling should be triggered
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy `json:"autoscaling_policy" gorm:"autoscaling_policy"`
 	// Protocol to be used when deploying the model
-	Protocol protocol.Protocol `json:"protocol" gorm:"protocol"`
+	Protocol                 protocol.Protocol `json:"protocol" gorm:"protocol"`
+	EnableModelObservability bool              `json:"enable_model_observability" gorm:"enable_model_observability"`
 	CreatedUpdated
 }
 

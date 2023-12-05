@@ -66,6 +66,7 @@ from merlin.version import VERSION
 #
 PyFuncModel = pyfunc.PyFuncModel
 PyFuncV2Model = pyfunc.PyFuncV2Model
+PyFuncV3Model = pyfunc.PyFuncV3Model
 PYFUNC_EXTRA_ARGS_KEY = pyfunc.PYFUNC_EXTRA_ARGS_KEY
 PYFUNC_MODEL_INPUT_KEY = pyfunc.PYFUNC_MODEL_INPUT_KEY
 
@@ -278,6 +279,7 @@ class ModelType(Enum):
     ONNX = "onnx"
     PYFUNC = "pyfunc"
     PYFUNC_V2 = "pyfunc_v2"
+    PYFUNC_V3 = "pyfunc_v3"
     CUSTOM = "custom"
 
 
@@ -684,7 +686,7 @@ class ModelVersion:
         self._labels = version.labels
         self._custom_predictor = version.custom_predictor
         self._python_version = version.python_version
-        mlflow.set_tracking_uri(model.project.mlflow_tracking_url)
+        mlflow.set_tracking_uri(model.project.mlflow_tracking_url) # type: ignore  # noqa
 
     @property
     def id(self) -> int:
@@ -809,7 +811,7 @@ class ModelVersion:
         Get MLFlow Run in a model version
         """
         try:
-            return mlflow.get_run(self._mlflow_run_id)
+            return mlflow.get_run(self._mlflow_run_id) # type: ignore  # noqa
         except MlflowException:
             return None
 
@@ -932,8 +934,9 @@ class ModelVersion:
         if (
             self._model.type != ModelType.PYFUNC
             and self._model.type != ModelType.PYFUNC_V2
+            and self._model.type != ModelType.PYFUNC_V3
         ):
-            raise ValueError("log_pyfunc_model is only for PyFunc and PyFuncV2 model")
+            raise ValueError("log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model")
 
         # add/replace python version in conda to match that used to create model version
         conda_env = _process_conda_env(conda_env, self._python_version)
@@ -973,6 +976,7 @@ class ModelVersion:
         if (
             self._model.type == ModelType.PYFUNC
             or self._model.type == ModelType.PYFUNC_V2
+            or self._model.type == ModelType.PYFUNC_V3
         ):
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
@@ -1012,7 +1016,7 @@ class ModelVersion:
             writer.write(f"args = {args}\n")
 
         validate_model_dir(self._model.type, model_dir)
-        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH) # type: ignore  # noqa
 
         if is_using_temp_dir:
             """
@@ -1058,6 +1062,7 @@ class ModelVersion:
         deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
+        enable_model_observability: bool = False
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1146,6 +1151,8 @@ class ModelVersion:
 
         if transformer is not None:
             target_transformer = ModelVersion._create_transformer_spec(transformer, target_env_name, env_list)
+            if current_endpoint is not None and current_endpoint.transformer is not None:
+                target_transformer.id = current_endpoint.transformer.id
 
         if logger is not None:
             target_logger = logger.to_logger_spec()
@@ -1163,6 +1170,7 @@ class ModelVersion:
             deployment_mode=target_deployment_mode,
             autoscaling_policy=target_autoscaling_policy,
             protocol=target_protocol,
+            enable_model_observability=enable_model_observability
         )
         if current_endpoint is not None:
             # This allows a serving deployment to be updated while it is serving
@@ -1186,12 +1194,16 @@ class ModelVersion:
             title=f"Deploying model {model.name} version " f"{self.id}",
         )
 
-        while endpoint.status == "pending":
+        while True:
+            # Emulate a do-while loop. Re-get the endpoint so that the API server would have
+            # started acting after the deployment job has been submitted.
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_get(
                 model_id=int(model.id), version_id=int(self.id), endpoint_id=endpoint.id
             )
-            bar.update()
+            if endpoint.status != "pending":
+                break
             sleep(5)
+            bar.update()
         bar.stop()
 
         if endpoint.status != "running" and endpoint.status != "serving":
@@ -1640,9 +1652,10 @@ class ModelVersion:
             target_env_vars = ModelVersion._add_env_vars(target_env_vars, transformer.env_vars)
 
         return client.Transformer(
-            transformer.enabled, transformer.transformer_type.value,
-            transformer.image, transformer.command, transformer.args,
-            target_resource_request, target_env_vars)
+            id=transformer.id, enabled=transformer.enabled,
+            transformer_type=transformer.transformer_type.value, image=transformer.image,
+            command=transformer.command, args=transformer.args,
+            resource_request=target_resource_request, env_vars=target_env_vars)
 
     def delete_model_version(self) -> int:
         """

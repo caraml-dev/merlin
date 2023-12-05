@@ -259,6 +259,7 @@ class MerlinClient:
         deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
+        enable_model_observability: bool = False
     ) -> VersionEndpoint:
         return model_version.deploy(
             environment_name,
@@ -270,6 +271,7 @@ class MerlinClient:
             deployment_mode,
             autoscaling_policy,
             protocol,
+            enable_model_observability
         )
 
     def undeploy(self, model_version: ModelVersion, environment_name: str = None):

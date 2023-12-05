@@ -1056,14 +1056,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("model-sdk-redeploy", ModelType.TENSORFLOW)
-    model_dir = "test/tensorflow-model"
+    merlin.set_model("model-sdk-redeploy", ModelType.CUSTOM)
 
     undeploy_all_version()
 
     # Upload new model version: v1
     with merlin.new_model_version() as v1:
-        merlin.log_model(model_dir=model_dir)
+        v1.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
 
     # Deploy using raw_deployment with CPU autoscaling policy
     endpoint = merlin.deploy(
@@ -1074,13 +1073,15 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+        transformer = Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest"),
     )
 
-    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
-
+    with open(os.path.join("test/transformer", "input.json"), "r") as f:
+        req = json.load(f)
+    
+    resp = requests.post(f"{endpoint.url}", json=req)
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     # Check the deployment configs of v1
     assert endpoint.resource_request.cpu_request == "123m"
@@ -1092,22 +1093,25 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert endpoint.autoscaling_policy.target_value == 50
 
+    # Check that the transformer id is set
+    assert endpoint.transformer.id != ""
+
     sleep(10)
 
-    # Deploy v2 using raw_deployment with CPU autoscaling policy
+    # Deploy v2 using raw_deployment with CPU autoscaling policy; update transformer specs.
     new_endpoint = merlin.deploy(
         v1,
         autoscaling_policy=merlin.AutoscalingPolicy(
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=90
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+        transformer = Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
+                                  resource_request=merlin.ResourceRequest(0, 1, "100m", "250Mi")),
     )
 
-    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
-
+    resp = requests.post(f"{new_endpoint.url}", json=req)
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     # Check that the endpoint remains the same
     assert endpoint.url == new_endpoint.url
@@ -1121,6 +1125,9 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert new_endpoint.autoscaling_policy.target_value == 90
+
+    # Check that the transformer id remains the same
+    assert endpoint.transformer.id == new_endpoint.transformer.id
 
     undeploy_all_version()
 
