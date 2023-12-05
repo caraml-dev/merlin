@@ -64,6 +64,7 @@ type Config struct {
 	UI                        UIConfig
 	StandardTransformerConfig StandardTransformerConfig
 	MlflowConfig              MlflowConfig
+	PyFuncPublisherConfig     PyFuncPublisherConfig
 }
 
 // UIConfig stores the configuration for the UI.
@@ -332,10 +333,19 @@ type StandardTransformerConfig struct {
 type KafkaConfig struct {
 	Topic               string
 	Brokers             string `validate:"required"`
+	Acks                int    `default:"0"`
 	CompressionType     string `validate:"required" default:"none"`
 	MaxMessageSizeBytes int    `validate:"required" default:"1048588"`
 	ConnectTimeoutMS    int    `validate:"required" default:"1000"`
 	SerializationFmt    string `validate:"required" default:"protobuf"`
+	LingerMS            int    `validate:"required" default:"100"`
+
+	AdditionalConfig string `validate:"required" default:"{}"`
+}
+
+type PyFuncPublisherConfig struct {
+	Kafka             KafkaConfig
+	SamplingRatioRate float64 `validate:"required" default:"0.01"`
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer

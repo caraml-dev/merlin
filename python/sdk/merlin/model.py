@@ -290,6 +290,7 @@ class ModelType(Enum):
     ONNX = "onnx"
     PYFUNC = "pyfunc"
     PYFUNC_V2 = "pyfunc_v2"
+    PYFUNC_V3 = "pyfunc_v3"
     CUSTOM = "custom"
 
 
@@ -944,8 +945,9 @@ class ModelVersion:
         if (
             self._model.type != ModelType.PYFUNC
             and self._model.type != ModelType.PYFUNC_V2
+            and self._model.type != ModelType.PYFUNC_V3
         ):
-            raise ValueError("log_pyfunc_model is only for PyFunc and PyFuncV2 model")
+            raise ValueError("log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model")
 
         # add/replace python version in conda to match that used to create model version
         conda_env = _process_conda_env(conda_env, self._python_version)
@@ -985,6 +987,7 @@ class ModelVersion:
         if (
             self._model.type == ModelType.PYFUNC
             or self._model.type == ModelType.PYFUNC_V2
+            or self._model.type == ModelType.PYFUNC_V3
         ):
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
@@ -1069,6 +1072,7 @@ class ModelVersion:
         deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
+        enable_model_observability: bool = False
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1168,6 +1172,7 @@ class ModelVersion:
             deployment_mode=target_deployment_mode,
             autoscaling_policy=target_autoscaling_policy,
             protocol=target_protocol,
+            enable_model_observability=enable_model_observability
         )
         if current_endpoint is not None:
             # This allows a serving deployment to be updated while it is serving

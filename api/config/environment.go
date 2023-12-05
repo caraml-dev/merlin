@@ -159,28 +159,30 @@ func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
 	return configs, nil
 }
 
-func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
+func ParseDeploymentConfig(envCfg *EnvironmentConfig, cfg *Config) DeploymentConfig {
 	return DeploymentConfig{
-		DeploymentTimeout: cfg.DeploymentTimeout,
-		NamespaceTimeout:  cfg.NamespaceTimeout,
+		DeploymentTimeout: envCfg.DeploymentTimeout,
+		NamespaceTimeout:  envCfg.NamespaceTimeout,
 		DefaultModelResourceRequests: &ResourceRequests{
-			MinReplica:    cfg.DefaultDeploymentConfig.MinReplica,
-			MaxReplica:    cfg.DefaultDeploymentConfig.MaxReplica,
-			CPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.CPURequest),
-			MemoryRequest: resource.MustParse(cfg.DefaultDeploymentConfig.MemoryRequest),
+			MinReplica:    envCfg.DefaultDeploymentConfig.MinReplica,
+			MaxReplica:    envCfg.DefaultDeploymentConfig.MaxReplica,
+			CPURequest:    resource.MustParse(envCfg.DefaultDeploymentConfig.CPURequest),
+			MemoryRequest: resource.MustParse(envCfg.DefaultDeploymentConfig.MemoryRequest),
 		},
 		DefaultTransformerResourceRequests: &ResourceRequests{
-			MinReplica:    cfg.DefaultTransformerConfig.MinReplica,
-			MaxReplica:    cfg.DefaultTransformerConfig.MaxReplica,
-			CPURequest:    resource.MustParse(cfg.DefaultTransformerConfig.CPURequest),
-			MemoryRequest: resource.MustParse(cfg.DefaultTransformerConfig.MemoryRequest),
+			MinReplica:    envCfg.DefaultTransformerConfig.MinReplica,
+			MaxReplica:    envCfg.DefaultTransformerConfig.MaxReplica,
+			CPURequest:    resource.MustParse(envCfg.DefaultTransformerConfig.CPURequest),
+			MemoryRequest: resource.MustParse(envCfg.DefaultTransformerConfig.MemoryRequest),
 		},
-		MaxCPU:                    resource.MustParse(cfg.MaxCPU),
-		MaxMemory:                 resource.MustParse(cfg.MaxMemory),
-		TopologySpreadConstraints: cfg.TopologySpreadConstraints,
-		QueueResourcePercentage:   cfg.QueueResourcePercentage,
-		PyfuncGRPCOptions:         pyfuncGRPCOptions,
-		PodDisruptionBudget:       cfg.PodDisruptionBudget,
-		GPUs:                      cfg.GPUs,
+		MaxCPU:                    resource.MustParse(envCfg.MaxCPU),
+		MaxMemory:                 resource.MustParse(envCfg.MaxMemory),
+		TopologySpreadConstraints: envCfg.TopologySpreadConstraints,
+		QueueResourcePercentage:   envCfg.QueueResourcePercentage,
+		PyfuncGRPCOptions:         cfg.PyfuncGRPCOptions,
+		PodDisruptionBudget:       envCfg.PodDisruptionBudget,
+		GPUs:                      envCfg.GPUs,
+		StandardTransformer:       cfg.StandardTransformerConfig,
+		PyFuncPublisher:           cfg.PyFuncPublisherConfig,
 	}
 }

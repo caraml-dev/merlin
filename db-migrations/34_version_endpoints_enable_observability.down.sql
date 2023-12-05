@@ -1,0 +1,2 @@
+ALTER TABLE version_endpoints
+DROP COLUMN enable_model_observability;

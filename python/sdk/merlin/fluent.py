@@ -356,6 +356,7 @@ def deploy(
     deployment_mode: DeploymentMode = None,
     autoscaling_policy: AutoscalingPolicy = None,
     protocol: Protocol = None,
+    enable_model_observability: bool = False
 ) -> VersionEndpoint:
     """
     Deploy a model version.
@@ -369,6 +370,7 @@ def deploy(
         :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
         :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
         :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
+        :param enable_model_observability: flag to determine whether model observability enabled for the endpoint
         :return: VersionEndpoint object
     """
     _check_active_client()
@@ -383,6 +385,7 @@ def deploy(
             deployment_mode,
             autoscaling_policy,
             protocol,
+            enable_model_observability
         )
 
     return _merlin_client.deploy(  # type: ignore
@@ -395,6 +398,7 @@ def deploy(
         deployment_mode,
         autoscaling_policy,
         protocol,
+        enable_model_observability
     )
 
 

@@ -311,7 +311,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, nil)
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, clusterresource.NewInferenceServiceTemplater(deployConfig))
 			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
 
 			if tt.wantError {
@@ -671,13 +671,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 					Enabled:                  true,
 					MaxUnavailablePercentage: &defaultMaxUnavailablePDB,
 				},
+				StandardTransformer: config.StandardTransformerConfig{
+					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
+					FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
+				},
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{
-				ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
-				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
-			})
+			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
 			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater)
 			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
@@ -804,12 +805,14 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 			v1Client := fake.NewSimpleClientset().CoreV1()
 			policyV1Client := fake.NewSimpleClientset().PolicyV1().(*fakepolicyv1.FakePolicyV1)
 
-			deployConfig := config.DeploymentConfig{}
+			deployConfig := config.DeploymentConfig{
+				StandardTransformer: config.StandardTransformerConfig{
+					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
+					FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
+				},
+			}
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{
-				ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
-				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
-			})
+			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
 			// Create test controller
 			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, nil, deployConfig, containerFetcher, templater)
@@ -1144,7 +1147,7 @@ func TestController_Delete(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 
-			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{})
+			templater := clusterresource.NewInferenceServiceTemplater(tt.deployConfig)
 
 			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, tt.deployConfig, containerFetcher, templater)
 			mSvc, err := ctl.Delete(context.Background(), tt.modelService)

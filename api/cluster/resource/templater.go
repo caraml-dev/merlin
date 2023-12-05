@@ -79,6 +79,14 @@ const (
 	defaultGRPCPort                  = 9000
 	defaultPredictorPort             = 80
 
+	envPublisherKafkaTopic    = "PUBLISHER_KAFKA_TOPIC"
+	envPublisherKafkaBrokers  = "PUBLISHER_KAFKA_BROKERS"
+	envPublisherEnabled       = "PUBLISHER_ENABLED"
+	envPublisherKafkaLinger   = "PUBLISHER_KAFKA_LINGER_MS"
+	envPublisherKafkaAck      = "PUBLISHER_KAFKA_ACKS"
+	envPublisherSamplingRatio = "PUBLISHER_SAMPLING_RATIO"
+	envPublisherKafkaConfig   = "PUBLISHER_KAFKA_CONFIG"
+
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
@@ -96,15 +104,15 @@ type DeploymentScale struct {
 }
 
 type InferenceServiceTemplater struct {
-	standardTransformerConfig config.StandardTransformerConfig
+	deploymentConfig config.DeploymentConfig
 }
 
-func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTransformerConfig) *InferenceServiceTemplater {
-	return &InferenceServiceTemplater{standardTransformerConfig: standardTransformerConfig}
+func NewInferenceServiceTemplater(deploymentCfg config.DeploymentConfig) *InferenceServiceTemplater {
+	return &InferenceServiceTemplater{deploymentConfig: deploymentCfg}
 }
 
-func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig, currentReplicas DeploymentScale) (*kservev1beta1.InferenceService, error) {
-	applyDefaults(modelService, config)
+func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, currentReplicas DeploymentScale) (*kservev1beta1.InferenceService, error) {
+	t.applyDefaults(modelService)
 
 	// Identify the desired initial scale of the new deployment
 	var initialScale *int
@@ -122,7 +130,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		}
 	}
 
-	annotations, err := createAnnotations(modelService, config, initialScale)
+	annotations, err := t.createAnnotations(modelService, initialScale)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
 	}
@@ -134,10 +142,9 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		Annotations: annotations,
 	}
 
-	predictorSpec := createPredictorSpec(modelService, config)
-	predictorSpec.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
+	predictorSpec := t.createPredictorSpec(modelService)
+	predictorSpec.TopologySpreadConstraints, err = t.createNewInferenceServiceTopologySpreadConstraints(
 		modelService,
-		config,
 		kservev1beta1.PredictorComponent,
 	)
 	if err != nil {
@@ -156,9 +163,8 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
-		inferenceService.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
+		inferenceService.Spec.Transformer.TopologySpreadConstraints, err = t.createNewInferenceServiceTopologySpreadConstraints(
 			modelService,
-			config,
 			kservev1beta1.TransformerComponent,
 		)
 		if err != nil {
@@ -169,7 +175,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	return inferenceService, nil
 }
 
-func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
+func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Set cpu limit and memory limit to be 2x of the requests
@@ -193,7 +199,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	tolerations := []corev1.Toleration{}
 	if modelService.ResourceRequest.GPUName != "" && !modelService.ResourceRequest.GPURequest.IsZero() {
 		// Look up to the GPU resource type and quantity from DeploymentConfig
-		for _, gpuConfig := range config.GPUs {
+		for _, gpuConfig := range t.deploymentConfig.GPUs {
 			if gpuConfig.Name == modelService.ResourceRequest.GPUName {
 				// Declare and initialize resourceType and resourceQuantity variables
 				resourceType := corev1.ResourceName(gpuConfig.ResourceType)
@@ -281,10 +287,20 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				},
 			},
 		}
-	case models.ModelTypePyFunc:
+	case models.ModelTypePyFunc, models.ModelTypePyFuncV3:
 		envVars := models.MergeEnvVars(modelService.EnvVars, createPyFuncDefaultEnvVars(modelService))
 		if modelService.Protocol == protocol.UpiV1 {
-			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: config.PyfuncGRPCOptions})
+			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
+		}
+		if modelService.EnabledModelObservability && modelService.Type == models.ModelTypePyFuncV3 {
+			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
+			envVars = append(envVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherSamplingRatio, Value: fmt.Sprintf("%f", pyfuncPublisherCfg.SamplingRatioRate)})
+			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaConfig, Value: pyfuncPublisherCfg.Kafka.AdditionalConfig})
 		}
 		predictorSpec = kservev1beta1.PredictorSpec{
 			PodSpec: kservev1beta1.PodSpec{
@@ -300,6 +316,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				},
 			},
 		}
+
 	case models.ModelTypeCustom:
 		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector, tolerations)
 	}
@@ -336,7 +353,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 
 	// Put in defaults if not provided by users (user's input is used)
 	if transformer.TransformerType == models.StandardTransformerType {
-		transformer.Image = t.standardTransformerConfig.ImageName
+		transformer.Image = t.deploymentConfig.StandardTransformer.ImageName
 		envVars = t.enrichStandardTransformerEnvVars(modelService, envVars)
 	}
 
@@ -424,43 +441,45 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 		}
 	}
 
+	standardTransformerCfg := t.deploymentConfig.StandardTransformer
+
 	// Additional env var to add
 	addEnvVar := models.EnvVars{}
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: t.standardTransformerConfig.DefaultFeastSource.String()})
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerCfg.DefaultFeastSource.String()})
 
 	// adding feast related config env variable
-	feastStorageConfig := t.standardTransformerConfig.ToFeastStorageConfigs()
+	feastStorageConfig := standardTransformerCfg.ToFeastStorageConfigs()
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
 	}
 	// Add keepalive configuration for predictor
 	// only pyfunc config that enforced by merlin
-	keepAliveModelCfg := t.standardTransformerConfig.ModelClientKeepAlive
-	if modelService.Protocol == protocol.UpiV1 && modelService.Type == models.ModelTypePyFunc {
+	keepAliveModelCfg := standardTransformerCfg.ModelClientKeepAlive
+	if modelService.Protocol == protocol.UpiV1 && (modelService.Type == models.ModelTypePyFunc || modelService.Type == models.ModelTypePyFuncV3) {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String()})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String()})
 	}
 
-	keepaliveCfg := t.standardTransformerConfig.FeastServingKeepAlive
+	keepaliveCfg := standardTransformerCfg.FeastServingKeepAlive
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: strconv.FormatBool(keepaliveCfg.Enabled)})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastGRPCConnCount, Value: fmt.Sprintf("%d", t.standardTransformerConfig.FeastGPRCConnCount)})
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastGRPCConnCount, Value: fmt.Sprintf("%d", standardTransformerCfg.FeastGPRCConnCount)})
 
 	if modelService.Protocol == protocol.UpiV1 {
 		// add kafka configuration
-		kafkaCfg := t.standardTransformerConfig.Kafka
+		kafkaCfg := standardTransformerCfg.Kafka
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaTopic, Value: modelService.GetPredictionLogTopic()})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaBrokers, Value: kafkaCfg.Brokers})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", kafkaCfg.MaxMessageSizeBytes)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", kafkaCfg.ConnectTimeoutMS)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaSerialization, Value: string(kafkaCfg.SerializationFmt)})
 
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelServerConnCount, Value: fmt.Sprintf("%d", t.standardTransformerConfig.ModelServerConnCount)})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelServerConnCount, Value: fmt.Sprintf("%d", standardTransformerCfg.ModelServerConnCount)})
 	}
 
-	jaegerCfg := t.standardTransformerConfig.Jaeger
+	jaegerCfg := standardTransformerCfg.Jaeger
 	jaegerEnvVars := []models.EnvVar{
 		{Name: transformerpkg.JaegerCollectorURL, Value: jaegerCfg.CollectorURL},
 		{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
@@ -520,14 +539,15 @@ func createPredictorHost(modelService *models.Service) string {
 	return fmt.Sprintf("%s-predictor.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
 }
 
-func createAnnotations(modelService *models.Service, config *config.DeploymentConfig, initialScale *int) (map[string]string, error) {
+func (t *InferenceServiceTemplater) createAnnotations(modelService *models.Service, initialScale *int) (map[string]string, error) {
 	annotations := make(map[string]string)
 
+	config := t.deploymentConfig
 	if config.QueueResourcePercentage != "" {
 		annotations[knserving.QueueSidecarResourcePercentageAnnotationKey] = config.QueueResourcePercentage
 	}
 
-	if modelService.Type == models.ModelTypePyFunc {
+	if modelService.Type == models.ModelTypePyFunc || modelService.Type == models.ModelTypePyFuncV3 {
 		annotations[annotationPrometheusScrapeFlag] = "true"
 		annotations[annotationPrometheusScrapePort] = fmt.Sprint(defaultHTTPPort)
 	}
@@ -594,11 +614,11 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 
 // createNewInferenceServiceTopologySpreadConstraints creates topology spread constrains for a component of a new
 // inference service
-func createNewInferenceServiceTopologySpreadConstraints(
+func (t *InferenceServiceTemplater) createNewInferenceServiceTopologySpreadConstraints(
 	modelService *models.Service,
-	config *config.DeploymentConfig,
 	component kservev1beta1.ComponentType,
 ) ([]corev1.TopologySpreadConstraint, error) {
+	config := t.deploymentConfig
 	if len(config.TopologySpreadConstraints) == 0 {
 		var topologySpreadConstraints []corev1.TopologySpreadConstraint
 		return topologySpreadConstraints, nil
@@ -778,12 +798,17 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 			Name:  envProtocol,
 			Value: fmt.Sprint(svc.Protocol),
 		},
+		models.EnvVar{
+			Name:  envProject,
+			Value: svc.Namespace,
+		},
 	}
 	return envVars
 }
 
-func applyDefaults(service *models.Service, config *config.DeploymentConfig) {
+func (t *InferenceServiceTemplater) applyDefaults(service *models.Service) {
 	// apply default resource request for model
+	config := t.deploymentConfig
 	if service.ResourceRequest == nil {
 		service.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultModelResourceRequests.MinReplica,

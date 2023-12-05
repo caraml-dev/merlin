@@ -45,6 +45,10 @@ type DeploymentConfig struct {
 	PodDisruptionBudget PodDisruptionBudgetConfig
 	// GPU Config
 	GPUs []GPUConfig
+	// PyFunc publisher Config
+	PyFuncPublisher PyFuncPublisherConfig
+	// Standard Transformer Config
+	StandardTransformer StandardTransformerConfig
 }
 
 type ResourceRequests struct {
