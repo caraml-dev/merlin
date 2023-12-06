@@ -54,9 +54,6 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf - -C /
 
-# Copy batch predictor application entrypoint to protected directory
-COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
-
 # Configure non-root user
 ENV USER spark
 ENV UID 185
@@ -78,19 +75,3 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MI
     rm ~/miniconda.sh && \
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
-
-# Copy batch predictor application
-COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
-COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
-ENV SDK_PATH=${HOME}/sdk
-
-# Setup base conda environment
-ARG PYTHON_VERSION
-ENV CONDA_ENVIRONMENT merlin-model
-RUN conda env create -f ${HOME}/merlin-spark-app/docker/env${PYTHON_VERSION}.yaml -n ${CONDA_ENVIRONMENT} && \
-    rm -rf ${HOME}/.cache
-
-RUN echo "conda activate ${CONDA_ENVIRONMENT}" >> $HOME/.bashrc
-ENV PATH ${CONDA_DIR}/envs/${CONDA_ENVIRONMENT}/bin:$PATH
-
-ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]

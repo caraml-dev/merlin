@@ -10,6 +10,7 @@ on:
 env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
+  DOCKER_REGISTRY: ghcr.io
   GO_VERSION: "1.20"
 
 jobs:
@@ -71,23 +72,27 @@ jobs:
 
   test-pyfunc-server:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
     env:
-      PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
+      PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ env.PIPENV_DEFAULT_PYTHON_VERSION }}-pipenv-pyfunc-server
+          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-pyfunc-server
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
@@ -254,26 +259,24 @@ jobs:
           path: merlin.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
-  build-batch-predictor:
+  build-push-batch-predictor-base:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["38", "39", "310"]
     needs:
       - create-version
+    env:
+      DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyspark-base:${{ needs.create-version.outputs.version }}"
     steps:
       - uses: actions/checkout@v2
-      - name: Build Batch Predictor Docker py${{ matrix.python-version }}
-        run: docker build -t merlin-pyspark-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} -f python/batch-predictor/docker/base.Dockerfile python
-      - name: Save Batch Predictor Docker
-        run: docker image save --output merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar merlin-pyspark-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }}
-      - name: Publish Batch Predictor Docker Artifact
-        uses: actions/upload-artifact@v2
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
         with:
-          name: merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
-          path: merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
-          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Batch Predictor Base Docker
+        run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/batch-predictor/docker/base.Dockerfile python
+      - name: Push Batch Predictor Base Docker
+        run: docker push ${{ env.DOCKER_IMAGE_TAG }}
 
   build-push-pyfunc-server-base:
     runs-on: ubuntu-latest
