@@ -106,7 +106,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		BuildTimeoutDuration: timeout,
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
 		KanikoServiceAccount: cfg.ImageBuilderConfig.KanikoServiceAccount,
-		DefaultResource:      *cfg.ImageBuilderConfig.DefaultResource,
+		DefaultResource:      cfg.ImageBuilderConfig.DefaultResource,
 		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
 		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
@@ -127,7 +127,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		BuildTimeoutDuration: timeout,
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
 		KanikoServiceAccount: cfg.ImageBuilderConfig.KanikoServiceAccount,
-		DefaultResource:      *cfg.ImageBuilderConfig.DefaultResource,
+		DefaultResource:      cfg.ImageBuilderConfig.DefaultResource,
 		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
 		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
@@ -204,7 +204,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 				MaxCPU:     envCfg.MaxCPU,
 				MaxMemory:  envCfg.MaxMemory,
 				GPUs:       models.ParseGPUsConfig(envCfg.GPUs),
-				DefaultResource: &models.ResourceRequest{
+				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
 					MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
 					CPURequest:    deploymentCfg.DefaultModelResourceRequests.CPURequest,
@@ -241,7 +241,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			env.MaxCPU = envCfg.MaxCPU
 			env.MaxMemory = envCfg.MaxMemory
 			env.GPUs = models.ParseGPUsConfig(envCfg.GPUs)
-			env.DefaultResource = &models.ResourceRequest{
+			env.DefaultResourceRequest = &models.ResourceRequest{
 				MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
 				MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
 				CPURequest:    deploymentCfg.DefaultModelResourceRequests.CPURequest,
