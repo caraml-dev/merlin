@@ -99,18 +99,18 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	}
 
 	webServiceConfig := imagebuilder.Config{
-		BaseImages:             cfg.ImageBuilderConfig.BaseImages,
-		BuildNamespace:         cfg.ImageBuilderConfig.BuildNamespace,
-		DockerRegistry:         cfg.ImageBuilderConfig.DockerRegistry,
-		ContextSubPath:         cfg.ImageBuilderConfig.ContextSubPath,
-		BuildTimeoutDuration:   timeout,
-		KanikoImage:            cfg.ImageBuilderConfig.KanikoImage,
-		KanikoServiceAccount:   cfg.ImageBuilderConfig.KanikoServiceAccount,
-		DefaultResourceRequest: *cfg.ImageBuilderConfig.DefaultResourceRequest,
-		Tolerations:            cfg.ImageBuilderConfig.Tolerations,
-		NodeSelectors:          cfg.ImageBuilderConfig.NodeSelectors,
-		MaximumRetry:           cfg.ImageBuilderConfig.MaximumRetry,
-		SafeToEvict:            cfg.ImageBuilderConfig.SafeToEvict,
+		BaseImages:           cfg.ImageBuilderConfig.BaseImages,
+		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
+		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
+		ContextSubPath:       cfg.ImageBuilderConfig.ContextSubPath,
+		BuildTimeoutDuration: timeout,
+		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
+		KanikoServiceAccount: cfg.ImageBuilderConfig.KanikoServiceAccount,
+		DefaultResource:      *cfg.ImageBuilderConfig.DefaultResource,
+		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
+		SafeToEvict:          cfg.ImageBuilderConfig.SafeToEvict,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -120,18 +120,18 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig)
 
 	predJobConfig := imagebuilder.Config{
-		BaseImages:             cfg.ImageBuilderConfig.PredictionJobBaseImages,
-		BuildNamespace:         cfg.ImageBuilderConfig.BuildNamespace,
-		DockerRegistry:         cfg.ImageBuilderConfig.DockerRegistry,
-		ContextSubPath:         cfg.ImageBuilderConfig.PredictionJobContextSubPath,
-		BuildTimeoutDuration:   timeout,
-		KanikoImage:            cfg.ImageBuilderConfig.KanikoImage,
-		KanikoServiceAccount:   cfg.ImageBuilderConfig.KanikoServiceAccount,
-		DefaultResourceRequest: *cfg.ImageBuilderConfig.DefaultResourceRequest,
-		Tolerations:            cfg.ImageBuilderConfig.Tolerations,
-		NodeSelectors:          cfg.ImageBuilderConfig.NodeSelectors,
-		MaximumRetry:           cfg.ImageBuilderConfig.MaximumRetry,
-		SafeToEvict:            cfg.ImageBuilderConfig.SafeToEvict,
+		BaseImages:           cfg.ImageBuilderConfig.PredictionJobBaseImages,
+		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
+		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
+		ContextSubPath:       cfg.ImageBuilderConfig.PredictionJobContextSubPath,
+		BuildTimeoutDuration: timeout,
+		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
+		KanikoServiceAccount: cfg.ImageBuilderConfig.KanikoServiceAccount,
+		DefaultResource:      *cfg.ImageBuilderConfig.DefaultResource,
+		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
+		SafeToEvict:          cfg.ImageBuilderConfig.SafeToEvict,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -204,7 +204,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 				MaxCPU:     envCfg.MaxCPU,
 				MaxMemory:  envCfg.MaxMemory,
 				GPUs:       models.ParseGPUsConfig(envCfg.GPUs),
-				DefaultResourceRequest: &models.ResourceRequest{
+				DefaultResource: &models.ResourceRequest{
 					MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
 					MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
 					CPURequest:    deploymentCfg.DefaultModelResourceRequests.CPURequest,
@@ -241,7 +241,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			env.MaxCPU = envCfg.MaxCPU
 			env.MaxMemory = envCfg.MaxMemory
 			env.GPUs = models.ParseGPUsConfig(envCfg.GPUs)
-			env.DefaultResourceRequest = &models.ResourceRequest{
+			env.DefaultResource = &models.ResourceRequest{
 				MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
 				MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
 				CPURequest:    deploymentCfg.DefaultModelResourceRequests.CPURequest,
