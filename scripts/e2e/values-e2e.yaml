@@ -45,7 +45,7 @@ imageBuilder:
     DockerRegistry: "dockerRegistry"
     BuildTimeout: "10m"
     KanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
-    Resources:
+    DefaultResourceRequest:
       Requests:
         CPU: "1"
         Memory: 512Mi
