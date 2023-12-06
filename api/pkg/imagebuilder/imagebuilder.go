@@ -69,7 +69,7 @@ var (
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
 	// return docker image ref
-	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error)
+	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error)
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
 	GetMainAppPath(version *models.Version) (string, error)
@@ -131,7 +131,7 @@ func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 
 // BuildImage build a docker image for the given model version
 // Returns the docker image ref
-func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error) {
+func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
 	imageExists := c.imageExists(imageName, version.ID.String())
@@ -169,7 +169,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec, err := c.createKanikoJobSpec(project, model, version)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest)
 		if err != nil {
 			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 			return "", ErrUnableToCreateJobSpec{
@@ -199,7 +199,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec, err := c.createKanikoJobSpec(project, model, version)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest)
 			if err != nil {
 				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 				return "", ErrUnableToCreateJobSpec{
@@ -402,7 +402,12 @@ func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) err
 	}
 }
 
-func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) (*batchv1.Job, error) {
+func (c *imageBuilder) createKanikoJobSpec(
+	project mlp.Project,
+	model *models.Model,
+	version *models.Version,
+	resourceRequest *models.ResourceRequest,
+) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
@@ -474,22 +479,34 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		}
 	}
 
-	resourceRequirements := RequestLimitResources{
+	var resourceRequirements RequestLimitResources
+	cpuRequest := resource.MustParse(c.config.DefaultResources.Requests.CPU)
+	memoryRequest := resource.MustParse(c.config.DefaultResources.Requests.Memory)
+	cpuLimit := resource.MustParse(c.config.DefaultResources.Limits.CPU)
+	memoryLimit := resource.MustParse(c.config.DefaultResources.Limits.Memory)
+
+	// User defined resource request and limit will override the default value
+	if resourceRequest != nil {
+		if !resourceRequest.CPURequest.IsZero() {
+			cpuRequest = resourceRequest.CPURequest
+		}
+		if !resourceRequest.MemoryRequest.IsZero() {
+			memoryRequest = resourceRequest.MemoryRequest
+		}
+
+		// If user overide the request, we also override the limit == request
+		cpuLimit = resourceRequest.CPURequest
+		memoryLimit = resourceRequest.MemoryRequest
+	}
+
+	resourceRequirements = RequestLimitResources{
 		Request: Resource{
-			CPU: resource.MustParse(
-				c.config.Resources.Requests.CPU,
-			),
-			Memory: resource.MustParse(
-				c.config.Resources.Requests.Memory,
-			),
+			CPU:    cpuRequest,
+			Memory: memoryRequest,
 		},
 		Limit: Resource{
-			CPU: resource.MustParse(
-				c.config.Resources.Limits.CPU,
-			),
-			Memory: resource.MustParse(
-				c.config.Resources.Limits.Memory,
-			),
+			CPU:    cpuLimit,
+			Memory: memoryLimit,
 		},
 	}
 

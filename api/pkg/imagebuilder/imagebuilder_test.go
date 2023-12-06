@@ -115,7 +115,7 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-		Resources: cfg.ResourceRequestsLimits{
+		DefaultResources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
 				Memory: "1Gi",
@@ -169,7 +169,7 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-		Resources: cfg.ResourceRequestsLimits{
+		DefaultResources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
 				Memory: "1Gi",
@@ -204,6 +204,17 @@ var (
 			Memory: resource.MustParse("1Gi"),
 		},
 	}
+
+	customResourceRequests = RequestLimitResources{
+		Request: Resource{
+			CPU:    resource.MustParse("2"),
+			Memory: resource.MustParse("4Gi"),
+		},
+		Limit: Resource{
+			CPU:    resource.MustParse("2"),
+			Memory: resource.MustParse("4Gi"),
+		},
+	}
 )
 
 func TestBuildImage(t *testing.T) {
@@ -215,9 +226,10 @@ func TestBuildImage(t *testing.T) {
 	}()
 
 	type args struct {
-		project mlp.Project
-		model   *models.Model
-		version *models.Version
+		project         mlp.Project
+		model           *models.Model
+		version         *models.Version
+		resourceRequest *models.ResourceRequest
 	}
 
 	tests := []struct {
@@ -558,7 +570,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-				Resources:            config.Resources,
+				DefaultResources:     config.DefaultResources,
 				NodeSelectors: map[string]string{
 					"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 				},
@@ -701,7 +713,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-				Resources:            config.Resources,
+				DefaultResources:     config.DefaultResources,
 				Tolerations: []v1.Toleration{
 					{
 						Key:      "image-build-job",
@@ -850,7 +862,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           config.GcpProject,
 				Environment:          config.Environment,
 				KanikoImage:          config.KanikoImage,
-				Resources:            config.Resources,
+				DefaultResources:     config.DefaultResources,
 				MaximumRetry:         config.MaximumRetry,
 				NodeSelectors:        config.NodeSelectors,
 				Tolerations:          config.Tolerations,
@@ -1286,6 +1298,120 @@ func TestBuildImage(t *testing.T) {
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:            config,
 		},
+		{
+			name: "success: with custom resource request",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+				resourceRequest: &models.ResourceRequest{
+					CPURequest:    resource.MustParse("2"),
+					MemoryRequest: resource.MustParse("4Gi"),
+				},
+			},
+			existingJob: nil,
+			wantCreateJob: &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+					Namespace: config.BuildNamespace,
+					Labels: map[string]string{
+						"gojek.com/app":          model.Name,
+						"gojek.com/component":    models.ComponentImageBuilder,
+						"gojek.com/environment":  config.Environment,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       project.Stream,
+						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Completions:             &jobCompletions,
+					BackoffLimit:            &jobBackOffLimit,
+					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/component":    models.ComponentImageBuilder,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/orchestrator": testOrchestratorName,
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+							},
+						},
+						Spec: v1.PodSpec{
+							RestartPolicy: v1.RestartPolicyNever,
+							Containers: []v1.Container{
+								{
+									Name:  containerName,
+									Image: "gcr.io/kaniko-project/executor:v1.1.0",
+									Args: []string{
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+										"--cache=true",
+										"--single-snapshot",
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+									},
+									VolumeMounts: []v1.VolumeMount{
+										{
+											Name:      kanikoSecretName,
+											MountPath: "/secret",
+										},
+									},
+									Env: []v1.EnvVar{
+										{
+											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+											Value: "/secret/kaniko-secret.json",
+										},
+									},
+									Resources:                customResourceRequests.Build(),
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+								},
+							},
+							Volumes: []v1.Volume{
+								{
+									Name: kanikoSecretName,
+									VolumeSource: v1.VolumeSource{
+										Secret: &v1.SecretVolumeSource{
+											SecretName: kanikoSecretName,
+										},
+									},
+								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+							},
+						},
+					},
+				},
+				Status: batchv1.JobStatus{},
+			},
+			wantDeleteJobName: "",
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+			config:            config,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1342,7 +1468,7 @@ func TestBuildImage(t *testing.T) {
 			imageBuilderCfg := tt.config
 			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg)
 
-			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version)
+			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version, tt.args.resourceRequest)
 			var actions []ktesting.Action
 			assert.NoError(t, err)
 			assert.Equal(t, tt.wantImageRef, imageRef)

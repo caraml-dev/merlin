@@ -350,6 +350,7 @@ def deploy(
     model_version: ModelVersion = None,
     environment_name: str = None,
     resource_request: ResourceRequest = None,
+    image_builder_resource_request: ResourceRequest = None,
     env_vars: Dict[str, str] = None,
     transformer: Transformer = None,
     logger: Logger = None,
@@ -364,6 +365,7 @@ def deploy(
         :param model_version: If model_version is not given it will deploy active model version
         :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
         :param resource_request: The resource requirement and replicas requests for model version endpoint.
+        :param image_builder_resource_request: The resource requirement and replicas requests for image builder job.
         :param env_vars: List of environment variables to be passed to the model container.
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
@@ -379,6 +381,7 @@ def deploy(
         return _active_model_version.deploy(  # type: ignore
             environment_name,
             resource_request,
+            image_builder_resource_request,
             env_vars,
             transformer,
             logger,
@@ -392,6 +395,7 @@ def deploy(
         model_version,
         environment_name,
         resource_request,
+        image_builder_resource_request,
         env_vars,
         transformer,
         logger,

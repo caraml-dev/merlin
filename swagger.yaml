@@ -1312,6 +1312,8 @@ definitions:
         type: "string"
       resource_request:
         $ref: "#/definitions/ResourceRequest"
+      image_builder_resource_request:
+        $ref: "#/definitions/ResourceRequest"
       env_vars:
         type: "array"
         items:
@@ -1534,6 +1536,8 @@ definitions:
         type: "string"
       resource_request:
         $ref: "#/definitions/PredictionJobResourceRequest"
+      image_builder_resource_request:
+        $ref: "#/definitions/ResourceRequest"
       env_vars:
         type: "array"
         items:

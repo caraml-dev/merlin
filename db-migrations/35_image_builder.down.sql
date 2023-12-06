@@ -1,0 +1,1 @@
+ALTER TABLE version_endpoints DROP COLUMN image_builder_resource_request;

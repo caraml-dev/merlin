@@ -170,6 +170,11 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.ResourceRequest = right.ResourceRequest
 	}
 
+	// override image builder resource request
+	if right.ImageBuilderResourceRequest != nil {
+		left.ImageBuilderResourceRequest = right.ImageBuilderResourceRequest
+	}
+
 	// override logger
 	if right.Logger != nil {
 		left.Logger = right.Logger
