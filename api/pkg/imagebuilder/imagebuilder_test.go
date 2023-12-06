@@ -115,7 +115,7 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-		DefaultResource: cfg.ResourceRequestsLimits{
+		DefaultResources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
 				Memory: "1Gi",
@@ -169,7 +169,7 @@ var (
 		GcpProject:           "test-project",
 		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-		DefaultResource: cfg.ResourceRequestsLimits{
+		DefaultResources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
 				Memory: "1Gi",
@@ -570,7 +570,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-				DefaultResource:      config.DefaultResource,
+				DefaultResources:     config.DefaultResources,
 				NodeSelectors: map[string]string{
 					"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 				},
@@ -713,7 +713,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
-				DefaultResource:      config.DefaultResource,
+				DefaultResources:     config.DefaultResources,
 				Tolerations: []v1.Toleration{
 					{
 						Key:      "image-build-job",
@@ -862,7 +862,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           config.GcpProject,
 				Environment:          config.Environment,
 				KanikoImage:          config.KanikoImage,
-				DefaultResource:      config.DefaultResource,
+				DefaultResources:     config.DefaultResources,
 				MaximumRetry:         config.MaximumRetry,
 				NodeSelectors:        config.NodeSelectors,
 				Tolerations:          config.Tolerations,
