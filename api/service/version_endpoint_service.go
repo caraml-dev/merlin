@@ -237,6 +237,8 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.Protocol = protocol.HttpJson
 	}
 
+	left.EnableModelObservability = right.EnableModelObservability
+
 	return nil
 }
 
@@ -292,7 +294,7 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 	}
 
 	containers := make([]*models.Container, 0)
-	if model.Type == models.ModelTypePyFunc {
+	if model.IsPyFuncModelService() {
 		imgBuilderContainers, err := k.imageBuilder.GetContainers(ctx, model.Project, model, version)
 		if err != nil {
 			return nil, err

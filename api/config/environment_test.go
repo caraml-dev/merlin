@@ -146,7 +146,7 @@ func TestPDBConfig(t *testing.T) {
 			}
 
 			for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
-				deploymentCfg := ParseDeploymentConfig(envCfg, "")
+				deploymentCfg := ParseDeploymentConfig(envCfg, cfg)
 				assert.Equal(t, tC.expectedPDBConfig, deploymentCfg.PodDisruptionBudget)
 			}
 		})
@@ -253,7 +253,7 @@ func TestGPUsConfig(t *testing.T) {
 			}
 
 			for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
-				deploymentCfg := ParseDeploymentConfig(envCfg, "")
+				deploymentCfg := ParseDeploymentConfig(envCfg, cfg)
 				assert.Equal(t, tC.expectedGPUsConfig, deploymentCfg.GPUs)
 			}
 		})

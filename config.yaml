@@ -80,3 +80,9 @@ StandardTransformerConfig:
 MlflowConfig:
   TrackingURL: https://caraml.dev/mlflow
   ArtifactServiceType: nop
+
+PyFuncPublisherConfig:
+  Kafka:
+    Brokers: localhost:9092
+    LingerMS: 1000
+    Acks: 0

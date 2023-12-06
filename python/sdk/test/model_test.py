@@ -124,6 +124,18 @@ upi_ep = cl.VersionEndpoint(
     protocol=cl.Protocol.UPI_V1,
 )
 
+observability_enabled_ep = cl.VersionEndpoint(
+    "7899",
+    1,
+    "running",
+    "localhost/1",
+    "svc-1",
+    env_3.name,
+    env_3,
+    "grafana.com",
+    enable_model_observability=True,
+)
+
 rule_1 = cl.ModelEndpointRule(
     destinations=[cl.ModelEndpointRuleDestination(ep1.id, weight=100)]
 )
@@ -718,6 +730,55 @@ class TestModelVersion:
             endpoint.resource_request.gpu_request
             == resource_request_with_gpu.gpu_request
         )
+
+    @responses.activate
+    def test_deploy_with_model_observability_enabled(self, version):
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(observability_enabled_ep.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([observability_enabled_ep.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint/7899",
+            body=json.dumps(observability_enabled_ep.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+
+        endpoint = version.deploy(environment_name=env_3.name, enable_model_observability=True)
+
+        assert endpoint.id == observability_enabled_ep.id
+        assert endpoint.status.value == observability_enabled_ep.status
+        assert endpoint.environment_name == observability_enabled_ep.environment_name
+        assert endpoint.environment.cluster == env_3.cluster
+        assert endpoint.environment.name == env_3.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.enable_model_observability == True
 
     @responses.activate
     def test_undeploy(self, version):

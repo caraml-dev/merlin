@@ -155,7 +155,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	ctl, err := cluster.NewController(
 		clusterCfg,
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
-		config.StandardTransformerConfig{})
+	)
 	imageBuilderJanitor = imagebuilder.NewJanitor(ctl, imagebuilder.JanitorConfig{
 		BuildNamespace: cfg.ImageBuilderConfig.BuildNamespace,
 		Retention:      cfg.ImageBuilderConfig.Retention,
@@ -196,7 +196,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			isDefaultPredictionJob = &envCfg.IsDefaultPredictionJob
 		}
 
-		deploymentCfg := config.ParseDeploymentConfig(envCfg, cfg.PyfuncGRPCOptions)
+		deploymentCfg := config.ParseDeploymentConfig(envCfg, cfg)
 
 		env, err := envSvc.GetEnvironment(envCfg.Name)
 		if err != nil {
@@ -435,8 +435,8 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 
 		ctl, err := cluster.NewController(
 			clusterCfg,
-			config.ParseDeploymentConfig(env, cfg.PyfuncGRPCOptions),
-			cfg.StandardTransformerConfig)
+			config.ParseDeploymentConfig(env, cfg),
+		)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
 		}
@@ -475,7 +475,7 @@ func initLogService(cfg *config.Config) service.LogService {
 	ctl, err := cluster.NewController(
 		clusterCfg,
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
-		cfg.StandardTransformerConfig)
+	)
 	if err != nil {
 		log.Panicf("unable to initialize cluster controller %v", err)
 	}
@@ -497,8 +497,8 @@ func initLogService(cfg *config.Config) service.LogService {
 
 		ctl, err := cluster.NewController(
 			clusterCfg,
-			config.ParseDeploymentConfig(env, cfg.PyfuncGRPCOptions),
-			cfg.StandardTransformerConfig)
+			config.ParseDeploymentConfig(env, cfg),
+		)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
 		}

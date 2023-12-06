@@ -51,7 +51,8 @@ type Service struct {
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy
 	Protocol          protocol.Protocol
 	// CurrentIsvcName is the name of the current running/serving InferenceService's revision
-	CurrentIsvcName string
+	CurrentIsvcName           string
+	EnabledModelObservability bool
 }
 
 func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
@@ -73,17 +74,22 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 			Team:      model.Project.Team,
 			Labels:    MergeProjectVersionLabels(model.Project.Labels, version.Labels),
 		},
-		Transformer:       endpoint.Transformer,
-		Logger:            endpoint.Logger,
-		DeploymentMode:    endpoint.DeploymentMode,
-		AutoscalingPolicy: endpoint.AutoscalingPolicy,
-		Protocol:          endpoint.Protocol,
-		CurrentIsvcName:   endpoint.InferenceServiceName,
+		Transformer:               endpoint.Transformer,
+		Logger:                    endpoint.Logger,
+		DeploymentMode:            endpoint.DeploymentMode,
+		AutoscalingPolicy:         endpoint.AutoscalingPolicy,
+		Protocol:                  endpoint.Protocol,
+		CurrentIsvcName:           endpoint.InferenceServiceName,
+		EnabledModelObservability: endpoint.EnableModelObservability,
 	}
 }
 
 func (svc *Service) GetPredictionLogTopic() string {
 	return fmt.Sprintf("caraml-%s-%s-prediction-log", svc.Namespace, svc.ModelName)
+}
+
+func (svc *Service) GetPredictionLogTopicForVersion() string {
+	return fmt.Sprintf("caraml-%s-%s-%s-prediction-log", svc.Namespace, svc.ModelName, svc.ModelVersion)
 }
 
 func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
