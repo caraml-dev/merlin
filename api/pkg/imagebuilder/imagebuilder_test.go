@@ -24,11 +24,7 @@ import (
 	"testing"
 	"time"
 
-	cfg "github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/mlp"
-	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/gsutil"
-	"github.com/caraml-dev/merlin/pkg/gsutil/mocks"
+	"cloud.google.com/go/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	batchv1 "k8s.io/api/batch/v1"
@@ -43,6 +39,12 @@ import (
 	fakebatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
+
+	cfg "github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gsutil"
+	"github.com/caraml-dev/merlin/pkg/gsutil/mocks"
 )
 
 const (
@@ -1274,6 +1276,123 @@ func TestBuildImage(t *testing.T) {
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:            config,
 		},
+		{
+			name: "success: with custom resource request",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+				resourceRequest: &models.ResourceRequest{
+					CPURequest:    resource.MustParse("2"),
+					MemoryRequest: resource.MustParse("4Gi"),
+				},
+			},
+			existingJob: nil,
+			wantCreateJob: &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+					Namespace: config.BuildNamespace,
+					Labels: map[string]string{
+						"gojek.com/app":          model.Name,
+						"gojek.com/component":    models.ComponentImageBuilder,
+						"gojek.com/environment":  config.Environment,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       project.Stream,
+						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Completions:             &jobCompletions,
+					BackoffLimit:            &jobBackOffLimit,
+					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/component":    models.ComponentImageBuilder,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/orchestrator": testOrchestratorName,
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+							},
+						},
+						Spec: v1.PodSpec{
+							RestartPolicy: v1.RestartPolicyNever,
+							Containers: []v1.Container{
+								{
+									Name:  containerName,
+									Image: "gcr.io/kaniko-project/executor:v1.1.0",
+									Args: []string{
+										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
+									},
+									VolumeMounts: []v1.VolumeMount{
+										{
+											Name:      kanikoSecretName,
+											MountPath: "/secret",
+										},
+									},
+									Env: []v1.EnvVar{
+										{
+											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+											Value: "/secret/kaniko-secret.json",
+										},
+									},
+									Resources:                customResourceRequests.Build(),
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+								},
+							},
+							Volumes: []v1.Volume{
+								{
+									Name: kanikoSecretName,
+									VolumeSource: v1.VolumeSource{
+										Secret: &v1.SecretVolumeSource{
+											SecretName: kanikoSecretName,
+										},
+									},
+								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+							},
+						},
+					},
+				},
+				Status: batchv1.JobStatus{},
+			},
+			wantDeleteJobName: "",
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+			config:            config,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1332,7 +1451,7 @@ func TestBuildImage(t *testing.T) {
 			gsutilMock := &mocks.GSUtil{}
 			gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
 			gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
-			gsutilMock.On("WriteFile", mock.Anything, modelDependenciesURL, testCondaEnvContent).Return(nil)
+			gsutilMock.On("ReadFile", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
 
 			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, gsutilMock)
 
@@ -1613,4 +1732,73 @@ func Test_kanikoBuilder_imageExists_noretry(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.Equal(t, 1, retryCounter)
+}
+
+func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
+	hash := sha256.New()
+	hash.Write([]byte(testCondaEnvContent))
+	hashEnv := hash.Sum(nil)
+
+	modelDependenciesURL := fmt.Sprintf("gs://%s/merlin/model_dependencies/%x", testArtifactGsutilURL.Bucket, hashEnv)
+
+	type args struct {
+		ctx     context.Context
+		version *models.Version
+	}
+	tests := []struct {
+		name       string
+		args       args
+		gsutilMock func(*mocks.GSUtil)
+		want       string
+		wantErr    bool
+	}{
+		{
+			name: "hash dependencies is already exist",
+			args: args{
+				ctx:     context.Background(),
+				version: modelVersion,
+			},
+			gsutilMock: func(gsutilMock *mocks.GSUtil) {
+				gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
+				gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+				gsutilMock.On("ReadFile", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
+			},
+			want:    modelDependenciesURL,
+			wantErr: false,
+		},
+		{
+			name: "hash dependencies is not exist yet",
+			args: args{
+				ctx:     context.Background(),
+				version: modelVersion,
+			},
+			gsutilMock: func(gsutilMock *mocks.GSUtil) {
+				gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
+				gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+				gsutilMock.On("ReadFile", mock.Anything, modelDependenciesURL).Return(nil, storage.ErrObjectNotExist)
+				gsutilMock.On("WriteFile", mock.Anything, modelDependenciesURL, testCondaEnvContent).Return(nil)
+			},
+			want:    modelDependenciesURL,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gsutilMock := &mocks.GSUtil{}
+			tt.gsutilMock(gsutilMock)
+
+			c := &imageBuilder{
+				gsutil: gsutilMock,
+			}
+
+			got, err := c.getHashedModelDependenciesUrl(tt.args.ctx, tt.args.version)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("imageBuilder.getHashedModelDependenciesUrl() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("imageBuilder.getHashedModelDependenciesUrl() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

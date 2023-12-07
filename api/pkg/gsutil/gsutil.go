@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-	"github.com/pkg/errors"
 	"google.golang.org/api/option"
 )
 
@@ -39,7 +38,7 @@ type gsutil struct {
 
 // NewClient initializes GSUtil client for working with Google Cloud Storage.
 func NewClient(ctx context.Context) (GSUtil, error) {
-	client, err := storage.NewClient(ctx, option.WithScopes(storage.ScopeReadOnly))
+	client, err := storage.NewClient(ctx, option.WithScopes(storage.ScopeReadWrite))
 	if err != nil {
 		return nil, err
 	}
@@ -61,18 +60,18 @@ func (g *gsutil) Close() error {
 func (g *gsutil) ReadFile(ctx context.Context, url string) ([]byte, error) {
 	u, err := g.ParseURL(url)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse url %s", url)
+		return nil, err
 	}
 
 	reader, err := g.client.Bucket(u.Bucket).Object(u.Object).NewReader(ctx)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read file from %s", url)
+		return nil, err
 	}
 	defer reader.Close() //nolint:errcheck
 
 	bytes, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read the content of %s", url)
+		return nil, err
 	}
 	return bytes, nil
 }
@@ -83,20 +82,20 @@ func (g *gsutil) ReadFile(ctx context.Context, url string) ([]byte, error) {
 func (g *gsutil) ParseURL(gsURL string) (*URL, error) {
 	u, err := url.Parse(gsURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse GCS url %s", gsURL)
+		return nil, err
 	}
 	if u.Scheme != "gs" {
-		return nil, errors.New("invalid protocal specified, the only protocal that is permitted is 'gs'")
+		return nil, err
 	}
 
 	bucket, object := u.Host, strings.TrimLeft(u.Path, "/")
 
 	if bucket == "" {
-		return nil, errors.New("bucket name is required")
+		return nil, err
 	}
 
 	if object == "" {
-		return nil, errors.New("object name is required")
+		return nil, err
 	}
 
 	return &URL{
@@ -108,16 +107,16 @@ func (g *gsutil) ParseURL(gsURL string) (*URL, error) {
 func (g *gsutil) WriteFile(ctx context.Context, url, content string) error {
 	u, err := g.ParseURL(url)
 	if err != nil {
-		return errors.Wrapf(err, "failed to parse url %s", url)
+		return err
 	}
 	w := g.client.Bucket(u.Bucket).Object(u.Object).NewWriter(ctx)
 
 	if _, err := fmt.Fprint(w, content); err != nil {
-		return errors.Wrapf(err, "failed to write content to %s", url)
+		return err
 	}
 
 	if err := w.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close writer for %s", url)
+		return err
 	}
 
 	return nil

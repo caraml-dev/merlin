@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -152,12 +153,22 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 	hash.Write([]byte(condaEnv))
 	hashEnv := hash.Sum(nil)
 
-	dependenciesUrl := fmt.Sprintf("gs://%s%s/%x", artifactURL.Bucket, modelDependenciesPath, hashEnv)
-	if err := c.gsutil.WriteFile(ctx, dependenciesUrl, string(condaEnv)); err != nil {
+	hashedDependenciesUrl := fmt.Sprintf("gs://%s%s/%x", artifactURL.Bucket, modelDependenciesPath, hashEnv)
+
+	_, err = c.gsutil.ReadFile(ctx, hashedDependenciesUrl)
+	if err == nil {
+		return hashedDependenciesUrl, nil
+	}
+
+	if err != nil && errors.Is(err, storage.ErrObjectNotExist) {
 		return "", err
 	}
 
-	return dependenciesUrl, nil
+	if err := c.gsutil.WriteFile(ctx, hashedDependenciesUrl, string(condaEnv)); err != nil {
+		return "", err
+	}
+
+	return hashedDependenciesUrl, nil
 }
 
 // BuildImage build a docker image for the given model version
