@@ -108,7 +108,6 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 
 	webServiceConfig := imagebuilder.Config{
 		BaseImage:            cfg.ImageBuilderConfig.BaseImage,
-		BaseImages:           cfg.ImageBuilderConfig.BaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
 		ContextSubPath:       cfg.ImageBuilderConfig.ContextSubPath,
@@ -131,7 +130,6 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 
 	predJobConfig := imagebuilder.Config{
 		BaseImage:            cfg.ImageBuilderConfig.PredictionJobBaseImage,
-		BaseImages:           cfg.ImageBuilderConfig.PredictionJobBaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
 		ContextSubPath:       cfg.ImageBuilderConfig.PredictionJobContextSubPath,

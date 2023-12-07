@@ -104,8 +104,11 @@ const (
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
 
+	baseImageEnvKey            = "BASE_IMAGE"
 	modelDependenciesUrlEnvKey = "MODEL_DEPENDENCIES_URL"
 	modelArtifactsUrlEnvKey    = "MODEL_ARTIFACTS_URL"
+
+	modelDependenciesPath = "/merlin/model_dependencies"
 )
 
 var (
@@ -124,11 +127,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 
 // GetMainAppPath Returns the path to run the main.py of batch predictor, as configured via env var
 func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
-	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
-	if !ok {
-		return "", fmt.Errorf("no matching base image for tag %s", version.PythonVersion)
-	}
-
+	baseImageTag := c.config.BaseImage
 	if baseImageTag.MainAppPath == "" {
 		return "", fmt.Errorf("mainAppPath is not set for tag %s", version.PythonVersion)
 	}
@@ -136,7 +135,7 @@ func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 	return baseImageTag.MainAppPath, nil
 }
 
-func (c *imageBuilder) getModelDependenciesUrl(ctx context.Context, version *models.Version) (string, error) {
+func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, version *models.Version) (string, error) {
 	artifactURL, err := c.gsutil.ParseURL(version.ArtifactURI)
 	if err != nil {
 		return "", err
@@ -153,7 +152,7 @@ func (c *imageBuilder) getModelDependenciesUrl(ctx context.Context, version *mod
 	hash.Write([]byte(condaEnv))
 	hashEnv := hash.Sum(nil)
 
-	dependenciesUrl := fmt.Sprintf("gs://%s/merlin/dependencies/%x", artifactURL.Bucket, hashEnv)
+	dependenciesUrl := fmt.Sprintf("gs://%s%s/%x", artifactURL.Bucket, modelDependenciesPath, hashEnv)
 	if err := c.gsutil.WriteFile(ctx, dependenciesUrl, string(condaEnv)); err != nil {
 		return "", err
 	}
@@ -177,8 +176,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 	startTime := time.Now()
 	result := "failed"
 
-	// TODO(arief): create or get model dependency
-	modelDependenciesUrl, err := c.getModelDependenciesUrl(ctx, version)
+	hashedModelDependenciesUrl, err := c.getHashedModelDependenciesUrl(ctx, version)
 	if err != nil {
 		log.Errorf("unable to get model dependencies url: %v", err)
 		return "", err
@@ -208,7 +206,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, modelDependenciesUrl)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl)
 		if err != nil {
 			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 			return "", ErrUnableToCreateJobSpec{
@@ -238,7 +236,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, modelDependenciesUrl)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl)
 			if err != nil {
 				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 				return "", ErrUnableToCreateJobSpec{
@@ -472,7 +470,7 @@ func (c *imageBuilder) createKanikoJobSpec(
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
-		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", baseImageEnvKey, baseImageTag.ImageName),
 		fmt.Sprintf("--build-arg=%s=%s", modelDependenciesUrlEnvKey, modelDependenciesUrl),
 		fmt.Sprintf("--build-arg=%s=%s/model", modelArtifactsUrlEnvKey, version.ArtifactURI),
 		fmt.Sprintf("--destination=%s", imageRef),

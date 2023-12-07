@@ -27,8 +27,6 @@ type Config struct {
 	ContextSubPath string
 	// Dockerfile Path within the build context
 	BaseImage cfg.BaseImageConfig
-	// Dockerfile Path within the build context
-	BaseImages cfg.BaseImageConfigs
 	// Namespace where Kaniko Pod will be created
 	BuildNamespace string
 	// Docker registry to push to

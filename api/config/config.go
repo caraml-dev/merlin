@@ -204,17 +204,15 @@ type ImageBuilderConfig struct {
 	ClusterName                 string `validate:"required"`
 	GcpProject                  string
 	ContextSubPath              string
-	DockerfilePath              string           `validate:"required" default:"./Dockerfile"`
-	BaseImage                   BaseImageConfig  `validate:"required"`
-	BaseImages                  BaseImageConfigs `validate:"required"`
+	DockerfilePath              string          `validate:"required" default:"./Dockerfile"`
+	BaseImage                   BaseImageConfig `validate:"required"`
 	PredictionJobContextSubPath string
-	PredictionJobDockerfilePath string           `validate:"required" default:"./Dockerfile"`
-	PredictionJobBaseImage      BaseImageConfig  `validate:"required"`
-	PredictionJobBaseImages     BaseImageConfigs `validate:"required"`
-	BuildNamespace              string           `validate:"required" default:"mlp"`
-	DockerRegistry              string           `validate:"required"`
-	BuildTimeout                string           `validate:"required" default:"10m"`
-	KanikoImage                 string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	PredictionJobDockerfilePath string          `validate:"required" default:"./Dockerfile"`
+	PredictionJobBaseImage      BaseImageConfig `validate:"required"`
+	BuildNamespace              string          `validate:"required" default:"mlp"`
+	DockerRegistry              string          `validate:"required"`
+	BuildTimeout                string          `validate:"required" default:"10m"`
+	KanikoImage                 string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	KanikoServiceAccount        string
 	KanikoAdditionalArgs        []string
 	DefaultResources            ResourceRequestsLimits `validate:"required"`

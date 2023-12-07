@@ -220,7 +220,7 @@ func TestBuildImage(t *testing.T) {
 	hash := sha256.New()
 	hash.Write([]byte(testCondaEnvContent))
 	hashEnv := hash.Sum(nil)
-	modelDependenciesURL := fmt.Sprintf("gs://%s/merlin/dependencies/%x", testArtifactGsutilURL.Bucket, hashEnv)
+	modelDependenciesURL := fmt.Sprintf("gs://%s/merlin/model_dependencies/%x", testArtifactGsutilURL.Bucket, hashEnv)
 
 	type args struct {
 		project         mlp.Project

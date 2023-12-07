@@ -8,13 +8,24 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-	"github.com/bboughton/gcp-helpers/gsurl"
 	"github.com/pkg/errors"
 	"google.golang.org/api/option"
 )
 
 // parseURL exists to allow us to use 'url' as a request param
-var parseURL = url.Parse
+// var parseURL = url.Parse
+
+// URL contains the information needed to identify the location of an object
+// located in Google Cloud Storage.
+type URL struct {
+	// Bucket is the name of the Google Cloud Storage bucket where the object
+	// is located.
+	Bucket string
+
+	// Object is the name and or path of the object stored in the bucket. It
+	// should not start with a foward slash.
+	Object string
+}
 
 type GSUtil interface {
 	ParseURL(url string) (*URL, error)
@@ -48,7 +59,7 @@ func (g *gsutil) Close() error {
 // func should take care to only load objects of a known size as errors can
 // arise if the requested object is too large.
 func (g *gsutil) ReadFile(ctx context.Context, url string) ([]byte, error) {
-	u, err := gsurl.Parse(url)
+	u, err := g.ParseURL(url)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse url %s", url)
 	}
@@ -66,25 +77,13 @@ func (g *gsutil) ReadFile(ctx context.Context, url string) ([]byte, error) {
 	return bytes, nil
 }
 
-// URL contains the information needed to identify the location of an object
-// located in Google Cloud Storage.
-type URL struct {
-	// Bucket is the name of the Google Cloud Storage bucket where the object
-	// is located.
-	Bucket string
-
-	// Object is the name and or path of the object stored in the bucket. It
-	// should not start with a foward slash.
-	Object string
-}
-
 // Parse parses a Google Cloud Storage string into a URL struct. The expected
 // format of the string is gs://[bucket-name]/[object-path]. If the provided
 // URL is formatted incorrectly an error will be returned.
-func (g *gsutil) ParseURL(url string) (*URL, error) {
-	u, err := parseURL(url)
+func (g *gsutil) ParseURL(gsURL string) (*URL, error) {
+	u, err := url.Parse(gsURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse url %s", url)
+		return nil, errors.Wrapf(err, "failed to parse GCS url %s", gsURL)
 	}
 	if u.Scheme != "gs" {
 		return nil, errors.New("invalid protocal specified, the only protocal that is permitted is 'gs'")
@@ -107,7 +106,7 @@ func (g *gsutil) ParseURL(url string) (*URL, error) {
 }
 
 func (g *gsutil) WriteFile(ctx context.Context, url, content string) error {
-	u, err := gsurl.Parse(url)
+	u, err := g.ParseURL(url)
 	if err != nil {
 		return errors.Wrapf(err, "failed to parse url %s", url)
 	}
