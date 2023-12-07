@@ -60,6 +60,11 @@ export const appConfig = {
       ? parseInt(getEnv("REACT_APP_MAX_ALLOWED_REPLICA"))
       : 20,
   },
+  imagebuilder:{
+    cluster:  getEnv("REACT_APP_IMAGE_BUILDER_CLUSTER"),
+    gcp_project: getEnv("REACT_APP_IMAGE_BUILDER_PROJECT"),
+    namespace: getEnv("REACT_APP_IMAGE_BUILDER_NAMESPACE"),
+  }
 };
 
 export const featureToggleConfig = {
@@ -115,3 +120,4 @@ export const ConfigProvider = ({ children }) => {
 };
 
 export const useConfig = () => React.useContext(ConfigContext);
+

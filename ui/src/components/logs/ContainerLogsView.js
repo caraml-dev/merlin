@@ -1,8 +1,13 @@
 import { AuthContext } from "@caraml-dev/ui-lib";
 import {
+  EuiCard,
+  EuiDescriptionList,
+  EuiDescriptionListDescription,
+  EuiDescriptionListTitle,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiLink,
   EuiLoadingContent,
   EuiPanel,
   EuiSpacer,
@@ -121,45 +126,57 @@ export const ContainerLogsView = ({
 
   const [logUrl, setLogUrl] = useState("");
   const [stackdriverUrl, setStackdriverUrl] = useState("");
+  const [imagebuilderStackdriverUrl, setImagebuilderStackdriverUrl] = useState("");
 
   useEffect(
     () => {
-      if (params.component_type !== "" && projectLoaded) {
-        const activeContainers = containers.filter(
-          (container) => container.component_type === params.component_type
-        );
+      if (projectLoaded) {
+        // set image builder url
+        let stackdriverQuery = {
+          job_name: project.name + "-" + model.name + "-" + versionId
+        };
+        setImagebuilderStackdriverUrl(createStackdriverUrl(stackdriverQuery, "image_builder"));
 
-        if (activeContainers && activeContainers.length > 0) {
-          const containerQuery = {
-            ...params,
-            cluster: activeContainers[0].cluster,
-            namespace: activeContainers[0].namespace,
-            timestamps: true,
-            project_name: project.name,
-            model_id: model.id,
-            model_name: model.name,
-            version_id: versionId,
-            revision_id: revisionId ? revisionId : "",
-            prediction_job_id: jobId ? jobId : "",
-          };
-          const logParams = new URLSearchParams(containerQuery).toString();
-          const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
-          if (newLogUrl !== logUrl) {
-            setLogUrl(newLogUrl);
+        // update active container
+        if (params.component_type !== "") {
+          const activeContainers = containers.filter(
+            (container) => container.component_type === params.component_type
+          );
+
+          if (activeContainers && activeContainers.length > 0) {
+            const containerQuery = {
+              ...params,
+              cluster: activeContainers[0].cluster,
+              namespace: activeContainers[0].namespace,
+              timestamps: true,
+              project_name: project.name,
+              model_id: model.id,
+              model_name: model.name,
+              version_id: versionId,
+              revision_id: revisionId ? revisionId : "",
+              prediction_job_id: jobId ? jobId : "",
+            };
+            const logParams = new URLSearchParams(containerQuery).toString();
+            const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
+            if (newLogUrl !== logUrl) {
+              setLogUrl(newLogUrl);
+            }
+
+            const pods = [
+              ...new Set(
+                activeContainers.map((container) => `"${container.pod_name}"`)
+              ),
+            ];
+            let stackdriverQuery = {
+              gcp_project: activeContainers[0].gcp_project,
+              cluster: activeContainers[0].cluster,
+              namespace: activeContainers[0].namespace,
+              pod_name: pods.join(" OR "),
+            };
+            if (params.component_type !== "image_builder"){
+              setStackdriverUrl(createStackdriverUrl(stackdriverQuery, params.component_type));
+            }
           }
-
-          const pods = [
-            ...new Set(
-              activeContainers.map((container) => `"${container.pod_name}"`)
-            ),
-          ];
-          let stackdriverQuery = {
-            gcp_project: activeContainers[0].gcp_project,
-            cluster: activeContainers[0].cluster,
-            namespace: activeContainers[0].namespace,
-            pod_name: pods.join(" OR "),
-          };
-          setStackdriverUrl(createStackdriverUrl(stackdriverQuery));
         }
       }
     },
@@ -175,12 +192,29 @@ export const ContainerLogsView = ({
         </span>
       </EuiTitle>
       <EuiSpacer size="s" />
+      {
+        imagebuilderStackdriverUrl && (
+          <EuiCard textAlign="left" title="">
+          <EuiDescriptionList 
+          style={{ marginBottom: "8px"}} 
+          titleProps={{ style: { width: "30%", fontSize: '14px'} }}
+          type="column" 
+          >
+          <EuiDescriptionListTitle style={{ width: "30%", fontSize: '14px'}} >Imagebuider URL</EuiDescriptionListTitle>
+          <EuiDescriptionListDescription>
+            <EuiLink href={imagebuilderStackdriverUrl} target="_blank" external>Stackdriver Logs</EuiLink>
+          </EuiDescriptionListDescription>
+          </EuiDescriptionList>
+        </EuiCard>
+        )
+      }
+      <EuiSpacer size="s" />
       <EuiPanel>
         {!containerHaveBeenLoaded &&
         componentTypes &&
         componentTypes.length === 0 ? (
           <EuiLoadingContent lines={4} />
-        ) : logUrl && stackdriverUrl ? (
+        ) : logUrl ? (
           <EuiFlexGroup direction="column" gutterSize="none">
             <EuiFlexItem grow={false}>
               <LogsSearchBar {...{ componentTypes, params, setParams }} />
@@ -209,10 +243,15 @@ export const ContainerLogsView = ({
                 )}
               />
             </EuiFlexItem>
-
-            <EuiFlexItem grow={false}>
-              <StackdriverLink stackdriverUrl={stackdriverUrl} />
-            </EuiFlexItem>
+            {
+              params.component_type !== "image_builder" && 
+              stackdriverUrl &&
+              (
+                <EuiFlexItem grow={false}>
+                  <StackdriverLink stackdriverUrl={stackdriverUrl} />
+                </EuiFlexItem>
+              )
+            }
           </EuiFlexGroup>
         ) : (
           <EuiEmptyPrompt
