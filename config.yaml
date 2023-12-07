@@ -18,19 +18,23 @@ NewRelic:
 
 ImageBuilderConfig:
   ClusterName: id-dev
-  Resources:
+  DefaultResources:
     Requests:
-      CPU: 2
-      Memory: 1Gi
+      CPU: "1"
+      Memory: 512Mi
     Limits:
-      CPU: 2
+      CPU: "1"
       Memory: 1Gi
-  PredictionJobBaseImages:
-    "3.8.*":
-      ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.7.0
-      DockerfilePath: docker/app.Dockerfile
-      BuildContextURI: ""
-      MainAppPath: /merlin-spark-app/main.py
+  BaseImage:
+    ImageName: ghcr.io/caraml-dev/merlin-pyfunc-base:v0.37.0
+    DockerfilePath: docker/Dockerfile
+    BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
+    MainAppPath: /merlin-spark-app/main.py
+  PredictionJobBaseImage:
+    ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.37.0
+    DockerfilePath: docker/app.Dockerfile
+    BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
+    MainAppPath: /merlin-spark-app/main.py
   BuildNamespace: mlp
   DockerRegistry: ghcr.io/caraml-dev
   BuildTimeout: 10m

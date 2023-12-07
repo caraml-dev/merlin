@@ -26,18 +26,16 @@ imageBuilder:
   clusterName: "merlin-cluster"
   k8sConfig: {}
   builderConfig:
-    BaseImages:
-      3.8.*:
-        ImageName: pyfunc-py38:v0.31.3
-        DockerfilePath: "docker/Dockerfile"
-        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
-        MainAppPath: /merlin-spark-app/main.py
-    PredictionJobBaseImages:
-      3.8.*:
-        ImageName: pyspark-py38:v0.31.3
-        DockerfilePath: "docker/app.Dockerfile"
-        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
-        MainAppPath: /merlin-spark-app/main.py
+    BaseImage:
+      ImageName: ghcr.io/caraml-dev/merlin-pyfunc-base:v0.37.0
+      DockerfilePath: "docker/Dockerfile"
+      BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.37.0"
+      MainAppPath: /merlin-spark-app/main.py
+    PredictionJobBaseImage:
+      ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.37.0
+      DockerfilePath: "docker/app.Dockerfile"
+      BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.37.0"
+      MainAppPath: /merlin-spark-app/main.py
     BuildNamespace: "mlp"
     BuildContextURI: git://github.com/caraml-dev/merlin.git#refs/heads/main
     PredictionJobContextSubPath: "python/batch-predictor"
