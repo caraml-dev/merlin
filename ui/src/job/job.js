@@ -32,6 +32,10 @@ export class Job {
       service_account_name: "",
 
       resource_request: {},
+      image_builder_resource_request: {
+        cpu_request: "",
+        memory_request: ""
+      },
 
       env_vars: [],
 

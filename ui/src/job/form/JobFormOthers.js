@@ -22,6 +22,8 @@ import { ServiceAccountSelect } from "./components/ServiceAccountSelect";
 import { ResourceRequestForm } from "./components/ResourceRequestForm";
 import { EnvironmentVariablesForm } from "./components/EnvironmentVariablesForm";
 import PropTypes from "prop-types";
+import { ImageBuilderSection } from "../../pages/version/components/forms/components/ImageBuilderSection";
+import { useOnChangeHandler } from "@caraml-dev/ui-lib";
 
 export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
   const {
@@ -29,8 +31,10 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
     setVersionId,
     setServiceAccountName,
     setResourceRequest,
-    setEnvVars
+    setEnvVars,
+    onChangeHandler
   } = useContext(JobFormContext);
+  const { onChange } = useOnChangeHandler(onChangeHandler);
 
   return (
     <Fragment>
@@ -75,6 +79,12 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
           />
         </EuiFlexItem>
       </EuiFlexGroup>
+
+      <EuiSpacer size="l" />
+      <ImageBuilderSection
+        imageBuilderResourceConfig={job.config.image_builder_resource_request}
+        onChangeHandler={onChange("config.image_builder_resource_request")}
+      />
     </Fragment>
   );
 };

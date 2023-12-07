@@ -26,8 +26,13 @@ export class VersionEndpoint {
       min_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 2 : 0,
       max_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 4 : 2,
       cpu_request: "500m",
-      memory_request: "512Mi"
+      memory_request: "512Mi",
     };
+
+    this.image_builder_resource_request = {
+      cpu_request: "",
+      memory_request: ""
+    }
 
     this.env_vars = [];
     this.transformer = new Transformer();

@@ -26,6 +26,7 @@ const maxTicks = 20;
 export const ResourcesPanel = ({
   environment: initEnvironment,
   isGPUEnabled,
+  child,
   resourcesConfig,
   onChangeHandler,
   errors = {},
@@ -273,6 +274,12 @@ export const ResourcesPanel = ({
           / Month
         </p>
       </EuiCallOut>
+      <EuiSpacer size="s" />
+      {
+        child && (
+          child
+        )
+      }
     </Panel>
   );
 };

@@ -12,6 +12,7 @@ import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
+import { ImageBuilderSection } from "../components/ImageBuilderSection";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -39,6 +40,13 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
           onChangeHandler={onChange("resource_request")}
           maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
           errors={get(errors, "resource_request")}
+          child={(
+            <ImageBuilderSection
+              imageBuilderResourceConfig={data.image_builder_resource_request}
+              onChangeHandler={onChange("image_builder_resource_request")}
+              errors={get(errors, "image_builder_resource_request")}
+              />
+            )}
         />
       </EuiFlexItem>
 
