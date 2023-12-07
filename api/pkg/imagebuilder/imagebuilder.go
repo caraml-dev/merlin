@@ -160,7 +160,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 		return hashedDependenciesUrl, nil
 	}
 
-	if err != nil && errors.Is(err, storage.ErrObjectNotExist) {
+	if err != nil && !errors.Is(err, storage.ErrObjectNotExist) {
 		return "", err
 	}
 
