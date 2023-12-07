@@ -272,7 +272,7 @@ jobs:
       - name: Build Batch Predictor Base Docker
         run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/batch-predictor/docker/base.Dockerfile python
       - name: Save Batch Predictor Base Docker
-        run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar ${DOCKER_IMAGE_TAG}
+        run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Batch Predictor Base Docker Artifact
         uses: actions/upload-artifact@v2
         with:
@@ -302,7 +302,7 @@ jobs:
       - name: Build Pyfunc Server Base Docker
         run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/pyfunc-server/docker/base.Dockerfile python
       - name: Save Pyfunc Server Base Docker
-        run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar ${DOCKER_IMAGE_TAG}
+        run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Pyfunc Server Base Docker Artifact
         uses: actions/upload-artifact@v2
         with:
@@ -458,9 +458,9 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
       - create-version
+      - build-api
       - build-batch-predictor-base
       - build-pyfunc-server-base
-      - test-api
       - test-python-sdk
       # TODO(arief): Uncomment this after local testing done.
       # - e2e-test
