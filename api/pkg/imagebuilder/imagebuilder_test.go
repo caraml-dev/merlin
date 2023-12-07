@@ -1432,9 +1432,10 @@ func TestGetContainers(t *testing.T) {
 		client.Fake.PrependReactor("list", "pods", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, tt.mock, nil
 		})
-		// TODO(arief)
-		gsutil, _ := gsutil.NewClient(context.Background())
-		c := NewModelServiceImageBuilder(kubeClient, config, gsutil)
+
+		gsutilMock := &mocks.GSUtil{}
+
+		c := NewModelServiceImageBuilder(kubeClient, config, gsutilMock)
 		containers, err := c.GetContainers(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 
 		if !tt.wantError {
