@@ -24,51 +24,40 @@ from sys import version_info
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import client
 import docker
+import mlflow
 import pyprind
 import yaml
-from client import (
-    EndpointApi,
-    EnvironmentApi,
-    ModelEndpointsApi,
-    ModelsApi,
-    SecretApi,
-    VersionApi,
-)
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
+
+import client
+from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
+                    SecretApi, VersionApi)
 from merlin import pyfunc
-from merlin.autoscaling import (
-    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-    AutoscalingPolicy,
-)
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+                                AutoscalingPolicy)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
 from merlin.batch.source import BigQuerySource
 from merlin.deployment_mode import DeploymentMode
-from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
+from merlin.docker.docker import (copy_pyfunc_dockerfile,
+                                  copy_standard_dockerfile)
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (
-    autostr,
-    download_files_from_gcs,
-    guess_mlp_ui_url,
-    valid_name_check,
-)
+from merlin.util import (autostr, download_files_from_gcs, guess_mlp_ui_url,
+                         valid_name_check)
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
-
-import mlflow
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -1066,6 +1055,7 @@ class ModelVersion:
         self,
         environment_name: str = None,
         resource_request: ResourceRequest = None,
+        image_builder_resource_request: ResourceRequest = None,
         env_vars: Dict[str, str] = None,
         transformer: Transformer = None,
         logger: Logger = None,
@@ -1096,6 +1086,7 @@ class ModelVersion:
         target_deployment_mode = None
         target_protocol = None
         target_resource_request = None
+        target_image_builder_resource_request = None
         target_autoscaling_policy = None
         target_env_vars: List[client.models.Environment] = []
         target_transformer = None
@@ -1143,6 +1134,12 @@ class ModelVersion:
                             )
                             break
 
+        if image_builder_resource_request is not None:
+            target_image_builder_resource_request = client.ResourceRequest(
+                cpu_request=image_builder_resource_request.cpu_request,
+                memory_request=image_builder_resource_request.memory_request,
+            )
+
         if autoscaling_policy is not None:
             target_autoscaling_policy = client.AutoscalingPolicy(
                 autoscaling_policy.metrics_type.value,
@@ -1166,6 +1163,7 @@ class ModelVersion:
         endpoint = client.VersionEndpoint(
             environment_name=target_env_name,
             resource_request=target_resource_request,
+            image_builder_resource_request=target_image_builder_resource_request,
             env_vars=target_env_vars,
             transformer=target_transformer,
             logger=target_logger,
@@ -1306,6 +1304,14 @@ class ModelVersion:
 
         if job_config.resource_request is not None:
             cfg.resource_request = job_config.resource_request.to_dict()
+
+        if job_config.image_builder_resource_request is not None:
+            cfg.image_builder_resource_request = client.ResourceRequest(
+                0,
+                0,
+                job_config.image_builder_resource_request.cpu_request,
+                job_config.image_builder_resource_request.memory_request,
+            )
 
         target_env_vars = []
         if job_config.env_vars is not None:

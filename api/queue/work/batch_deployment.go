@@ -79,7 +79,7 @@ func (depl *BatchDeployment) doCreatePredictionJob(ctx context.Context, env *mod
 	project := model.Project
 
 	// build image
-	imageRef, err := depl.ImageBuilder.BuildImage(ctx, project, model, version)
+	imageRef, err := depl.ImageBuilder.BuildImage(ctx, project, model, version, job.Config.ImageBuilderResourceRequest)
 	if err != nil {
 		return err
 	}

@@ -17,10 +17,18 @@ from typing import Optional
 
 class ResourceRequest:
     """
-    The resource requirement and replicas requests for model version endpoint.
+    The resource requirement and replicas requests for Merlin components (e.g. version endpoint, batch prediction job, image builder).
     """
 
-    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str=None, gpu_name: str=None):
+    def __init__(
+        self,
+        min_replica: int = None,
+        max_replica: int = None,
+        cpu_request: str = None,
+        memory_request: str = None,
+        gpu_request: str = None,
+        gpu_name: str = None,
+    ):
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
@@ -30,7 +38,7 @@ class ResourceRequest:
         self.validate()
 
     @property
-    def min_replica(self) -> int:
+    def min_replica(self) -> Optional[int]:
         return self._min_replica
 
     @min_replica.setter
@@ -38,7 +46,7 @@ class ResourceRequest:
         self._min_replica = min_replica
 
     @property
-    def max_replica(self) -> int:
+    def max_replica(self) -> Optional[int]:
         return self._max_replica
 
     @max_replica.setter
@@ -46,7 +54,7 @@ class ResourceRequest:
         self._max_replica = max_replica
 
     @property
-    def cpu_request(self) -> str:
+    def cpu_request(self) -> Optional[str]:
         return self._cpu_request
 
     @cpu_request.setter
@@ -54,7 +62,7 @@ class ResourceRequest:
         self._cpu_request = cpu_request
 
     @property
-    def memory_request(self) -> str:
+    def memory_request(self) -> Optional[str]:
         return self._memory_request
 
     @memory_request.setter
@@ -78,5 +86,8 @@ class ResourceRequest:
         self._gpu_name = gpu_name
 
     def validate(self):
+        if self._min_replica is None and self._max_replica is None:
+            return 
+
         if self._min_replica > self._max_replica:
             raise Exception("Min replica must be less or equal to max replica")

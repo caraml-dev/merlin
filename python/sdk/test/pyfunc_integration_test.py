@@ -15,26 +15,26 @@
 import os
 import warnings
 from test.utils import undeploy_all_version
-from time import sleep
 
 import joblib
-import merlin
 import numpy as np
 import pytest
 import xgboost as xgb
+
+import merlin
+from merlin.model import ModelType, PyFuncModel
+from merlin.resource_request import ResourceRequest
 from merlin.model import ModelType, PyFuncModel, PyFuncV3Model
 from merlin.pyfunc import ModelInput, ModelOutput, Values
 from sklearn import svm
 from sklearn.datasets import load_iris
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
-request_json = {
-    "instances": [
-        [2.8, 1.0, 6.8, 0.4],
-        [3.1, 1.4, 4.5, 1.6]
-    ]
-}
+request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
+
+XGB_PATH = os.path.join("test/pyfunc/", "model_1.bst")
+SKLEARN_PATH = os.path.join("test/pyfunc/", "model_2.joblib")
 
 
 class EnsembleModel(PyFuncModel):
@@ -43,8 +43,8 @@ class EnsembleModel(PyFuncModel):
         self._model_2 = joblib.load(artifacts["sklearn_model"])
 
     def infer(self, model_input):
-        inputs = np.array(model_input['instances'])
-        dmatrix = xgb.DMatrix(model_input['instances'])
+        inputs = np.array(model_input["instances"])
+        dmatrix = xgb.DMatrix(model_input["instances"])
         result_1 = self._model_1.predict(dmatrix)
         result_2 = self._model_2.predict_proba(inputs)
         return {"predictions": ((result_1 + result_2) / 2).tolist()}
@@ -91,6 +91,7 @@ class ModelObservabilityModel(PyFuncV3Model):
             "predictions": model_output.predictions.data
         }
 
+
 @pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -101,17 +102,12 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        iris = load_iris()
-        y = iris['target']
-        X = iris['data']
-        xgb_path = train_xgboost_model(X, y)
-        sklearn_path = train_sklearn_model(X, y)
-
-        v.log_pyfunc_model(model_instance=EnsembleModel(),
-                           conda_env="test/pyfunc/env.yaml",
-                           code_dir=["test"],
-                           artifacts={"xgb_model": xgb_path,
-                                      "sklearn_model": sklearn_path})
+        v.log_pyfunc_model(
+            model_instance=EnsembleModel(),
+            conda_env="test/pyfunc/env.yaml",
+            code_dir=["test"],
+            artifacts={"xgb_model": XGB_PATH, "sklearn_model": SKLEARN_PATH},
+        )
 
     endpoint = merlin.deploy(v)
 
@@ -119,24 +115,63 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
 
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.dependency()
+def test_pyfunc_image_builder_resource_request(
+    integration_test_url, project_name, use_google_oauth, requests
+):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pyfunc-image-builder", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        v.log_pyfunc_model(
+            model_instance=EnsembleModel(),
+            conda_env="test/pyfunc/env.yaml",
+            code_dir=["test"],
+            artifacts={"xgb_model": XGB_PATH, "sklearn_model": SKLEARN_PATH},
+        )
+
+    image_builder_resource_request = ResourceRequest(
+        cpu_request="2", memory_request="4Gi"
+    )
+    endpoint = merlin.deploy(
+        v, image_builder_resource_request=image_builder_resource_request
+    )
+
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
+
+    merlin.undeploy(v)
+
+
+@pytest.mark.pyfunc
+@pytest.mark.integration
+def test_pyfunc_env_vars(
+    integration_test_url, project_name, use_google_oauth, requests
+):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-env-vars-sample", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(model_instance=EnvVarModel(),
-                           conda_env="test/pyfunc/env.yaml",
-                           code_dir=["test"],
-                           artifacts={})
+        v.log_pyfunc_model(
+            model_instance=EnvVarModel(),
+            conda_env="test/pyfunc/env.yaml",
+            code_dir=["test"],
+            artifacts={},
+        )
 
     env_vars = {"WORKERS": "8", "ENV_VAR_1": "1", "ENV_VAR_2": "2"}
     endpoint = merlin.deploy(v, env_vars=env_vars)
@@ -144,9 +179,9 @@ def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, r
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert resp.json()['workers'] == "8"
-    assert resp.json()['env_var_1'] == "1"
-    assert resp.json()['env_var_2'] == "2"
+    assert resp.json()["workers"] == "8"
+    assert resp.json()["env_var_1"] == "1"
+    assert resp.json()["env_var_2"] == "2"
     assert env_vars.items() <= endpoint.env_vars.items()
 
     merlin.undeploy(v)
@@ -194,50 +229,26 @@ class OldInferModel(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, requests):
+def test_pyfunc_old_infer(
+    integration_test_url, project_name, use_google_oauth, requests
+):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-old-infer-sample", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(model_instance=OldInferModel(),
-                           conda_env="test/pyfunc/env.yaml",
-                           code_dir=["test"],
-                           artifacts={})
+        v.log_pyfunc_model(
+            model_instance=OldInferModel(),
+            conda_env="test/pyfunc/env.yaml",
+            code_dir=["test"],
+            artifacts={},
+        )
 
     endpoint = merlin.deploy(v)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
-    assert resp.json()['instances'] == request_json['instances']
+    assert resp.json()["instances"] == request_json["instances"]
 
     merlin.undeploy(v)
-
-
-def train_xgboost_model(X, y):
-    model_1_dir = "test/pyfunc/"
-    BST_FILE = "model_1.bst"
-    dtrain = xgb.DMatrix(X, label=y)
-    param = {'max_depth': 6,
-             'eta': 0.1,
-             'silent': 1,
-             'nthread': 4,
-             'num_class': 3,
-             'objective': 'multi:softprob'
-             }
-    xgb_model = xgb.train(params=param, dtrain=dtrain)
-    model_1_path = os.path.join(model_1_dir, BST_FILE)
-    xgb_model.save_model(model_1_path)
-    return model_1_path
-
-
-def train_sklearn_model(X, y):
-    model_2_dir = "test/pyfunc/"
-    MODEL_FILE = "model_2.joblib"
-    model_2_path = os.path.join(model_2_dir, MODEL_FILE)
-
-    clf = svm.SVC(gamma='scale', probability=True)
-    clf.fit(X, y)
-    joblib.dump(clf, model_2_path)
-    return model_2_path

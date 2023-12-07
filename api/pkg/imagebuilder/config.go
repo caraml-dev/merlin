@@ -42,7 +42,7 @@ type Config struct {
 	// Kaniko additional args
 	KanikoAdditionalArgs []string
 	// Kubernetes resource request and limits for kaniko
-	Resources cfg.ResourceRequestsLimits
+	DefaultResources cfg.ResourceRequestsLimits
 	// Tolerations for Jobs Specification
 	Tolerations []v1.Toleration
 	// Node Selectors for Jobs Specification

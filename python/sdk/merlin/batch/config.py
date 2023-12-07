@@ -13,10 +13,11 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from merlin.batch.sink import Sink
 from merlin.batch.source import Source
+from merlin.resource_request import ResourceRequest
 
 
 class ResultType(Enum):
@@ -33,11 +34,14 @@ class PredictionJobResourceRequest:
     Resource request configuration for starting prediction job
     """
 
-    def __init__(self, driver_cpu_request: str,
-                 driver_memory_request: str,
-                 executor_cpu_request: str,
-                 executor_memory_request: str,
-                 executor_replica: int):
+    def __init__(
+        self,
+        driver_cpu_request: str,
+        driver_memory_request: str,
+        executor_cpu_request: str,
+        executor_memory_request: str,
+        executor_replica: int,
+    ):
         """
         Create resource request object
 
@@ -59,17 +63,22 @@ class PredictionJobResourceRequest:
             "driver_memory_request": self._driver_memory_request,
             "executor_cpu_request": self._executor_cpu_request,
             "executor_memory_request": self._executor_memory_request,
-            "executor_replica": self._executor_replica
+            "executor_replica": self._executor_replica,
         }
 
 
 class PredictionJobConfig:
-    def __init__(self, source: Source, sink: Sink,
-                 service_account_name: str,
-                 result_type: ResultType = ResultType.DOUBLE,
-                 item_type: ResultType = ResultType.DOUBLE,
-                 resource_request: PredictionJobResourceRequest = None,
-                 env_vars: Dict[str, str] = None):
+    def __init__(
+        self,
+        source: Source,
+        sink: Sink,
+        service_account_name: str,
+        result_type: ResultType = ResultType.DOUBLE,
+        item_type: ResultType = ResultType.DOUBLE,
+        resource_request: PredictionJobResourceRequest = None,
+        image_builder_resource_request: ResourceRequest = None,
+        env_vars: Dict[str, str] = None,
+    ):
         """
         Create configuration for starting a prediction job
 
@@ -79,6 +88,7 @@ class PredictionJobConfig:
         :param result_type: type of the prediction result (default to ResultType.DOUBLE).
         :param item_type: item type of the prediction result if the result_type is ResultType.ARRAY. Otherwise will be ignored.
         :param resource_request: optional resource request for starting the prediction job. If not given the system default will be used.
+        :param image_builder_resource_request: optional resource request for image builder job.
         :param env_vars: optional environment variables in the form of a key value pair in a list.
         """
 
@@ -86,6 +96,7 @@ class PredictionJobConfig:
         self._sink = sink
         self._service_account_name = service_account_name
         self._resource_request = resource_request
+        self._image_builder_resource_request = image_builder_resource_request
         self._result_type = result_type
         self._item_type = item_type
         self._env_vars = env_vars
@@ -105,6 +116,10 @@ class PredictionJobConfig:
     @property
     def resource_request(self) -> Optional[PredictionJobResourceRequest]:
         return self._resource_request
+
+    @property
+    def image_builder_resource_request(self) -> Optional[ResourceRequest]:
+        return self._image_builder_resource_request
 
     @property
     def result_type(self) -> ResultType:

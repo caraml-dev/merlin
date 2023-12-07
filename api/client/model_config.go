@@ -9,9 +9,10 @@
 package client
 
 type Config struct {
-	JobConfig          *PredictionJobConfig          `json:"job_config,omitempty"`
-	ImageRef           string                        `json:"image_ref,omitempty"`
-	ServiceAccountName string                        `json:"service_account_name,omitempty"`
-	ResourceRequest    *PredictionJobResourceRequest `json:"resource_request,omitempty"`
-	EnvVars            []EnvVar                      `json:"env_vars,omitempty"`
+	JobConfig                   *PredictionJobConfig          `json:"job_config,omitempty"`
+	ImageRef                    string                        `json:"image_ref,omitempty"`
+	ServiceAccountName          string                        `json:"service_account_name,omitempty"`
+	ResourceRequest             *PredictionJobResourceRequest `json:"resource_request,omitempty"`
+	ImageBuilderResourceRequest *ResourceRequest              `json:"image_builder_resource_request,omitempty"`
+	EnvVars                     []EnvVar                      `json:"env_vars,omitempty"`
 }

@@ -137,7 +137,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		}
 	}()
 
-	modelOpt, err := depl.generateModelOptions(ctx, model, version)
+	modelOpt, err := depl.generateModelOptions(ctx, model, version, endpoint)
 	if err != nil {
 		deployment.Status = models.EndpointFailed
 		deployment.Error = err.Error()
@@ -181,11 +181,11 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	return nil
 }
 
-func (depl *ModelServiceDeployment) generateModelOptions(ctx context.Context, model *models.Model, version *models.Version) (*models.ModelOption, error) {
+func (depl *ModelServiceDeployment) generateModelOptions(ctx context.Context, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.ModelOption, error) {
 	modelOpt := &models.ModelOption{}
 	switch model.Type {
-	case models.ModelTypePyFunc, models.ModelTypePyFuncV3:
-		imageRef, err := depl.ImageBuilder.BuildImage(ctx, model.Project, model, version)
+	case models.ModelTypePyFunc:
+		imageRef, err := depl.ImageBuilder.BuildImage(ctx, model.Project, model, version, endpoint.ImageBuilderResourceRequest)
 		if err != nil {
 			return modelOpt, err
 		}

@@ -217,7 +217,7 @@ type ImageBuilderConfig struct {
 	KanikoImage                 string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	KanikoServiceAccount        string
 	KanikoAdditionalArgs        []string
-	Resources                   ResourceRequestsLimits `validate:"required"`
+	DefaultResources            ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
