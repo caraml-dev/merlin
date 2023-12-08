@@ -279,15 +279,6 @@ jobs:
           name: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
           path: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-      # TODO(arief): Remove publishing docker image to GHCR after local testing done.
-      - name: Log in to the Container registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push Batch Predictor Base Docker
-        run: docker push ${{ env.DOCKER_IMAGE_TAG }}
 
   build-pyfunc-server-base:
     runs-on: ubuntu-latest
@@ -309,15 +300,6 @@ jobs:
           name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
           path: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-      # TODO(arief): Remove publishing docker image to GHCR after local testing done.
-      - name: Log in to the Container registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push Pyfunc Server Base Docker
-        run: docker push ${{ env.DOCKER_IMAGE_TAG }}
 
   build-transformer:
     runs-on: ubuntu-latest
@@ -462,8 +444,7 @@ jobs:
       - build-batch-predictor-base
       - build-pyfunc-server-base
       - test-python-sdk
-      # TODO(arief): Uncomment this after local testing done.
-      # - e2e-test
+      - e2e-test
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:
