@@ -24,7 +24,6 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
-RUN sed -i 's/mlflow\(\s*==\s*[^ ]*\)\{0,1\}/mlflow==1.26.1/g' conda.yaml
 RUN conda env create --name merlin-model --file conda.yaml
 
 # Copy and install batch predictor dependencies
