@@ -187,24 +187,26 @@ export const ContainerLogsView = ({
           <EuiTextColor color="success">&nbsp; Logs</EuiTextColor>
         </span>
       </EuiTitle>
-      <EuiSpacer size="s" />
       {
         Object.keys(stackdriverUrls).length !== 0 &&
         (
-          <EuiPanel>
-          <EuiFlexGroup direction="row" alignItems="center">
-            <EuiFlexItem style={{marginTop:0, marginBottom:0}} grow={false}>
-              <EuiText  style={{ fontSize: '14px', fontWeight:"bold"}}>Stackdriver Logs</EuiText>
-            </EuiFlexItem>
-              {Object.entries(stackdriverUrls).map(([component,url])=> (
-                <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px"}} key={component} grow={false}>
-                  <EuiText size="xs" >
-                    <EuiLink href={url} target="_blank" external>{component.replace(new RegExp("_", "g"), " ")}</EuiLink>
-                  </EuiText>
+          <Fragment>
+            <EuiSpacer size="s"/>
+            <EuiPanel>
+              <EuiFlexGroup direction="row" alignItems="center">
+                <EuiFlexItem style={{marginTop:0, marginBottom:0}} grow={false}>
+                  <EuiText  style={{ fontSize: '14px', fontWeight:"bold"}}>Stackdriver Logs</EuiText>
                 </EuiFlexItem>
-              ))}
-            </EuiFlexGroup>
-          </EuiPanel>
+                {Object.entries(stackdriverUrls).map(([component,url])=> (
+                  <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px"}} key={component} grow={false}>
+                    <EuiText size="xs" >
+                      <EuiLink href={url} target="_blank" external>{component.replace(new RegExp("_", "g"), " ")}</EuiLink>
+                    </EuiText>
+                  </EuiFlexItem>
+                ))}
+              </EuiFlexGroup>
+            </EuiPanel>
+          </Fragment>
         )
       }
       <EuiSpacer size="s" />
