@@ -22,9 +22,10 @@ import (
 	cfg "github.com/caraml-dev/merlin/config"
 )
 
+// TODO: Refactor this struct to not use structs from config package
+// E.g. BaseImage is cfg.BaseImageConfig and DefaultResources cfg.ResourceRequestsLimits
+// Ref: https://github.com/caraml-dev/merlin/pull/500#discussion_r1419874313
 type Config struct {
-	// Path to sub folder which is intended to build instead of using root folder
-	ContextSubPath string
 	// Dockerfile Path within the build context
 	BaseImage cfg.BaseImageConfig
 	// Namespace where Kaniko Pod will be created
@@ -57,4 +58,7 @@ type Config struct {
 
 	// Environment (dev, staging or prod)
 	Environment string
+
+	// Supported Python versions
+	SupportedPythonVersions []string
 }

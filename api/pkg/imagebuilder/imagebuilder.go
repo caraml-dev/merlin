@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -43,7 +44,6 @@ import (
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/gsutil"
 )
 
 var maxCheckImageRetry uint64 = 2
@@ -86,10 +86,10 @@ type nameGenerator interface {
 }
 
 type imageBuilder struct {
-	kubeClient    kubernetes.Interface
-	config        Config
-	nameGenerator nameGenerator
-	gsutil        gsutil.GSUtil
+	kubeClient      kubernetes.Interface
+	config          Config
+	nameGenerator   nameGenerator
+	artifactService artifact.Service
 }
 
 const (
@@ -117,17 +117,35 @@ var (
 	jobCompletions            int32 = 1
 )
 
-func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator, gsutil gsutil.GSUtil) ImageBuilder {
+func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator, artifactService artifact.Service) ImageBuilder {
 	return &imageBuilder{
-		kubeClient:    kubeClient,
-		config:        config,
-		nameGenerator: nameGenerator,
-		gsutil:        gsutil,
+		kubeClient:      kubeClient,
+		config:          config,
+		nameGenerator:   nameGenerator,
+		artifactService: artifactService,
 	}
+}
+
+func (c *imageBuilder) validatePythonVersion(version *models.Version) error {
+	if version.PythonVersion == "" {
+		return fmt.Errorf("python version is not set model version %s", version.ID)
+	}
+
+	for _, v := range c.config.SupportedPythonVersions {
+		if v == version.PythonVersion {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("python version %s is not supported", version.PythonVersion)
 }
 
 // GetMainAppPath Returns the path to run the main.py of batch predictor, as configured via env var
 func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
+	if err := c.validatePythonVersion(version); err != nil {
+		return "", err
+	}
+
 	baseImageTag := c.config.BaseImage
 	if baseImageTag.MainAppPath == "" {
 		return "", fmt.Errorf("mainAppPath is not set for tag %s", version.PythonVersion)
@@ -137,14 +155,14 @@ func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 }
 
 func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, version *models.Version) (string, error) {
-	artifactURL, err := c.gsutil.ParseURL(version.ArtifactURI)
+	artifactURL, err := c.artifactService.ParseURL(version.ArtifactURI)
 	if err != nil {
 		return "", err
 	}
 
 	condaEnvUrl := fmt.Sprintf("gs://%s/%s/model/conda.yaml", artifactURL.Bucket, artifactURL.Object)
 
-	condaEnv, err := c.gsutil.ReadFile(ctx, condaEnvUrl)
+	condaEnv, err := c.artifactService.ReadArtifact(ctx, condaEnvUrl)
 	if err != nil {
 		return "", err
 	}
@@ -155,7 +173,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 
 	hashedDependenciesUrl := fmt.Sprintf("gs://%s%s/%x", artifactURL.Bucket, modelDependenciesPath, hashEnv)
 
-	_, err = c.gsutil.ReadFile(ctx, hashedDependenciesUrl)
+	_, err = c.artifactService.ReadArtifact(ctx, hashedDependenciesUrl)
 	if err == nil {
 		return hashedDependenciesUrl, nil
 	}
@@ -164,7 +182,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 		return "", err
 	}
 
-	if err := c.gsutil.WriteFile(ctx, hashedDependenciesUrl, string(condaEnv)); err != nil {
+	if err := c.artifactService.WriteArtifact(ctx, hashedDependenciesUrl, condaEnv); err != nil {
 		return "", err
 	}
 
@@ -487,8 +505,8 @@ func (c *imageBuilder) createKanikoJobSpec(
 		fmt.Sprintf("--destination=%s", imageRef),
 	}
 
-	if c.config.ContextSubPath != "" {
-		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath))
+	if c.config.BaseImage.BuildContextSubPath != "" {
+		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.BaseImage.BuildContextSubPath))
 	}
 
 	kanikoArgs = append(kanikoArgs, c.config.KanikoAdditionalArgs...)

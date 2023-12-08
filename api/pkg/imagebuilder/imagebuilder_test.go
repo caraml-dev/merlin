@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/caraml-dev/mlp/api/pkg/artifact"
+	"github.com/caraml-dev/mlp/api/pkg/artifact/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	batchv1 "k8s.io/api/batch/v1"
@@ -43,8 +45,6 @@ import (
 	cfg "github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/gsutil"
-	"github.com/caraml-dev/merlin/pkg/gsutil/mocks"
 )
 
 const (
@@ -69,7 +69,7 @@ const (
 )
 
 var (
-	testArtifactGsutilURL = &gsutil.URL{
+	testArtifactGsutilURL = &artifact.URL{
 		Bucket: "bucket-name",
 		Object: "mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts",
 	}
@@ -112,11 +112,11 @@ var (
 
 	config = Config{
 		BuildNamespace: testBuildNamespace,
-		ContextSubPath: "python/pyfunc-server",
 		BaseImage: cfg.BaseImageConfig{
-			ImageName:       "gojek/base-image:1",
-			BuildContextURI: testBuildContextURL,
-			DockerfilePath:  "./Dockerfile",
+			ImageName:           "gojek/base-image:1",
+			BuildContextURI:     testBuildContextURL,
+			BuildContextSubPath: "python/pyfunc-server",
+			DockerfilePath:      "./Dockerfile",
 		},
 		DockerRegistry:       testDockerRegistry,
 		BuildTimeoutDuration: timeout,
@@ -150,11 +150,11 @@ var (
 	}
 	configWithSa = Config{
 		BuildNamespace: testBuildNamespace,
-		ContextSubPath: "python/pyfunc-server",
 		BaseImage: cfg.BaseImageConfig{
-			ImageName:       "gojek/base-image:1",
-			BuildContextURI: testBuildContextURL,
-			DockerfilePath:  "./Dockerfile",
+			ImageName:           "gojek/base-image:1",
+			BuildContextURI:     testBuildContextURL,
+			BuildContextSubPath: "python/pyfunc-server",
+			DockerfilePath:      "./Dockerfile",
 		},
 		DockerRegistry:       testDockerRegistry,
 		BuildTimeoutDuration: timeout,
@@ -300,7 +300,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -413,7 +413,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -504,7 +504,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -549,11 +549,11 @@ func TestBuildImage(t *testing.T) {
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
 				BuildNamespace: testBuildNamespace,
-				ContextSubPath: "python/pyfunc-server",
 				BaseImage: cfg.BaseImageConfig{
-					ImageName:       "gojek/base-image:1",
-					BuildContextURI: testBuildContextURL,
-					DockerfilePath:  "./Dockerfile",
+					ImageName:           "gojek/base-image:1",
+					BuildContextURI:     testBuildContextURL,
+					BuildContextSubPath: "python/pyfunc-server",
+					DockerfilePath:      "./Dockerfile",
 				},
 				DockerRegistry:       testDockerRegistry,
 				BuildTimeoutDuration: timeout,
@@ -629,7 +629,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -679,11 +679,11 @@ func TestBuildImage(t *testing.T) {
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
 				BuildNamespace: testBuildNamespace,
-				ContextSubPath: "python/pyfunc-server",
 				BaseImage: cfg.BaseImageConfig{
-					ImageName:       "gojek/base-image:1",
-					BuildContextURI: testBuildContextURL,
-					DockerfilePath:  "./Dockerfile",
+					ImageName:           "gojek/base-image:1",
+					BuildContextURI:     testBuildContextURL,
+					BuildContextSubPath: "python/pyfunc-server",
+					DockerfilePath:      "./Dockerfile",
 				},
 				DockerRegistry:       testDockerRegistry,
 				BuildTimeoutDuration: timeout,
@@ -893,7 +893,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1005,7 +1005,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1120,7 +1120,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1223,7 +1223,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1340,7 +1340,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
 										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1448,12 +1448,12 @@ func TestBuildImage(t *testing.T) {
 
 			imageBuilderCfg := tt.config
 
-			gsutilMock := &mocks.GSUtil{}
-			gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
-			gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
-			gsutilMock.On("ReadFile", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
+			artifactServiceMock := &mocks.Service{}
+			artifactServiceMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
+			artifactServiceMock.On("ReadArtifact", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+			artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
 
-			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, gsutilMock)
+			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, artifactServiceMock)
 
 			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version, tt.args.resourceRequest)
 			var actions []ktesting.Action
@@ -1552,9 +1552,9 @@ func TestGetContainers(t *testing.T) {
 			return true, tt.mock, nil
 		})
 
-		gsutilMock := &mocks.GSUtil{}
+		artifaceServiceMock := &mocks.Service{}
 
-		c := NewModelServiceImageBuilder(kubeClient, config, gsutilMock)
+		c := NewModelServiceImageBuilder(kubeClient, config, artifaceServiceMock)
 		containers, err := c.GetContainers(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 
 		if !tt.wantError {
@@ -1746,11 +1746,11 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 		version *models.Version
 	}
 	tests := []struct {
-		name       string
-		args       args
-		gsutilMock func(*mocks.GSUtil)
-		want       string
-		wantErr    bool
+		name                string
+		args                args
+		artifactServiceMock func(*mocks.Service)
+		want                string
+		wantErr             bool
 	}{
 		{
 			name: "hash dependencies is already exist",
@@ -1758,10 +1758,10 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 				ctx:     context.Background(),
 				version: modelVersion,
 			},
-			gsutilMock: func(gsutilMock *mocks.GSUtil) {
-				gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
-				gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
-				gsutilMock.On("ReadFile", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
+			artifactServiceMock: func(artifactServiceMock *mocks.Service) {
+				artifactServiceMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
+				artifactServiceMock.On("ReadArtifact", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
 			},
 			want:    modelDependenciesURL,
 			wantErr: false,
@@ -1772,11 +1772,11 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 				ctx:     context.Background(),
 				version: modelVersion,
 			},
-			gsutilMock: func(gsutilMock *mocks.GSUtil) {
-				gsutilMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
-				gsutilMock.On("ReadFile", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
-				gsutilMock.On("ReadFile", mock.Anything, modelDependenciesURL).Return(nil, storage.ErrObjectNotExist)
-				gsutilMock.On("WriteFile", mock.Anything, modelDependenciesURL, testCondaEnvContent).Return(nil)
+			artifactServiceMock: func(artifactServiceMock *mocks.Service) {
+				artifactServiceMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
+				artifactServiceMock.On("ReadArtifact", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return(nil, storage.ErrObjectNotExist)
+				artifactServiceMock.On("WriteArtifact", mock.Anything, modelDependenciesURL, []byte(testCondaEnvContent)).Return(nil)
 			},
 			want:    modelDependenciesURL,
 			wantErr: false,
@@ -1784,11 +1784,11 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gsutilMock := &mocks.GSUtil{}
-			tt.gsutilMock(gsutilMock)
+			artifactServiceMock := &mocks.Service{}
+			tt.artifactServiceMock(artifactServiceMock)
 
 			c := &imageBuilder{
-				gsutil: gsutilMock,
+				artifactService: artifactServiceMock,
 			}
 
 			got, err := c.getHashedModelDependenciesUrl(tt.args.ctx, tt.args.version)

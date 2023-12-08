@@ -17,6 +17,7 @@ NewRelic:
   Enabled: false
 
 ImageBuilderConfig:
+  ArtifactServiceType: nop
   ClusterName: id-dev
   DefaultResources:
     Requests:
@@ -29,17 +30,17 @@ ImageBuilderConfig:
     ImageName: ghcr.io/caraml-dev/merlin-pyfunc-base:v0.37.0
     DockerfilePath: docker/Dockerfile
     BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
+    BuildContextSubPath: python
     MainAppPath: /merlin-spark-app/main.py
   PredictionJobBaseImage:
     ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.37.0
     DockerfilePath: docker/app.Dockerfile
     BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
+    BuildContextSubPath: python
     MainAppPath: /merlin-spark-app/main.py
   BuildNamespace: mlp
   DockerRegistry: ghcr.io/caraml-dev
   BuildTimeout: 10m
-  PredictionJobContextSubPath: python/batch-predictor
-  ContextSubPath: python/pyfunc-server
   K8sConfig:
     name: id-dev
     cluster:
