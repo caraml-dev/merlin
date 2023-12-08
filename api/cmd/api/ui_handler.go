@@ -23,9 +23,9 @@ type uiEnvHandler struct {
 
 	ModelDeletionEnabled bool `json:"REACT_APP_MODEL_DELETION_ENABLED"`
 
-	ImageBuilderCluster   string `json:"REACT_APP_IMAGE_BUILDER_CLUSTER"`
-	ImageBuilderProject   string `json:"REACT_APP_IMAGE_BUILDER_PROJECT"`
-	ImageBuilderNamespace string `json:"REACT_APP_IMAGE_BUILDER_NAMESPACE"`
+	ImageBuilderCluster   	string `json:"REACT_APP_IMAGE_BUILDER_CLUSTER"`
+	ImageBuilderGCPProject	string `json:"REACT_APP_IMAGE_BUILDER_GCP_PROJECT"`
+	ImageBuilderNamespace 	string `json:"REACT_APP_IMAGE_BUILDER_NAMESPACE"`
 }
 
 func (h uiEnvHandler) handler(w http.ResponseWriter, r *http.Request) {

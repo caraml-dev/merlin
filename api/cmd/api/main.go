@@ -173,9 +173,9 @@ func main() {
 
 		ModelDeletionEnabled: cfg.FeatureToggleConfig.ModelDeletionConfig.Enabled,
 
-		ImageBuilderCluster:   cfg.ImageBuilderConfig.ClusterName,
-		ImageBuilderProject:   cfg.ImageBuilderConfig.GcpProject,
-		ImageBuilderNamespace: cfg.ImageBuilderConfig.BuildNamespace,
+		ImageBuilderCluster:   	cfg.ImageBuilderConfig.ClusterName,
+		ImageBuilderGCPProject:	cfg.ImageBuilderConfig.GcpProject,
+		ImageBuilderNamespace: 	cfg.ImageBuilderConfig.BuildNamespace,
 	}
 
 	uiHomePage := fmt.Sprintf("/%s", strings.TrimPrefix(cfg.ReactAppConfig.HomePage, "/"))

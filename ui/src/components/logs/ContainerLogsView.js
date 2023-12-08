@@ -200,9 +200,9 @@ export const ContainerLogsView = ({
           titleProps={{ style: { width: "30%", fontSize: '14px'} }}
           type="column" 
           >
-          <EuiDescriptionListTitle style={{ width: "30%", fontSize: '14px'}} >Imagebuider URL</EuiDescriptionListTitle>
+          <EuiDescriptionListTitle style={{ width: "30%", fontSize: '14px'}} >Stackdriver Logs</EuiDescriptionListTitle>
           <EuiDescriptionListDescription>
-            <EuiLink href={imagebuilderStackdriverUrl} target="_blank" external>Stackdriver Logs</EuiLink>
+            <EuiLink href={imagebuilderStackdriverUrl} target="_blank" external>Image Builder</EuiLink>
           </EuiDescriptionListDescription>
           </EuiDescriptionList>
         </EuiCard>
@@ -255,7 +255,7 @@ export const ContainerLogsView = ({
           </EuiFlexGroup>
         ) : (
           <EuiEmptyPrompt
-            title={<h2>You have no logs</h2>}
+            title={<h2>Active Container Logs</h2>}
             body={
               <Fragment>
                 <p>

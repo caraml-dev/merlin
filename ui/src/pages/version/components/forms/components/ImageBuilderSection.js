@@ -37,7 +37,7 @@ export const ImageBuilderSection = ({
         >
             <EuiFieldText
             placeholder="500m"
-            value={imageBuilderResourceConfig.cpu_request}
+            value={imageBuilderResourceConfig?.cpu_request}
             onChange={(e) => onChange("cpu_request")(e.target.value)}
             isInvalid={!!errors.cpu_request}
             name="cpu"
@@ -59,7 +59,7 @@ export const ImageBuilderSection = ({
         >
             <EuiFieldText
             placeholder="500Mi"
-            value={imageBuilderResourceConfig.memory_request}
+            value={imageBuilderResourceConfig?.memory_request}
             onChange={(e) => onChange("memory_request")(e.target.value)}
             isInvalid={!!errors.memory_request}
             name="memory"

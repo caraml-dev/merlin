@@ -62,7 +62,7 @@ export const appConfig = {
   },
   imagebuilder:{
     cluster:  getEnv("REACT_APP_IMAGE_BUILDER_CLUSTER"),
-    gcp_project: getEnv("REACT_APP_IMAGE_BUILDER_PROJECT"),
+    gcp_project: getEnv("REACT_APP_IMAGE_BUILDER_GCP_PROJECT"),
     namespace: getEnv("REACT_APP_IMAGE_BUILDER_NAMESPACE"),
   }
 };
