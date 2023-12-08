@@ -35,6 +35,7 @@ import { JobFormSource } from "./JobFormSource";
 import { JobFormStep } from "./JobFormStep";
 import PropTypes from "prop-types";
 
+const _ = require('lodash');
 const isSourceConfigured = job => {
   return (
     !!job.config.job_config.bigquerySource.table &&
@@ -170,7 +171,18 @@ export const JobForm = ({ isNewJob = true }) => {
 
   const onPrev = () => setCurrentStep(i => i - 1);
   const onNext = () => setCurrentStep(i => i + 1);
-  const onSubmit = () => submitForm({ body: JSON.stringify(job) });
+  const onSubmit = () => {
+    if (job?.config?.image_builder_resource_request?.cpu_request === "") {
+      delete job.config.image_builder_resource_request.cpu_request;
+    }
+    if (job?.config?.image_builder_resource_request?.memory_request === "") {
+      delete job.config.image_builder_resource_request.memory_request;
+    }
+    if (_.isEmpty(job?.config?.image_builder_resource_request)) {
+      delete job.config.image_builder_resource_request;
+    }
+    submitForm({ body: JSON.stringify(job) });
+  }
 
   const stepStatus = (step, idx) => {
     switch (true) {

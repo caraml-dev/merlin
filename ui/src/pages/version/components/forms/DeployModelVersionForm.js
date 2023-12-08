@@ -21,6 +21,7 @@ import {
 } from "./validation/schema";
 import { PROTOCOL } from "../../../../services/version_endpoint/VersionEndpoint";
 
+const _ = require('lodash');
 const targetRequestStatus = (currentStatus) => {
   return currentStatus === "serving" ? "serving" : "running";
 };
@@ -51,13 +52,25 @@ export const DeployModelVersionForm = ({
     }
   }, [submissionResponse, onSuccess, model, version]);
 
-  const onSubmit = () =>
+  const onSubmit = () => {
+
+    // versionEndpoint toJSON() is not invoked, binding that causes many issues
+    if (versionEndpoint?.image_builder_resource_request?.cpu_request === "") {
+      delete versionEndpoint.image_builder_resource_request.cpu_request;
+    }
+    if (versionEndpoint?.image_builder_resource_request?.memory_request === "") {
+      delete versionEndpoint.image_builder_resource_request.memory_request;
+    }
+    if (_.isEmpty(versionEndpoint.image_builder_resource_request)) {
+      delete versionEndpoint.image_builder_resource_request;
+    }
     submitForm({
       body: JSON.stringify({
         ...versionEndpoint,
         status: targetRequestStatus(versionEndpoint.status),
       }),
     });
+  }
 
   const mainSteps = [
     {
