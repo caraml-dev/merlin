@@ -1,9 +1,11 @@
 from unittest.mock import MagicMock
 
-import grpc
-from caraml.upi.v1 import upi_pb2, table_pb2, variable_pb2, type_pb2
-from mlflow.pyfunc import PythonModelContext
+import pytest
+import numpy as np
+import pandas as pd
 
+from caraml.upi.v1 import upi_pb2, table_pb2, type_pb2
+from mlflow.pyfunc import PythonModelContext
 
 from merlin.model import PyFuncModel, PyFuncV3Model, PYFUNC_MODEL_INPUT_KEY, PYFUNC_EXTRA_ARGS_KEY
 from merlin.protocol import Protocol
@@ -180,3 +182,76 @@ def test_pyfuncv3_upi():
     pyfunc_model.upiv1_preprocess.assert_called_with(model_input[PYFUNC_MODEL_INPUT_KEY], grpc_context)
     pyfunc_model.infer.assert_called_with(pyfunc_model_input)
     pyfunc_model.upiv1_postprocess.assert_called_with(pyfunc_model_output, model_input[PYFUNC_MODEL_INPUT_KEY])
+
+@pytest.mark.parametrize("features,prediction_ids,expected", [
+    (
+        Values(columns=["col1", "col2", "col3"], data=[[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]]), 
+        ["prediction_1", "prediction_2", "prediction3"],
+        {"columns": ["col1", "col2", "col3"], "data": [[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], "row_ids":["prediction_1", "prediction_2", "prediction3"]}
+    ), 
+    (
+        Values(columns=["col1", "col2", "col3"], data=np.array([[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]])),
+        ["prediction_1", "prediction_2", "prediction3"],
+        {"columns": ["col1", "col2", "col3"], "data": [[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], "row_ids":["prediction_1", "prediction_2", "prediction3"]}
+    ),
+    (
+        pd.DataFrame([[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], columns=["col1", "col2", "col3"]),
+        ["prediction_1", "prediction_2", "prediction3"],
+        {"columns": ["col1", "col2", "col3"], "data": [[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], "row_ids":["prediction_1", "prediction_2", "prediction3"]}
+    )
+])
+def test_model_input_features(features, prediction_ids, expected):
+    model_input = ModelInput(features=features, prediction_ids=prediction_ids)
+    assert model_input.features_dict() == expected
+
+@pytest.mark.parametrize("entities,prediction_ids,expected", [
+    (
+        Values(columns=["col1", "col2", "col3"], data=[[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]]), 
+        ["prediction_1", "prediction_2"],
+        {"columns": ["col1", "col2", "col3"], "data": [[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], "row_ids":["prediction_1", "prediction_2"]}
+    ), 
+    (
+        Values(columns=["col1", "col2", "col3"], data=np.array([[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]])),
+        ["prediction_1", "prediction_2"],
+        {"columns": ["col1", "col2", "col3"], "data": [[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], "row_ids":["prediction_1", "prediction_2"]}
+    ),
+    (
+        pd.DataFrame([[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], columns=["col1", "col2", "col3"]),
+        ["prediction_1", "prediction_2"],
+        {"columns": ["col1", "col2", "col3"], "data": [[0.1, 0.2, 0.3], [0.2, 0.25, 0.3]], "row_ids":["prediction_1", "prediction_2"]}
+    ),
+    (
+        None,
+        None,
+        None
+    )
+])
+def test_model_input_entities(entities, prediction_ids, expected):
+    model_input = ModelInput(features=Values(columns=["col1"], data=[[0.2], [0.3]]), entities=entities, prediction_ids=prediction_ids)
+    assert model_input.entities_dict() == expected
+
+@pytest.mark.parametrize("predictions,prediction_ids,expected", [
+    (
+        Values(columns=["prediction_score"], data=[[0.1], [0.2]]), 
+        ["prediction_1", "prediction_2"],
+        {"columns": ["prediction_score"], "data": [[0.1], [0.2]], "row_ids":["prediction_1", "prediction_2"]}
+    ), 
+    (
+        Values(columns=["prediction_score"], data=np.array([[0.1], [0.2]])),
+        ["prediction_1", "prediction_2"],
+        {"columns": ["prediction_score"], "data": [[0.1], [0.2]], "row_ids":["prediction_1", "prediction_2"]}
+    ),
+    (
+        pd.DataFrame([[0.1], [0.2]], columns=["prediction_score"]),
+        ["prediction_1", "prediction_2"],
+        {"columns": ["prediction_score"], "data": [[0.1], [0.2]], "row_ids":["prediction_1", "prediction_2"]}
+    ),
+    (
+        None,
+        None,
+        None
+    )
+])
+def test_model_output_predictions(predictions, prediction_ids, expected):
+    model_output = ModelOutput(predictions=predictions, prediction_ids=prediction_ids)
+    assert model_output.predictions_dict() == expected

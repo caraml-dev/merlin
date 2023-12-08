@@ -33,7 +33,7 @@ class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
     def PredictValues(self, request, context):
         output = self._model.upiv1_predict(request=request, context=context)
         upi_response = output
-        output_is_pyfunc_output = type(upi_response) == PyFuncOutput
+        output_is_pyfunc_output = isinstance(upi_response, PyFuncOutput) 
         if output_is_pyfunc_output:
             upi_response = output.upi_response
 

@@ -148,8 +148,8 @@ func deploymentModeValidation(prev *models.VersionEndpoint, new *models.VersionE
 
 func modelObservabilityValidation(endpoint *models.VersionEndpoint, model *models.Model) requestValidator {
 	return newFuncValidate(func() error {
-		if endpoint.EnableModelObservability && model.Type != models.ModelTypePyFuncV3 {
-			return fmt.Errorf("model type should be pyfunc_v3 if want to enable model observablity")
+		if endpoint.EnableModelObservability && model.Type != models.ModelTypePyFuncV3 && model.Type != models.ModelTypePyFunc {
+			return fmt.Errorf("model type should be pyfunc or pyfunc_v3 if want to enable model observablity")
 		}
 		return nil
 	})
