@@ -203,6 +203,8 @@ type ClusterConfig struct {
 type ImageBuilderConfig struct {
 	ClusterName                 string `validate:"required"`
 	GcpProject                  string
+	GcsAuthenticationType       string
+	GcsCredentialsJson          string
 	ContextSubPath              string
 	DockerfilePath              string          `validate:"required" default:"./Dockerfile"`
 	BaseImage                   BaseImageConfig `validate:"required"`

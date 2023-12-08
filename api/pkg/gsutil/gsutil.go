@@ -2,6 +2,7 @@ package gsutil
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/url"
@@ -36,9 +37,27 @@ type gsutil struct {
 	client *storage.Client
 }
 
+type Option struct {
+	AuthenticationType string
+	CredentialsJson    string
+}
+
 // NewClient initializes GSUtil client for working with Google Cloud Storage.
-func NewClient(ctx context.Context) (GSUtil, error) {
-	client, err := storage.NewClient(ctx, option.WithScopes(storage.ScopeReadWrite))
+func NewClient(ctx context.Context, opt Option) (GSUtil, error) {
+	clientOpts := []option.ClientOption{}
+	clientOpts = append(clientOpts, option.WithScopes(storage.ScopeReadWrite))
+
+	if opt.AuthenticationType == "" {
+		clientOpts = append(clientOpts, option.WithoutAuthentication())
+	} else if opt.AuthenticationType == "credentials_json" {
+		credsByte, err := base64.StdEncoding.DecodeString(opt.CredentialsJson)
+		if err != nil {
+			return nil, err
+		}
+		clientOpts = append(clientOpts, option.WithCredentialsJSON(credsByte))
+	}
+
+	client, err := storage.NewClient(ctx, clientOpts...)
 	if err != nil {
 		return nil, err
 	}

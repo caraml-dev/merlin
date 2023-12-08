@@ -101,7 +101,11 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		log.Panicf("unable to parse image builder timeout to time.Duration %s", cfg.ImageBuilderConfig.BuildTimeout)
 	}
 
-	gsutil, err := gsutil.NewClient(ctx)
+	gsutilOption := gsutil.Option{
+		AuthenticationType: cfg.ImageBuilderConfig.GcsAuthenticationType,
+		CredentialsJson:    cfg.ImageBuilderConfig.GcsCredentialsJson,
+	}
+	gsutil, err := gsutil.NewClient(ctx, gsutilOption)
 	if err != nil {
 		log.Panicf("unable to initialize gsutil client: %s", err.Error())
 	}
