@@ -47,7 +47,7 @@ const resourceRequestSchema = yup.object().shape({
     ),
 });
 
-const imagebuilderRequestSchema = yup.object().shape({
+const imagebuilderRequestSchema = yup.object().nullable().shape({
   cpu_request: yup
   .string()
   .matches(imageBuilderCpuRequestRegex, 'Valid CPU value is required, e.g "2" or "500m"'),
@@ -70,7 +70,7 @@ const environmentVariableSchema = yup.object().shape({
 export const versionEndpointSchema = yup.object().shape({
   environment_name: yup.string().required("Environment is required"),
   resource_request: resourceRequestSchema,
-  image_builder_resource_request : imagebuilderRequestSchema,
+  image_builder_resource_request: imagebuilderRequestSchema,
   env_vars: yup.array(environmentVariableSchema),
 });
 

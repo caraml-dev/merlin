@@ -23,7 +23,9 @@ const stackdriverFilter = query => {
 resource.labels.project_id:${query.gcp_project}
 resource.labels.cluster_name:${query.cluster}
 resource.labels.namespace_name:${query.namespace}
-resource.labels.pod_name:${query.pod_name}`;
+resource.labels.pod_name:${query.pod_name}
+timestamp>"${query.start_time}"
+`;
 };
 
 const stackdriverImageBuilderFilter = query => {
@@ -31,17 +33,17 @@ const stackdriverImageBuilderFilter = query => {
 resource.labels.project_id:${appConfig.imagebuilder.gcp_project}
 resource.labels.cluster_name:${appConfig.imagebuilder.cluster}
 resource.labels.namespace_name:${appConfig.imagebuilder.namespace}
-labels.k8s-pod/job-name:${query.job_name}`;
+labels.k8s-pod/job-name:${query.job_name}
+timestamp>"${query.start_time}"`;
 }
 
 export const createStackdriverUrl = (query, component) => {
   const advanceFilter = component === "image_builder" ? stackdriverImageBuilderFilter(query, appConfig) : stackdriverFilter(query);
   const url = {
-    interval: "PT1H",
     project: query.gcp_project || appConfig.imagebuilder.gcp_project,
     minLogLevel: 0,
     expandAll: false,
-    advancedFilter: advanceFilter
+    advancedFilter: advanceFilter,
   };
 
   const stackdriverParams = new URLSearchParams(url).toString();

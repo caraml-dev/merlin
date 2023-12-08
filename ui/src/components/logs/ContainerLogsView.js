@@ -1,9 +1,5 @@
 import { AuthContext } from "@caraml-dev/ui-lib";
 import {
-  EuiCard,
-  EuiDescriptionList,
-  EuiDescriptionListDescription,
-  EuiDescriptionListTitle,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
@@ -11,6 +7,7 @@ import {
   EuiLoadingContent,
   EuiPanel,
   EuiSpacer,
+  EuiText,
   EuiTextColor,
   EuiTitle,
 } from "@elastic/eui";
@@ -21,7 +18,6 @@ import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
 import { createStackdriverUrl } from "../../utils/createStackdriverUrl";
 import { LogsSearchBar } from "./LogsSearchBar";
-import StackdriverLink from "./StackdriverLink";
 
 const componentOrder = [
   "image_builder",
@@ -125,17 +121,16 @@ export const ContainerLogsView = ({
   };
 
   const [logUrl, setLogUrl] = useState("");
-  const [stackdriverUrl, setStackdriverUrl] = useState("");
-  const [imagebuilderStackdriverUrl, setImagebuilderStackdriverUrl] = useState("");
-
+  const [stackdriverUrls, setStackdriverUrls] = useState({});
   useEffect(
     () => {
       if (projectLoaded) {
         // set image builder url
         let stackdriverQuery = {
-          job_name: project.name + "-" + model.name + "-" + versionId
+          job_name: project.name + "-" + model.name + "-" + versionId,
+          start_time: model.updated_at,
         };
-        setImagebuilderStackdriverUrl(createStackdriverUrl(stackdriverQuery, "image_builder"));
+        setStackdriverUrls({...stackdriverUrls, "image_builder":createStackdriverUrl(stackdriverQuery, "image_builder")});
 
         // update active container
         if (params.component_type !== "") {
@@ -172,9 +167,10 @@ export const ContainerLogsView = ({
               cluster: activeContainers[0].cluster,
               namespace: activeContainers[0].namespace,
               pod_name: pods.join(" OR "),
+              start_time: model.updated_at,
             };
             if (params.component_type !== "image_builder"){
-              setStackdriverUrl(createStackdriverUrl(stackdriverQuery, params.component_type));
+              setStackdriverUrls({...stackdriverUrls, [params.component_type]: createStackdriverUrl(stackdriverQuery,params.component_type)});
             }
           }
         }
@@ -193,19 +189,22 @@ export const ContainerLogsView = ({
       </EuiTitle>
       <EuiSpacer size="s" />
       {
-        imagebuilderStackdriverUrl && (
-          <EuiCard textAlign="left" title="">
-          <EuiDescriptionList 
-          style={{ marginBottom: "8px"}} 
-          titleProps={{ style: { width: "30%", fontSize: '14px'} }}
-          type="column" 
-          >
-          <EuiDescriptionListTitle style={{ width: "30%", fontSize: '14px'}} >Stackdriver Logs</EuiDescriptionListTitle>
-          <EuiDescriptionListDescription>
-            <EuiLink href={imagebuilderStackdriverUrl} target="_blank" external>Image Builder</EuiLink>
-          </EuiDescriptionListDescription>
-          </EuiDescriptionList>
-        </EuiCard>
+        Object.keys(stackdriverUrls).length !== 0 &&
+        (
+          <EuiPanel>
+          <EuiFlexGroup direction="row" alignItems="center">
+            <EuiFlexItem style={{marginTop:0, marginBottom:0}} grow={false}>
+              <EuiText  style={{ fontSize: '14px', fontWeight:"bold"}}>Stackdriver Logs</EuiText>
+            </EuiFlexItem>
+              {Object.entries(stackdriverUrls).map(([component,url])=> (
+                <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px"}} key={component} grow={false}>
+                  <EuiText size="xs" >
+                    <EuiLink href={url} target="_blank" external>{component.replace(new RegExp("_", "g"), " ")}</EuiLink>
+                  </EuiText>
+                </EuiFlexItem>
+              ))}
+            </EuiFlexGroup>
+          </EuiPanel>
         )
       }
       <EuiSpacer size="s" />
@@ -243,15 +242,6 @@ export const ContainerLogsView = ({
                 )}
               />
             </EuiFlexItem>
-            {
-              params.component_type !== "image_builder" && 
-              stackdriverUrl &&
-              (
-                <EuiFlexItem grow={false}>
-                  <StackdriverLink stackdriverUrl={stackdriverUrl} />
-                </EuiFlexItem>
-              )
-            }
           </EuiFlexGroup>
         ) : (
           <EuiEmptyPrompt
