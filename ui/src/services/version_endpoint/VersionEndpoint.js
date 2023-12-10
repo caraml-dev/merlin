@@ -59,6 +59,13 @@ export class VersionEndpoint {
       );
     }
 
+    if (!versionEndpoint.image_builder_resource_request) {
+      versionEndpoint.image_builder_resource_request = {
+        cpu_request: "",
+        memory_request: ""
+      }
+    }
+
     if (json.transformer) {
       versionEndpoint.transformer = Transformer.fromJson(json.transformer);
     }

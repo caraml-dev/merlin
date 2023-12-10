@@ -198,7 +198,7 @@ export const ContainerLogsView = ({
                   <EuiText  style={{ fontSize: '14px', fontWeight:"bold"}}>Stackdriver Logs</EuiText>
                 </EuiFlexItem>
                 {Object.entries(stackdriverUrls).map(([component,url])=> (
-                  <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px"}} key={component} grow={false}>
+                  <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px", textTransform: "capitalize"}} key={component} grow={false}>
                     <EuiText size="xs" >
                       <EuiLink href={url} target="_blank" external>{component.replace(new RegExp("_", "g"), " ")}</EuiLink>
                     </EuiText>

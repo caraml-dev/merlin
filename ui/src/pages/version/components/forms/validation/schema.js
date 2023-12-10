@@ -3,9 +3,6 @@ import { appConfig } from "../../../../../config";
 
 const cpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)$|^(\d{2,5}m)$/,
   memRequestRegex = /^\d+(Ei?|Pi?|Ti?|Gi?|Mi?|Ki?)?$/,
-  // these are similar to the cpu request, just that it allows empty fields
-  imageBuilderCpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)?$|^(\d{2,5}m)$/,
-  imageBuilderMemRequestRegex = /^(\d+(Ei?|Pi?|Ti?|Gi?|Mi?|Ki?)?)?$/,
   envVariableNameRegex = /^[a-z0-9_]*$/i,
   dockerImageRegex =
     /^([a-z0-9]+(?:[._-][a-z0-9]+)*(?::\d{2,5})?\/)?([a-z0-9]+(?:[._-][a-z0-9]+)*\/)*([a-z0-9]+(?:[._-][a-z0-9]+)*)(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)?$/i;
@@ -50,10 +47,10 @@ const resourceRequestSchema = yup.object().shape({
 const imagebuilderRequestSchema = yup.object().nullable().shape({
   cpu_request: yup
   .string()
-  .matches(imageBuilderCpuRequestRegex, 'Valid CPU value is required, e.g "2" or "500m"'),
+  .matches(cpuRequestRegex, { message:'Valid CPU value is required, e.g "2" or "500m"', excludeEmptyString: true }),
   memory_request: yup
   .string()
-  .matches(imageBuilderMemRequestRegex, "Valid RAM value is required, e.g. 512Mi"),
+  .matches(memRequestRegex, { message:"Valid RAM value is required, e.g. 512Mi", excludeEmptyString: true }),
 });
 
 const environmentVariableSchema = yup.object().shape({

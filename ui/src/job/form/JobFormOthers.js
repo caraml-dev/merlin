@@ -15,7 +15,7 @@
  */
 
 import React, { Fragment, useContext } from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiForm, EuiSpacer } from "@elastic/eui";
+import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiForm, EuiSpacer } from "@elastic/eui";
 import { JobFormContext } from "./context";
 import { ModelVersionSelect } from "./components/ModelVersionsSelect";
 import { ServiceAccountSelect } from "./components/ServiceAccountSelect";
@@ -81,10 +81,16 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
       </EuiFlexGroup>
 
       <EuiSpacer size="l" />
-      <ImageBuilderSection
-        imageBuilderResourceConfig={job.config.image_builder_resource_request}
-        onChangeHandler={onChange("config.image_builder_resource_request")}
-      />
+
+      <EuiAccordion 
+      id="adv config"
+      buttonContent="Advanced configurations">
+        <EuiSpacer size="s" />
+        <ImageBuilderSection
+          imageBuilderResourceConfig={job.config.image_builder_resource_request}
+          onChangeHandler={onChange("config.image_builder_resource_request")}
+        />
+      </EuiAccordion>
     </Fragment>
   );
 };

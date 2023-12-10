@@ -4,7 +4,7 @@ import {
   get,
   useOnChangeHandler,
 } from "@caraml-dev/ui-lib";
-import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
+import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
 import React, { useContext } from "react";
 import { appConfig } from "../../../../../config";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
@@ -18,15 +18,6 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
   const { data, onChangeHandler } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
-
-  // isEnvironmentDisabled is true for redeployment and false for deploy 
-  const imagebuilderSection = !isEnvironmentDisabled ? (
-    <ImageBuilderSection
-      imageBuilderResourceConfig={data.image_builder_resource_request}
-      onChangeHandler={onChange("image_builder_resource_request")}
-      errors={get(errors, "image_builder_resource_request")}
-      />
-    ) : null
 
   return (
     <EuiFlexGroup direction="column" gutterSize="m">
@@ -49,7 +40,18 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
           onChangeHandler={onChange("resource_request")}
           maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
           errors={get(errors, "resource_request")}
-          child={imagebuilderSection}
+          child={
+          <EuiAccordion 
+          id="adv config"
+          buttonContent="Advanced configurations">
+            <EuiSpacer size="s" />
+            <ImageBuilderSection
+              imageBuilderResourceConfig={data.image_builder_resource_request}
+              onChangeHandler={onChange("image_builder_resource_request")}
+              errors={get(errors, "image_builder_resource_request")}
+            />
+          </EuiAccordion>
+          }
         />
       </EuiFlexItem>
 

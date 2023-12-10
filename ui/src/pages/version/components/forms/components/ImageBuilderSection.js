@@ -1,11 +1,9 @@
 import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { 
-    EuiAccordion, 
     EuiFieldText, 
     EuiFlexGroup, 
     EuiFlexItem, 
     EuiFormRow, 
-    EuiSpacer 
 } from "@elastic/eui";
 
 
@@ -18,10 +16,6 @@ export const ImageBuilderSection = ({
     const { onChange } = useOnChangeHandler(onChangeHandler);
 
     return (
-    <EuiAccordion 
-    id="imagebuilderOption"
-    buttonContent="Advanced configurations">
-    <EuiSpacer size="s" />
     <EuiFlexGroup direction="row">
         <EuiFlexItem>
         <EuiFormRow
@@ -67,5 +61,4 @@ export const ImageBuilderSection = ({
         </EuiFormRow>
         </EuiFlexItem>
     </EuiFlexGroup>
-    </EuiAccordion>
 )}

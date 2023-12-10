@@ -275,11 +275,7 @@ export const ResourcesPanel = ({
         </p>
       </EuiCallOut>
       <EuiSpacer size="s" />
-      {
-        child && (
-          child
-        )
-      }
+      { !!child && (child) }
     </Panel>
   );
 };
