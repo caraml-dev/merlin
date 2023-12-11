@@ -128,7 +128,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 
 func (c *imageBuilder) validatePythonVersion(version *models.Version) error {
 	if version.PythonVersion == "" {
-		return fmt.Errorf("python version is not set model version %s", version.ID)
+		return fmt.Errorf("python version is not set for model version %s", version.ID)
 	}
 
 	for _, v := range c.config.SupportedPythonVersions {
