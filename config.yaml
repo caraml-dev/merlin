@@ -17,25 +17,30 @@ NewRelic:
   Enabled: false
 
 ImageBuilderConfig:
+  ArtifactServiceType: nop
   ClusterName: id-dev
-  Resources:
+  DefaultResources:
     Requests:
-      CPU: 2
-      Memory: 1Gi
+      CPU: "1"
+      Memory: 512Mi
     Limits:
-      CPU: 2
+      CPU: "1"
       Memory: 1Gi
-  PredictionJobBaseImages:
-    "3.8.*":
-      ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.7.0
-      DockerfilePath:  docker/app.Dockerfile
-      BuildContextURI: ""
-      MainAppPath: /merlin-spark-app/main.py
+  BaseImage:
+    ImageName: ghcr.io/caraml-dev/merlin-pyfunc-base:v0.37.0
+    DockerfilePath: docker/Dockerfile
+    BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
+    BuildContextSubPath: python
+    MainAppPath: /merlin-spark-app/main.py
+  PredictionJobBaseImage:
+    ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.37.0
+    DockerfilePath: docker/app.Dockerfile
+    BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
+    BuildContextSubPath: python
+    MainAppPath: /merlin-spark-app/main.py
   BuildNamespace: mlp
   DockerRegistry: ghcr.io/caraml-dev
   BuildTimeout: 10m
-  PredictionJobContextSubPath: python/batch-predictor
-  ContextSubPath: python/pyfunc-server
   K8sConfig:
     name: id-dev
     cluster:
@@ -47,6 +52,11 @@ ImageBuilderConfig:
         command: gke-gcloud-auth-plugin
         interactiveMode: IfAvailable
         provideClusterInfo: true
+  KanikoAdditionalArgs:
+    - "--cache=true"
+    - "--compressed-caching=false"
+    - "--snapshot-mode=redo"
+    - "--use-new-run"
 
 AuthorizationConfig:
   AuthorizationEnabled: false
