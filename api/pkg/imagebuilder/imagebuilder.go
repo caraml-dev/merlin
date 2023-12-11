@@ -16,6 +16,7 @@ package imagebuilder
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
@@ -23,7 +24,14 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
+	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	backoff "github.com/cenkalti/backoff/v4"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/google"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
@@ -36,11 +44,6 @@ import (
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/google"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 )
 
 var maxCheckImageRetry uint64 = 2
@@ -83,9 +86,10 @@ type nameGenerator interface {
 }
 
 type imageBuilder struct {
-	kubeClient    kubernetes.Interface
-	config        Config
-	nameGenerator nameGenerator
+	kubeClient      kubernetes.Interface
+	config          Config
+	nameGenerator   nameGenerator
+	artifactService artifact.Service
 }
 
 const (
@@ -100,6 +104,12 @@ const (
 
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
+
+	baseImageEnvKey            = "BASE_IMAGE"
+	modelDependenciesUrlEnvKey = "MODEL_DEPENDENCIES_URL"
+	modelArtifactsUrlEnvKey    = "MODEL_ARTIFACTS_URL"
+
+	modelDependenciesPath = "/merlin/model_dependencies"
 )
 
 var (
@@ -107,26 +117,76 @@ var (
 	jobCompletions            int32 = 1
 )
 
-func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator) ImageBuilder {
+func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator, artifactService artifact.Service) ImageBuilder {
 	return &imageBuilder{
-		kubeClient:    kubeClient,
-		config:        config,
-		nameGenerator: nameGenerator,
+		kubeClient:      kubeClient,
+		config:          config,
+		nameGenerator:   nameGenerator,
+		artifactService: artifactService,
 	}
+}
+
+func (c *imageBuilder) validatePythonVersion(version *models.Version) error {
+	if version.PythonVersion == "" {
+		return fmt.Errorf("python version is not set for model version %s", version.ID)
+	}
+
+	for _, v := range c.config.SupportedPythonVersions {
+		if v == version.PythonVersion {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("python version %s is not supported", version.PythonVersion)
 }
 
 // GetMainAppPath Returns the path to run the main.py of batch predictor, as configured via env var
 func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
-	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
-	if !ok {
-		return "", fmt.Errorf("no matching base image for tag %s", version.PythonVersion)
+	if err := c.validatePythonVersion(version); err != nil {
+		return "", err
 	}
 
+	baseImageTag := c.config.BaseImage
 	if baseImageTag.MainAppPath == "" {
 		return "", fmt.Errorf("mainAppPath is not set for tag %s", version.PythonVersion)
 	}
 
 	return baseImageTag.MainAppPath, nil
+}
+
+func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, version *models.Version) (string, error) {
+	artifactURL, err := c.artifactService.ParseURL(version.ArtifactURI)
+	if err != nil {
+		return "", err
+	}
+
+	condaEnvUrl := fmt.Sprintf("gs://%s/%s/model/conda.yaml", artifactURL.Bucket, artifactURL.Object)
+
+	condaEnv, err := c.artifactService.ReadArtifact(ctx, condaEnvUrl)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.New()
+	hash.Write([]byte(condaEnv))
+	hashEnv := hash.Sum(nil)
+
+	hashedDependenciesUrl := fmt.Sprintf("gs://%s%s/%x", artifactURL.Bucket, modelDependenciesPath, hashEnv)
+
+	_, err = c.artifactService.ReadArtifact(ctx, hashedDependenciesUrl)
+	if err == nil {
+		return hashedDependenciesUrl, nil
+	}
+
+	if err != nil && !errors.Is(err, storage.ErrObjectNotExist) {
+		return "", err
+	}
+
+	if err := c.artifactService.WriteArtifact(ctx, hashedDependenciesUrl, condaEnv); err != nil {
+		return "", err
+	}
+
+	return hashedDependenciesUrl, nil
 }
 
 // BuildImage build a docker image for the given model version
@@ -144,6 +204,12 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 
 	startTime := time.Now()
 	result := "failed"
+
+	hashedModelDependenciesUrl, err := c.getHashedModelDependenciesUrl(ctx, version)
+	if err != nil {
+		log.Errorf("unable to get model dependencies url: %v", err)
+		return "", err
+	}
 
 	labelValues := []string{
 		project.Name,
@@ -169,7 +235,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl)
 		if err != nil {
 			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 			return "", ErrUnableToCreateJobSpec{
@@ -199,7 +265,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl)
 			if err != nil {
 				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 				return "", ErrUnableToCreateJobSpec{
@@ -407,6 +473,7 @@ func (c *imageBuilder) createKanikoJobSpec(
 	model *models.Model,
 	version *models.Version,
 	resourceRequest *models.ResourceRequest,
+	modelDependenciesUrl string,
 ) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
@@ -427,24 +494,22 @@ func (c *imageBuilder) createKanikoJobSpec(
 		annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
 	}
 
-	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
-	if !ok {
-		return nil, fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
-	}
+	baseImageTag := c.config.BaseImage
 
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
-		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
-		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", baseImageEnvKey, baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", modelDependenciesUrlEnvKey, modelDependenciesUrl),
+		fmt.Sprintf("--build-arg=%s=%s/model", modelArtifactsUrlEnvKey, version.ArtifactURI),
 		fmt.Sprintf("--destination=%s", imageRef),
-		"--cache=true",
-		"--single-snapshot",
 	}
 
-	if c.config.ContextSubPath != "" {
-		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath))
+	if c.config.BaseImage.BuildContextSubPath != "" {
+		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.BaseImage.BuildContextSubPath))
 	}
+
+	kanikoArgs = append(kanikoArgs, c.config.KanikoAdditionalArgs...)
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
 	var volume []v1.Volume

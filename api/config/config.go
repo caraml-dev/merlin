@@ -21,9 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caraml-dev/merlin/pkg/transformer/feast"
-	"github.com/caraml-dev/merlin/pkg/transformer/spec"
-	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
@@ -34,6 +31,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 )
 
 const (
@@ -99,8 +100,10 @@ type BaseImageConfig struct {
 	DockerfilePath string `validate:"required" json:"dockerfilePath"`
 	// GCS URL Containing build context
 	BuildContextURI string `validate:"required" json:"buildContextURI"`
+	// Path to sub folder which is intended to build instead of using root folder
+	BuildContextSubPath string `json:"buildContextSubPath"`
 	// path to main file to run application
-	MainAppPath string `validate:"required" json:"mainAppPath"`
+	MainAppPath string `json:"mainAppPath"`
 }
 
 // Decoder to decode the env variable which is a nested map into a list of BaseImageConfig
@@ -200,20 +203,18 @@ type ClusterConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName                 string `validate:"required"`
-	GcpProject                  string
-	ContextSubPath              string
-	DockerfilePath              string           `validate:"required" default:"./Dockerfile"`
-	BaseImages                  BaseImageConfigs `validate:"required"`
-	PredictionJobContextSubPath string
-	PredictionJobDockerfilePath string           `validate:"required" default:"./Dockerfile"`
-	PredictionJobBaseImages     BaseImageConfigs `validate:"required"`
-	BuildNamespace              string           `validate:"required" default:"mlp"`
-	DockerRegistry              string           `validate:"required"`
-	BuildTimeout                string           `validate:"required" default:"10m"`
-	KanikoImage                 string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
-	KanikoServiceAccount        string
-	DefaultResources            ResourceRequestsLimits `validate:"required"`
+	ClusterName            string `validate:"required"`
+	GcpProject             string
+	ArtifactServiceType    string
+	BaseImage              BaseImageConfig `validate:"required"`
+	PredictionJobBaseImage BaseImageConfig `validate:"required"`
+	BuildNamespace         string          `validate:"required" default:"mlp"`
+	DockerRegistry         string          `validate:"required"`
+	BuildTimeout           string          `validate:"required" default:"10m"`
+	KanikoImage            string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	KanikoServiceAccount   string
+	KanikoAdditionalArgs   []string
+	DefaultResources       ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
@@ -221,6 +222,8 @@ type ImageBuilderConfig struct {
 	MaximumRetry  int32                 `validate:"required" default:"3"`
 	K8sConfig     *mlpcluster.K8sConfig `validate:"required" default:"-"`
 	SafeToEvict   bool                  `default:"false"`
+	// Supported Python versions for image builder. Example: ["3.8.*", "3.9.*", "3.10.*"]
+	SupportedPythonVersions []string
 }
 
 type Tolerations []v1.Toleration

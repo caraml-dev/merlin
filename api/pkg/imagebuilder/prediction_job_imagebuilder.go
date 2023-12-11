@@ -17,6 +17,7 @@ package imagebuilder
 import (
 	"fmt"
 
+	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caraml-dev/merlin/mlp"
@@ -24,8 +25,8 @@ import (
 )
 
 // NewPredictionJobImageBuilder create ImageBuilder for building docker image of prediction job (batch)
-func NewPredictionJobImageBuilder(kubeClient kubernetes.Interface, config Config) ImageBuilder {
-	return newImageBuilder(kubeClient, config, &predictionJobNameGenerator{dockerRegistry: config.DockerRegistry})
+func NewPredictionJobImageBuilder(kubeClient kubernetes.Interface, config Config, artifactService artifact.Service) ImageBuilder {
+	return newImageBuilder(kubeClient, config, &predictionJobNameGenerator{dockerRegistry: config.DockerRegistry}, artifactService)
 }
 
 // predictionJobNameGenerator is name generator that will be used for building docker image of prediction job

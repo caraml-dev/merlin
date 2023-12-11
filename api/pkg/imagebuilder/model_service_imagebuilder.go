@@ -17,6 +17,7 @@ package imagebuilder
 import (
 	"fmt"
 
+	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/caraml-dev/merlin/mlp"
@@ -24,8 +25,8 @@ import (
 )
 
 // NewModelServiceImageBuilder create an ImageBuilder that will be used to build docker image of model service
-func NewModelServiceImageBuilder(kubeClient kubernetes.Interface, config Config) ImageBuilder {
-	return newImageBuilder(kubeClient, config, &modelServiceNameGenerator{dockerRegistry: config.DockerRegistry})
+func NewModelServiceImageBuilder(kubeClient kubernetes.Interface, config Config, artifactService artifact.Service) ImageBuilder {
+	return newImageBuilder(kubeClient, config, &modelServiceNameGenerator{dockerRegistry: config.DockerRegistry}, artifactService)
 }
 
 // modelServiceNameGenerator is name generator to generate docker image of model service

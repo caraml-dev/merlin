@@ -10,6 +10,7 @@ on:
 env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
+  DOCKER_REGISTRY: ghcr.io
   GO_VERSION: "1.20"
 
 jobs:
@@ -238,8 +239,9 @@ jobs:
         ports:
           - 5432:5432
     needs:
-      - build-ui
       - create-version
+      - build-ui
+      - test-api
     steps:
       - uses: actions/checkout@v2
       - name: Download UI Dist
@@ -258,46 +260,45 @@ jobs:
           path: merlin.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
-  build-batch-predictor:
+  build-batch-predictor-base:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["38", "39", "310"]
     needs:
       - create-version
+      - test-batch-predictor
+    env:
+      DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyspark-base:${{ needs.create-version.outputs.version }}"
     steps:
       - uses: actions/checkout@v2
-      - name: Build Batch Predictor Docker py${{ matrix.python-version }}
-        run: docker build -t merlin-pyspark-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} -f python/batch-predictor/docker/base.Dockerfile python
-      - name: Save Batch Predictor Docker
-        run: docker image save --output merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar merlin-pyspark-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }}
-      - name: Publish Batch Predictor Docker Artifact
+      - name: Build Batch Predictor Base Docker
+        run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/batch-predictor/docker/base.Dockerfile python
+      - name: Save Batch Predictor Base Docker
+        run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
+      - name: Publish Batch Predictor Base Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
-          path: merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
+          path: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
-  build-pyfunc-server:
+  build-pyfunc-server-base:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["38", "39", "310"]
     needs:
       - create-version
+      - test-pyfunc-server
+    env:
+      DOCKER_REGISTRY: ghcr.io
+      DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}"
     steps:
       - uses: actions/checkout@v2
-      - name: Build Pyfunc Server Docker py${{ matrix.python-version }}
-        run: docker build -t merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} -f python/pyfunc-server/docker/base.Dockerfile python
-      - name: Save Pyfunc Server Docker py${{ matrix.python-version }}
-        run: docker image save --output merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }}
-      - name: Publish Pyfunc Server Docker Artifact py${{ matrix.python-version }}
+      - name: Build Pyfunc Server Base Docker
+        run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/pyfunc-server/docker/base.Dockerfile python
+      - name: Save Pyfunc Server Base Docker
+        run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
+      - name: Publish Pyfunc Server Base Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
-          path: merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
+          path: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-transformer:
@@ -439,11 +440,11 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
       - create-version
-      - e2e-test
-      - test-api
+      - build-api
+      - build-batch-predictor-base
+      - build-pyfunc-server-base
       - test-python-sdk
-      - test-pyfunc-server
-      - test-batch-predictor
+      - e2e-test
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:

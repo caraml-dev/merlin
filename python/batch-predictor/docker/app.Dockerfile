@@ -13,19 +13,32 @@
 # limitations under the License.
 
 ARG BASE_IMAGE
-
 FROM ${BASE_IMAGE}
-# Get the model
 
-ARG MODEL_URL
 ARG GOOGLE_APPLICATION_CREDENTIALS
+RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
+    then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} > gcloud-auth.txt; \
+    else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
+    fi
 
-# Run docker build using the provided credential
-RUN if [[ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
-RUN gsutil -m cp -r ${MODEL_URL} .
-RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \
-    sed -i 's/mlflow[><=]\{0,1\}.*$/mlflow==1.26.1/g' ${HOME}/model/conda.yaml && \
-    sed -i '/merlin-sdk/d' ${HOME}/model/conda.yaml && \
-    conda env update --name ${CONDA_ENVIRONMENT} --file ${HOME}/model/conda.yaml && \
-    pip install ${SDK_PATH} && \
-    python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"
+# Download and install user model dependencies
+ARG MODEL_DEPENDENCIES_URL
+RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
+RUN conda env create --name merlin-model --file conda.yaml
+
+# Copy and install batch predictor dependencies
+COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
+COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
+ENV SDK_PATH=${HOME}/sdk
+
+RUN /bin/bash -c ". activate merlin-model && pip install -r ${HOME}/merlin-spark-app/requirements.txt"
+
+# Download and dry-run user model artifacts and code
+ARG MODEL_ARTIFACTS_URL
+RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
+RUN /bin/bash -c ". activate merlin-model && python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"
+
+# Copy batch predictor application entrypoint to protected directory
+COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
+
+ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]
