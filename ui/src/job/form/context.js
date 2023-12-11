@@ -211,7 +211,8 @@ export const JobFormContextProvider = ({ job: initJob, ...props }) => {
     [setJob]
   );
   
-  // This port partial of the FormContextProvider that most of the forms are using,
+  // TODO refactor the job form to use FormContextProvider and FormContext for simplicity and consistency
+  // This port partial of the FormContextProvider that most of the other forms are using,
   // so that the similiar/future section using onChangeHandler can be reused and 
   // does not requires adding new callbacks per field
   var handleChanges = React.useCallback(function (paths, value) {
