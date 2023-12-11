@@ -15,13 +15,15 @@
  */
 
 import React, { Fragment, useContext } from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiForm, EuiSpacer } from "@elastic/eui";
+import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiForm, EuiSpacer } from "@elastic/eui";
 import { JobFormContext } from "./context";
 import { ModelVersionSelect } from "./components/ModelVersionsSelect";
 import { ServiceAccountSelect } from "./components/ServiceAccountSelect";
 import { ResourceRequestForm } from "./components/ResourceRequestForm";
 import { EnvironmentVariablesForm } from "./components/EnvironmentVariablesForm";
 import PropTypes from "prop-types";
+import { ImageBuilderSection } from "../../pages/version/components/forms/components/ImageBuilderSection";
+import { useOnChangeHandler } from "@caraml-dev/ui-lib";
 
 export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
   const {
@@ -29,8 +31,10 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
     setVersionId,
     setServiceAccountName,
     setResourceRequest,
-    setEnvVars
+    setEnvVars,
+    onChangeHandler
   } = useContext(JobFormContext);
+  const { onChange } = useOnChangeHandler(onChangeHandler);
 
   return (
     <Fragment>
@@ -75,6 +79,18 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
           />
         </EuiFlexItem>
       </EuiFlexGroup>
+
+      <EuiSpacer size="l" />
+
+      <EuiAccordion 
+      id="adv config"
+      buttonContent="Advanced configurations">
+        <EuiSpacer size="s" />
+        <ImageBuilderSection
+          imageBuilderResourceConfig={job.config.image_builder_resource_request}
+          onChangeHandler={onChange("config.image_builder_resource_request")}
+        />
+      </EuiAccordion>
     </Fragment>
   );
 };

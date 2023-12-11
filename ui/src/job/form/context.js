@@ -16,6 +16,7 @@
 
 import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
+import { StackableFunction, set, useOnChangeHandler } from "@caraml-dev/ui-lib";
 
 export const JobFormContext = React.createContext({});
 
@@ -209,6 +210,27 @@ export const JobFormContextProvider = ({ job: initJob, ...props }) => {
     },
     [setJob]
   );
+  
+  // TODO refactor the job form to use FormContextProvider and FormContext for simplicity and consistency
+  // This port partial of the FormContextProvider that most of the other forms are using,
+  // so that the similiar/future section using onChangeHandler can be reused and 
+  // does not requires adding new callbacks per field
+  var handleChanges = React.useCallback(function (paths, value) {
+    var path = paths.filter(function (part) {
+      return !!part;
+    }).join(".");
+    setJob(function (data) {
+      set(data, path, value);
+      return Object.assign(Object.create(data), data);
+    });
+  }, [setJob]);
+  var rootHandler = React.useMemo(function () {
+    return new StackableFunction([], handleChanges);
+  }, [handleChanges]);
+
+  var _useOnChangeHandler = useOnChangeHandler(rootHandler),
+      onChangeHandler = _useOnChangeHandler.onChangeHandler,
+      onChange = _useOnChangeHandler.onChange;
 
   return (
     <JobFormContext.Provider
@@ -224,7 +246,9 @@ export const JobFormContextProvider = ({ job: initJob, ...props }) => {
         unsetBigquerySourceOptions,
         setBigquerySink,
         setBigquerySinkOptions,
-        setEnvVars
+        setEnvVars,
+        onChange: onChange,
+        onChangeHandler: onChangeHandler
       }}>
       {props.children}
     </JobFormContext.Provider>

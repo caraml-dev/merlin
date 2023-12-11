@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { appConfig } from "../config";
+
 const stackdriverAPI = "https://console.cloud.google.com/logs/viewer";
 
 const stackdriverFilter = query => {
@@ -21,19 +23,30 @@ const stackdriverFilter = query => {
 resource.labels.project_id:${query.gcp_project}
 resource.labels.cluster_name:${query.cluster}
 resource.labels.namespace_name:${query.namespace}
-resource.labels.pod_name:${query.pod_name}`;
+resource.labels.pod_name:${query.pod_name}
+timestamp>"${query.start_time}"
+`;
 };
 
-export const createStackdriverUrl = query => {
-  const advanceFilter = stackdriverFilter(query);
+const stackdriverImageBuilderFilter = query => {
+  return `resource.type:"k8s_container"
+resource.labels.project_id:${appConfig.imagebuilder.gcp_project}
+resource.labels.cluster_name:${appConfig.imagebuilder.cluster}
+resource.labels.namespace_name:${appConfig.imagebuilder.namespace}
+labels.k8s-pod/job-name:${query.job_name}
+timestamp>"${query.start_time}"`;
+}
+
+export const createStackdriverUrl = (query, component) => {
+  const advanceFilter = component === "image_builder" ? stackdriverImageBuilderFilter(query, appConfig) : stackdriverFilter(query);
   const url = {
-    interval: "PT1H",
-    project: query.gcp_project,
+    project: query.gcp_project || appConfig.imagebuilder.gcp_project,
     minLogLevel: 0,
     expandAll: false,
-    advancedFilter: advanceFilter
+    advancedFilter: advanceFilter,
   };
 
   const stackdriverParams = new URLSearchParams(url).toString();
   return stackdriverAPI + "?" + stackdriverParams;
 };
+

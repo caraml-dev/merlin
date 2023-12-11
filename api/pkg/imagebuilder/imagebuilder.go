@@ -550,18 +550,16 @@ func (c *imageBuilder) createKanikoJobSpec(
 	cpuLimit := resource.MustParse(c.config.DefaultResources.Limits.CPU)
 	memoryLimit := resource.MustParse(c.config.DefaultResources.Limits.Memory)
 
-	// User defined resource request and limit will override the default value
+	// User defined resource request and limit will override the default value and set request==limit
 	if resourceRequest != nil {
 		if !resourceRequest.CPURequest.IsZero() {
 			cpuRequest = resourceRequest.CPURequest
+			cpuLimit = resourceRequest.CPURequest
 		}
 		if !resourceRequest.MemoryRequest.IsZero() {
 			memoryRequest = resourceRequest.MemoryRequest
+			memoryLimit = resourceRequest.MemoryRequest
 		}
-
-		// If user overide the request, we also override the limit == request
-		cpuLimit = resourceRequest.CPURequest
-		memoryLimit = resourceRequest.MemoryRequest
 	}
 
 	resourceRequirements = RequestLimitResources{

@@ -172,6 +172,10 @@ func main() {
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
 
 		ModelDeletionEnabled: cfg.FeatureToggleConfig.ModelDeletionConfig.Enabled,
+
+		ImageBuilderCluster:    cfg.ImageBuilderConfig.ClusterName,
+		ImageBuilderGCPProject: cfg.ImageBuilderConfig.GcpProject,
+		ImageBuilderNamespace:  cfg.ImageBuilderConfig.BuildNamespace,
 	}
 
 	uiHomePage := fmt.Sprintf("/%s", strings.TrimPrefix(cfg.ReactAppConfig.HomePage, "/"))

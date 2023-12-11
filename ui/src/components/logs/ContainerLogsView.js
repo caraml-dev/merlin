@@ -3,9 +3,11 @@ import {
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiLink,
   EuiLoadingContent,
   EuiPanel,
   EuiSpacer,
+  EuiText,
   EuiTextColor,
   EuiTitle,
 } from "@elastic/eui";
@@ -16,7 +18,6 @@ import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
 import { createStackdriverUrl } from "../../utils/createStackdriverUrl";
 import { LogsSearchBar } from "./LogsSearchBar";
-import StackdriverLink from "./StackdriverLink";
 
 const componentOrder = [
   "image_builder",
@@ -120,46 +121,58 @@ export const ContainerLogsView = ({
   };
 
   const [logUrl, setLogUrl] = useState("");
-  const [stackdriverUrl, setStackdriverUrl] = useState("");
-
+  const [stackdriverUrls, setStackdriverUrls] = useState({});
   useEffect(
     () => {
-      if (params.component_type !== "" && projectLoaded) {
-        const activeContainers = containers.filter(
-          (container) => container.component_type === params.component_type
-        );
+      if (projectLoaded) {
+        // set image builder url
+        let stackdriverQuery = {
+          job_name: project.name + "-" + model.name + "-" + versionId,
+          start_time: model.updated_at,
+        };
+        setStackdriverUrls({...stackdriverUrls, "image_builder":createStackdriverUrl(stackdriverQuery, "image_builder")});
 
-        if (activeContainers && activeContainers.length > 0) {
-          const containerQuery = {
-            ...params,
-            cluster: activeContainers[0].cluster,
-            namespace: activeContainers[0].namespace,
-            timestamps: true,
-            project_name: project.name,
-            model_id: model.id,
-            model_name: model.name,
-            version_id: versionId,
-            revision_id: revisionId ? revisionId : "",
-            prediction_job_id: jobId ? jobId : "",
-          };
-          const logParams = new URLSearchParams(containerQuery).toString();
-          const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
-          if (newLogUrl !== logUrl) {
-            setLogUrl(newLogUrl);
+        // update active container
+        if (params.component_type !== "") {
+          const activeContainers = containers.filter(
+            (container) => container.component_type === params.component_type
+          );
+
+          if (activeContainers && activeContainers.length > 0) {
+            const containerQuery = {
+              ...params,
+              cluster: activeContainers[0].cluster,
+              namespace: activeContainers[0].namespace,
+              timestamps: true,
+              project_name: project.name,
+              model_id: model.id,
+              model_name: model.name,
+              version_id: versionId,
+              revision_id: revisionId ? revisionId : "",
+              prediction_job_id: jobId ? jobId : "",
+            };
+            const logParams = new URLSearchParams(containerQuery).toString();
+            const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
+            if (newLogUrl !== logUrl) {
+              setLogUrl(newLogUrl);
+            }
+
+            const pods = [
+              ...new Set(
+                activeContainers.map((container) => `"${container.pod_name}"`)
+              ),
+            ];
+            let stackdriverQuery = {
+              gcp_project: activeContainers[0].gcp_project,
+              cluster: activeContainers[0].cluster,
+              namespace: activeContainers[0].namespace,
+              pod_name: pods.join(" OR "),
+              start_time: model.updated_at,
+            };
+            if (params.component_type !== "image_builder"){
+              setStackdriverUrls({...stackdriverUrls, [params.component_type]: createStackdriverUrl(stackdriverQuery,params.component_type)});
+            }
           }
-
-          const pods = [
-            ...new Set(
-              activeContainers.map((container) => `"${container.pod_name}"`)
-            ),
-          ];
-          let stackdriverQuery = {
-            gcp_project: activeContainers[0].gcp_project,
-            cluster: activeContainers[0].cluster,
-            namespace: activeContainers[0].namespace,
-            pod_name: pods.join(" OR "),
-          };
-          setStackdriverUrl(createStackdriverUrl(stackdriverQuery));
         }
       }
     },
@@ -174,13 +187,35 @@ export const ContainerLogsView = ({
           <EuiTextColor color="success">&nbsp; Logs</EuiTextColor>
         </span>
       </EuiTitle>
+      {
+        Object.keys(stackdriverUrls).length !== 0 &&
+        (
+          <Fragment>
+            <EuiSpacer size="s"/>
+            <EuiPanel>
+              <EuiFlexGroup direction="row" alignItems="center">
+                <EuiFlexItem style={{marginTop:0, marginBottom:0}} grow={false}>
+                  <EuiText  style={{ fontSize: '14px', fontWeight:"bold"}}>Stackdriver Logs</EuiText>
+                </EuiFlexItem>
+                {Object.entries(stackdriverUrls).map(([component,url])=> (
+                  <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px", textTransform: "capitalize"}} key={component} grow={false}>
+                    <EuiText size="xs" >
+                      <EuiLink href={url} target="_blank" external>{component.replace(new RegExp("_", "g"), " ")}</EuiLink>
+                    </EuiText>
+                  </EuiFlexItem>
+                ))}
+              </EuiFlexGroup>
+            </EuiPanel>
+          </Fragment>
+        )
+      }
       <EuiSpacer size="s" />
       <EuiPanel>
         {!containerHaveBeenLoaded &&
         componentTypes &&
         componentTypes.length === 0 ? (
           <EuiLoadingContent lines={4} />
-        ) : logUrl && stackdriverUrl ? (
+        ) : logUrl ? (
           <EuiFlexGroup direction="column" gutterSize="none">
             <EuiFlexItem grow={false}>
               <LogsSearchBar {...{ componentTypes, params, setParams }} />
@@ -209,14 +244,10 @@ export const ContainerLogsView = ({
                 )}
               />
             </EuiFlexItem>
-
-            <EuiFlexItem grow={false}>
-              <StackdriverLink stackdriverUrl={stackdriverUrl} />
-            </EuiFlexItem>
           </EuiFlexGroup>
         ) : (
           <EuiEmptyPrompt
-            title={<h2>You have no logs</h2>}
+            title={<h2>Active Container Logs</h2>}
             body={
               <Fragment>
                 <p>
