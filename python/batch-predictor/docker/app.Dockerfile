@@ -36,6 +36,11 @@ RUN /bin/bash -c ". activate merlin-model && pip install -r ${HOME}/merlin-spark
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
+RUN pwd
+RUN ls -lah
+RUN ls -lah ${HOME}
+RUN ls -lah ${HOME}/merlin-spark-app
+RUN ls -lah ${HOME}/model
 RUN /bin/bash -c ". activate merlin-model && python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"
 
 # Copy batch predictor application entrypoint to protected directory
