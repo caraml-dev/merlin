@@ -15,23 +15,23 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG GOOGLE_APPLICATION_CREDENTIALS
-RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
-    then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} > gcloud-auth.txt; \
-    else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
-    fi
+# ARG GOOGLE_APPLICATION_CREDENTIALS
+# RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
+#     then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} > gcloud-auth.txt; \
+#     else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
+#     fi
 
-# Download and install user model dependencies
-ARG MODEL_DEPENDENCIES_URL
-RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
-RUN conda env create --name merlin-model --file conda.yaml
+# # Download and install user model dependencies
+# ARG MODEL_DEPENDENCIES_URL
+# RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
+# RUN conda env create --name merlin-model --file conda.yaml
 
-# Copy and install batch predictor dependencies
-COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
-COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
-ENV SDK_PATH=${HOME}/sdk
+# # Copy and install batch predictor dependencies
+# COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
+# COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
+# ENV SDK_PATH=${HOME}/sdk
 
-RUN /bin/bash -c ". activate merlin-model && pip install -r ${HOME}/merlin-spark-app/requirements.txt"
+# RUN /bin/bash -c ". activate merlin-model && pip install -r ${HOME}/merlin-spark-app/requirements.txt"
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
