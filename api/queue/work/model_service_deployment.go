@@ -184,7 +184,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 func (depl *ModelServiceDeployment) generateModelOptions(ctx context.Context, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.ModelOption, error) {
 	modelOpt := &models.ModelOption{}
 	switch model.Type {
-	case models.ModelTypePyFunc:
+	case models.ModelTypePyFunc, models.ModelTypePyFuncV3:
 		imageRef, err := depl.ImageBuilder.BuildImage(ctx, model.Project, model, version, endpoint.ImageBuilderResourceRequest)
 		if err != nil {
 			return modelOpt, err
