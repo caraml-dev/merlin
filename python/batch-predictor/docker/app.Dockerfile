@@ -31,7 +31,7 @@ COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
 COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
 ENV SDK_PATH=${HOME}/sdk
 
-RUN /bin/bash -c ". activate merlin-model && pip install -r ${HOME}/merlin-spark-app/requirements.txt"
+RUN /bin/bash -c ". activate merlin-model && pip uninstall -y merlin-sdk && pip install -r ${HOME}/merlin-spark-app/requirements.txt"
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
