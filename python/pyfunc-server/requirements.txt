@@ -6,7 +6,7 @@ prometheus_client==0.14.1
 uvloop>=0.15.2,<0.18.0
 orjson>=2.6.8
 tornado
-caraml-upi-protos
+caraml-upi-protos>=0.3.4
 grpcio-reflection
 grpcio-health-checking
 confluent-kafka==2.3.0
