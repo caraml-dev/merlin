@@ -24,7 +24,7 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
-RUN sed -i '/merlin-sdk/d' model/conda.yaml
+RUN sed -i '/merlin-sdk/d' conda.yaml
 RUN conda env create --name merlin-model --file conda.yaml
 
 # Copy and install pyfunc-server and merlin-sdk dependencies
