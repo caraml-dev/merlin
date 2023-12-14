@@ -32,8 +32,7 @@ COPY sdk /sdk
 ENV SDK_PATH=/sdk
 
 WORKDIR /pyfunc-server
-RUN /bin/bash -c ". activate merlin-model && pip uninstall merlin-sdk || true"
-RUN /bin/bash -c ". activate merlin-model && pip install -r /pyfunc-server/requirements.txt"
+RUN /bin/bash -c ". activate merlin-model && pip uninstall -y merlin-sdk && pip install -r /pyfunc-server/requirements.txt"
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
