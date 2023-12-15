@@ -4,6 +4,17 @@ from typing import Optional
 import pandas as pd
 import pyarrow as pa
 from arize.pandas.logger import Client
+from typing import List
+
+import pandas as pd
+import pyarrow as pa
+from arize.pandas.validation.errors import ValidationError
+from arize.pandas.validation.validator import Validator
+from arize.utils.types import (
+    ModelTypes as ArizeModelType,
+    Environments as ArizeEnvironment,
+    Schema as ArizeSchema,
+)
 from merlin.observability.inference import (
     BinaryClassificationOutput,
     InferenceSchema,
@@ -32,7 +43,6 @@ class MockArizeClient(Client):
         timeout: Optional[float] = None,
     ) -> Response:
         return MockResponse(pa.ipc.open_stream(pa.OSFile(path)).read_pandas(), "Success", 200)
-
 
 def test_binary_classification_model_preprocessing_for_arize():
     inference_schema = InferenceSchema(
