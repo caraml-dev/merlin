@@ -8,10 +8,6 @@ endif
 setup:
 	@echo "Setting up environment..."
 	@pip install -r requirements.txt --use-pep517
-
-.PHONY: setup-dev
-setup-dev:
-	@echo "Setting up environment..."
 	@pip install -r requirements-dev.txt
 
 .PHONY: pip-compile

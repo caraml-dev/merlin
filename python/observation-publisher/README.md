@@ -18,7 +18,6 @@ make run
 ## Development
 ### Setup
 ```bash
-make setup-dev
 make setup
 ```
 

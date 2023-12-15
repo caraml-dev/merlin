@@ -17,8 +17,6 @@ from merlin.observability.inference import (
     RankingOutput,
     ObservationType,
 )
-from pandas._testing import assert_frame_equal
-
 from publisher.config import ArizeConfig
 from publisher.observability_backend import ArizeSink
 
@@ -27,7 +25,8 @@ def assert_no_validation_errors(errors: List[ValidationError]):
     try:
         assert len(errors) == 0
     except AssertionError:
-        print(errors)
+        for error in errors:
+            print(error.error_message())
         raise
 
 
@@ -124,11 +123,12 @@ def test_ranking_model_preprocessing_for_arize():
     request_timestamp = datetime.now()
     input_df = pd.DataFrame.from_records(
         [
-            [1.0, "1234", "1001", request_timestamp],
-            [0.9, "1234", "1001", request_timestamp],
-            [0.8, "1234", "1001", request_timestamp],
+            [5.0, 1.0, "1234", "1001", request_timestamp],
+            [4.0, 0.9, "1234", "1001", request_timestamp],
+            [3.0, 0.8, "1234", "1001", request_timestamp],
         ],
         columns=[
+            "rating",
             "rank_score",
             "prediction_id",
             "order_id",
