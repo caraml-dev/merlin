@@ -16,6 +16,17 @@ make run
 
 
 ## Development
+### Setup
+```bash
+make setup-dev
+make setup
+```
+
+### Updating requirements.txt
+Make changes on requirements.in, then execute
+```bash
+make pip-compile
+```
 
 ### Run test
 ```bash

@@ -1,15 +1,21 @@
 import abc
-from typing import List
+from typing import Tuple
 
 import pandas as pd
 from arize.pandas.logger import Client
 from arize.pandas.logger import Schema as ArizeSchema
+from arize.pandas.validation.errors import ValidationFailure
 from arize.utils.types import Environments
 from arize.utils.types import ModelTypes as ArizeModelType
-from merlin.observability.inference import InferenceSchema, InferenceType
+from merlin.observability.inference import (
+    InferenceSchema,
+    RegressionOutput,
+    BinaryClassificationOutput,
+    RankingOutput,
+    ObservationType,
+)
 
-from publisher.config import (ArizeConfig, ObservabilityBackend,
-                              ObservabilityBackendType)
+from publisher.config import ArizeConfig, ObservabilityBackend, ObservabilityBackendType
 from publisher.prediction_log_parser import PREDICTION_LOG_TIMESTAMP_COLUMN
 
 
@@ -17,54 +23,6 @@ class ObservationSink(abc.ABC):
     @abc.abstractmethod
     def write(self, dataframe: pd.DataFrame):
         raise NotImplementedError
-
-
-def map_to_arize_schema(inference_schema: InferenceSchema) -> List[ArizeSchema]:
-    # One log will be published per model schema
-    match inference_schema.type:
-        case InferenceType.BINARY_CLASSIFICATION:
-            return [
-                ArizeSchema(
-                    feature_column_names=inference_schema.feature_columns,
-                    prediction_label_column_name=inference_schema.binary_classification.prediction_label_column,
-                    prediction_score_column_name=inference_schema.binary_classification.prediction_score_column,
-                    prediction_id_column_name=inference_schema.prediction_id_column,
-                    timestamp_column_name=PREDICTION_LOG_TIMESTAMP_COLUMN,
-                )
-            ]
-        case InferenceType.MULTICLASS_CLASSIFICATION:
-            return [
-                ArizeSchema(
-                    feature_column_names=inference_schema.feature_columns,
-                    prediction_label_column_name=prediction_label_column,
-                    prediction_score_column_name=prediction_score_column,
-                    prediction_id_column_name=inference_schema.prediction_id_column,
-                    timestamp_column_name=PREDICTION_LOG_TIMESTAMP_COLUMN,
-                )
-                for prediction_label_column, prediction_score_column in zip(
-                    inference_schema.multiclass_classification.prediction_label_columns,
-                    inference_schema.multiclass_classification.prediction_score_columns,
-                )
-            ]
-        case InferenceType.REGRESSION:
-            return [
-                ArizeSchema(
-                    feature_column_names=inference_schema.feature_columns,
-                    prediction_score_column_name=inference_schema.regression.prediction_score_column,
-                    prediction_id_column_name=inference_schema.prediction_id_column,
-                    timestamp_column_name=PREDICTION_LOG_TIMESTAMP_COLUMN,
-                )
-            ]
-        case InferenceType.RANKING:
-            return [
-                ArizeSchema(
-                    feature_column_names=inference_schema.feature_columns,
-                    rank_column_name=inference_schema.ranking.rank_column,
-                    prediction_group_id_column_name=inference_schema.ranking.prediction_group_id_column,
-                    prediction_id_column_name=inference_schema.prediction_id_column,
-                    timestamp_column_name=PREDICTION_LOG_TIMESTAMP_COLUMN,
-                )
-            ]
 
 
 class ArizeSink(ObservationSink):
@@ -80,16 +38,59 @@ class ArizeSink(ObservationSink):
         self._model_version = model_version
         self._inference_schema = inference_schema
 
+    def common_arize_schema_attributes(self) -> dict:
+        return dict(
+            feature_column_names=self._inference_schema.feature_columns,
+            prediction_id_column_name=self._inference_schema.prediction_id_column,
+            timestamp_column_name=PREDICTION_LOG_TIMESTAMP_COLUMN,
+            tag_column_names=self._inference_schema.tag_columns,
+        )
+
+    def to_arize_schema(self) -> Tuple[ArizeModelType, ArizeSchema]:
+        prediction_output = self._inference_schema.model_prediction_output
+        if isinstance(prediction_output, BinaryClassificationOutput):
+            schema_attributes = self.common_arize_schema_attributes() | dict(
+                prediction_label_column_name=prediction_output.prediction_label_column,
+                prediction_score_column_name=prediction_output.prediction_score_column,
+            )
+            model_type = ArizeModelType.BINARY_CLASSIFICATION
+        elif isinstance(prediction_output, RegressionOutput):
+            schema_attributes = self.common_arize_schema_attributes() | dict(
+                prediction_score_column_name=prediction_output.prediction_score_column,
+            )
+            model_type = ArizeModelType.REGRESSION
+        elif isinstance(prediction_output, RankingOutput):
+            schema_attributes = self.common_arize_schema_attributes() | dict(
+                rank_column_name=prediction_output.rank_column,
+                prediction_group_id_column_name=prediction_output.prediction_group_id_column,
+            )
+            model_type = ArizeModelType.RANKING
+        else:
+            raise ValueError(
+                f"Unknown prediction output type: {type(prediction_output)}"
+            )
+
+        return model_type, ArizeSchema(**schema_attributes)
+
     def write(self, df: pd.DataFrame):
-        for schema in map_to_arize_schema(self._inference_schema):
+        processed_df = self._inference_schema.model_prediction_output.preprocess(
+            df, [ObservationType.FEATURE, ObservationType.PREDICTION]
+        )
+        model_type, arize_schema = self.to_arize_schema()
+        try:
             self._client.log(
-                dataframe=df,
+                dataframe=processed_df,
                 environment=Environments.PRODUCTION,
-                schema=schema,
+                schema=arize_schema,
                 model_id=self._model_id,
-                model_type=ArizeModelType(self._inference_schema.type.name),
+                model_type=model_type,
                 model_version=self._model_version,
             )
+        except ValidationFailure as e:
+            error_mesage = "\n".join([err.error_message() for err in e.errors])
+            print(f"Failed to log to Arize: {error_mesage}")
+        except Exception as e:
+            print(f"Failed to log to Arize: {e}")
 
 
 def new_observation_sink(
