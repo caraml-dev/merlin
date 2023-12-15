@@ -142,10 +142,6 @@ func (c *imageBuilder) validatePythonVersion(version *models.Version) error {
 
 // GetMainAppPath Returns the path to run the main.py of batch predictor, as configured via env var
 func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
-	if err := c.validatePythonVersion(version); err != nil {
-		return "", err
-	}
-
 	baseImageTag := c.config.BaseImage
 	if baseImageTag.MainAppPath == "" {
 		return "", fmt.Errorf("mainAppPath is not set for tag %s", version.PythonVersion)
@@ -200,6 +196,10 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 	if imageExists {
 		log.Infof("Image %s already exists. Skipping build.", imageRef)
 		return imageRef, nil
+	}
+
+	if err := c.validatePythonVersion(version); err != nil {
+		return "", err
 	}
 
 	startTime := time.Now()
