@@ -378,6 +378,29 @@ jobs:
           path: merlin-logger.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
+  build-observation-publisher:
+    runs-on: ubuntu-latest
+    needs:
+      - create-version
+      - test-observation-publisher
+    env:
+      DOCKER_REGISTRY: ghcr.io
+      DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-observation-publisher:${{ needs.create-version.outputs.version }}"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Observation Publisher Docker
+        env:
+          OBSERVATION_PUBLISHER_IMAGE_TAG: ${{ env.DOCKER_IMAGE_TAG }}
+        run: make observation-publisher
+      - name: Save Observation Publisher Docker
+        run: docker image save --output merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
+      - name: Publish Observation Publisher Docker Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar
+          path: merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
   e2e-test:
     runs-on: ubuntu-latest
     needs:

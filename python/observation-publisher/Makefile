@@ -1,8 +1,4 @@
 ENVIRONMENT_CONFIG = "example-override"
-VERSION=$(shell git describe --tags --always --first-parent)
-ifeq ($(strip $(VERSION)),)
-VERSION=0.1.0
-endif
 
 .PHONY: setup
 setup:

@@ -1,6 +1,6 @@
-IMAGE_TAG=dev
+OBSERVATION_PUBLISHER_IMAGE_TAG = observation-publisher:dev
 
 .PHONY: observation-publisher
 observation-publisher:
 	@echo "Building image for observation publisher..."
-	@docker build -t observation-publisher:${IMAGE_TAG} -f observation-publisher/Dockerfile .
+	@docker build -t ${OBSERVATION_PUBLISHER_IMAGE_TAG} -f observation-publisher/Dockerfile --progress plain .
