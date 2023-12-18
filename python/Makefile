@@ -1,4 +1,4 @@
-OBSERVATION_PUBLISHER_IMAGE_TAG = observation-publisher:dev
+OBSERVATION_PUBLISHER_IMAGE_TAG ?= observation-publisher:dev
 
 .PHONY: observation-publisher
 observation-publisher:

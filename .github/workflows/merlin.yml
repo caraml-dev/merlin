@@ -187,7 +187,7 @@ jobs:
         run: make it-test-api-ci
 
 
-  test-observability-publisher:
+  test-observation-publisher:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -392,6 +392,7 @@ jobs:
         env:
           OBSERVATION_PUBLISHER_IMAGE_TAG: ${{ env.DOCKER_IMAGE_TAG }}
         run: make observation-publisher
+        working-directory: ./python
       - name: Save Observation Publisher Docker
         run: docker image save --output merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Observation Publisher Docker Artifact
@@ -489,6 +490,7 @@ jobs:
       - build-api
       - build-batch-predictor-base
       - build-pyfunc-server-base
+      - build-observation-publisher
       - test-python-sdk
       - e2e-test
     with:
