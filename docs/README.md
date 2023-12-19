@@ -40,3 +40,14 @@ The design of Merlin uses a few key concepts below, you should familiarize yours
 **Model Version Endpoint**: A model version endpoint is a way to obtain model inference results in real-time, over the network (HTTP). This endpoint is unique to each model version. Model endpoint will route to the model version endpoint in the background, when the associated model version is set to serving.
 
 **Environment**: The environment’s name is a user-facing property that will be used to determine the target Kubernetes cluster where a model will be deployed to. The environment has two important properties, name and Kubernetes cluster.
+
+## Getting Started
+
+To start learning about using Merlin, check out:
+{% page-ref page="../user/basics.md" %}
+
+To start deploying Merlin, check out:
+{% page-ref page="../developer/deploying-merlin/README.md" %}
+
+To connect to an existing Merlin deployment, check out:
+{% page-ref page="../user/connecting-to-merlin/README.md" %}

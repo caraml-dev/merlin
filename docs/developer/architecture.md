@@ -36,9 +36,9 @@ The big advantage of a golang-migrate is that it can read migration files from t
 
 ### Merlin SDK
 
-[Merlin SDK](./../connecting-to-merlin/python-sdk.md) is a python library for interacting with Merlin. Data scientist can install merlin-sdk from Pypi and import it into their Python project or Jupyter notebook. It provides all the functionalites that users are allowed to perform in Merlin. Models can only be logged via the SDK.
+[Merlin SDK](./../user/connecting-to-merlin/python-sdk.md) is a python library for interacting with Merlin. Data scientist can install merlin-sdk from Pypi and import it into their Python project or Jupyter notebook. It provides all the functionalites that users are allowed to perform in Merlin. Models can only be logged via the SDK.
 
-Upon installing the sdk, you will also have access to the [Merlin CLI](./../connecting-to-merlin/merlin-cli.md)
+Upon installing the sdk, you will also have access to the [Merlin CLI](./../user/connecting-to-merlin/merlin-cli.md)
 
 ### CaraML MLP
 
