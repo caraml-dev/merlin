@@ -5,20 +5,29 @@
 3. Make sure documentation is updated for your PR!
 
 -->
+# Description
+<!-- Briefly describe the motivation for the change. Please include illustrations where appropriate. -->
 
-**What this PR does / why we need it**:
-<!-- Explain here the context and why you're making the change. What is the problem you're trying to solve. --->
+# Modifications
+<!-- Summarize the key code changes. -->
 
-**Which issue(s) this PR fixes**:
-<!--
-*Automatically closes linked issue when PR is merged.
-Usage: `Fixes #<issue number>`, or `Fixes (paste link of issue)`.
+## Tests
+<!-- Besides the existing / updated automated tests, what specific scenarios should be tested? Consider the backward compatibility of the changes, whether corner cases are covered, etc. Please describe the tests and check the ones that have been completed. Eg:
+- [x] Deploying new and existing standard models
+- [ ] Deploying PyFunc models
 -->
 
-Fixes #
+# Checklist
+- [ ] Added PR label
+- [ ] Added unit test, integration, and/or e2e tests
+- [ ] Tested locally
+- [ ] Updated documentation
+- [ ] Update Swagger spec if the PR introduce API changes
+- [ ] Regenerated Golang and Python client if the PR introduces API changes
 
-**Does this PR introduce a user-facing change?**:
+# Release Notes
 <!--
+Does this PR introduce a user-facing change?
 If no, just write "NONE" in the release-note block below.
 If yes, a release note is required. Enter your extended release note in the block below.
 If the PR requires additional action from users switching to the new release, include the string "action required".
@@ -29,12 +38,3 @@ For more information about release notes, see kubernetes' guide here: http://git
 ```release-note
 
 ```
-
-**Checklist**
-
-- [ ] Added PR label
-- [ ] Added unit test, integration, and/or e2e tests
-- [ ] Tested locally
-- [ ] Updated documentation
-- [ ] Update Swagger spec if the PR introduce API changes
-- [ ] Regenerated Golang and Python client if the PR introduce API changes
