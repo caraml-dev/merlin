@@ -46,8 +46,8 @@ The design of Merlin uses a few key concepts below, you should familiarize yours
 To start learning about using Merlin, check out:
 {% page-ref page="../user/basics.md" %}
 
-To start deploying Merlin, check out:
-{% page-ref page="../developer/deploying-merlin/README.md" %}
-
 To connect to an existing Merlin deployment, check out:
 {% page-ref page="../user/connecting-to-merlin/README.md" %}
+
+To start deploying Merlin, check out:
+{% page-ref page="../developer/deploying-merlin/README.md" %}

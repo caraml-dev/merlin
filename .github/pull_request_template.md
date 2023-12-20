@@ -11,7 +11,7 @@
 # Modifications
 <!-- Summarize the key code changes. -->
 
-## Tests
+# Tests
 <!-- Besides the existing / updated automated tests, what specific scenarios should be tested? Consider the backward compatibility of the changes, whether corner cases are covered, etc. Please describe the tests and check the ones that have been completed. Eg:
 - [x] Deploying new and existing standard models
 - [ ] Deploying PyFunc models
