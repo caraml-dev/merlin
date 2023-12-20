@@ -13,3 +13,4 @@ jobs:
         with:
           mode: minimum
           count: 1
+          labels: "breaking, bug, enhancement, documentation, maintenance" # Permissible PR labels

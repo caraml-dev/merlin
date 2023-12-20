@@ -3,7 +3,6 @@
 ## Introduction
 
 * [Merlin Overview](README.md)
-* [Getting Started](getting-started/README.md)
 
 ## Connecting to Merlin
 
