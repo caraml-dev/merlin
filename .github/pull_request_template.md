@@ -32,6 +32,7 @@ For more information about release notes, see kubernetes' guide here: http://git
 
 **Checklist**
 
+- [ ] Added PR label
 - [ ] Added unit test, integration, and/or e2e tests
 - [ ] Tested locally
 - [ ] Updated documentation
