@@ -1,66 +1,37 @@
 from datetime import datetime
-from typing import List
+from typing import Optional
 
 import pandas as pd
 import pyarrow as pa
-from arize.pandas.validation.errors import ValidationError
-from arize.pandas.validation.validator import Validator
-from arize.utils.types import (
-    ModelTypes as ArizeModelType,
-    Environments as ArizeEnvironment,
-    Schema as ArizeSchema,
-)
+from arize.pandas.logger import Client
 from merlin.observability.inference import (
     BinaryClassificationOutput,
     InferenceSchema,
     ValueType,
     RankingOutput,
-    ObservationType,
 )
-from publisher.config import ArizeConfig
+from requests import Response
+
 from publisher.observability_backend import ArizeSink
 
 
-def assert_no_validation_errors(errors: List[ValidationError]):
-    try:
-        assert len(errors) == 0
-    except AssertionError:
-        for error in errors:
-            print(error.error_message())
-        raise
+class MockResponse(Response):
+    def __init__(self, df, reason, status_code):
+        super().__init__()
+        self.df = df
+        self.reason = reason
+        self.status_code = status_code
 
 
-def assert_arize_schema_validity(
-    schema: ArizeSchema,
-    dataframe: pd.DataFrame,
-    environment: ArizeEnvironment,
-    model_id: str,
-    model_version: str,
-    model_type: ArizeModelType,
-):
-    errors = Validator.validate_required_checks(
-        dataframe=dataframe,
-        model_id=model_id,
-        environment=environment,
-        schema=schema,
-        model_version=model_version,
-    )
-    assert_no_validation_errors(errors)
-    errors = Validator.validate_params(
-        dataframe=dataframe,
-        model_id=model_id,
-        model_type=model_type,
-        environment=environment,
-        schema=schema,
-        model_version=model_version,
-    )
-    assert_no_validation_errors(errors)
-    Validator.validate_types(
-        model_type=model_type,
-        schema=schema,
-        pyarrow_schema=pa.Schema.from_pandas(dataframe),
-    )
-    assert_no_validation_errors(errors)
+class MockArizeClient(Client):
+    def _post_file(
+        self,
+        path: str,
+        schema: bytes,
+        sync: Optional[bool],
+        timeout: Optional[float] = None,
+    ) -> Response:
+        return MockResponse(pa.ipc.open_stream(pa.OSFile(path)).read_pandas(), "Success", 200)
 
 
 def test_binary_classification_model_preprocessing_for_arize():
@@ -76,8 +47,9 @@ def test_binary_classification_model_preprocessing_for_arize():
             score_threshold=0.5,
         ),
     )
+    arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
-        ArizeConfig(api_key="test", space_key="test"),
+        arize_client,
         inference_schema,
         "test-model",
         "0.1.0",
@@ -95,18 +67,7 @@ def test_binary_classification_model_preprocessing_for_arize():
             "request_timestamp",
         ],
     )
-    processed_df = inference_schema.model_prediction_output.preprocess(
-        input_df, [ObservationType.FEATURE, ObservationType.PREDICTION]
-    )
-    model_type, arize_schema = arize_sink.to_arize_schema()
-    assert_arize_schema_validity(
-        arize_schema,
-        processed_df,
-        ArizeEnvironment.PRODUCTION,
-        "test-model",
-        "0.1.0",
-        model_type,
-    )
+    arize_sink.write(input_df)
 
 
 def test_ranking_model_preprocessing_for_arize():
@@ -135,21 +96,11 @@ def test_ranking_model_preprocessing_for_arize():
             "request_timestamp",
         ],
     )
+    arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
-        ArizeConfig(api_key="test", space_key="test"),
+        arize_client,
         inference_schema,
         "test-model",
         "0.1.0",
     )
-    processed_df = inference_schema.model_prediction_output.preprocess(
-        input_df, [ObservationType.FEATURE, ObservationType.PREDICTION]
-    )
-    model_type, arize_schema = arize_sink.to_arize_schema()
-    assert_arize_schema_validity(
-        arize_schema,
-        processed_df,
-        ArizeEnvironment.PRODUCTION,
-        "test-model",
-        "0.1.0",
-        ArizeModelType.RANKING,
-    )
+    arize_sink.write(input_df)

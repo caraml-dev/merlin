@@ -15,7 +15,7 @@ from merlin.observability.inference import (
     ObservationType,
 )
 
-from publisher.config import ArizeConfig, ObservabilityBackend, ObservabilityBackendType
+from publisher.config import ObservabilityBackend, ObservabilityBackendType
 from publisher.prediction_log_parser import PREDICTION_LOG_TIMESTAMP_COLUMN
 
 
@@ -28,12 +28,12 @@ class ObservationSink(abc.ABC):
 class ArizeSink(ObservationSink):
     def __init__(
         self,
-        config: ArizeConfig,
+        arize_client: Client,
         inference_schema: InferenceSchema,
         model_id: str,
         model_version: str,
     ):
-        self._client = Client(space_key=config.space_key, api_key=config.api_key)
+        self._client = arize_client
         self._model_id = model_id
         self._model_version = model_version
         self._inference_schema = inference_schema
@@ -89,8 +89,10 @@ class ArizeSink(ObservationSink):
         except ValidationFailure as e:
             error_mesage = "\n".join([err.error_message() for err in e.errors])
             print(f"Failed to log to Arize: {error_mesage}")
+            raise e
         except Exception as e:
             print(f"Failed to log to Arize: {e}")
+            raise e
 
 
 def new_observation_sink(
@@ -100,8 +102,9 @@ def new_observation_sink(
     model_version: str,
 ) -> ObservationSink:
     if config.type == ObservabilityBackendType.ARIZE:
+        client = Client(space_key=config.arize_config.space_key, api_key=config.arize_config.api_key)
         return ArizeSink(
-            config=config.arize_config,
+            arize_client = client,
             inference_schema=inference_schema,
             model_id=model_id,
             model_version=model_version,
