@@ -90,10 +90,18 @@ const (
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
-var grpcContainerPorts = []corev1.ContainerPort{
+var grpcKPAContainerPorts = []corev1.ContainerPort{
 	{
 		ContainerPort: defaultGRPCPort,
 		Name:          "h2c",
+		Protocol:      corev1.ProtocolTCP,
+	},
+}
+
+var grpcHPAContainerPorts = []corev1.ContainerPort{
+	{
+		ContainerPort: defaultGRPCPort,
+		Name:          "grpc",
 		Protocol:      corev1.ProtocolTCP,
 	},
 }
@@ -223,7 +231,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol)
+	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
 	var predictorSpec kservev1beta1.PredictorSpec
 	switch modelService.Type {
@@ -390,7 +398,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, "/")
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol)
+	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	transformerSpec := &kservev1beta1.TransformerSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
@@ -594,11 +602,15 @@ func (t *InferenceServiceTemplater) createAnnotations(modelService *models.Servi
 	return annotations, nil
 }
 
-func createContainerPorts(protocolValue protocol.Protocol) []corev1.ContainerPort {
+func createContainerPorts(protocolValue protocol.Protocol, deploymentMode deployment.Mode) []corev1.ContainerPort {
 	var containerPorts []corev1.ContainerPort = nil
 	switch protocolValue {
 	case protocol.UpiV1:
-		containerPorts = grpcContainerPorts
+		if deploymentMode == deployment.RawDeploymentMode {
+			containerPorts = grpcHPAContainerPorts
+		} else {
+			containerPorts = grpcKPAContainerPorts
+		}
 	default:
 	}
 	return containerPorts
@@ -740,7 +752,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 		}
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol)
+	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	spec := kservev1beta1.PredictorSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{

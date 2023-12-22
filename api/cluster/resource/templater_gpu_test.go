@@ -1351,7 +1351,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequestsWithGPU,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcKPAContainerPorts,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
 								},
@@ -1370,7 +1370,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 			},
 		},
 		{
-			name: "pyfunc upi v1",
+			name: "pyfunc upi v1 raw",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,
@@ -1384,6 +1384,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				Metadata:        modelSvc.Metadata,
 				Protocol:        protocol.UpiV1,
 				ResourceRequest: modelSvc.ResourceRequest,
+				DeploymentMode:  deployment.RawDeploymentMode,
 			},
 			resourcePercentage: queueResourcePercentage,
 			deploymentScale:    defaultDeploymentScale,
@@ -1395,8 +1396,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						"prometheus.io/scrape":                                "true",
 						"prometheus.io/port":                                  "8080",
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
+						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1416,7 +1416,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Image:     "gojek/project-model:1",
 									Resources: expDefaultModelResourceRequestsWithGPU,
-									Ports:     grpcContainerPorts,
+									Ports:     grpcHPAContainerPorts,
 									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
 										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
 									LivenessProbe: probeConfigUPI,
@@ -1476,7 +1476,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequestsWithGPU,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcKPAContainerPorts,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
 								},
@@ -1549,7 +1549,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 									Image:     "gcr.io/custom-model:v0.1",
 									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequestsWithGPU,
-									Ports:     grpcContainerPorts,
+									Ports:     grpcKPAContainerPorts,
 								},
 							},
 							NodeSelector: defaultGPUNodeSelector,
