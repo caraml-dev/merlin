@@ -90,7 +90,7 @@ const (
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
-var grpcKPAContainerPorts = []corev1.ContainerPort{
+var grpcServerlessContainerPorts = []corev1.ContainerPort{
 	{
 		ContainerPort: defaultGRPCPort,
 		Name:          "h2c",
@@ -98,7 +98,8 @@ var grpcKPAContainerPorts = []corev1.ContainerPort{
 	},
 }
 
-var grpcHPAContainerPorts = []corev1.ContainerPort{
+// https://github.com/kserve/kserve/issues/2728
+var grpcRawContainerPorts = []corev1.ContainerPort{
 	{
 		ContainerPort: defaultGRPCPort,
 		Name:          "grpc",
@@ -607,9 +608,9 @@ func createContainerPorts(protocolValue protocol.Protocol, deploymentMode deploy
 	switch protocolValue {
 	case protocol.UpiV1:
 		if deploymentMode == deployment.RawDeploymentMode {
-			containerPorts = grpcHPAContainerPorts
+			containerPorts = grpcRawContainerPorts
 		} else {
-			containerPorts = grpcKPAContainerPorts
+			containerPorts = grpcServerlessContainerPorts
 		}
 	default:
 	}
