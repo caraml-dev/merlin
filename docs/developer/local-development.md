@@ -23,7 +23,7 @@ k3d cluster create $CLUSTER_NAME --image rancher/k3s:$K3S_VERSION --k3s-arg '--d
 
 ## Install Merlin
 
-You can run [`quick_install.sh`](../../../scripts/quick_install.sh) to install Merlin and it's components:
+You can run [`quick_install.sh`](../../scripts/quick_install.sh) to install Merlin and it's components:
 
 ```bash
 # From Merlin root directory, run:
