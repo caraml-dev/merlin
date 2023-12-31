@@ -35,4 +35,4 @@ transformer = Transformer("gcr.io/<your-gcp-project>/<your-docker-image>",
 # Deploy the model alongside the transformer
 endpoint = merlin.deploy(v, transformer=transformer)
 ```
-{% endpoint %}
+{% endcode %}

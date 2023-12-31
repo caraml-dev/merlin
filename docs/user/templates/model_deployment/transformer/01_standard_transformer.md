@@ -898,8 +898,8 @@ For example, given following customerTable:
 
 Depending on the json format, it will render different result JSON
 
-* RECORD format
-  ```
+* RECORD Format
+```
   outputStage:
     jsonOutput:
       jsonTemplate:
@@ -908,9 +908,9 @@ Depending on the json format, it will render different result JSON
           fromTable:
              tableName: customerTable
              format: RECORD
-  ```
-    JSON Result:
-     ```
+```
+JSON Result:
+```
         {
            "instances" : [
                [
@@ -932,9 +932,10 @@ Depending on the json format, it will render different result JSON
                ]
            ]
         }
-     ```
+```
+
 * VALUES Format
-   ```
+```
   outputStage:
     jsonOutput:
       jsonTemplate:
@@ -943,9 +944,9 @@ Depending on the json format, it will render different result JSON
           fromTable:
              tableName: customerTable
              format: VALUES
-  ```
-    JSON Result:
-    ```
+```
+JSON Result:
+```
         {
             "instances":[
                 [
@@ -955,9 +956,10 @@ Depending on the json format, it will render different result JSON
                 ]
             ]
         }
-    ```
+```
+
 * SPLIT Format
-   ```
+```
   outputStage:
     jsonOutput:
       jsonTemplate:
@@ -966,9 +968,9 @@ Depending on the json format, it will render different result JSON
           fromTable:
              tableName: customerTable
              format: SPLIT
-  ```
-    JSON Result:
-    ```
+```
+JSON Result:
+```
       {
          "instances" : {
              "data": [
@@ -979,7 +981,7 @@ Depending on the json format, it will render different result JSON
              "columns" : ["customer_id", "customer_age", "total_booking_1w"]
          }
       }
-    ```
+```
 
 ### UPIPreprocessOutput
 UPIPreprocessOutput is output specification only for **upi_v1** protocol and preprocess step. This output specification will create operation that convert defined tables to UPI request interface.
@@ -1103,7 +1105,7 @@ transformer = StandardTransformer(config_file=transformer_config_path,
 # Deploy the model alongside the transformer
 endpoint = merlin.deploy(v, transformer=transformer)
 ```
-{% endpoint %}
+{% endcode %}
 
 ### Standard Transformer Environment Variables
 

@@ -5,7 +5,7 @@ The batch prediction job will be executed as a Spark Application running in a Sp
 
 ## Prediction Job
 
-Prediction Job is the resource introduced in Merlin for executing batch prediction. A Prediction Job is owned by the corresponding [Model Version](./model_version.md). One Model Version can have several Prediction Jobs and it maintains the history of all jobs ever created. Prediction Job has several important properties:
+Prediction Job is the resource introduced in Merlin for executing batch prediction. A Prediction Job is owned by the corresponding Model Version. One Model Version can have several Prediction Jobs and it maintains the history of all jobs ever created. Prediction Job has several important properties:
 
 1. **Id**: Unique ID of the prediction job
 1. **Model / Model version**: Reference to the model version from which the prediction job is created
