@@ -8,7 +8,7 @@ Whenever a running (or serving) model version is redeployed, a new *deployment* 
 
 If the deployment of the new configuration fails, **the old deployment stays deployed** and remains as the current *deployment* of the model version. The new configuration will then show a 'Failed' status.
 
-![Unsuccessful redeployment](../../../images/redeploy_model_unsuccessful.png)
+![Unsuccessful Model Version Redeployment](../../../images/redeploy_model_unsuccessful.png)
 
 A model version can be redeployed via the SDK or the UI.
 
@@ -35,4 +35,4 @@ new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
 A Running / Serving model version can be redeployed from the model versions view.
 
-![Redeploying Model Version](../../../images/redeploy_model_version.png)
+![Redeploy Model Version](../../../images/redeploy_model_version.png)

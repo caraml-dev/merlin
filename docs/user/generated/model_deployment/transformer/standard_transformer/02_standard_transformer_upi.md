@@ -69,7 +69,7 @@ request = upi_pb2.PredictValuesRequest(
 Add all variables and tables that are going to be imported in the standard transformer.
 In below example we are importing `prediction_table`, `customer_table` , and `user_rating` that was sent by the client.
 
-![UPI Autoload](../../../../../images/upi_autoloading_config.png)
+![UPI Autoloading](../../../../../images/upi_autoloading_config.png)
 
 Which will add following config
 
@@ -94,7 +94,7 @@ Standard transformer’s preprocessing output in UPI mode must satisfy `PredictV
 
 Example below shows a preprocessing pipeline which join prediction_table and sample_table to produce preprocessed_table , and then use the preprocessed_table as the prediction_table of the `PredictValuesRequest` that is sent to model.
 
-![UPI Preprocess Output](../../../../../images/upi_preprocess_output.png)
+![UPI Standard Transformer Preprocessing Output](../../../../../images/upi_preprocess_output.png)
 
 ```yaml
 transformerConfig:

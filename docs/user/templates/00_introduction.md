@@ -12,7 +12,7 @@ Merlin is a platform designed to help users productionize their models quickly w
 
 Productionizing a model with Merlin can be easily done in 3 steps, as detailed in the diagram below:
 
-![User flow](../../diagrams/user_flow.drawio.svg)
+![User Flow](../../diagrams/user_flow.drawio.svg)
 
 1. **Deploy a model**
 

@@ -22,13 +22,13 @@ version.delete_model_version()
 To delete a model version from the UI, you can access the delete button directly on the model version list page. The dialog will provide information about entities that are blocking the deletion process or will be deleted along with the model version.
 
 - If the model version does not have any associated entities, a dialog like the one below will be displayed:
-![Model Version Deletion Without Entity](../../images/delete_model_version_no_entity.png)
+![Delete Model Version without linked entites](../../images/delete_model_version_no_entity.png)
 
 - If the model version has any associated active entities, a dialog like the one below (showing the entities blocking the deletion process) will be displayed:
-![Model Version Deletion Without Entity](../../images/delete_model_version_active_entity.png)
+![Delete Model Version with linked active entites](../../images/delete_model_version_active_entity.png)
 
 - If the model version has any associated inactive entities, a dialog like the one below (showing which entities will get deleted along with the deletion process) will be displayed:
-![Model Version Deletion Without Entity](../../images/delete_model_version_inactive_entity.png)
+![Delete Model Version with linked inactive entites](../../images/delete_model_version_inactive_entity.png)
 
 # Model Deletion
 
@@ -57,7 +57,7 @@ model.delete_model()
 To delete a model from the UI, you can access the delete button directly on the model list page. The dialog will provide information about any entities that are blocking the deletion process.
 
 - If the model does not have any associated entities, a dialog like the one below will be displayed:
-![Model Version Deletion Without Entity](../../images/delete_model_no_entity.png)
+![Delete Model without linked entites](../../images/delete_model_no_entity.png)
 
 - If the model has any associated active entities, a dialog like the one below will be displayed:
-![Model Version Deletion Without Entity](../../images/delete_model_active_entity.png)
+![Delete Model with linked active entites](../../images/delete_model_active_entity.png)

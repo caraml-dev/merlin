@@ -55,7 +55,7 @@ with merlin.new_model_version() as v:
 
 The Deploy option can be selected from the model versions view.
 
-![Deploying Model Version](../../../images/deploy_model_version.png)
+![Deploy a Model Version](../../../images/deploy_model_version.png)
 
 ## Deployment Modes
 
@@ -100,7 +100,7 @@ new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
 #### Configuring Deployment Mode via UI
 
-![Configuring Deployment Mode](../../../images/deployment_mode.png)
+![Deployment Mode](../../../images/deployment_mode.png)
 
 ## Autoscaling Policy
 
@@ -144,7 +144,7 @@ with merlin.new_model_version() as v:
 
 #### Configuring Autoscaling Policy via UI
 
-![Configuring Autoscaling Policy](../../../images/autoscaling_policy.png)
+![Autoscaling Policy](../../../images/autoscaling_policy.png)
 
 ## Liveness Probe
 

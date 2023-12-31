@@ -7,7 +7,7 @@ This feature is currently behind a toggle and may or may not be enabled on the M
 
 Merlin uses a GitOps based alerting mechanism. Alerts can be configured for a model, on the Model Endpoint (i.e., for the model version that is in the 'Serving' state), from the models list UI.
 
-![Configure Alert Models List](../../images/configure_alert_models_list.png)
+![Configure Alerts on Model Endpoint](../../images/configure_alert_models_list.png)
 
 ## Metrics
 
@@ -18,4 +18,4 @@ Alerting based on the following metrics are supported. For all metrics below, th
 * **CPU:** This alert is triggered when the percentage of CPU utilization is more than the threshold.
 * **Memory:** This alert is triggered when the percentage of memory utilization is more than the threshold.
 
-![Configure Alert](../../images/configure_alert.png)
+![Alert Configuration](../../images/configure_alert.png)

@@ -44,4 +44,4 @@ model_endpoint = merlin.serve_traffic({version_endpoint: 100})
 
 Once a model version is deployed (i.e., it is in the Running state), the Serve option can be selected from the model versions view.
 
-![Serving Model Version](../../../images/serve_model_version.png)
+![Serve Model Version](../../../images/serve_model_version.png)
