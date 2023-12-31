@@ -48,4 +48,4 @@ Note that, to utilise this feature, the minimum replicas for the deployment shou
 
 ### Log History
 
-Users can only view the logs that are still in the model’s container. Link to the associated stackdriver dashboard is provided in the log page to access past log.
+Users can only view the logs that are still in the model’s container. Link to the associated Stackdriver dashboard is provided in the log page to access past log.

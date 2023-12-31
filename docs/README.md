@@ -10,7 +10,9 @@ To understand the development process and the architecture, refer to the [Develo
 
 All docs are created for Gitbook.
 
-Currently, the user docs are templated using Jinja2, under [user/templates](./user/templates) and the values for the templates reside in [values.json](./user/values.json). To generate the final docs into [user/generated](./user/generated), run:
+Currently, the user docs and maintainer docs are templated using Jinja2.
+
+The templates can be found under `${folder}/templates` and the values for the templates reside in `${folder}/values.json`. To generate the final docs into `${folder}/generated`, run:
 
 ```sh
 make docs
