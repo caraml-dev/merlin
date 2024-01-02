@@ -2,3 +2,10 @@
 addopts = [
     "--import-mode=importlib",
 ]
+
+[tool.mypy]
+exclude = "test.*"
+
+[[tool.mypy.overrides]]
+module = ["arize.*", "merlin.*", "confluent_kafka.*", "caraml.upi.*", "pyarrow.*"]
+ignore_missing_imports = true

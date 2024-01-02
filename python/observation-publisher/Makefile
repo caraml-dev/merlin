@@ -11,11 +11,6 @@ pip-compile:
 	@echo "Compiling requirements..."
 	@python -m piptools compile
 
-.PHONY: pip-compile
-pip-compile:
-	@echo "Compiling requirements..."
-	@python -m piptools compile
-
 .PHONY: test
 test:
 	@echo "Running tests..."

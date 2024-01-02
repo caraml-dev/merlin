@@ -4,20 +4,15 @@ from typing import Optional
 import pandas as pd
 import pyarrow as pa
 from arize.pandas.logger import Client
-from typing import List
-
-import pandas as pd
-import pyarrow as pa
-from arize.pandas.logger import Client
 from merlin.observability.inference import (
     BinaryClassificationOutput,
     InferenceSchema,
-    ValueType,
     RankingOutput,
+    ValueType,
 )
 from requests import Response
 
-from publisher.observability_backend import ArizeSink
+from publisher.observation_sink import ArizeSink
 
 
 class MockResponse(Response):
@@ -36,7 +31,10 @@ class MockArizeClient(Client):
         sync: Optional[bool],
         timeout: Optional[float] = None,
     ) -> Response:
-        return MockResponse(pa.ipc.open_stream(pa.OSFile(path)).read_pandas(), "Success", 200)
+        return MockResponse(
+            pa.ipc.open_stream(pa.OSFile(path)).read_pandas(), "Success", 200
+        )
+
 
 def test_binary_classification_model_preprocessing_for_arize():
     inference_schema = InferenceSchema(
@@ -53,10 +51,10 @@ def test_binary_classification_model_preprocessing_for_arize():
     )
     arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
-        arize_client,
         inference_schema,
         "test-model",
         "0.1.0",
+        arize_client,
     )
     request_timestamp = datetime.now()
     input_df = pd.DataFrame.from_records(
@@ -102,9 +100,9 @@ def test_ranking_model_preprocessing_for_arize():
     )
     arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
-        arize_client,
         inference_schema,
         "test-model",
         "0.1.0",
+        arize_client,
     )
     arize_sink.write(input_df)
