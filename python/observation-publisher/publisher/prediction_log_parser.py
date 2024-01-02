@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from google.protobuf.internal.well_known_types import ListValue, Struct
@@ -63,7 +63,7 @@ def parse_struct_to_result_table(
     table_struct: Struct, inference_schema: InferenceSchema
 ) -> PredictionLogResultsTable:
     columns = [c for c in table_struct["columns"]]
-    column_types = inference_schema.prediction_column_types
+    column_types = inference_schema.model_prediction_output.prediction_types()
     return PredictionLogResultsTable(
         columns=columns,
         rows=[

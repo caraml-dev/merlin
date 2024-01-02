@@ -7,12 +7,17 @@ from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
 from merlin.observability.inference import InferenceSchema
 
-from publisher.config import (KafkaConsumerConfig, ObservationSource,
-                              ObservationSourceConfig)
+from publisher.config import (
+    KafkaConsumerConfig,
+    ObservationSource,
+    ObservationSourceConfig,
+)
 from publisher.observability_backend import ObservationSink
-from publisher.prediction_log_parser import (PREDICTION_LOG_TIMESTAMP_COLUMN,
-                                             parse_struct_to_feature_table,
-                                             parse_struct_to_result_table)
+from publisher.prediction_log_parser import (
+    PREDICTION_LOG_TIMESTAMP_COLUMN,
+    parse_struct_to_feature_table,
+    parse_struct_to_result_table,
+)
 
 
 class PredictionLogConsumer(abc.ABC):
@@ -37,7 +42,7 @@ class PredictionLogConsumer(abc.ABC):
                 if len(logs) == 0:
                     continue
                 df = log_batch_to_dataframe(logs, inference_schema)
-                observation_sink.write(dataframe=df)
+                observation_sink.write(df)
                 self.commit()
         finally:
             self.close()
@@ -48,6 +53,7 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         consumer_config = {
             "bootstrap.servers": config.bootstrap_servers,
             "group.id": config.group_id,
+            "enable.auto.commit": False,
         }
 
         if config.additional_consumer_config is not None:
@@ -61,13 +67,12 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
     def poll_new_logs(self) -> List[PredictionLog]:
         messages = self._consumer.consume(self._batch_size, timeout=self._poll_timeout)
         errors = [msg.error() for msg in messages if msg.error() is not None]
-
         if len(errors) > 0:
             print(f"Last encountered error: {errors[-1]}")
             raise KafkaException(errors[-1])
 
         return [
-            parse_message_to_prediction_log(msg.value().decode("utf-8"))
+            parse_message_to_prediction_log(msg.value())
             for msg in messages
             if (msg is not None and msg.error() is None)
         ]
