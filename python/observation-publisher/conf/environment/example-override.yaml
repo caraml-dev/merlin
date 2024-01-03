@@ -1,53 +1,20 @@
 model_id: "test-model"
 model_version: "0.1.0"
 inference_schema:
-  # Supported model types:
-  #  - BINARY_CLASSIFICATION
-  #  - MULTICLASS_CLASSIFICATION
-  #  - REGRESSION
-  #  - RANKING
-  # The prediction output schema that is corresponded to the model
-  # type must be provided.
+  # Inference schema associated with the model id and version. For full documentation on the support configuration,
+  # refer to the Merlin SDK. Example below is for a binary classification model.
 
-  # Example for binary classification
-  type: "BINARY_CLASSIFICATION"
-  binary_classification:
-    # The classification label STRING of this event.
-    prediction_label_column: "label"
-    # Optional: The likelihood of the event (Probability between 0 to 1.0).
+  model_prediction_output:
+    output_class: "BinaryClassificationOutput"
     prediction_score_column: "score"
+    actual_label_column: "actual_label"
+    positive_class_label: "positive"
+    negative_class_label: "negative"
+    score_threshold: 0.5
 
-#  # Example for multiclass classification
-#  type: "MULTICLASS_CLASSIFICATION"
-#  multiclass_classification:
-#    # The classification label STRING of this event.
-#    prediction_label_column: "label"
-#    # Optional: The likelihood of the event (Probability between 0 to 1.0).
-#    prediction_score_column: "score"
-
-#  # Example for regression
-#  type: "REGRESSION"
-#  regression:
-#    # FLOAT64 value for the prediction value.
-#    prediction_score_column: "score"
-
-#  # Example for ranking
-#  type: "RANKING"
-#  ranking:
-#    # A group of predictions within which items are ranked..
-#    prediction_group_id_column: "prediction_group"
-#    # INT64 value for the rank of the prediction within the group.
-#    rank_column: "rank"
-
-  # Column name to data types mapping for feature columns. Supported types are:
-  #  - INT64
-  #  - FLOAT64
-  #  - STRING
   feature_types:
-    distance: "INT64"
-    transaction: "FLOAT64"
-  # Optional: Column name to be used for prediction id.
-  # If not provided, it's assumed to be prediction_id.
+    distance: "int64"
+    transaction: "float64"
   prediction_id_column: "prediction_id"
 observability_backend:
   # Supported backend types:
