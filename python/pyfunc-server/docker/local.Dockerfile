@@ -12,15 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE
-
+ARG BASE_IMAGE=ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.38.1
 FROM ${BASE_IMAGE}
 
-WORKDIR /pyfunc-server
-COPY pyfunc-server/echo-model/model model
-RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/pip$/pip=20.2.4/' model/conda.yaml && \
-    conda env update --name merlin-model --file model/conda.yaml && \
-    python -m pyfuncserver --model_dir model --dry_run"
+# Download and install user model dependencies
+ARG MODEL_DEPENDENCIES_URL
+COPY ${MODEL_DEPENDENCIES_URL} conda.yaml
+RUN conda env create --name merlin-model --file conda.yaml
 
-CMD ["/bin/bash", "./run.sh"]
+# Copy and install pyfunc-server and merlin-sdk dependencies
+COPY merlin/python/pyfunc-server /pyfunc-server
+COPY merlin/python/sdk /sdk
+ENV SDK_PATH=/sdk
+
+WORKDIR /pyfunc-server
+RUN /bin/bash -c ". activate merlin-model && pip uninstall -y merlin-sdk && pip install -r /pyfunc-server/requirements.txt"
+
+# Download and dry-run user model artifacts and code
+ARG MODEL_ARTIFACTS_URL
+COPY ${MODEL_ARTIFACTS_URL} model
+RUN /bin/bash -c ". activate merlin-model && python -m pyfuncserver --model_dir model --dry_run"
+
+CMD ["/bin/bash", "/pyfunc-server/run.sh"]

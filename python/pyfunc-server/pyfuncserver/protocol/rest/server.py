@@ -1,16 +1,14 @@
 import asyncio
 import logging
-import os
 import signal
-import sys
 
 import tornado
 from prometheus_client import CollectorRegistry
-
 from pyfuncserver.config import Config
 from pyfuncserver.metrics.handler import MetricsHandler
 from pyfuncserver.model.model import PyFuncModel
-from pyfuncserver.protocol.rest.handler import HealthHandler, LivenessHandler, PredictHandler
+from pyfuncserver.protocol.rest.handler import (HealthHandler, LivenessHandler,
+                                                PredictHandler)
 from pyfuncserver.publisher.kafka import KafkaProducer
 from pyfuncserver.publisher.publisher import Publisher
 from pyfuncserver.sampler.sampler import RatioSampling
@@ -26,24 +24,37 @@ async def sig_handler(server):
 
 
 class Application(tornado.web.Application):
-    def __init__(self, config: Config, metrics_registry: CollectorRegistry, registered_models: dict):
+    def __init__(
+        self,
+        config: Config,
+        metrics_registry: CollectorRegistry,
+        registered_models: dict,
+    ):
         self.publisher = None
         self.model_manifest = config.model_manifest
         handlers = [
             # Server Liveness API returns 200 if server is alive.
             (r"/", LivenessHandler),
             # Model Health API returns 200 if model is ready to serve.
-            (r"/v1/models/([a-zA-Z0-9_-]+)",
-             HealthHandler, dict(models=registered_models)),
-            (r"/v1/models/([a-zA-Z0-9_-]+):predict",
-             PredictHandler, dict(models=registered_models)),
-            (r"/metrics", MetricsHandler, dict(metrics_registry=metrics_registry))
+            (
+                r"/v1/models/([a-zA-Z0-9_-]+)",
+                HealthHandler,
+                dict(models=registered_models),
+            ),
+            (
+                r"/v1/models/([a-zA-Z0-9_-]+):predict",
+                PredictHandler,
+                dict(models=registered_models),
+            ),
+            (r"/metrics", MetricsHandler, dict(metrics_registry=metrics_registry)),
         ]
-        super().__init__(handlers) # type: ignore  # noqa
+        super().__init__(handlers)  # type: ignore  # noqa
 
 
 class HTTPServer:
-    def __init__(self, model: PyFuncModel, config: Config, metrics_registry: CollectorRegistry):
+    def __init__(
+        self, model: PyFuncModel, config: Config, metrics_registry: CollectorRegistry
+    ):
         self.config = config
         self.workers = config.workers
         self.model_manifest = config.model_manifest
@@ -65,17 +76,26 @@ class HTTPServer:
 
         # kafka producer must be initialize after fork the process
         if self.config.publisher is not None:
-            kafka_producer = KafkaProducer(self.config.publisher, self.config.model_manifest)
+            kafka_producer = KafkaProducer(
+                self.config.publisher, self.config.model_manifest
+            )
             sampler = RatioSampling(self.config.publisher.sampling_ratio)
             application.publisher = Publisher(kafka_producer, sampler)
 
-        for signame in ('SIGINT', 'SIGTERM'):
-            asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
-                                                        lambda: asyncio.create_task(sig_handler(self._http_server)))
+        for signame in ("SIGINT", "SIGTERM"):
+            asyncio.get_event_loop().add_signal_handler(
+                getattr(signal, signame),
+                lambda: asyncio.create_task(sig_handler(self._http_server)),
+            )
 
         tornado.ioloop.IOLoop.current().start()
 
     def register_model(self, model: PyFuncModel):
         self.registered_models[model.full_name] = model
-        logging.info("Registering model: name: %s, version: %s, fullname: %s", model.name, model.version,
-                     model.full_name)
+        logging.info(
+            "Registering model: name: %s, version: %s, fullname: %s, predict endpoint: /v1/models/%s:predict",
+            model.name,
+            model.version,
+            model.full_name,
+            model.full_name,
+        )

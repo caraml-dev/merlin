@@ -1,15 +1,23 @@
+import os
+import re
+import shutil
 from abc import abstractmethod
-from typing import Union, List, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
 
+import docker
+from git import Repo
 import grpc
+import mlflow
 import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
-from mlflow.pyfunc import PythonModel
-
-
+from docker import APIClient
+from docker.errors import BuildError
+from merlin.docker.docker import copy_pyfunc_dockerfile
 from merlin.protocol import Protocol
+from merlin.version import VERSION
+from mlflow.pyfunc import PythonModel
 
 PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
 PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
@@ -56,12 +64,15 @@ class PyFuncModel(PythonModel):
     def _do_http_predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
             try:
-                http_response =  self.infer(model_input, **kwargs)
+                http_response = self.infer(model_input, **kwargs)
                 return http_response
             except TypeError as e:
                 if "infer() got an unexpected keyword argument" in str(e):
                     print(
-                        'Fallback to the old infer() method, got TypeError exception: {}'.format(e))
+                        "Fallback to the old infer() method, got TypeError exception: {}".format(
+                            e
+                        )
+                    )
                     self._use_kwargs_infer = False
                 else:
                     raise e
@@ -101,8 +112,9 @@ class PyFuncModel(PythonModel):
         raise NotImplementedError("infer is not implemented")
 
     @abstractmethod
-    def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
-                    context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+    def upiv1_infer(
+        self, request: upi_pb2.PredictValuesRequest, context: grpc.ServicerContext
+    ) -> upi_pb2.PredictValuesResponse:
         """
         Do inference.
 
@@ -114,17 +126,15 @@ class PyFuncModel(PythonModel):
         :return: Prediction result as PredictValuesResponse proto
         """
         raise NotImplementedError("upiv1_infer is not implemented")
-    
+
+
 @dataclass
 class Values:
     columns: List[str]
     data: List[List]
 
     def to_dict(self):
-        return {
-            "columns": self.columns,
-            "data": self.data
-        }
+        return {"columns": self.columns, "data": self.data}
 
 
 @dataclass
@@ -145,14 +155,14 @@ class ModelInput:
         result = self.features.to_dict()
         result["row_ids"] = self.prediction_ids
         return result
-    
+
     def entities_dict(self) -> Optional[dict]:
         if self.entities is None:
             return None
-        result =  self.entities.to_dict()
+        result = self.entities.to_dict()
         result["row_ids"] = self.prediction_ids
         return result
-    
+
 
 @dataclass
 class ModelOutput:
@@ -169,6 +179,7 @@ class ModelOutput:
         result = self.predictions.to_dict()
         result["row_ids"] = self.prediction_ids
         return result
+
 
 @dataclass
 class PyFuncOutput:
@@ -188,7 +199,7 @@ class PyFuncOutput:
 
     def contains_prediction_log(self):
         return self.model_input is not None and self.model_output is not None
-    
+
 
 class PyFuncV3Model(PythonModel):
     def load_context(self, context):
@@ -223,7 +234,11 @@ class PyFuncV3Model(PythonModel):
             ml_model_input = self.upiv1_preprocess(input, grpc_context)
             ml_model_output = self.infer(ml_model_input)
             final_output = self.upiv1_postprocess(ml_model_output, input)
-            return PyFuncOutput(upi_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
+            return PyFuncOutput(
+                upi_response=final_output,
+                model_input=ml_model_input,
+                model_output=ml_model_output,
+            )
         else:
             raise NotImplementedError(f"protocol {protocol} is not supported")
 
@@ -232,7 +247,11 @@ class PyFuncV3Model(PythonModel):
         ml_model_output = self.infer(ml_model_input)
         final_output = self.postprocess(ml_model_output, model_input)
 
-        return PyFuncOutput(http_response=final_output, model_input=ml_model_input, model_output=ml_model_output)
+        return PyFuncOutput(
+            http_response=final_output,
+            model_input=ml_model_input,
+            model_output=ml_model_output,
+        )
 
     @abstractmethod
     def initialize(self, artifacts: dict):
@@ -243,7 +262,6 @@ class PyFuncV3Model(PythonModel):
         :param artifacts: dictionary of artifacts passed to log_model method
         """
         pass
-
 
     @abstractmethod
     def preprocess(self, request: dict, **kwargs) -> ModelInput:
@@ -264,7 +282,7 @@ class PyFuncV3Model(PythonModel):
         :return: model output
         """
         raise NotImplementedError("infer is not implemented")
-    
+
     @abstractmethod
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
         """
@@ -277,8 +295,9 @@ class PyFuncV3Model(PythonModel):
         raise NotImplementedError("postprocess is not implemented")
 
     @abstractmethod
-    def upiv1_preprocess(self, request: upi_pb2.PredictValuesRequest,
-                    context: grpc.ServicerContext) -> ModelInput:
+    def upiv1_preprocess(
+        self, request: upi_pb2.PredictValuesRequest, context: grpc.ServicerContext
+    ) -> ModelInput:
         """
         upiv1_preprocess is the preprocessing method that only applicable for UPI_V1 protocol.
         basically the method is the same with `preprocess` the difference is on the type of the incoming request
@@ -288,9 +307,11 @@ class PyFuncV3Model(PythonModel):
         :return: model input
         """
         raise NotImplementedError("upiv1_preprocess is not implemented")
-    
+
     @abstractmethod
-    def upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
+    def upiv1_postprocess(
+        self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest
+    ) -> upi_pb2.PredictValuesResponse:
         """
         upiv1_postprocess is the postprocessing method that only applicable for UPI_V1 protocol.
         :param model_output: the output of the `infer` function
@@ -331,9 +352,9 @@ class PyFuncV2Model(PythonModel):
         """
         pass
 
-    def infer(self, model_input: pandas.DataFrame) -> Union[numpy.ndarray,
-                                                            pandas.Series,
-                                                            pandas.DataFrame]:
+    def infer(
+        self, model_input: pandas.DataFrame
+    ) -> Union[numpy.ndarray, pandas.Series, pandas.DataFrame]:
         """
         Infer method is the main method that will be called when calculating
         the inference result for both online prediction and batch
@@ -350,3 +371,116 @@ class PyFuncV2Model(PythonModel):
 
         """
         raise NotImplementedError("infer is not implemented")
+
+
+def run_pyfunc_model(
+    model_instance: Any,
+    conda_env: str,
+    code_dir: List[str] = None,
+    artifacts: Dict[str, str] = None,
+    pyfunc_base_image: str = None,
+):
+    # TODO: Sanitize model name so it can be accepted as both mlflow experiment name and docker image name
+    model_name = model_instance.__class__.__name__
+
+    # Log model to local mlflow
+    print("Logging model to local mlflow")
+    tracking_uri = f"file:///tmp/merlin-pyfunc-models"
+    mlflow.set_tracking_uri(tracking_uri)
+    experiment = mlflow.set_experiment(model_name)
+
+    model_info = mlflow.pyfunc.log_model(
+        artifact_path="model",
+        python_model=model_instance,
+        conda_env=conda_env,
+        code_path=code_dir,
+        artifacts=artifacts,
+    )
+
+    artifact_location = experiment.artifact_location
+    if "file://" in artifact_location:
+        artifact_location = artifact_location.replace("file://", "")
+    print("artifact_location:", artifact_location)
+
+    dependencies_path = f"{artifact_location}/env.yaml"
+    shutil.copy(conda_env, dependencies_path)
+    print("dependencies_path:", dependencies_path)
+
+    artifact_path = f"{model_info.run_id}/artifacts/model"
+    print("artifact_path:", artifact_path)
+
+    print("Building docker image")
+    if pyfunc_base_image is None:
+        if "dev" in VERSION:
+            pyfunc_base_image = "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:dev"
+        else:
+            pyfunc_base_image = (
+                f"ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:{VERSION}"
+            )
+
+    dockerfile_path = copy_pyfunc_dockerfile(artifact_location)
+    print("dockerfile_path:", dockerfile_path)
+
+    repo_url = "https://github.com/caraml-dev/merlin.git"
+    repo_path = f"{artifact_location}/merlin"
+    if not os.path.isdir(repo_path):
+        repo = Repo.clone_from(repo_url, repo_path)
+        repo.git.checkout("v0.38.1")
+
+    image_tag = f"{str.lower(model_name)}:{model_info.run_id}"
+    print(image_tag)
+
+    docker_api_client = APIClient()
+    print(f"Building pyfunc image: {image_tag}")
+    logs = docker_api_client.build(
+        path=artifact_location,
+        tag=image_tag,
+        buildargs={
+            "BASE_IMAGE": pyfunc_base_image,
+            "MODEL_DEPENDENCIES_URL": os.path.basename(dependencies_path),
+            "MODEL_ARTIFACTS_URL": artifact_path,
+        },
+        dockerfile=os.path.basename(dockerfile_path),
+        decode=True,
+    )
+    _wait_build_complete(logs)
+
+    try:
+        docker_client = docker.from_env()
+        env_vars = {}
+        env_vars["CARAML_HTTP_PORT"] = 8080
+        env_vars["CARAML_MODEL_FULL_NAME"] = str.lower(model_name)
+        env_vars["WORKERS"] = 1
+
+        container = docker_client.containers.run(
+            image=image_tag,
+            name=str.lower(model_name),
+            labels={"managed-by": "merlin"},
+            ports={"8080/tcp": 8080},
+            environment=env_vars,
+            detach=True,
+            remove=True,
+        )
+        # continously print docker log until the process is interrupted
+        for log in container.logs(stream=True):
+            print(log)
+    finally:
+        if container is not None:
+            container.remove(force=True)
+
+
+def _wait_build_complete(logs):
+    for chunk in logs:
+        print(chunk)
+        if "error" in chunk:
+            raise BuildError(chunk["error"], logs)
+        if "stream" in chunk:
+            match = re.search(
+                r"(^Successfully built |sha256:)([0-9a-f]+)$", chunk["stream"]
+            )
+            if match:
+                image_id = match.group(2)
+        last_event = chunk
+    if image_id:
+        return
+    raise BuildError("Unknown", logs)

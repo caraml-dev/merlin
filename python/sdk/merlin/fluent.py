@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
@@ -357,7 +358,7 @@ def deploy(
     deployment_mode: DeploymentMode = None,
     autoscaling_policy: AutoscalingPolicy = None,
     protocol: Protocol = None,
-    enable_model_observability: bool = False
+    enable_model_observability: bool = False,
 ) -> VersionEndpoint:
     """
     Deploy a model version.
@@ -388,7 +389,7 @@ def deploy(
             deployment_mode,
             autoscaling_policy,
             protocol,
-            enable_model_observability
+            enable_model_observability,
         )
 
     return _merlin_client.deploy(  # type: ignore
@@ -402,7 +403,7 @@ def deploy(
         deployment_mode,
         autoscaling_policy,
         protocol,
-        enable_model_observability
+        enable_model_observability,
     )
 
 

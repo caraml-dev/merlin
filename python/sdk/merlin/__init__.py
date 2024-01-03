@@ -17,14 +17,14 @@
 
 from __future__ import absolute_import
 
-import sys
 import signal
+import sys
+
+import merlin.autoscaling
+import merlin.deployment_mode
 import merlin.fluent
 import merlin.resource_request
-import merlin.deployment_mode
-import merlin.autoscaling
 from merlin.version import VERSION as __version__
-
 
 # Merlin URL
 set_url = merlin.fluent.set_url
@@ -68,7 +68,7 @@ deploy = merlin.fluent.deploy
 undeploy = merlin.fluent.undeploy
 
 # Model serving
-set_traffic = merlin.fluent.set_traffic # deprecated
+set_traffic = merlin.fluent.set_traffic  # deprecated
 serve_traffic = merlin.fluent.serve_traffic
 stop_serving_traffic = merlin.fluent.stop_serving_traffic
 
@@ -80,25 +80,49 @@ ResourceRequest = merlin.resource_request.ResourceRequest
 DeploymentMode = merlin.deployment_mode.DeploymentMode
 AutoscalingPolicy = merlin.autoscaling.AutoscalingPolicy
 MetricsType = merlin.autoscaling.MetricsType
+
 # Batch
 create_prediction_job = merlin.fluent.create_prediction_job
 
+# Run server locally
+run_pyfunc_model = merlin.pyfunc.run_pyfunc_model
 
 __all__ = [
-    "set_url", "get_url",
-    "list_project", "set_project", "active_project",
-    "list_environment", "get_environment", "get_default_environment",
-    "set_model", "active_model",
-    "new_model_version", "log_param", "log_metric", "set_tag", "delete_tag",
-    "log_artifact", "log_pyfunc_model", "log_pytorch_model", "log_model",
-    "deploy", "undeploy",
-    "set_traffic", "serve_traffic",
-    "ResourceRequest", "DeploymentMode", "AutoscalingPolicy", "MetricsType",
-    "create_prediction_job"
+    "set_url",
+    "get_url",
+    "list_project",
+    "set_project",
+    "active_project",
+    "list_environment",
+    "get_environment",
+    "get_default_environment",
+    "set_model",
+    "active_model",
+    "new_model_version",
+    "log_param",
+    "log_metric",
+    "set_tag",
+    "delete_tag",
+    "log_artifact",
+    "log_pyfunc_model",
+    "log_pytorch_model",
+    "log_model",
+    "deploy",
+    "undeploy",
+    "set_traffic",
+    "serve_traffic",
+    "ResourceRequest",
+    "DeploymentMode",
+    "AutoscalingPolicy",
+    "MetricsType",
+    "create_prediction_job",
+    "run_pyfunc_model",
 ]
+
 
 def sigterm_handler(_signo, _stack_frame):
     # Raises SystemExit(0):
     sys.exit(0)
+
 
 signal.signal(signal.SIGTERM, sigterm_handler)
