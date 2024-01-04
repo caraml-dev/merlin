@@ -1,0 +1,6 @@
+arize==7.7.2
+flytekit==1.10.1
+pyfarmhash==0.3.2
+# To assist pip-tool backtracking resolver
+s3fs==2023.9.2
+-e file:../sdk
