@@ -30,7 +30,7 @@ REQUIRES = [
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "dataclasses-json>=0.5.2",  # allow Flyte version 1.2.0 or above to import Merlin SDK
-    "docker>=7.0.0",
+    "docker<=6.1.3",
     "GitPython>=3.1.40",
     "google-cloud-storage>=1.19.0",
     "protobuf>=3.12.0,<5.0.0",  # Determined by the mlflow dependency

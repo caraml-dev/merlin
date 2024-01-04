@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 import docker
-from git import Repo
 import grpc
 import mlflow
 import numpy
@@ -14,6 +13,7 @@ import pandas
 from caraml.upi.v1 import upi_pb2
 from docker import APIClient
 from docker.errors import BuildError
+from git import Repo
 from merlin.docker.docker import copy_pyfunc_dockerfile
 from merlin.protocol import Protocol
 from merlin.version import VERSION
@@ -448,9 +448,9 @@ def run_pyfunc_model(
     try:
         docker_client = docker.from_env()
         env_vars = {}
-        env_vars["CARAML_HTTP_PORT"] = 8080
+        env_vars["CARAML_HTTP_PORT"] = "8080"
         env_vars["CARAML_MODEL_FULL_NAME"] = str.lower(model_name)
-        env_vars["WORKERS"] = 1
+        env_vars["WORKERS"] = "1"
 
         container = docker_client.containers.run(
             image=image_tag,
