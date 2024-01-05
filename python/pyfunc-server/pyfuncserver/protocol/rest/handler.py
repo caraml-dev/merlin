@@ -61,10 +61,10 @@ class PredictHandler(tornado.web.RequestHandler):
 
         output = model.predict(request, headers=headers)
         response_json = output
-        output_is_pyfunc_output = type(response_json) == PyFuncOutput
+        output_is_pyfunc_output = isinstance(response_json, PyFuncOutput)
         if output_is_pyfunc_output:
             response_json = output.http_response
-
+         
         response_json = orjson.dumps(response_json)
         self.write(response_json)
         self.set_header("Content-Type", "application/json; charset=UTF-8")

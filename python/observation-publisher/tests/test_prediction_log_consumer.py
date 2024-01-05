@@ -4,9 +4,11 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
-from merlin.observability.inference import (BinaryClassificationOutput,
-                                            InferenceSchema, InferenceType,
-                                            ValueType)
+from merlin.observability.inference import (
+    BinaryClassificationOutput,
+    InferenceSchema,
+    ValueType,
+)
 from pandas._testing import assert_frame_equal
 
 from publisher.prediction_log_consumer import log_batch_to_dataframe
@@ -56,17 +58,17 @@ def test_log_to_dataframe():
     model_id = "test_model"
     model_version = "0.1.0"
     inference_schema = InferenceSchema(
-        type=InferenceType.BINARY_CLASSIFICATION,
         feature_types={
             "acceptance_rate": ValueType.FLOAT64,
             "minutes_since_last_order": ValueType.INT64,
             "service_type": ValueType.STRING,
-            "prediction_score": ValueType.FLOAT64,
-            "prediction_label": ValueType.STRING,
         },
-        binary_classification=BinaryClassificationOutput(
-            prediction_label_column="prediction_label",
+        model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="prediction_score",
+            actual_label_column="actual_label",
+            positive_class_label="fraud",
+            negative_class_label="non fraud",
+            score_threshold=0.5,
         ),
     )
     input_columns = [
@@ -74,7 +76,7 @@ def test_log_to_dataframe():
         "minutes_since_last_order",
         "service_type",
     ]
-    output_columns = ["prediction_score", "prediction_label"]
+    output_columns = ["prediction_score"]
     prediction_logs = [
         new_prediction_log(
             prediction_id="1234",
@@ -87,8 +89,8 @@ def test_log_to_dataframe():
             ],
             output_columns=output_columns,
             output_data=[
-                [0.9, "non fraud"],
-                [0.5, "fraud"],
+                [0.9],
+                [0.5],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["a", "b"],
@@ -104,8 +106,8 @@ def test_log_to_dataframe():
             ],
             output_columns=output_columns,
             output_data=[
-                [0.4, "non fraud"],
-                [0.2, "non fraud"],
+                [0.4],
+                [0.2],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["c", "d"],
@@ -114,17 +116,16 @@ def test_log_to_dataframe():
     prediction_logs_df = log_batch_to_dataframe(prediction_logs, inference_schema)
     expected_df = pd.DataFrame.from_records(
         [
-            [0.8, 24, "FOOD", 0.9, "non fraud", "1234a", datetime(2021, 1, 1, 0, 0, 0)],
-            [0.5, 2, "RIDE", 0.5, "fraud", "1234b", datetime(2021, 1, 1, 0, 0, 0)],
-            [1.0, 13, "CAR", 0.4, "non fraud", "5678c", datetime(2021, 1, 1, 0, 0, 0)],
-            [0.4, 60, "RIDE", 0.2, "non fraud", "5678d", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.8, 24, "FOOD", 0.9, "1234a", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.5, 2, "RIDE", 0.5, "1234b", datetime(2021, 1, 1, 0, 0, 0)],
+            [1.0, 13, "CAR", 0.4, "5678c", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.4, 60, "RIDE", 0.2, "5678d", datetime(2021, 1, 1, 0, 0, 0)],
         ],
         columns=[
             "acceptance_rate",
             "minutes_since_last_order",
             "service_type",
             "prediction_score",
-            "prediction_label",
             "prediction_id",
             "request_timestamp",
         ],
@@ -136,13 +137,15 @@ def test_empty_column_conversion_to_dataframe():
     model_id = "test_model"
     model_version = "0.1.0"
     inference_schema = InferenceSchema(
-        type=InferenceType.BINARY_CLASSIFICATION,
         feature_types={
             "acceptance_rate": ValueType.FLOAT64,
         },
-        binary_classification=BinaryClassificationOutput(
-            prediction_label_column="prediction_label",
+        model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="prediction_score",
+            actual_label_column="actual_label",
+            positive_class_label="fraud",
+            negative_class_label="non fraud",
+            score_threshold=0.5,
         ),
     )
     prediction_logs = [
@@ -154,9 +157,9 @@ def test_empty_column_conversion_to_dataframe():
             input_data=[
                 [None],
             ],
-            output_columns=["prediction_label", "prediction_score"],
+            output_columns=["prediction_score"],
             output_data=[
-                ["ACCEPTED", 0.5],
+                [0.5],
             ],
             request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
             row_ids=["a"],
@@ -167,7 +170,6 @@ def test_empty_column_conversion_to_dataframe():
         [
             [
                 np.NaN,
-                "ACCEPTED",
                 0.5,
                 "1234a",
                 datetime(2021, 1, 1, 0, 0, 0),
@@ -175,7 +177,6 @@ def test_empty_column_conversion_to_dataframe():
         ],
         columns=[
             "acceptance_rate",
-            "prediction_label",
             "prediction_score",
             "prediction_id",
             "request_timestamp",

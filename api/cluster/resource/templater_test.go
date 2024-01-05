@@ -849,6 +849,67 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
+			name: "pyfunc spec with model observability enabled",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypePyFunc,
+				Options: &models.ModelOption{
+					PyFuncImageName: "gojek/project-model:1",
+				},
+				Metadata:                  modelSvc.Metadata,
+				Protocol:                  protocol.HttpJson,
+				EnabledModelObservability: true,
+			},
+			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						"prometheus.io/scrape":                                "true",
+						"prometheus.io/port":                                  "8080",
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/component":    models.ComponentModelVersion,
+						"gojek.com/environment":  testEnvironmentName,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"sample":                 "true",
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
+										createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig)).ToKubernetesEnvVars(),
+									Resources:     expDefaultModelResourceRequests,
+									LivenessProbe: probeConfig,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "pyfunc with liveness probe disabled",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
@@ -1536,7 +1597,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcServerlessContainerPorts,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
 								},
@@ -1596,7 +1657,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Image:     "gojek/project-model:1",
 									Resources: expDefaultModelResourceRequests,
-									Ports:     grpcContainerPorts,
+									Ports:     grpcServerlessContainerPorts,
 									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
 										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
 									LivenessProbe: probeConfigUPI,
@@ -1653,7 +1714,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcServerlessContainerPorts,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
 								},
@@ -1721,7 +1782,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Image:     "gcr.io/custom-model:v0.1",
 									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
-									Ports:     grpcContainerPorts,
+									Ports:     grpcServerlessContainerPorts,
 								},
 							},
 						},
@@ -2055,7 +2116,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									Env:           []corev1.EnvVar{},
-									Ports:         grpcContainerPorts,
+									Ports:         grpcServerlessContainerPorts,
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -2076,7 +2137,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Env:           createDefaultTransformerEnvVars(modelSvcGRPC).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfigUPI,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcServerlessContainerPorts,
 								},
 							},
 						},
@@ -2194,7 +2255,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 			},
 		},
 		{
-			name: "standard transformer upi v1",
+			name: "standard transformer upi v1 raw",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,
@@ -2221,7 +2282,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
-				Protocol: protocol.UpiV1,
+				Protocol:       protocol.UpiV1,
+				DeploymentMode: deployment.RawDeploymentMode,
 			},
 			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
@@ -2230,8 +2292,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
+						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2253,7 +2314,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Resources:     expDefaultModelResourceRequests,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcRawContainerPorts,
 								},
 							},
 						},
@@ -2293,7 +2354,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcRawContainerPorts,
 									LivenessProbe: transformerProbeConfigUPI,
 								},
 							},
@@ -2307,7 +2368,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 			},
 		},
 		{
-			name: "standard transformer upi v1; pyfunc",
+			name: "standard transformer upi v1; pyfunc raw",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,
@@ -2336,7 +2397,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
-				Protocol: protocol.UpiV1,
+				Protocol:       protocol.UpiV1,
+				DeploymentMode: deployment.RawDeploymentMode,
 			},
 			deploymentScale: defaultDeploymentScale,
 			exp: &kservev1beta1.InferenceService{
@@ -2345,10 +2407,9 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						kserveconstant.DeploymentMode:                         string(kserveconstant.RawDeployment),
 						annotationPrometheusScrapeFlag:                        "true",
 						annotationPrometheusScrapePort:                        "8080",
-						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -2371,7 +2432,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfigUPI,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcRawContainerPorts,
 								},
 							},
 						},
@@ -2414,7 +2475,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
-									Ports:         grpcContainerPorts,
+									Ports:         grpcRawContainerPorts,
 									LivenessProbe: transformerProbeConfigUPI,
 								},
 							},

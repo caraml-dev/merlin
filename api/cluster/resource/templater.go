@@ -90,10 +90,19 @@ const (
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
-var grpcContainerPorts = []corev1.ContainerPort{
+var grpcServerlessContainerPorts = []corev1.ContainerPort{
 	{
 		ContainerPort: defaultGRPCPort,
 		Name:          "h2c",
+		Protocol:      corev1.ProtocolTCP,
+	},
+}
+
+// https://github.com/kserve/kserve/issues/2728
+var grpcRawContainerPorts = []corev1.ContainerPort{
+	{
+		ContainerPort: defaultGRPCPort,
+		Name:          "grpc",
 		Protocol:      corev1.ProtocolTCP,
 	},
 }
@@ -223,7 +232,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol)
+	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
 	var predictorSpec kservev1beta1.PredictorSpec
 	switch modelService.Type {
@@ -292,7 +301,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		if modelService.Protocol == protocol.UpiV1 {
 			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
 		}
-		if modelService.EnabledModelObservability && modelService.Type == models.ModelTypePyFuncV3 {
+		if modelService.EnabledModelObservability {
 			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
 			envVars = append(envVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
 			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
@@ -390,7 +399,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, "/")
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol)
+	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	transformerSpec := &kservev1beta1.TransformerSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
@@ -594,11 +603,15 @@ func (t *InferenceServiceTemplater) createAnnotations(modelService *models.Servi
 	return annotations, nil
 }
 
-func createContainerPorts(protocolValue protocol.Protocol) []corev1.ContainerPort {
+func createContainerPorts(protocolValue protocol.Protocol, deploymentMode deployment.Mode) []corev1.ContainerPort {
 	var containerPorts []corev1.ContainerPort = nil
 	switch protocolValue {
 	case protocol.UpiV1:
-		containerPorts = grpcContainerPorts
+		if deploymentMode == deployment.RawDeploymentMode {
+			containerPorts = grpcRawContainerPorts
+		} else {
+			containerPorts = grpcServerlessContainerPorts
+		}
 	default:
 	}
 	return containerPorts
@@ -740,7 +753,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 		}
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol)
+	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	spec := kservev1beta1.PredictorSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
