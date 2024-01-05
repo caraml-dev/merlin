@@ -2,7 +2,7 @@ import logging
 import os
 
 import grpc
-import mlflow
+import merlin
 from caraml.upi.v1 import upi_pb2
 from merlin.model import PyFuncModel
 from prometheus_client import Counter, Gauge
@@ -42,6 +42,11 @@ class EchoUPIModel(PyFuncModel):
 if __name__ == "__main__":
     model_name = "echo-model"
     model_version = "1"
-    mlflow.pyfunc.log_model(
-        "model", python_model=EchoUPIModel(model_name, model_version)
+
+    merlin.run_pyfunc_model(
+        model_instance=EchoUPIModel(model_name, model_version),
+        conda_env="env.yaml",
+        env_vars={
+            "CARAML_PROTOCOL": "UPI_V1",
+        },
     )

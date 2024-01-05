@@ -1469,6 +1469,8 @@ class ModelVersion:
                 model_name=self.model.name,
                 model_version=f"{self.id}",
                 pyfunc_base_image=pyfunc_base_image,
+                port=port,
+                env_vars=env_vars,
                 debug=debug,
             )
             return

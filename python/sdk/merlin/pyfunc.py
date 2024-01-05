@@ -402,6 +402,7 @@ def run_pyfunc_model(
     artifacts: Dict[str, str] = None,
     pyfunc_base_image: str = None,
     port: int = 8080,
+    env_vars: Dict[str, str] = None,
     debug: bool = False,
 ):
     """
@@ -413,6 +414,7 @@ def run_pyfunc_model(
     :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
     :param pyfunc_base_image: base image for building pyfunc model
     :param port: port to expose the model
+    :param env_vars: dictionary of environment variables to be passed to the server
     :param debug: flag to enable debug mode that will print docker build log
     """
 
@@ -449,6 +451,7 @@ def run_pyfunc_model(
         model_version="dev",
         pyfunc_base_image=pyfunc_base_image,
         port=port,
+        env_vars=env_vars,
         debug=debug,
     )
 
@@ -461,6 +464,7 @@ def run_pyfunc_local_server(
     model_version: str,
     pyfunc_base_image: str = None,
     port: int = 8080,
+    env_vars: Dict[str, str] = None,
     debug: bool = False,
 ):
     if pyfunc_base_image is None:
@@ -501,6 +505,7 @@ def run_pyfunc_local_server(
         model_version=model_version,
         model_full_name=f"{model_name}-{model_version}",
         port=port,
+        env_vars=env_vars,
     )
 
 
@@ -540,7 +545,14 @@ def _build_image(
     wait_build_complete(logs, debug)
 
 
-def _run_container(image_tag, model_name, model_version, model_full_name, port):
+def _run_container(
+    image_tag,
+    model_name,
+    model_version,
+    model_full_name,
+    port,
+    env_vars: Dict[str, str] = None,
+):
     docker_client = docker.from_env()
 
     # Stop all previous containers to avoid port conflict
@@ -551,18 +563,22 @@ def _run_container(image_tag, model_name, model_version, model_full_name, port):
         started_container.remove(force=True)
 
     try:
-        env_vars = {}
         env_vars["CARAML_HTTP_PORT"] = "8080"
+        env_vars["CARAML_GRPC_PORT"] = "9000"
         env_vars["CARAML_MODEL_NAME"] = model_name
         env_vars["CARAML_MODEL_VERSION"] = model_version
         env_vars["CARAML_MODEL_FULL_NAME"] = model_full_name
         env_vars["WORKERS"] = "1"
 
+        ports = {"8080/tcp": port}
+        if "CARAML_PROTOCOL" in env_vars and env_vars["CARAML_PROTOCOL"] == "UPI_V1":
+            ports = {"9000/tcp": port}
+
         container = docker_client.containers.run(
             image=image_tag,
             name=model_name,
             labels={"managed-by": "merlin"},
-            ports={"8080/tcp": port},
+            ports=ports,
             environment=env_vars,
             detach=True,
             remove=True,
