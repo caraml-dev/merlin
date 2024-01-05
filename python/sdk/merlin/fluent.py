@@ -298,7 +298,6 @@ def log_pyfunc_model(
     :param model_instance: instance of python function model
     :param conda_env: path to conda env.yaml file
     :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
-    :param code_dir: additional code directory to be uploaded
     :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
     """
     _check_active_model_version()

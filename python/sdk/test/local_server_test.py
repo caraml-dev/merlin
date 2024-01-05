@@ -23,12 +23,7 @@ import pytest
 import requests
 from merlin.model import ModelType
 
-request_json = {
-    "instances": [
-        [2.8, 1.0, 6.8, 0.4],
-        [3.1, 1.4, 4.5, 1.6]
-    ]
-}
+request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 
 if os.environ.get("CI_SERVER"):
     host = "172.17.0.1"
@@ -38,7 +33,9 @@ else:
 
 @pytest.mark.integration
 @pytest.mark.local_server_test
-@pytest.mark.dependency(depends=["test/integration_test.py::test_sklearn"], scope='session')
+@pytest.mark.dependency(
+    depends=["test/integration_test.py::test_sklearn"], scope="session"
+)
 def test_sklearn(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -52,13 +49,15 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
     p.terminate()
 
 
 @pytest.mark.integration
 @pytest.mark.local_server_test
-@pytest.mark.dependency(depends=["test/integration_test.py::test_xgboost"], scope='session')
+@pytest.mark.dependency(
+    depends=["test/integration_test.py::test_xgboost"], scope="session"
+)
 def test_xgboost(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -72,13 +71,15 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
     p.terminate()
 
 
 @pytest.mark.integration
 @pytest.mark.local_server_test
-@pytest.mark.dependency(depends=["test/integration_test.py::test_tensorflow"], scope='session')
+@pytest.mark.dependency(
+    depends=["test/integration_test.py::test_tensorflow"], scope="session"
+)
 def test_tensorflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -91,23 +92,33 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth):
     request_json = {
         "signature_name": "predict",
         "instances": [
-            {"sepal_length": 2.8, "sepal_width": 1.0, "petal_length": 6.8,
-             "petal_width": 0.4},
-            {"sepal_length": 0.1, "sepal_width": 0.5, "petal_length": 1.8,
-             "petal_width": 2.4}
-        ]
+            {
+                "sepal_length": 2.8,
+                "sepal_width": 1.0,
+                "petal_length": 6.8,
+                "petal_width": 0.4,
+            },
+            {
+                "sepal_length": 0.1,
+                "sepal_width": 0.5,
+                "petal_length": 1.8,
+                "petal_width": 2.4,
+            },
+        ],
     }
     resp = requests.post(_get_local_endpoint(v, port), json=request_json)
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
     p.terminate()
 
 
 @pytest.mark.integration
 @pytest.mark.local_server_test
-@pytest.mark.dependency(depends=["test/integration_test.py::test_pytorch"], scope='session')
+@pytest.mark.dependency(
+    depends=["test/integration_test.py::test_pytorch"], scope="session"
+)
 def test_pytorch(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -125,13 +136,15 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
     p.terminate()
 
 
 @pytest.mark.local_server_test
 @pytest.mark.integration
-@pytest.mark.dependency(depends=["test/pyfunc_integration_test.py::test_pyfunc"], scope='session')
+@pytest.mark.dependency(
+    depends=["test/pyfunc_integration_test.py::test_pyfunc"], scope="session"
+)
 def test_pyfunc(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -145,7 +158,7 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
     p.terminate()
 
 
@@ -158,10 +171,10 @@ def _get_latest_version(model):
 def _get_free_port():
     sock = None
     try:
-        while (True):
+        while True:
             port = random.randint(8000, 9000)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex(('127.0.0.1', port))
+            result = sock.connect_ex(("127.0.0.1", port))
             if result != 0:
                 return port
     finally:
@@ -171,7 +184,7 @@ def _get_free_port():
 
 def _wait_server_ready(url, timeout_second=300, tick_second=5):
     ellapsed_second = 0
-    while (ellapsed_second < timeout_second):
+    while ellapsed_second < timeout_second:
         try:
             resp = requests.get(url)
             if resp.status_code == 200:

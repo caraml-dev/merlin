@@ -24,40 +24,50 @@ from sys import version_info
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import client
 import docker
 import mlflow
 import pyprind
 import yaml
+from client import (
+    EndpointApi,
+    EnvironmentApi,
+    ModelEndpointsApi,
+    ModelsApi,
+    SecretApi,
+    VersionApi,
+)
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
-
-import client
-from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
-                    SecretApi, VersionApi)
 from merlin import pyfunc
-from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-                                AutoscalingPolicy)
+from merlin.autoscaling import (
+    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+    AutoscalingPolicy,
+)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
 from merlin.batch.source import BigQuerySource
 from merlin.deployment_mode import DeploymentMode
-from merlin.docker.docker import (copy_pyfunc_dockerfile,
-                                  copy_standard_dockerfile)
+from merlin.docker.docker import copy_standard_dockerfile, wait_build_complete
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.logger import Logger
 from merlin.protocol import Protocol
+from merlin.pyfunc import run_pyfunc_local_server
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (autostr, download_files_from_gcs, guess_mlp_ui_url,
-                         valid_name_check)
+from merlin.util import (
+    autostr,
+    download_files_from_gcs,
+    guess_mlp_ui_url,
+    valid_name_check,
+)
 from merlin.validation import validate_model_dir
-from merlin.version import VERSION
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -686,7 +696,7 @@ class ModelVersion:
         self._labels = version.labels
         self._custom_predictor = version.custom_predictor
         self._python_version = version.python_version
-        mlflow.set_tracking_uri(model.project.mlflow_tracking_url) # type: ignore  # noqa
+        mlflow.set_tracking_uri(model.project.mlflow_tracking_url)  # type: ignore  # noqa
 
     @property
     def id(self) -> int:
@@ -811,7 +821,7 @@ class ModelVersion:
         Get MLFlow Run in a model version
         """
         try:
-            return mlflow.get_run(self._mlflow_run_id) # type: ignore  # noqa
+            return mlflow.get_run(self._mlflow_run_id)  # type: ignore  # noqa
         except MlflowException:
             return None
 
@@ -936,7 +946,9 @@ class ModelVersion:
             and self._model.type != ModelType.PYFUNC_V2
             and self._model.type != ModelType.PYFUNC_V3
         ):
-            raise ValueError("log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model")
+            raise ValueError(
+                "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
+            )
 
         # add/replace python version in conda to match that used to create model version
         conda_env = _process_conda_env(conda_env, self._python_version)
@@ -1016,7 +1028,7 @@ class ModelVersion:
             writer.write(f"args = {args}\n")
 
         validate_model_dir(self._model.type, model_dir)
-        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH) # type: ignore  # noqa
+        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)  # type: ignore  # noqa
 
         if is_using_temp_dir:
             """
@@ -1062,7 +1074,7 @@ class ModelVersion:
         deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
-        enable_model_observability: bool = False
+        enable_model_observability: bool = False,
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1079,7 +1091,11 @@ class ModelVersion:
         :return: VersionEndpoint object
         """
         env_list = self._get_env_list()
-        target_env_name = _get_default_target_env_name(env_list) if environment_name is None else environment_name
+        target_env_name = (
+            _get_default_target_env_name(env_list)
+            if environment_name is None
+            else environment_name
+        )
 
         current_endpoint = self._get_endpoint_in_environment(target_env_name)
 
@@ -1097,9 +1113,13 @@ class ModelVersion:
         if current_endpoint is None:
             target_deployment_mode = DeploymentMode.SERVERLESS.value
             target_protocol = Protocol.HTTP_JSON.value
-            target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
+            target_resource_request = ModelVersion._get_default_resource_request(
+                target_env_name, env_list
+            )
             target_autoscaling_policy = ModelVersion._get_default_autoscaling_policy(
-                deployment_mode.value if deployment_mode is not None else target_deployment_mode
+                deployment_mode.value
+                if deployment_mode is not None
+                else target_deployment_mode
             )
 
         if deployment_mode is not None:
@@ -1117,8 +1137,8 @@ class ModelVersion:
                 resource_request.memory_request,
             )
             if (
-                    resource_request.gpu_request is not None
-                    and resource_request.gpu_name is not None
+                resource_request.gpu_request is not None
+                and resource_request.gpu_name is not None
             ):
                 for env in env_list:
                     for gpu in env.gpus:
@@ -1150,8 +1170,13 @@ class ModelVersion:
             target_env_vars = ModelVersion._add_env_vars(target_env_vars, env_vars)
 
         if transformer is not None:
-            target_transformer = ModelVersion._create_transformer_spec(transformer, target_env_name, env_list)
-            if current_endpoint is not None and current_endpoint.transformer is not None:
+            target_transformer = ModelVersion._create_transformer_spec(
+                transformer, target_env_name, env_list
+            )
+            if (
+                current_endpoint is not None
+                and current_endpoint.transformer is not None
+            ):
                 target_transformer.id = current_endpoint.transformer.id
 
         if logger is not None:
@@ -1170,7 +1195,7 @@ class ModelVersion:
             deployment_mode=target_deployment_mode,
             autoscaling_policy=target_autoscaling_policy,
             protocol=target_protocol,
-            enable_model_observability=enable_model_observability
+            enable_model_observability=enable_model_observability,
         )
         if current_endpoint is not None:
             # This allows a serving deployment to be updated while it is serving
@@ -1392,6 +1417,7 @@ class ModelVersion:
         kill_existing_server: bool = False,
         tmp_dir: Optional[str] = os.environ.get("MERLIN_TMP_DIR"),
         build_image: bool = False,
+        debug: bool = False,
     ):
         """
         Start a local server running the model version
@@ -1402,6 +1428,7 @@ class ModelVersion:
         :param kill_existing_server: (optional, default=False) kill existing server if has been started previously
         :param tmp_dir: (optional, default=None) specify base path for storing model artifact
         :param build_image: (optional, default=False) build image for standard model instead of directly mounting the model artifact to model container
+        :param debug: (optional, default=False) enable debug mode that will print docker build log
         :return:
         """
         if tmp_dir is None:
@@ -1426,8 +1453,24 @@ class ModelVersion:
 
         model_type = self.model.type
         if model_type == ModelType.PYFUNC:
-            self._run_pyfunc_local_server(
-                artifact_path, env_vars, port, pyfunc_base_image
+            context_path = (
+                f"{tmp_dir}/merlin/{self.model.project.name}/{self.model.name}"
+            )
+
+            conda_env = f"{tmp_dir}/merlin/{self.model.project.name}/{self.model.name}/{self.id}/{DEFAULT_MODEL_PATH}/conda.yaml"
+            dependencies_path = f"{context_path}/env.yaml"
+            shutil.copy(conda_env, dependencies_path)
+
+            artifact_path = f"{self.id}/{DEFAULT_MODEL_PATH}"
+
+            run_pyfunc_local_server(
+                context_path=context_path,
+                dependencies_path=dependencies_path,
+                artifact_path=artifact_path,
+                model_name=self.model.name,
+                model_version=self.id,
+                pyfunc_base_image=pyfunc_base_image,
+                debug=debug,
             )
             return
 
@@ -1482,7 +1525,7 @@ class ModelVersion:
                     dockerfile=os.path.basename(dockerfile_path),
                     decode=True,
                 )
-                self._wait_build_complete(logs)
+                wait_build_complete(logs)
                 image_name = image_tag
 
             print(f"Starting model server {container_name} at port: {port}")
@@ -1511,79 +1554,15 @@ class ModelVersion:
             if container is not None:
                 container.remove(force=True)
 
-    def _run_pyfunc_local_server(
-        self, artifact_path, env_vars, port, pyfunc_base_image
-    ):
-        if pyfunc_base_image is None:
-            if "dev" in VERSION:
-                pyfunc_base_image = "ghcr.io/caraml-dev/merlin-pyfunc-base:dev"
-            else:
-                pyfunc_base_image = f"ghcr.io/caraml-dev/merlin-pyfunc-base:v{VERSION}"
-
-        dockerfile_path = copy_pyfunc_dockerfile(artifact_path)
-        image_tag = f"{self.model.project.name}-{self.model.name}:{self.id}"
-        client = docker.from_env()
-        apiClient = APIClient()
-        print(f"Building pyfunc image: {image_tag}")
-        logs = apiClient.build(
-            path=artifact_path,
-            tag=image_tag,
-            buildargs={"BASE_IMAGE": pyfunc_base_image, "MODEL_PATH": artifact_path},
-            dockerfile=os.path.basename(dockerfile_path),
-            decode=True,
-        )
-        self._wait_build_complete(logs)
-
-        container: Optional[Container] = None  # type: ignore
-        try:
-            container_name = self._container_name()
-            print(f"Starting model server {container_name} at port: {port}")
-
-            if env_vars is None:
-                env_vars = {}
-
-            env_vars["MODEL_NAME"] = f"{self.model.name}-{self.id}"
-            env_vars["WORKERS"] = 1
-            env_vars["PORT"] = 8080
-            container = client.containers.run(
-                image=image_tag,
-                name=container_name,
-                labels={"managed-by": "merlin"},
-                ports={"8080/tcp": port},
-                environment=env_vars,
-                detach=True,
-                remove=True,
-            )
-
-            # continously print docker log until the process is interrupted
-            for log in container.logs(stream=True):
-                print(log)
-        finally:
-            if container is not None:
-                container.remove(force=True)
-
     def _container_name(self):
         return f"{self.model.project.name}-{self.model.name}-{self.id}"
-
-    def _wait_build_complete(self, logs):
-        for chunk in logs:
-            if "error" in chunk:
-                raise BuildError(chunk["error"], logs)
-            if "stream" in chunk:
-                match = re.search(
-                    r"(^Successfully built |sha256:)([0-9a-f]+)$", chunk["stream"]
-                )
-                if match:
-                    image_id = match.group(2)
-            last_event = chunk
-        if image_id:
-            return
-        raise BuildError("Unknown", logs)
 
     def _get_env_list(self) -> List[client.models.Environment]:
         return EnvironmentApi(self._api_client).environments_get()
 
-    def _get_endpoint_in_environment(self, environment_name: Optional[str]) -> Optional[VersionEndpoint]:
+    def _get_endpoint_in_environment(
+        self, environment_name: Optional[str]
+    ) -> Optional[VersionEndpoint]:
         """
         Return the FIRST endpoint of this model version that is deployed in the environment specified
 
@@ -1596,7 +1575,9 @@ class ModelVersion:
         return None
 
     @staticmethod
-    def _get_default_resource_request(env_name: str, env_list: List[client.models.Environment]) -> client.ResourceRequest:
+    def _get_default_resource_request(
+        env_name: str, env_list: List[client.models.Environment]
+    ) -> client.ResourceRequest:
         resource_request = None
         for env in env_list:
             if env.name == env_name:
@@ -1609,53 +1590,78 @@ class ModelVersion:
 
         # This case is when the default resource request is not specified in the environment config
         if resource_request is None:
-            raise ValueError("default resource request not found in the environment config")
+            raise ValueError(
+                "default resource request not found in the environment config"
+            )
 
         resource_request.validate()
         return client.ResourceRequest(
-            resource_request.min_replica, resource_request.max_replica,
-            resource_request.cpu_request, resource_request.memory_request)
+            resource_request.min_replica,
+            resource_request.max_replica,
+            resource_request.cpu_request,
+            resource_request.memory_request,
+        )
 
     @staticmethod
-    def _get_default_autoscaling_policy(deployment_mode: str) -> client.AutoscalingPolicy:
+    def _get_default_autoscaling_policy(
+        deployment_mode: str,
+    ) -> client.AutoscalingPolicy:
         if deployment_mode == DeploymentMode.RAW_DEPLOYMENT.value:
             autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
         else:
             autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
-        return client.AutoscalingPolicy(autoscaling_policy.metrics_type.value, autoscaling_policy.target_value)
+        return client.AutoscalingPolicy(
+            autoscaling_policy.metrics_type.value, autoscaling_policy.target_value
+        )
 
     @staticmethod
     def _add_env_vars(target_env_vars, new_env_vars):
         if not isinstance(new_env_vars, dict):
             raise ValueError(
-                f"env_vars should be dictionary, got: {type(new_env_vars)}")
+                f"env_vars should be dictionary, got: {type(new_env_vars)}"
+            )
 
         if len(new_env_vars) > 0:
             for name, value in new_env_vars.items():
-                target_env_vars.append(
-                    client.EnvVar(str(name), str(value)))
+                target_env_vars.append(client.EnvVar(str(name), str(value)))
         return target_env_vars
 
     @staticmethod
-    def _create_transformer_spec(transformer: Transformer, target_env_name: str, env_list: List[client.models.Environment]) -> client.Transformer:
+    def _create_transformer_spec(
+        transformer: Transformer,
+        target_env_name: str,
+        env_list: List[client.models.Environment],
+    ) -> client.Transformer:
         resource_request = transformer.resource_request
         if resource_request is None:
-            target_resource_request = ModelVersion._get_default_resource_request(target_env_name, env_list)
+            target_resource_request = ModelVersion._get_default_resource_request(
+                target_env_name, env_list
+            )
         else:
             resource_request.validate()
             target_resource_request = client.ResourceRequest(
-                resource_request.min_replica, resource_request.max_replica,
-                resource_request.cpu_request, resource_request.memory_request)
+                resource_request.min_replica,
+                resource_request.max_replica,
+                resource_request.cpu_request,
+                resource_request.memory_request,
+            )
 
         target_env_vars: List[client.models.Environment] = []
         if transformer.env_vars is not None:
-            target_env_vars = ModelVersion._add_env_vars(target_env_vars, transformer.env_vars)
+            target_env_vars = ModelVersion._add_env_vars(
+                target_env_vars, transformer.env_vars
+            )
 
         return client.Transformer(
-            id=transformer.id, enabled=transformer.enabled,
-            transformer_type=transformer.transformer_type.value, image=transformer.image,
-            command=transformer.command, args=transformer.args,
-            resource_request=target_resource_request, env_vars=target_env_vars)
+            id=transformer.id,
+            enabled=transformer.enabled,
+            transformer_type=transformer.transformer_type.value,
+            image=transformer.image,
+            command=transformer.command,
+            args=transformer.args,
+            resource_request=target_resource_request,
+            env_vars=target_env_vars,
+        )
 
     def delete_model_version(self) -> int:
         """
@@ -1676,8 +1682,9 @@ def _get_default_target_env_name(env_list: List[client.models.Environment]) -> s
         if env.is_default:
             target_env_name = env.name
     if target_env_name is None:
-        raise ValueError("Unable to find default environment, "
-                         "pass environment_name to the method")
+        raise ValueError(
+            "Unable to find default environment, " "pass environment_name to the method"
+        )
     return target_env_name
 
 

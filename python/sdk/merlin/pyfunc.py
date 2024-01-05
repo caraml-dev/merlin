@@ -14,7 +14,7 @@ from caraml.upi.v1 import upi_pb2
 from docker import APIClient
 from docker.errors import BuildError
 from git import Repo
-from merlin.docker.docker import copy_pyfunc_dockerfile
+from merlin.docker.docker import copy_pyfunc_dockerfile, wait_build_complete
 from merlin.protocol import Protocol
 from merlin.version import VERSION
 from mlflow.pyfunc import PythonModel
@@ -379,13 +379,26 @@ def run_pyfunc_model(
     code_dir: List[str] = None,
     artifacts: Dict[str, str] = None,
     pyfunc_base_image: str = None,
+    port: int = 8080,
+    debug: bool = False,
 ):
-    # TODO: Sanitize model name so it can be accepted as both mlflow experiment name and docker image name
-    model_name = model_instance.__class__.__name__
+    """
+    Run pyfunc model locally using Docker. The function will log the model artifacts onto local mlflow, build a docker image, and run the container locally.
+
+    :param model_instance: instance of python function model
+    :param conda_env: path to conda env.yaml file
+    :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
+    :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
+    :param pyfunc_base_image: base image for building pyfunc model
+    :param port: port to expose the model
+    :param debug: flag to enable debug mode that will print docker build log
+    """
+
+    model_name = str.lower(model_instance.__class__.__name__)
 
     # Log model to local mlflow
-    print("Logging model to local mlflow")
-    tracking_uri = f"file:///tmp/merlin-pyfunc-models"
+    print("Logging model to local MLflow")
+    tracking_uri = f"file:///tmp/merlin/pyfunc-models"
     mlflow.set_tracking_uri(tracking_uri)
     experiment = mlflow.set_experiment(model_name)
 
@@ -397,43 +410,101 @@ def run_pyfunc_model(
         artifacts=artifacts,
     )
 
-    artifact_location = experiment.artifact_location
-    if "file://" in artifact_location:
-        artifact_location = artifact_location.replace("file://", "")
-    print("artifact_location:", artifact_location)
+    context_path = experiment.artifact_location
+    if "file://" in context_path:
+        context_path = context_path.replace("file://", "")
 
-    dependencies_path = f"{artifact_location}/env.yaml"
+    dependencies_path = f"{context_path}/env.yaml"
     shutil.copy(conda_env, dependencies_path)
-    print("dependencies_path:", dependencies_path)
 
     artifact_path = f"{model_info.run_id}/artifacts/model"
-    print("artifact_path:", artifact_path)
 
-    print("Building docker image")
+    run_pyfunc_local_server(
+        context_path=context_path,
+        dependencies_path=dependencies_path,
+        artifact_path=artifact_path,
+        model_name=model_name,
+        model_version="dev",
+        pyfunc_base_image=pyfunc_base_image,
+        port=port,
+        debug=debug,
+    )
+
+
+def run_pyfunc_local_server(
+    context_path: str,
+    dependencies_path: str,
+    artifact_path: str,
+    model_name: str,
+    model_version: str,
+    pyfunc_base_image: str = None,
+    port: int = 8080,
+    debug: bool = False,
+):
     if pyfunc_base_image is None:
-        if "dev" in VERSION:
-            pyfunc_base_image = "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:dev"
+        if "dev" in VERSION or "0.0.0" in VERSION:
+            pyfunc_base_image = "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.38.1"
         else:
             pyfunc_base_image = (
                 f"ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:{VERSION}"
             )
 
-    dockerfile_path = copy_pyfunc_dockerfile(artifact_location)
-    print("dockerfile_path:", dockerfile_path)
+    dockerfile_path = copy_pyfunc_dockerfile(context_path)
 
+    _clone_merlin_repo(context_path)
+
+    image_tag = f"{model_name}-{model_version}"
+
+    print(f"Building Docker image {image_tag}")
+    if debug:
+        print("Context path:", context_path)
+        print("Dockerfile path:", dockerfile_path)
+        print("Dependencies path:", dependencies_path)
+        print("Model artifacts path:", artifact_path)
+
+    _build_image(
+        image_tag=image_tag,
+        context_path=context_path,
+        dependencies_path=dependencies_path,
+        artifact_path=artifact_path,
+        pyfunc_base_image=pyfunc_base_image,
+        dockerfile_path=dockerfile_path,
+        debug=debug,
+    )
+
+    print("Running PyFunc local server")
+    _run_container(
+        image_tag=image_tag,
+        model_name=model_name,
+        model_version=model_version,
+        model_full_name=f"{model_name}-{model_version}",
+        port=port,
+    )
+
+
+def _clone_merlin_repo(context_path: str):
     repo_url = "https://github.com/caraml-dev/merlin.git"
-    repo_path = f"{artifact_location}/merlin"
+    repo_path = f"{context_path}/merlin"
     if not os.path.isdir(repo_path):
         repo = Repo.clone_from(repo_url, repo_path)
-        repo.git.checkout("v0.38.1")
+        if "dev" in VERSION or "0.0.0" in VERSION:
+            repo.git.checkout("main")
+        else:
+            repo.git.checkout(f"v{VERSION}")
 
-    image_tag = f"{str.lower(model_name)}:{model_info.run_id}"
-    print(image_tag)
 
+def _build_image(
+    image_tag,
+    context_path,
+    dependencies_path,
+    artifact_path,
+    pyfunc_base_image,
+    dockerfile_path,
+    debug,
+):
     docker_api_client = APIClient()
-    print(f"Building pyfunc image: {image_tag}")
     logs = docker_api_client.build(
-        path=artifact_location,
+        path=context_path,
         tag=image_tag,
         buildargs={
             "BASE_IMAGE": pyfunc_base_image,
@@ -443,44 +514,33 @@ def run_pyfunc_model(
         dockerfile=os.path.basename(dockerfile_path),
         decode=True,
     )
-    _wait_build_complete(logs)
 
+    wait_build_complete(logs, debug)
+
+
+def _run_container(image_tag, model_name, model_version, model_full_name, port):
     try:
-        docker_client = docker.from_env()
         env_vars = {}
         env_vars["CARAML_HTTP_PORT"] = "8080"
-        env_vars["CARAML_MODEL_FULL_NAME"] = str.lower(model_name)
+        env_vars["CARAML_MODEL_NAME"] = model_name
+        env_vars["CARAML_MODEL_VERSION"] = model_version
+        env_vars["CARAML_MODEL_FULL_NAME"] = model_full_name
         env_vars["WORKERS"] = "1"
 
+        docker_client = docker.from_env()
         container = docker_client.containers.run(
             image=image_tag,
-            name=str.lower(model_name),
+            name=model_name,
             labels={"managed-by": "merlin"},
-            ports={"8080/tcp": 8080},
+            ports={"8080/tcp": port},
             environment=env_vars,
             detach=True,
             remove=True,
         )
+
         # continously print docker log until the process is interrupted
         for log in container.logs(stream=True):
             print(log)
     finally:
         if container is not None:
             container.remove(force=True)
-
-
-def _wait_build_complete(logs):
-    for chunk in logs:
-        print(chunk)
-        if "error" in chunk:
-            raise BuildError(chunk["error"], logs)
-        if "stream" in chunk:
-            match = re.search(
-                r"(^Successfully built |sha256:)([0-9a-f]+)$", chunk["stream"]
-            )
-            if match:
-                image_id = match.group(2)
-        last_event = chunk
-    if image_id:
-        return
-    raise BuildError("Unknown", logs)

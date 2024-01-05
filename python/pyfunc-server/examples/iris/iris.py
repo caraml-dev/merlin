@@ -1,4 +1,3 @@
-import logging
 import os
 
 import joblib
@@ -73,5 +72,4 @@ if __name__ == "__main__":
             "xgb_model": "models/model_1.bst",
             "sklearn_model": "models/model_2.joblib",
         },
-        pyfunc_base_image="ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.38.1",
     )
