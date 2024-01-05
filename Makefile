@@ -214,6 +214,14 @@ generate-client-python:
 	@mv ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}/client ${CLIENT_PYTHON_OUTPUT_DIR}
 	@rm -rf ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}
 
+gen-client-python:
+	rm -rf ${CLIENT_PYTHON_OUTPUT_DIR}
+	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v5.1.1 generate \
+		--input-spec /local/openapi.yaml \
+		--generator-name python \
+		--output /local/python/sdk/. \
+		--config /local/openapi-codegen.yaml
+
 
 .PHONY: generate-proto
 generate-proto:

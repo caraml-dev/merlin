@@ -434,9 +434,10 @@ class Model:
             versions,
             _,
             headers,
-        ) = version_api.models_model_id_versions_get_with_http_info(
+        ) = version_api.models_model_id_versions_get(
             int(self.id), limit=limit, cursor=cursor, search=search
         )
+        
         next_cursor = headers.get("Next-Cursor") or ""
         result = []
         for v in versions:
@@ -1065,8 +1066,8 @@ class ModelVersion:
     def deploy(
         self,
         environment_name: str = None,
-        resource_request: ResourceRequest = None,
-        image_builder_resource_request: ResourceRequest = None,
+        resource_request: Optional[ResourceRequest] = None,
+        image_builder_resource_request: Optional[ResourceRequest] = None,
         env_vars: Dict[str, str] = None,
         transformer: Transformer = None,
         logger: Logger = None,
@@ -1147,10 +1148,11 @@ class ModelVersion:
                                     f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
                                 )
 
-                            target_resource_request.gpu_name = resource_request.gpu_name
-                            target_resource_request.gpu_request = (
-                                resource_request.gpu_request
-                            )
+                            if target_resource_request is not None:
+                                target_resource_request.gpu_name = resource_request.gpu_name
+                                target_resource_request.gpu_request = (
+                                    resource_request.gpu_request
+                                )
                             break
 
         if image_builder_resource_request is not None:

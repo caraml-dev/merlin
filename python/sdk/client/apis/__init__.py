@@ -1,0 +1,28 @@
+
+# flake8: noqa
+
+# Import all APIs into this package.
+# If you have many APIs here with many many models used in each API this may
+# raise a `RecursionError`.
+# In order to avoid this, import only the API that you directly need like:
+#
+#   from .api.alert_api import AlertApi
+#
+# or import this package, but before doing it, use:
+#
+#   import sys
+#   sys.setrecursionlimit(n)
+
+# Import APIs into API package:
+from client.api.alert_api import AlertApi
+from client.api.endpoint_api import EndpointApi
+from client.api.environment_api import EnvironmentApi
+from client.api.log_api import LogApi
+from client.api.model_endpoints_api import ModelEndpointsApi
+from client.api.model_schema_api import ModelSchemaApi
+from client.api.models_api import ModelsApi
+from client.api.prediction_jobs_api import PredictionJobsApi
+from client.api.project_api import ProjectApi
+from client.api.secret_api import SecretApi
+from client.api.standard_transformer_api import StandardTransformerApi
+from client.api.version_api import VersionApi

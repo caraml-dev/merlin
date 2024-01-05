@@ -60,15 +60,15 @@ class PredictionLoggerConfig:
 @autostr
 class Logger:
     logger_mode_mapping = {
-        LoggerMode.ALL: client.LoggerMode.ALL,
-        LoggerMode.REQUEST: client.LoggerMode.REQUEST,
-        LoggerMode.RESPONSE: client.LoggerMode.RESPONSE
+        LoggerMode.ALL: client.LoggerMode(LoggerMode.ALL.value),
+        LoggerMode.REQUEST: client.LoggerMode(LoggerMode.REQUEST.value),
+        LoggerMode.RESPONSE: client.LoggerMode(LoggerMode.RESPONSE.value)
     }
 
     logger_mode_mapping_rev = {
-        client.LoggerMode.ALL: LoggerMode.ALL,
-        client.LoggerMode.REQUEST: LoggerMode.REQUEST,
-        client.LoggerMode.RESPONSE: LoggerMode.RESPONSE,
+        # client.LoggerMode("all"): LoggerMode.ALL,
+        # client.LoggerMode("request"): LoggerMode.REQUEST,
+        # client.LoggerMode("response"): LoggerMode.RESPONSE,
     }
 
     def __init__(self, model: LoggerConfig = None, transformer: LoggerConfig = None, prediction: PredictionLoggerConfig = None):
