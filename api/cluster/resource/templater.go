@@ -301,7 +301,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		if modelService.Protocol == protocol.UpiV1 {
 			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
 		}
-		if modelService.EnabledModelObservability && modelService.Type == models.ModelTypePyFuncV3 {
+		if modelService.EnabledModelObservability {
 			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
 			envVars = append(envVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
 			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})

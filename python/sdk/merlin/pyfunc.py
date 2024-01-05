@@ -115,15 +115,21 @@ class PyFuncModel(PythonModel):
         """
         raise NotImplementedError("upiv1_infer is not implemented")
     
+
+    
 @dataclass
 class Values:
     columns: List[str]
-    data: List[List]
+    data: Union[List[List], numpy.ndarray]
 
     def to_dict(self):
+        data = self.data
+        if isinstance(self.data, numpy.ndarray):
+            data = self.data.tolist()
+        
         return {
             "columns": self.columns,
-            "data": self.data
+            "data": data
         }
 
 
@@ -132,27 +138,35 @@ class ModelInput:
     # unique identifier of each prediction
     prediction_ids: List[str]
     # features data for model prediction, the length of data of features must be the same as `prediction_ids` length
-    features: Values
+    features: Union[Values, pandas.DataFrame]
     # entities data is additional data that are not used for prediction, but this data is used to retrieved another features.
     # The length of data of entities must be the same as `prediction_ids` length
-    entities: Optional[Values] = None
+    entities: Optional[Union[Values, pandas.DataFrame]] = None
     # session id is identifier for the request
     session_id: str = ""
 
     def features_dict(self) -> Optional[dict]:
         if self.features is None:
             return None
-        result = self.features.to_dict()
+        
+        val = self.features
+        if isinstance(self.features, pandas.DataFrame):
+            val = Values(self.features.columns.values.tolist(), self.features.values.tolist())
+    
+        result = val.to_dict()
         result["row_ids"] = self.prediction_ids
         return result
     
     def entities_dict(self) -> Optional[dict]:
         if self.entities is None:
             return None
-        result =  self.entities.to_dict()
+        val = self.entities
+        if isinstance(self.entities, pandas.DataFrame):
+            val = Values(self.entities.columns.values.tolist(), self.entities.values.tolist())
+        result =  val.to_dict()
         result["row_ids"] = self.prediction_ids
         return result
-    
+  
 
 @dataclass
 class ModelOutput:
@@ -166,7 +180,12 @@ class ModelOutput:
     def predictions_dict(self) -> dict:
         if self.predictions is None:
             return None
-        result = self.predictions.to_dict()
+        
+        predictions = self.predictions
+        if isinstance(self.predictions, pandas.DataFrame):
+            predictions = Values(self.predictions.columns.values.tolist(), self.predictions.values.tolist())
+        
+        result = predictions.to_dict()
         result["row_ids"] = self.prediction_ids
         return result
 
