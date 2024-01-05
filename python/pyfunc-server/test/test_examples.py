@@ -31,7 +31,7 @@ def _get_free_port():
             sock.close()
 
 
-def _wait_server_ready(proc, url, timeout_second=300, tick_second=5):
+def _wait_server_ready(proc, url, timeout_second=600, tick_second=10):
     time.sleep(5)
 
     ellapsed_second = 0

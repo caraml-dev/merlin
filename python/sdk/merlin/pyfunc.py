@@ -562,18 +562,21 @@ def _run_container(
     for started_container in started_containers:
         started_container.remove(force=True)
 
+    if env_vars is None:
+        env_vars = {}
+
+    env_vars["CARAML_HTTP_PORT"] = "8080"
+    env_vars["CARAML_GRPC_PORT"] = "9000"
+    env_vars["CARAML_MODEL_NAME"] = model_name
+    env_vars["CARAML_MODEL_VERSION"] = model_version
+    env_vars["CARAML_MODEL_FULL_NAME"] = model_full_name
+    env_vars["WORKERS"] = "1"
+
+    ports = {"8080/tcp": port}
+    if "CARAML_PROTOCOL" in env_vars and env_vars["CARAML_PROTOCOL"] == "UPI_V1":
+        ports = {"9000/tcp": port}
+
     try:
-        env_vars["CARAML_HTTP_PORT"] = "8080"
-        env_vars["CARAML_GRPC_PORT"] = "9000"
-        env_vars["CARAML_MODEL_NAME"] = model_name
-        env_vars["CARAML_MODEL_VERSION"] = model_version
-        env_vars["CARAML_MODEL_FULL_NAME"] = model_full_name
-        env_vars["WORKERS"] = "1"
-
-        ports = {"8080/tcp": port}
-        if "CARAML_PROTOCOL" in env_vars and env_vars["CARAML_PROTOCOL"] == "UPI_V1":
-            ports = {"9000/tcp": port}
-
         container = docker_client.containers.run(
             image=image_tag,
             name=model_name,
