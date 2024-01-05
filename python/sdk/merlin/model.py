@@ -1467,7 +1467,7 @@ class ModelVersion:
                 dependencies_path=dependencies_path,
                 artifact_path=artifact_path,
                 model_name=self.model.name,
-                model_version=self.id,
+                model_version=f"{self.id}",
                 pyfunc_base_image=pyfunc_base_image,
                 debug=debug,
             )
