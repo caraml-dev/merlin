@@ -38,7 +38,6 @@ from client import (
     VersionApi,
 )
 from docker import APIClient
-from docker.errors import BuildError
 from docker.models.containers import Container
 from merlin import pyfunc
 from merlin.autoscaling import (

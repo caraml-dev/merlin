@@ -1,5 +1,4 @@
 import os
-import re
 import shutil
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -12,7 +11,6 @@ import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
 from docker import APIClient
-from docker.errors import BuildError
 from git import Repo
 from merlin.docker.docker import copy_pyfunc_dockerfile, wait_build_complete
 from merlin.protocol import Protocol
@@ -543,6 +541,15 @@ def _build_image(
 
 
 def _run_container(image_tag, model_name, model_version, model_full_name, port):
+    docker_client = docker.from_env()
+
+    # Stop all previous containers to avoid port conflict
+    started_containers = docker_client.containers.list(
+        filters={"name": model_full_name}
+    )
+    for started_container in started_containers:
+        started_container.remove(force=True)
+
     try:
         env_vars = {}
         env_vars["CARAML_HTTP_PORT"] = "8080"
@@ -551,7 +558,6 @@ def _run_container(image_tag, model_name, model_version, model_full_name, port):
         env_vars["CARAML_MODEL_FULL_NAME"] = model_full_name
         env_vars["WORKERS"] = "1"
 
-        docker_client = docker.from_env()
         container = docker_client.containers.run(
             image=image_tag,
             name=model_name,
