@@ -362,18 +362,18 @@ def deploy(
     """
     Deploy a model version.
 
-        :param model_version: If model_version is not given it will deploy active model version
-        :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
-        :param resource_request: The resource requirement and replicas requests for model version endpoint.
-        :param image_builder_resource_request: The resource requirement and replicas requests for image builder job.
-        :param env_vars: List of environment variables to be passed to the model container.
-        :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
-        :param logger: Response/Request logging configuration for model or transformer.
-        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
-        :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
-        :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
-        :param enable_model_observability: flag to determine whether model observability enabled for the endpoint
-        :return: VersionEndpoint object
+    :param model_version: If model_version is not given it will deploy active model version
+    :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
+    :param resource_request: The resource requirement and replicas requests for model version endpoint.
+    :param image_builder_resource_request: The resource requirement and replicas requests for image builder job.
+    :param env_vars: List of environment variables to be passed to the model container.
+    :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
+    :param logger: Response/Request logging configuration for model or transformer.
+    :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+    :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
+    :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
+    :param enable_model_observability: flag to determine whether model observability enabled for the endpoint
+    :return: VersionEndpoint object
     """
     _check_active_client()
     if model_version is None:

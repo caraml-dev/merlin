@@ -1412,6 +1412,7 @@ class ModelVersion:
         self,
         env_vars: Dict[str, str] = None,
         port: int = 8080,
+        protocol: Protocol = Protocol.HTTP_JSON,
         pyfunc_base_image: str = None,
         kill_existing_server: bool = False,
         tmp_dir: Optional[str] = os.environ.get("MERLIN_TMP_DIR"),
@@ -1423,6 +1424,7 @@ class ModelVersion:
 
         :param env_vars: dictionary of environment variables to be passed to the server
         :param port: host port that will be used to expose model server
+        :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
         :param pyfunc_base_image: (optional, default=None) docker image to be used as base image for building pyfunc model
         :param kill_existing_server: (optional, default=False) kill existing server if has been started previously
         :param tmp_dir: (optional, default=None) specify base path for storing model artifact
@@ -1471,6 +1473,7 @@ class ModelVersion:
                 pyfunc_base_image=pyfunc_base_image,
                 port=port,
                 env_vars=env_vars,
+                protocol=protocol,
                 debug=debug,
             )
             return

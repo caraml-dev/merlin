@@ -403,6 +403,7 @@ def run_pyfunc_model(
     pyfunc_base_image: str = None,
     port: int = 8080,
     env_vars: Dict[str, str] = None,
+    protocol: Protocol = Protocol.HTTP_JSON,
     debug: bool = False,
 ):
     """
@@ -415,6 +416,7 @@ def run_pyfunc_model(
     :param pyfunc_base_image: base image for building pyfunc model
     :param port: port to expose the model
     :param env_vars: dictionary of environment variables to be passed to the server
+    :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
     :param debug: flag to enable debug mode that will print docker build log
     """
 
@@ -452,6 +454,7 @@ def run_pyfunc_model(
         pyfunc_base_image=pyfunc_base_image,
         port=port,
         env_vars=env_vars,
+        protocol=protocol,
         debug=debug,
     )
 
@@ -465,6 +468,7 @@ def run_pyfunc_local_server(
     pyfunc_base_image: str = None,
     port: int = 8080,
     env_vars: Dict[str, str] = None,
+    protocol: Protocol = None,
     debug: bool = False,
 ):
     if pyfunc_base_image is None:
@@ -506,6 +510,7 @@ def run_pyfunc_local_server(
         model_full_name=f"{model_name}-{model_version}",
         port=port,
         env_vars=env_vars,
+        protocol=protocol,
     )
 
 
@@ -552,6 +557,7 @@ def _run_container(
     model_full_name,
     port,
     env_vars: Dict[str, str] = None,
+    protocol: Protocol = None,
 ):
     docker_client = docker.from_env()
 
@@ -573,7 +579,7 @@ def _run_container(
     env_vars["WORKERS"] = "1"
 
     ports = {"8080/tcp": port}
-    if "CARAML_PROTOCOL" in env_vars and env_vars["CARAML_PROTOCOL"] == "UPI_V1":
+    if protocol == Protocol.UPI_V1:
         ports = {"9000/tcp": port}
 
     try:

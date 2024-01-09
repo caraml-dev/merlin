@@ -5,6 +5,7 @@ import grpc
 import merlin
 from caraml.upi.v1 import upi_pb2
 from merlin.model import PyFuncModel
+from merlin.protocol import Protocol
 from prometheus_client import Counter, Gauge
 
 
@@ -46,7 +47,5 @@ if __name__ == "__main__":
     merlin.run_pyfunc_model(
         model_instance=EchoUPIModel(model_name, model_version),
         conda_env="env.yaml",
-        env_vars={
-            "CARAML_PROTOCOL": "UPI_V1",
-        },
+        protocol=Protocol.UPI_V1,
     )
