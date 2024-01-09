@@ -1376,7 +1376,7 @@ class TestModel:
             "POST",
             "/v1/models/1/versions",
             body=json.dumps(self.v3.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
 

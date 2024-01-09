@@ -304,7 +304,7 @@ def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
                         "created_at": "{created_at}",
                         "updated_at": "{updated_at}"
                       }}""",
-        status=200,
+        status=201,
         content_type="application/json",
     )
 

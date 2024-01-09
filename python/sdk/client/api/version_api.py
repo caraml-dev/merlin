@@ -419,7 +419,7 @@ class VersionApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Version"
+            '201': "Version"
             
         }
         response_data = self.api_client.call_api(
@@ -490,7 +490,7 @@ class VersionApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Version"
+            '201': "Version"
             
         }
         response_data = self.api_client.call_api(
@@ -561,7 +561,7 @@ class VersionApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Version"
+            '201': "Version"
             
         }
         response_data = self.api_client.call_api(

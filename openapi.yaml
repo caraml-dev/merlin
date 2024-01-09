@@ -388,7 +388,7 @@ paths:
               "$ref": "#/components/schemas/Version"
         required: false
       responses:
-        '200':
+        '201':
           description: Created
           content:
             "*/*":

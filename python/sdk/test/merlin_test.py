@@ -251,7 +251,7 @@ def _mock_new_model_version_call(model, version, labels=None):
         "POST",
         f"/v1/models/{model.id}/versions",
         body=json.dumps(body),
-        status=200,
+        status=201,
         content_type="application/json",
     )
 
