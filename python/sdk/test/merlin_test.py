@@ -24,12 +24,20 @@ from merlin.model import ModelVersion
 # get global mock responses that configured in conftest
 responses = pytest.responses
 
-default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
+default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
 env_1 = cl.Environment(
-    1, "dev", "cluster-1", True, default_resource_request=default_resource_request
+    id=1,
+    name="dev",
+    cluster="cluster-1",
+    is_default=True,
+    default_resource_request=default_resource_request,
 )
 env_2 = cl.Environment(
-    2, "dev-2", "cluster-2", False, default_resource_request=default_resource_request
+    id=2,
+    name="dev-2",
+    cluster="cluster-2",
+    is_default=False,
+    default_resource_request=default_resource_request,
 )
 
 
@@ -215,7 +223,7 @@ def _mock_get_model_call(project, model):
         f"/v1/projects/{project.id}/models",
         body=f"""[{{
                         "id": {model.id},
-                        "mlflow_experiment_id": "{model.mlflow_experiment_id}",
+                        "mlflow_experiment_id": {model.mlflow_experiment_id},
                         "name": "{model.name}",
                         "type": "{model.type.value}",
                         "mlflow_url": "{model.mlflow_url}",

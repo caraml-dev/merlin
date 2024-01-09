@@ -23,13 +23,13 @@ from client import (
     Configuration,
     EndpointApi,
     EnvironmentApi,
-    FreeFormObject,
     ModelsApi,
     ProjectApi,
     StandardTransformerApi,
     StandardTransformerSimulationRequest,
     VersionApi,
 )
+
 from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
@@ -212,7 +212,7 @@ class MerlinClient:
         m_list = self._model_api.projects_project_id_models_get(
             project_id=int(prj.id), name=model_name
         )
-
+        
         model = None
         for mdl in m_list:
             if mdl.name == model_name:

@@ -430,13 +430,11 @@ class Model:
         :return: next cursor to fetch next page of version
         """
         version_api = VersionApi(self._api_client)
-        (
-            versions,
-            _,
-            headers,
-        ) = version_api.models_model_id_versions_get(
+        version_api_response = version_api.models_model_id_versions_get_with_http_info(
             int(self.id), limit=limit, cursor=cursor, search=search
         )
+        versions = version_api_response.data
+        headers = version_api_response.headers
         
         next_cursor = headers.get("Next-Cursor") or ""
         result = []
@@ -1163,8 +1161,8 @@ class ModelVersion:
 
         if autoscaling_policy is not None:
             target_autoscaling_policy = client.AutoscalingPolicy(
-                autoscaling_policy.metrics_type.value,
-                autoscaling_policy.target_value,
+                metrics_type=autoscaling_policy.metrics_type.value,
+                target_value=autoscaling_policy.target_value,
             )
 
         if env_vars is not None:
@@ -1602,11 +1600,10 @@ class ModelVersion:
 
         resource_request.validate()
         return client.ResourceRequest(
-            resource_request.min_replica,
-            resource_request.max_replica,
-            resource_request.cpu_request,
-            resource_request.memory_request,
-        )
+            min_replica=resource_request.min_replica, 
+            max_replica=resource_request.max_replica,
+            cpu_request=resource_request.cpu_request, 
+            memory_request=resource_request.memory_request)
 
     @staticmethod
     def _get_default_autoscaling_policy(
@@ -1617,8 +1614,8 @@ class ModelVersion:
         else:
             autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
         return client.AutoscalingPolicy(
-            autoscaling_policy.metrics_type.value, autoscaling_policy.target_value
-        )
+            metrics_type=autoscaling_policy.metrics_type.value, 
+            target_value=autoscaling_policy.target_value)
 
     @staticmethod
     def _add_env_vars(target_env_vars, new_env_vars):

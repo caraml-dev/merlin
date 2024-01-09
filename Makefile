@@ -208,15 +208,8 @@ CLIENT_PYTHON_OUTPUT_DIR = ./python/sdk/client
 TEMP_CLIENT_PYTHON_OUTPUT_DIR = ./python/sdk/client_tmp
 .PHONY: generate-client-python
 generate-client-python:
-	@echo "Generating Python client from swagger.yaml"
-	@rm -rf ${CLIENT_PYTHON_OUTPUT_DIR}
-	@swagger-codegen generate -i swagger.yaml -l python -o ${TEMP_CLIENT_PYTHON_OUTPUT_DIR} -DpackageName=client
-	@mv ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}/client ${CLIENT_PYTHON_OUTPUT_DIR}
-	@rm -rf ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}
-
-gen-client-python:
 	rm -rf ${CLIENT_PYTHON_OUTPUT_DIR}
-	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v5.1.1 generate \
+	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
 		--input-spec /local/openapi.yaml \
 		--generator-name python \
 		--output /local/python/sdk/. \

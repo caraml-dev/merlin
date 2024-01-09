@@ -16,7 +16,6 @@ import client
 
 from merlin.resource_request import ResourceRequest
 
-
 class Environment:
     def __init__(self, env: client.Environment):
         self._name = env.name

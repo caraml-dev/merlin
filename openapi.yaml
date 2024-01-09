@@ -757,7 +757,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
       responses:
         '200':
           description: OK
@@ -779,7 +779,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
       requestBody:
         content:
           "*/*":
@@ -808,7 +808,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
       responses:
         '200':
           description: OK
@@ -1026,7 +1026,7 @@ paths:
         schema:
           type: integer
       responses:
-        '201':
+        '200':
           description: Ok
           content:
             "*/*":
@@ -1157,8 +1157,8 @@ paths:
               "$ref": "#/components/schemas/PredictionJob"
         required: false
       responses:
-        '201':
-          description: Created
+        '200':
+          description: OK
           content:
             "*/*":
               schema:
@@ -2048,9 +2048,14 @@ components:
       - STRING
       - ARRAY
     SaveMode:
-      type: string
-      default: ERRORIFEXISTS
+      type: integer
       enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      x-enum-names:
       - ERRORIFEXISTS
       - OVERWRITE
       - APPEND
@@ -2110,7 +2115,6 @@ components:
           "$ref": "#/components/schemas/FreeFormObject"
     FreeFormObject:
       type: object
-      additionalProperties: true
     Protocol:
       type: string
       enum:
