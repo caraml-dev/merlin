@@ -79,7 +79,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 	isRedeployment := false
 
-	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
+	// Need to reassign destionationURL because it is ignored when marshalled and unmarshalled
 	if endpoint.Logger != nil {
 		endpoint.Logger.DestinationURL = depl.LoggerDestinationURL
 	}
@@ -94,16 +94,27 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 	log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
 
-	// record the deployment process
-	deployment, err := depl.DeploymentStorage.Save(&models.Deployment{
-		ProjectID:         model.ProjectID,
-		VersionModelID:    model.ID,
-		VersionID:         endpoint.VersionID,
-		VersionEndpointID: endpoint.ID,
-		Status:            models.EndpointPending,
-	})
+	// check if the latest deployment entry in the deployments table is in the 'pending' state (aborted workflow)
+	deployment, err := depl.DeploymentStorage.GetLatestDeployment(model.ID, endpoint.VersionID)
 	if err != nil {
-		log.Warnf("unable to create deployment history", err)
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Errorf("failed retrieving from db the latest deployment with the error: %v", err)
+			return err
+		}
+		// do not create a new entry if the last deployment entry in the db is 'pending'
+		if deployment.Status != models.EndpointPending {
+			deployment, err = depl.DeploymentStorage.Save(&models.Deployment{
+				ProjectID:         model.ProjectID,
+				VersionModelID:    model.ID,
+				VersionID:         endpoint.VersionID,
+				VersionEndpointID: endpoint.ID,
+				Status:            models.EndpointPending,
+			})
+			// record the deployment process
+			if err != nil {
+				log.Warnf("unable to create deployment history", err)
+			}
+		}
 	}
 
 	defer func() {

@@ -105,6 +105,85 @@ func TestDeploymentStorage_List(t *testing.T) {
 	})
 }
 
+func TestGetLatestDeployment(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		deploymentStorage := NewDeploymentStorage(db)
+		isDefaultTrue := true
+
+		p := mlp.Project{
+			Name:              "project",
+			MLFlowTrackingURL: "http://mlflow:5000",
+		}
+
+		m := models.Model{
+			ID:           1,
+			ProjectID:    models.ID(p.ID),
+			ExperimentID: 1,
+			Name:         "model",
+			Type:         models.ModelTypeSkLearn,
+		}
+		db.Create(&m)
+
+		v := models.Version{
+			ModelID:       m.ID,
+			RunID:         "1",
+			ArtifactURI:   "gcs:/mlp/1/1",
+			PythonVersion: "3.7.*",
+		}
+		db.Create(&v)
+
+		env1 := models.Environment{
+			Name:      "env1",
+			Cluster:   "k8s",
+			IsDefault: &isDefaultTrue,
+		}
+		db.Create(&env1)
+
+		endpoint := models.VersionEndpoint{
+			ID:              uuid.New(),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
+			Status:          "pending",
+			EnvironmentName: env1.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
+		}
+		db.Create(&endpoint)
+
+		deploy1 := &models.Deployment{
+			ProjectID:         models.ID(p.ID),
+			VersionID:         v.ID,
+			VersionModelID:    m.ID,
+			VersionEndpointID: endpoint.ID,
+			Status:            models.EndpointServing,
+			Error:             "",
+			CreatedUpdated: models.CreatedUpdated{
+				UpdatedAt: time.Date(2022, 4, 27, 16, 33, 41, 0, time.UTC),
+			},
+		}
+
+		deploy2 := &models.Deployment{
+			ProjectID:         models.ID(p.ID),
+			VersionID:         v.ID,
+			VersionModelID:    m.ID,
+			VersionEndpointID: endpoint.ID,
+			Status:            models.EndpointServing,
+			Error:             "",
+			CreatedUpdated: models.CreatedUpdated{
+				UpdatedAt: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+			},
+		}
+
+		_, err := deploymentStorage.Save(deploy1)
+		assert.NoError(t, err)
+
+		_, err = deploymentStorage.Save(deploy2)
+		assert.NoError(t, err)
+
+		dep, err := deploymentStorage.GetLatestDeployment(m.ID, endpoint.VersionID)
+		assert.Equal(t, deploy1, dep)
+	})
+}
+
 func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
 		deploymentStorage := NewDeploymentStorage(db)

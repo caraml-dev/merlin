@@ -15,6 +15,7 @@ import (
 	"github.com/caraml-dev/merlin/storage/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -83,6 +84,111 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
+				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
+					Environment:     env,
+					EnvironmentName: env.Name,
+					ResourceRequest: env.DefaultResourceRequest,
+					VersionID:       version.ID,
+					Namespace:       project.Name,
+				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				return mockImgBuilder
+			},
+		},
+		{
+			name:    "Success: Latest deployment entry in storage stuck in pending",
+			model:   model,
+			version: version,
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName: env.Name,
+				ResourceRequest: env.DefaultResourceRequest,
+				VersionID:       version.ID,
+				Namespace:       project.Name,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(
+					&models.Deployment{
+						ProjectID:      model.ProjectID,
+						VersionModelID: model.ID,
+						VersionID:      version.ID,
+						Status:         models.EndpointPending,
+					}, nil)
+				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
+				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
+					Environment:     env,
+					EnvironmentName: env.Name,
+					ResourceRequest: env.DefaultResourceRequest,
+					VersionID:       version.ID,
+					Namespace:       project.Name,
+				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				return mockImgBuilder
+			},
+		},
+		{
+			name:    "Success: Latest deployment entry in storage not in pending state",
+			model:   model,
+			version: version,
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName: env.Name,
+				ResourceRequest: env.DefaultResourceRequest,
+				VersionID:       version.ID,
+				Namespace:       project.Name,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(
+					&models.Deployment{
+						ProjectID:      model.ProjectID,
+						VersionModelID: model.ID,
+						VersionID:      version.ID,
+						Status:         models.EndpointRunning,
+					}, nil)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -128,6 +234,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -173,6 +280,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -220,6 +328,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -267,6 +376,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -321,6 +431,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -374,6 +485,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				return mockStorage
 			},
@@ -413,6 +525,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				return mockStorage
 			},
@@ -573,6 +686,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			expectedEndpointStatus: models.EndpointRunning,
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(
+					&models.Deployment{
+						ProjectID:      model.ProjectID,
+						VersionModelID: model.ID,
+						VersionID:      version.ID,
+						Status:         models.EndpointRunning,
+					}, nil)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -638,6 +758,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			expectedEndpointStatus: models.EndpointServing,
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(
+					&models.Deployment{
+						ProjectID:      model.ProjectID,
+						VersionModelID: model.ID,
+						VersionID:      version.ID,
+						Status:         models.EndpointServing,
+					}, nil)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -703,6 +830,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			expectedEndpointStatus: models.EndpointRunning,
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(
+					&models.Deployment{
+						ProjectID:      model.ProjectID,
+						VersionModelID: model.ID,
+						VersionID:      version.ID,
+						Status:         models.EndpointFailed,
+					}, nil)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
@@ -769,6 +903,13 @@ func TestExecuteRedeployment(t *testing.T) {
 			expectedEndpointStatus: models.EndpointRunning,
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
+				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(
+					&models.Deployment{
+						ProjectID:      model.ProjectID,
+						VersionModelID: model.ID,
+						VersionID:      version.ID,
+						Status:         models.EndpointRunning,
+					}, nil)
 				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				return mockStorage
 			},
