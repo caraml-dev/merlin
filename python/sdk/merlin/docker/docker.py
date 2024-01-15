@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import os
-import shutil
 import pathlib
+import re
+import shutil
+
+from docker.errors import BuildError
 
 try:
     import importlib.resources as pkg_resources
 except ImportError:
     # Try backported to PY<37 `importlib_resources`.
-
     import importlib_resources as pkg_resources  # type: ignore
 
 
@@ -54,3 +56,21 @@ def _copy_dockerfile(dst, dockerfile_name):
     full_path = os.path.join(package_path, dockerfile_name)
     shutil.copy(full_path, dst_dockerfile_path)
     return dst_dockerfile_path
+
+
+def wait_build_complete(logs, debug: bool = False):
+    for chunk in logs:
+        if "error" in chunk:
+            raise BuildError(chunk["error"], logs)
+        if "stream" in chunk:
+            if debug:
+                print(chunk["stream"].replace("\n", ""))
+
+            match = re.search(
+                r"(^Successfully built |sha256:)([0-9a-f]+)$", chunk["stream"]
+            )
+            if match:
+                image_id = match.group(2)
+    if image_id:
+        return
+    raise BuildError("Unknown", logs)

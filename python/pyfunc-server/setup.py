@@ -13,19 +13,23 @@
 # limitations under the License.
 
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 tests_require = [
-    'pytest',
-    'pytest-tornasync',
-    'requests',
-    'types-requests',
-    'types-protobuf',
-    'mypy',
-    'pytest-benchmark',
+    "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
+    "mypy",
+    "pytest-benchmark",
+    "pytest-tornasync",
+    "pytest",
+    "requests",
+    "scikit-learn>=1.1.2",
+    "types-protobuf",
+    "types-requests",
+    "xgboost==1.6.2",
 ]
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
 
 
@@ -36,18 +40,20 @@ merlin_path = os.path.join(os.getcwd(), "../sdk")
 merlin_sdk_package = "merlin-sdk"
 for index, item in enumerate(REQUIRE):
     if merlin_sdk_package in item:
-        REQUIRE[index] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
+        REQUIRE[
+            index
+        ] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
 
 setup(
-    name='pyfuncserver',
-    version='0.6.0',
-    author_email='merlin-dev@gojek.com',
-    description='Model Server implementation for mlflow pyfunc model',
-    long_description=open('README.md').read(),
-    long_description_content_type='text/markdown',
-    python_requires='>=3.8,<3.11',
+    name="pyfuncserver",
+    version="0.6.0",
+    author_email="merlin-dev@gojek.com",
+    description="Model Server implementation for mlflow pyfunc model",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    python_requires=">=3.8,<3.11",
     packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
     tests_require=tests_require,
-    extras_require={'test': tests_require}
+    extras_require={"test": tests_require},
 )

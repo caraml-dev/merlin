@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
@@ -297,7 +298,6 @@ def log_pyfunc_model(
     :param model_instance: instance of python function model
     :param conda_env: path to conda env.yaml file
     :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
-    :param code_dir: additional code directory to be uploaded
     :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
     """
     _check_active_model_version()
@@ -357,23 +357,23 @@ def deploy(
     deployment_mode: DeploymentMode = None,
     autoscaling_policy: AutoscalingPolicy = None,
     protocol: Protocol = None,
-    enable_model_observability: bool = False
+    enable_model_observability: bool = False,
 ) -> VersionEndpoint:
     """
     Deploy a model version.
 
-        :param model_version: If model_version is not given it will deploy active model version
-        :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
-        :param resource_request: The resource requirement and replicas requests for model version endpoint.
-        :param image_builder_resource_request: The resource requirement and replicas requests for image builder job.
-        :param env_vars: List of environment variables to be passed to the model container.
-        :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
-        :param logger: Response/Request logging configuration for model or transformer.
-        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
-        :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
-        :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
-        :param enable_model_observability: flag to determine whether model observability enabled for the endpoint
-        :return: VersionEndpoint object
+    :param model_version: If model_version is not given it will deploy active model version
+    :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
+    :param resource_request: The resource requirement and replicas requests for model version endpoint.
+    :param image_builder_resource_request: The resource requirement and replicas requests for image builder job.
+    :param env_vars: List of environment variables to be passed to the model container.
+    :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
+    :param logger: Response/Request logging configuration for model or transformer.
+    :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+    :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
+    :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
+    :param enable_model_observability: flag to determine whether model observability enabled for the endpoint
+    :return: VersionEndpoint object
     """
     _check_active_client()
     if model_version is None:
@@ -388,7 +388,7 @@ def deploy(
             deployment_mode,
             autoscaling_policy,
             protocol,
-            enable_model_observability
+            enable_model_observability,
         )
 
     return _merlin_client.deploy(  # type: ignore
@@ -402,7 +402,7 @@ def deploy(
         deployment_mode,
         autoscaling_policy,
         protocol,
-        enable_model_observability
+        enable_model_observability,
     )
 
 

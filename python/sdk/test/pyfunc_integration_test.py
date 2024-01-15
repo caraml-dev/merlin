@@ -17,16 +17,13 @@ import warnings
 from test.utils import undeploy_all_version
 
 import joblib
+import merlin
 import numpy as np
 import pytest
 import xgboost as xgb
-
-import merlin
-from merlin.model import ModelType, PyFuncModel
-from merlin.resource_request import ResourceRequest
 from merlin.model import ModelType, PyFuncModel, PyFuncV3Model
 from merlin.pyfunc import ModelInput, ModelOutput, Values
-from sklearn import svm
+from merlin.resource_request import ResourceRequest
 from sklearn.datasets import load_iris
 
 warnings.filterwarnings("ignore")
@@ -49,6 +46,7 @@ class EnsembleModel(PyFuncModel):
         result_2 = self._model_2.predict_proba(inputs)
         return {"predictions": ((result_1 + result_2) / 2).tolist()}
 
+
 class EnvVarModel(PyFuncModel):
     def initialize(self, artifacts):
         self.env_var = {}
@@ -58,21 +56,24 @@ class EnvVarModel(PyFuncModel):
 
     def infer(self, model_input):
         return self.env_var
-    
+
+
 class ModelObservabilityModel(PyFuncV3Model):
     def initialize(self, artifacts):
-        self._feature_names = ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
-        self._target_names = ['setosa', 'versicolor', 'virginica']
+        self._feature_names = [
+            "sepal length (cm)",
+            "sepal width (cm)",
+            "petal length (cm)",
+            "petal width (cm)",
+        ]
+        self._target_names = ["setosa", "versicolor", "virginica"]
         self._model = xgb.Booster(model_file=artifacts["xgb_model"])
 
     def preprocess(self, request: dict, **kwargs) -> ModelInput:
-        features_data = request['instances']
+        features_data = request["instances"]
         return ModelInput(
             prediction_ids=["prediction_1", "prediction_2"],
-            features=Values(
-                columns=self._feature_names,
-                data=features_data
-            )
+            features=Values(columns=self._feature_names, data=features_data),
         )
 
     def infer(self, model_input: ModelInput) -> ModelOutput:
@@ -80,16 +81,11 @@ class ModelObservabilityModel(PyFuncV3Model):
         outputs = self._model.predict(dmatrix).tolist()
         return ModelOutput(
             prediction_ids=model_input.prediction_ids,
-            predictions=Values(
-                columns=self._target_names,
-                data = outputs
-            )
+            predictions=Values(columns=self._target_names, data=outputs),
         )
 
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
-        return {
-            "predictions": model_output.predictions.data
-        }
+        return {"predictions": model_output.predictions.data}
 
 
 @pytest.mark.pyfunc
@@ -186,10 +182,13 @@ def test_pyfunc_env_vars(
 
     merlin.undeploy(v)
 
+
 @pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_pyfunc_model_observability(integration_test_url, project_name, use_google_oauth, requests):
+def test_pyfunc_model_observability(
+    integration_test_url, project_name, use_google_oauth, requests
+):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-mlobs", ModelType.PYFUNC_V3)
@@ -197,14 +196,16 @@ def test_pyfunc_model_observability(integration_test_url, project_name, use_goog
     undeploy_all_version()
     with merlin.new_model_version() as v:
         iris = load_iris()
-        y = iris['target']
-        X = iris['data']
+        y = iris["target"]
+        X = iris["data"]
         xgb_path = train_xgboost_model(X, y)
 
-        v.log_pyfunc_model(model_instance=ModelObservabilityModel(),
-                           conda_env="test/pyfunc/env.yaml",
-                           code_dir=["test"],
-                           artifacts={"xgb_model": xgb_path})
+        v.log_pyfunc_model(
+            model_instance=ModelObservabilityModel(),
+            conda_env="test/pyfunc/env.yaml",
+            code_dir=["test"],
+            artifacts={"xgb_model": xgb_path},
+        )
 
     endpoint = merlin.deploy(v, enable_model_observability=True)
 
@@ -212,7 +213,7 @@ def test_pyfunc_model_observability(integration_test_url, project_name, use_goog
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
 
