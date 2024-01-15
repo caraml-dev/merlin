@@ -453,7 +453,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 				nil,
 				errors.New("error creating inference service"),
 			},
-			checkResult:     nil,
+			checkResult: &inferenceServiceReactor{
+				nil,
+				kerrors.NewNotFound(schema.GroupResource{}, ""),
+			},
 			deployTimeout:   deployTimeout,
 			createPdbResult: &pdbReactor{pdb, nil},
 			createVsResult:  &vsReactor{vs, nil},
@@ -468,7 +471,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			checkResult: &inferenceServiceReactor{
 				nil,
-				errors.New("error check"),
+				kerrors.NewNotFound(schema.GroupResource{}, ""),
 			},
 			deployTimeout:   deployTimeout,
 			createPdbResult: &pdbReactor{pdb, nil},
@@ -639,7 +642,6 @@ func TestController_DeployInferenceService(t *testing.T) {
 			kfClient.PrependReactor(createMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tt.createResult.isvc, tt.createResult.err
 			})
-
 			kfClient.PrependReactor(deleteMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, nil
 			})

@@ -223,10 +223,16 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
 	}
 
-	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
+	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.Name, metav1.GetOptions{})
 	if err != nil {
-		log.Errorf("unable to create inference service %s: %v", isvcName, err)
-		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
+		if !kerrors.IsNotFound(err) {
+			return nil, errors.Wrapf(err, "unable to check status of inference service: %s", s.Name)
+		}
+		s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
+		if err != nil {
+			log.Errorf("unable to create inference service %s: %v", isvcName, err)
+			return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
+		}
 	}
 
 	if c.deploymentConfig.PodDisruptionBudget.Enabled {
