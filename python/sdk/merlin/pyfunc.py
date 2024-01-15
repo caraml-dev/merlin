@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import docker
 import grpc
-import mlflow
 import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
@@ -16,6 +15,8 @@ from merlin.docker.docker import copy_pyfunc_dockerfile, wait_build_complete
 from merlin.protocol import Protocol
 from merlin.version import VERSION
 from mlflow.pyfunc import PythonModel
+
+import mlflow
 
 PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
 PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
@@ -468,7 +469,7 @@ def run_pyfunc_local_server(
     pyfunc_base_image: str = None,
     port: int = 8080,
     env_vars: Dict[str, str] = None,
-    protocol: Protocol = None,
+    protocol: Protocol = Protocol.HTTP_JSON,
     debug: bool = False,
 ):
     if pyfunc_base_image is None:
@@ -557,7 +558,7 @@ def _run_container(
     model_full_name,
     port,
     env_vars: Dict[str, str] = None,
-    protocol: Protocol = None,
+    protocol: Protocol = Protocol.HTTP_JSON,
 ):
     docker_client = docker.from_env()
 
@@ -580,6 +581,7 @@ def _run_container(
 
     ports = {"8080/tcp": port}
     if protocol == Protocol.UPI_V1:
+        env_vars["CARAML_PROTOCOL"] = protocol.value
         ports = {"9000/tcp": port}
 
     try:

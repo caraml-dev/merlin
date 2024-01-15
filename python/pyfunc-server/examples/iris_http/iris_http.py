@@ -69,7 +69,7 @@ if __name__ == "__main__":
         model_instance=IrisModel(),
         conda_env="env.yaml",
         artifacts={
-            "xgb_model": "models/model_1.bst",
-            "sklearn_model": "models/model_2.joblib",
+            "xgb_model": XGB_PATH,
+            "sklearn_model": SKLEARN_PATH,
         },
     )
