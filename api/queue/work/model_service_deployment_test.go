@@ -127,6 +127,7 @@ func TestExecuteDeployment(t *testing.T) {
 				ResourceRequest: env.DefaultResourceRequest,
 				VersionID:       version.ID,
 				Namespace:       project.Name,
+				Status:          models.EndpointPending,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
 				mockStorage := &mocks.DeploymentStorage{}
@@ -137,7 +138,6 @@ func TestExecuteDeployment(t *testing.T) {
 						VersionID:      version.ID,
 						Status:         models.EndpointPending,
 					}, nil)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -601,11 +601,16 @@ func TestExecuteDeployment(t *testing.T) {
 				assert.Equal(t, env.DefaultResourceRequest, savedEndpoint.ResourceRequest)
 			}
 
+			mockDeploymentStorage.AssertNumberOfCalls(t, "GetLatestDeployment", 1)
 			if tt.deployErr != nil {
 				mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 2)
 				assert.Equal(t, models.EndpointFailed, savedEndpoint.Status)
 			} else {
-				mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 1)
+				if tt.endpoint.Status == models.EndpointPending {
+					mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 0)
+				} else {
+					mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 1)
+				}
 				mockDeploymentStorage.AssertNumberOfCalls(t, "OnDeploymentSuccess", 1)
 				assert.Equal(t, models.EndpointRunning, savedEndpoint.Status)
 				assert.Equal(t, url, savedEndpoint.URL)
@@ -999,8 +1004,14 @@ func TestExecuteRedeployment(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.expectedEndpointStatus, savedEndpoint.Status)
+
+			mockDeploymentStorage.AssertNumberOfCalls(t, "GetLatestDeployment", 1)
 			if tt.deployErr == nil {
-				mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 1)
+				if tt.endpoint.Status == models.EndpointPending {
+					mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 0)
+				} else {
+					mockDeploymentStorage.AssertNumberOfCalls(t, "Save", 1)
+				}
 				mockDeploymentStorage.AssertNumberOfCalls(t, "OnDeploymentSuccess", 1)
 				assert.Equal(t, url, savedEndpoint.URL)
 				assert.Equal(t, modelSvcName, savedEndpoint.InferenceServiceName)
