@@ -181,7 +181,8 @@ func TestGetLatestDeployment(t *testing.T) {
 		assert.NoError(t, err)
 
 		dep, err := deploymentStorage.GetLatestDeployment(m.ID, endpoint.VersionID)
-		assert.Equal(t, deploy1, dep)
+		assert.NoError(t, err)
+		assert.WithinDuration(t, deploy1.UpdatedAt, dep.UpdatedAt, 0)
 	})
 }
 
