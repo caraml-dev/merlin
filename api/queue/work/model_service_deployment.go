@@ -92,29 +92,35 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		isRedeployment = true
 	}
 
-	log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
-
 	// check if the latest deployment entry in the deployments table is in the 'pending' state (aborted workflow)
 	deployment, err := depl.DeploymentStorage.GetLatestDeployment(model.ID, endpoint.VersionID)
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Errorf("failed retrieving from db the latest deployment with the error: %v", err)
-			return err
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Errorf("failed retrieving from db the latest deployment with the error: %v", err)
+		return err
+	}
+
+	// create a new entry if the there is no deployment entry found or if it is in the 'pending' state
+	if deployment == nil || deployment.Status != models.EndpointPending {
+		log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
+		deployment, err = depl.DeploymentStorage.Save(&models.Deployment{
+			ProjectID:         model.ProjectID,
+			VersionModelID:    model.ID,
+			VersionID:         endpoint.VersionID,
+			VersionEndpointID: endpoint.ID,
+			Status:            models.EndpointPending,
+		})
+		// record the deployment process
+		if err != nil {
+			log.Warnf("unable to create deployment history", err)
 		}
-		// do not create a new entry if the last deployment entry in the db is 'pending'
-		if deployment.Status != models.EndpointPending {
-			deployment, err = depl.DeploymentStorage.Save(&models.Deployment{
-				ProjectID:         model.ProjectID,
-				VersionModelID:    model.ID,
-				VersionID:         endpoint.VersionID,
-				VersionEndpointID: endpoint.ID,
-				Status:            models.EndpointPending,
-			})
-			// record the deployment process
-			if err != nil {
-				log.Warnf("unable to create deployment history", err)
-			}
-		}
+	} else {
+		log.Infof(
+			"found existing deployment in the pending state for model %s version %s revision %s with endpoint id: %s",
+			model.Name,
+			endpoint.VersionID,
+			endpoint.RevisionID,
+			endpoint.ID,
+		)
 	}
 
 	defer func() {
