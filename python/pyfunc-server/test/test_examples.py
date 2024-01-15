@@ -7,7 +7,7 @@ from multiprocessing import Process
 import merlin
 import pytest
 import requests
-from examples.iris.iris import IrisModel
+from examples.iris_http.iris_http import IrisModel
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 
