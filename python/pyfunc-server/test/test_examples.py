@@ -60,8 +60,8 @@ def _get_local_endpoint(model_full_name, port):
 
 @pytest.mark.local_server_test
 def test_examples_iris():
-    XGB_PATH = os.path.join("examples/iris/models/", "model_1.bst")
-    SKLEARN_PATH = os.path.join("examples/iris/models/", "model_2.joblib")
+    XGB_PATH = os.path.join("examples/iris_http/models/", "model_1.bst")
+    SKLEARN_PATH = os.path.join("examples/iris_http/models/", "model_2.joblib")
 
     port = _get_free_port()
 
@@ -69,7 +69,7 @@ def test_examples_iris():
         target=merlin.run_pyfunc_model,
         kwargs={
             "model_instance": IrisModel(),
-            "conda_env": "examples/iris/env.yaml",
+            "conda_env": "examples/iris_http/env.yaml",
             "code_dir": ["examples"],
             "artifacts": {
                 "xgb_model": XGB_PATH,
