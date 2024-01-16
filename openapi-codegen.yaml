@@ -1,9 +1,0 @@
-projectName: merlin-sdk
-packageName: client
-generateSourceCodeOnly: true
-# Global Properties
-globalProperties:
-  apiTests: false
-  modelTests: false
-  apiDocs: false
-  modelDocs: false
