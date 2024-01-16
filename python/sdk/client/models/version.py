@@ -20,9 +20,8 @@ import json
 from datetime import datetime
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from pydantic import BaseModel, StrictInt, StrictStr
-from pydantic import Field
 from client.models.custom_predictor import CustomPredictor
-from client.models.inference_schema import InferenceSchema
+from client.models.model_schema import ModelSchema
 from client.models.version_endpoint import VersionEndpoint
 try:
     from typing import Self
@@ -45,8 +44,8 @@ class Version(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     python_version: Optional[StrictStr] = None
-    var_schema: Optional[InferenceSchema] = Field(default=None, alias="schema")
-    __properties: ClassVar[List[str]] = ["id", "model_id", "mlflow_run_id", "mlflow_url", "artifact_uri", "endpoints", "properties", "labels", "custom_predictor", "created_at", "updated_at", "python_version", "schema"]
+    model_schema: Optional[ModelSchema] = None
+    __properties: ClassVar[List[str]] = ["id", "model_id", "mlflow_run_id", "mlflow_url", "artifact_uri", "endpoints", "properties", "labels", "custom_predictor", "created_at", "updated_at", "python_version", "model_schema"]
 
     model_config = {
         "populate_by_name": True,
@@ -94,9 +93,9 @@ class Version(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of custom_predictor
         if self.custom_predictor:
             _dict['custom_predictor'] = self.custom_predictor.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of var_schema
-        if self.var_schema:
-            _dict['schema'] = self.var_schema.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of model_schema
+        if self.model_schema:
+            _dict['model_schema'] = self.model_schema.to_dict()
         return _dict
 
     @classmethod
@@ -121,7 +120,7 @@ class Version(BaseModel):
             "created_at": obj.get("created_at"),
             "updated_at": obj.get("updated_at"),
             "python_version": obj.get("python_version"),
-            "schema": InferenceSchema.from_dict(obj.get("schema")) if obj.get("schema") is not None else None
+            "model_schema": ModelSchema.from_dict(obj.get("model_schema")) if obj.get("model_schema") is not None else None
         })
         return _obj
 

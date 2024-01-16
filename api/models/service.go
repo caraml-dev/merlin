@@ -53,6 +53,7 @@ type Service struct {
 	// CurrentIsvcName is the name of the current running/serving InferenceService's revision
 	CurrentIsvcName           string
 	EnabledModelObservability bool
+	ModelSchema               *ModelSchema
 }
 
 func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
@@ -81,6 +82,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		Protocol:                  endpoint.Protocol,
 		CurrentIsvcName:           endpoint.InferenceServiceName,
 		EnabledModelObservability: endpoint.EnableModelObservability,
+		ModelSchema:               version.ModelSchema,
 	}
 }
 

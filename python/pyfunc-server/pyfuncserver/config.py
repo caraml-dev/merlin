@@ -5,6 +5,7 @@ from typing import Optional
 
 from merlin.protocol import Protocol
 from dataclasses import dataclass
+from merlin.model_schema import ModelSchema
 
 # Following environment variables are expected to be populated by Merlin
 HTTP_PORT = ("CARAML_HTTP_PORT", 8080)
@@ -13,6 +14,7 @@ MODEL_VERSION = ("CARAML_MODEL_VERSION", "1")
 MODEL_FULL_NAME = ("CARAML_MODEL_FULL_NAME", "model-1")
 PROJECT = ("CARAML_PROJECT", "project")
 PROTOCOL = ("CARAML_PROTOCOL", "HTTP_JSON")
+MODEL_SCHEMA = "CARAML_MODEL_SCHEMA"
 
 WORKERS = ("WORKERS", 1)
 GRPC_PORT = ("CARAML_GRPC_PORT", 9000)
@@ -31,6 +33,7 @@ PUBLISHER_KAFKA_ACKS = ("PUBLISHER_KAFKA_ACKS", 0)
 PUBLISHER_KAFKA_CONFIG = ("PUBLISHER_KAFKA_CONFIG", "{}")
 PUBLISHER_SAMPLING_RATIO = ("PUBLISHER_SAMPLING_RATIO", 0.01)
 PUBLISHER_ENABLED = ("PUBLISHER_ENABLED", "false")
+
 
 @dataclass
 class ModelManifest:
@@ -102,6 +105,7 @@ class Config:
                                         push_url,
                                         push_interval)
         
+        self.model_schema = ModelSchema.from_json(os.getenv(MODEL_SCHEMA))
         # Publisher
         self.publisher = None
         publisher_enabled = str_to_bool(os.getenv(*PUBLISHER_ENABLED))

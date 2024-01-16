@@ -22,12 +22,12 @@ class ResourceRequest:
 
     def __init__(
         self,
-        min_replica: int = None,
-        max_replica: int = None,
-        cpu_request: str = None,
-        memory_request: str = None,
-        gpu_request: str = None,
-        gpu_name: str = None,
+        min_replica: Optional[int] = None,
+        max_replica: Optional[int] = None,
+        cpu_request: Optional[str] = None,
+        memory_request: Optional[str] = None,
+        gpu_request: Optional[str] = None,
+        gpu_name: Optional[str] = None,
     ):
         self._min_replica = min_replica
         self._max_replica = max_replica

@@ -56,7 +56,6 @@ from client.models.environment import Environment
 from client.models.file_format import FileFormat
 from client.models.gpu_config import GPUConfig
 from client.models.gpu_toleration import GPUToleration
-from client.models.inference_schema import InferenceSchema
 from client.models.label import Label
 from client.models.logger import Logger
 from client.models.logger_config import LoggerConfig
@@ -71,6 +70,7 @@ from client.models.model_endpoint_rule import ModelEndpointRule
 from client.models.model_endpoint_rule_destination import ModelEndpointRuleDestination
 from client.models.model_prediction_config import ModelPredictionConfig
 from client.models.model_prediction_output import ModelPredictionOutput
+from client.models.model_schema import ModelSchema
 from client.models.operation_tracing import OperationTracing
 from client.models.pipeline_tracing_inner import PipelineTracingInner
 from client.models.prediction_job import PredictionJob
@@ -86,12 +86,15 @@ from client.models.prediction_logger_config import PredictionLoggerConfig
 from client.models.project import Project
 from client.models.protocol import Protocol
 from client.models.ranking_output import RankingOutput
+from client.models.regression_output import RegressionOutput
 from client.models.resource_request import ResourceRequest
 from client.models.result_type import ResultType
 from client.models.save_mode import SaveMode
+from client.models.schema_spec import SchemaSpec
 from client.models.secret import Secret
 from client.models.standard_transformer_simulation_request import StandardTransformerSimulationRequest
 from client.models.standard_transformer_simulation_response import StandardTransformerSimulationResponse
 from client.models.transformer import Transformer
+from client.models.value_type import ValueType
 from client.models.version import Version
 from client.models.version_endpoint import VersionEndpoint

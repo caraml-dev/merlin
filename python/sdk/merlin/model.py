@@ -67,6 +67,8 @@ from merlin.validation import validate_model_dir
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
+from merlin.version import VERSION
+from merlin.model_schema import ModelSchema
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -442,7 +444,7 @@ class Model:
             result.append(ModelVersion(v, self, self._api_client))
         return result, next_cursor
 
-    def new_model_version(self, labels: Dict[str, str] = None) -> "ModelVersion":
+    def new_model_version(self, labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None) -> "ModelVersion":
         """
         Create a new version of this model
 
@@ -451,8 +453,9 @@ class Model:
         """
         version_api = VersionApi(self._api_client)
         python_version = f"{version_info.major}.{version_info.minor}.*"  # capture user's python version
+        model_schema_payload = model_schema.to_client_model_schema() if model_schema is not None else None
         v = version_api.models_model_id_versions_post(
-            int(self.id), body={"labels": labels, "python_version": python_version}
+            int(self.id), body={"labels": labels, "python_version": python_version, "model_schema": model_schema_payload}
         )
         return ModelVersion(v, self, self._api_client)
 
@@ -694,7 +697,8 @@ class ModelVersion:
         self._labels = version.labels
         self._custom_predictor = version.custom_predictor
         self._python_version = version.python_version
-        mlflow.set_tracking_uri(model.project.mlflow_tracking_url)  # type: ignore  # noqa
+        self._model_schema = ModelSchema.from_model_schema_response(version.model_schema)
+        mlflow.set_tracking_uri(model.project.mlflow_tracking_url) # type: ignore  # noqa
 
     @property
     def id(self) -> int:
@@ -1129,10 +1133,10 @@ class ModelVersion:
         if resource_request is not None:
             resource_request.validate()
             target_resource_request = client.ResourceRequest(
-                resource_request.min_replica,
-                resource_request.max_replica,
-                resource_request.cpu_request,
-                resource_request.memory_request,
+                min_replica=resource_request.min_replica,
+                max_replica=resource_request.max_replica,
+                cpu_request=resource_request.cpu_request,
+                memory_request=resource_request.memory_request,
             )
             if (
                 resource_request.gpu_request is not None
@@ -1331,10 +1335,10 @@ class ModelVersion:
 
         if job_config.image_builder_resource_request is not None:
             cfg.image_builder_resource_request = client.ResourceRequest(
-                0,
-                0,
-                job_config.image_builder_resource_request.cpu_request,
-                job_config.image_builder_resource_request.memory_request,
+                min_replica=0,
+                max_replica=0,
+                cpu_request=job_config.image_builder_resource_request.cpu_request,
+                memory_request=job_config.image_builder_resource_request.memory_request,
             )
 
         target_env_vars = []
@@ -1346,7 +1350,7 @@ class ModelVersion:
 
             if len(job_config.env_vars) > 0:
                 for name, value in job_config.env_vars.items():
-                    target_env_vars.append(client.EnvVar(name, value))
+                    target_env_vars.append(client.EnvVar(name=name, value=value))
                 cfg.env_vars = target_env_vars
 
         req = client.PredictionJob(
@@ -1584,7 +1588,7 @@ class ModelVersion:
     ) -> client.ResourceRequest:
         resource_request = None
         for env in env_list:
-            if env.name == env_name:
+            if env.name == env_name and env.default_resource_request is not None:
                 resource_request = ResourceRequest(
                     env.default_resource_request.min_replica,
                     env.default_resource_request.max_replica,
@@ -1643,11 +1647,10 @@ class ModelVersion:
         else:
             resource_request.validate()
             target_resource_request = client.ResourceRequest(
-                resource_request.min_replica,
-                resource_request.max_replica,
-                resource_request.cpu_request,
-                resource_request.memory_request,
-            )
+                min_replica=resource_request.min_replica, 
+                max_replica=resource_request.max_replica,
+                cpu_request=resource_request.cpu_request, 
+                memory_request=resource_request.memory_request)
 
         target_env_vars: List[client.models.Environment] = []
         if transformer.env_vars is not None:

@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Union
 from pydantic import BaseModel, StrictFloat, StrictInt
 from client.models.metrics_type import MetricsType
 try:
@@ -30,8 +30,8 @@ class AutoscalingPolicy(BaseModel):
     """
     AutoscalingPolicy
     """ # noqa: E501
-    metrics_type: Optional[MetricsType] = None
-    target_value: Optional[Union[StrictFloat, StrictInt]] = None
+    metrics_type: MetricsType
+    target_value: Union[StrictFloat, StrictInt]
     __properties: ClassVar[List[str]] = ["metrics_type", "target_value"]
 
     model_config = {

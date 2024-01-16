@@ -30,6 +30,8 @@ type Version struct {
 	MlflowURL       string             `json:"mlflow_url" gorm:"-"`
 	ArtifactURI     string             `json:"artifact_uri" gorm:"artifact_uri"`
 	Endpoints       []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;references:ID,ModelID;"`
+	ModelSchemaID   *ID                `json:"-"`
+	ModelSchema     *ModelSchema       `json:"model_schema" gorm:"foreignkey:ModelSchemaID;"`
 	Properties      KV                 `json:"properties" gorm:"properties"`
 	Labels          KV                 `json:"labels" gorm:"labels"`
 	PythonVersion   string             `json:"python_version" gorm:"python_version"`

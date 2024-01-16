@@ -15,6 +15,8 @@
 package resource
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -196,6 +198,49 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 		},
 		Protocol:                  protocol.HttpJson,
 		EnabledModelObservability: true,
+	}
+
+	modelSvcWithSchema := &models.Service{
+		Name:         "my-model-1",
+		ModelName:    "my-model",
+		Namespace:    project.Name,
+		ModelVersion: "1",
+		ArtifactURI:  "gs://my-artifacet",
+		Metadata: models.Metadata{
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
+			Labels: mlp.Labels{
+				{
+					Key:   "sample",
+					Value: "true",
+				},
+			},
+		},
+		Protocol:                  protocol.HttpJson,
+		EnabledModelObservability: true,
+		ModelSchema: &models.ModelSchema{
+			ID:      models.ID(1),
+			ModelID: models.ID(1),
+			Spec: &models.SchemaSpec{
+				PredictionIDColumn: "prediction_id",
+				TagColumns:         []string{"tags"},
+				FeatureTypes: map[string]models.ValueType{
+					"featureA": models.Float64,
+					"featureB": models.Int64,
+					"featureC": models.String,
+					"featureD": models.Boolean,
+				},
+				ModelPredictionOutput: &models.ModelPredictionOutput{
+					RankingOutput: &models.RankingOutput{
+						PredictionGroudIDColumn: "session_id",
+						RankScoreColumn:         "score",
+						RelevanceScoreColumn:    "relevance_score",
+					},
+				},
+			},
+		},
 	}
 
 	queueResourcePercentage := "2"
@@ -802,6 +847,27 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:                  modelSvc.Metadata,
 				Protocol:                  protocol.HttpJson,
 				EnabledModelObservability: true,
+				ModelSchema: &models.ModelSchema{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						TagColumns:         []string{"tags"},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.String,
+							"featureD": models.Boolean,
+						},
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+							},
+						},
+					},
+				},
 			},
 			resourcePercentage: queueResourcePercentage,
 			deploymentScale:    defaultDeploymentScale,
@@ -833,8 +899,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								{
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
-									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
-										createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig)).ToKubernetesEnvVars(),
+									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson),
+										createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig)).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 								},
@@ -4165,6 +4231,17 @@ func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue p
 			Name:  envProject,
 			Value: svc.Namespace,
 		},
+	}
+
+	if svc.ModelSchema != nil {
+		compactedfJsonBuffer := new(bytes.Buffer)
+		marshalledSchema, _ := json.Marshal(svc.ModelSchema)
+		if err := json.Compact(compactedfJsonBuffer, []byte(marshalledSchema)); err == nil {
+			envVars = append(envVars, models.EnvVar{
+				Name:  envModelSchema,
+				Value: compactedfJsonBuffer.String(),
+			})
+		}
 	}
 	return envVars
 }

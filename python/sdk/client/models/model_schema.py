@@ -18,22 +18,22 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictInt, StrictStr
-from client.models.model_prediction_output import ModelPredictionOutput
+from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, StrictInt
+from client.models.schema_spec import SchemaSpec
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class InferenceSchema(BaseModel):
+class ModelSchema(BaseModel):
     """
-    InferenceSchema
+    ModelSchema
     """ # noqa: E501
-    id: Optional[StrictInt] = None
-    prediction_id_column: Optional[StrictStr] = None
-    model_prediction_output: Optional[ModelPredictionOutput] = None
-    __properties: ClassVar[List[str]] = ["id", "prediction_id_column", "model_prediction_output"]
+    id: StrictInt
+    model_id: StrictInt
+    spec: SchemaSpec
+    __properties: ClassVar[List[str]] = ["id", "model_id", "spec"]
 
     model_config = {
         "populate_by_name": True,
@@ -52,7 +52,7 @@ class InferenceSchema(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of InferenceSchema from a JSON string"""
+        """Create an instance of ModelSchema from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -71,14 +71,14 @@ class InferenceSchema(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of model_prediction_output
-        if self.model_prediction_output:
-            _dict['model_prediction_output'] = self.model_prediction_output.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of spec
+        if self.spec:
+            _dict['spec'] = self.spec.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of InferenceSchema from a dict"""
+        """Create an instance of ModelSchema from a dict"""
         if obj is None:
             return None
 
@@ -87,8 +87,8 @@ class InferenceSchema(BaseModel):
 
         _obj = cls.model_validate({
             "id": obj.get("id"),
-            "prediction_id_column": obj.get("prediction_id_column"),
-            "model_prediction_output": ModelPredictionOutput.from_dict(obj.get("model_prediction_output")) if obj.get("model_prediction_output") is not None else None
+            "model_id": obj.get("model_id"),
+            "spec": SchemaSpec.from_dict(obj.get("spec")) if obj.get("spec") is not None else None
         })
         return _obj
 

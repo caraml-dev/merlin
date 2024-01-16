@@ -29,7 +29,7 @@ class PredictionLoggerConfig(BaseModel):
     """
     PredictionLoggerConfig
     """ # noqa: E501
-    enabled: Optional[StrictBool] = None
+    enabled: StrictBool
     raw_features_table: Optional[StrictStr] = None
     entities_table: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["enabled", "raw_features_table", "entities_table"]

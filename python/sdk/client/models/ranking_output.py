@@ -29,9 +29,10 @@ class RankingOutput(BaseModel):
     """
     RankingOutput
     """ # noqa: E501
-    prediction_score_column: Optional[StrictStr] = None
-    actual_label_column: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_label_column"]
+    rank_score_column: StrictStr
+    prediction_group_id_column: StrictStr
+    relevance_score_column: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["rank_score_column", "prediction_group_id_column", "relevance_score_column"]
 
     model_config = {
         "populate_by_name": True,
@@ -81,8 +82,9 @@ class RankingOutput(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "prediction_score_column": obj.get("prediction_score_column"),
-            "actual_label_column": obj.get("actual_label_column")
+            "rank_score_column": obj.get("rank_score_column"),
+            "prediction_group_id_column": obj.get("prediction_group_id_column"),
+            "relevance_score_column": obj.get("relevance_score_column")
         })
         return _obj
 

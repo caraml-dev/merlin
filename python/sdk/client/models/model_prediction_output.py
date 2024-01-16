@@ -22,6 +22,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel, Field, StrictStr, ValidationError, field_validator
 from client.models.binary_classification_output import BinaryClassificationOutput
 from client.models.ranking_output import RankingOutput
+from client.models.regression_output import RegressionOutput
 from typing import Union, Any, List, TYPE_CHECKING, Optional, Dict
 from typing_extensions import Literal
 from pydantic import StrictStr, Field
@@ -30,7 +31,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-MODELPREDICTIONOUTPUT_ONE_OF_SCHEMAS = ["BinaryClassificationOutput", "RankingOutput"]
+MODELPREDICTIONOUTPUT_ONE_OF_SCHEMAS = ["BinaryClassificationOutput", "RankingOutput", "RegressionOutput"]
 
 class ModelPredictionOutput(BaseModel):
     """
@@ -40,8 +41,10 @@ class ModelPredictionOutput(BaseModel):
     oneof_schema_1_validator: Optional[BinaryClassificationOutput] = None
     # data type: RankingOutput
     oneof_schema_2_validator: Optional[RankingOutput] = None
-    actual_instance: Optional[Union[BinaryClassificationOutput, RankingOutput]] = None
-    one_of_schemas: List[str] = Literal["BinaryClassificationOutput", "RankingOutput"]
+    # data type: RegressionOutput
+    oneof_schema_3_validator: Optional[RegressionOutput] = None
+    actual_instance: Optional[Union[BinaryClassificationOutput, RankingOutput, RegressionOutput]] = None
+    one_of_schemas: List[str] = Literal["BinaryClassificationOutput", "RankingOutput", "RegressionOutput"]
 
     model_config = {
         "validate_assignment": True
@@ -76,12 +79,17 @@ class ModelPredictionOutput(BaseModel):
             error_messages.append(f"Error! Input type `{type(v)}` is not `RankingOutput`")
         else:
             match += 1
+        # validate data type: RegressionOutput
+        if not isinstance(v, RegressionOutput):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `RegressionOutput`")
+        else:
+            match += 1
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when setting `actual_instance` in ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when setting `actual_instance` in ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput, RegressionOutput. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when setting `actual_instance` in ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when setting `actual_instance` in ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput, RegressionOutput. Details: " + ", ".join(error_messages))
         else:
             return v
 
@@ -108,13 +116,19 @@ class ModelPredictionOutput(BaseModel):
             match += 1
         except (ValidationError, ValueError) as e:
             error_messages.append(str(e))
+        # deserialize data into RegressionOutput
+        try:
+            instance.actual_instance = RegressionOutput.from_json(json_str)
+            match += 1
+        except (ValidationError, ValueError) as e:
+            error_messages.append(str(e))
 
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when deserializing the JSON string into ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when deserializing the JSON string into ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput, RegressionOutput. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when deserializing the JSON string into ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when deserializing the JSON string into ModelPredictionOutput with oneOf schemas: BinaryClassificationOutput, RankingOutput, RegressionOutput. Details: " + ", ".join(error_messages))
         else:
             return instance
 

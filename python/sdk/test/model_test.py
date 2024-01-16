@@ -31,6 +31,7 @@ from merlin.batch.source import BigQuerySource
 from merlin.endpoint import VersionEndpoint
 from merlin.model import ModelType
 from merlin.protocol import Protocol
+from merlin.model_schema import ModelSchema, InferenceSchema, ValueType, RankingOutput
 from urllib3_mock import Responses
 
 responses = Responses("requests.packages.urllib3")
@@ -1316,6 +1317,48 @@ class TestModel:
     v2 = cl.Version(id=2, model_id=1)
     v3 = cl.Version(id=3, model_id=1, labels={"model": "T-800"}, python_version="3.7.*")
 
+    schema = client.ModelSchema(
+                id=3,
+                model_id=1,
+                spec=client.SchemaSpec(
+                    prediction_id_column="prediction_id",
+                    tag_columns=["tags", "extras"],
+                    feature_types={
+                        "featureA": client.ValueType.FLOAT64,
+                        "featureB": client.ValueType.INT64,
+                        "featureC": client.ValueType.BOOLEAN,
+                        "featureD": client.ValueType.STRING
+                    },
+                    model_prediction_output=client.ModelPredictionOutput(
+                        client.RankingOutput(
+                            rank_score_column="score",
+                            prediction_group_id_column="session_id",
+                            relevance_score_column="relevance_score"
+                        )
+                    ) 
+                )
+            )
+    merlin_model_schema = ModelSchema(
+                id=3,
+                model_id=1,
+                spec=InferenceSchema(
+                    prediction_id_column="prediction_id",
+                    tag_columns=["tags", "extras"],
+                    feature_types={
+                        "featureA": ValueType.FLOAT64,
+                        "featureB": ValueType.INT64,
+                        "featureC": ValueType.BOOLEAN,
+                        "featureD": ValueType.STRING
+                    },
+                    model_prediction_output=RankingOutput(
+                        rank_score_column="score",
+                        prediction_group_id_column="session_id",
+                        relevance_score_column="relevance_score"
+                    )
+                ),
+            )
+    v4 = cl.Version(id=4, model_id=1, labels={"model": "T-800"}, python_version="3.7.*", model_schema=schema)
+
     @responses.activate
     def test_list_version(self, model):
         responses.add(
@@ -1375,16 +1418,17 @@ class TestModel:
         responses.add(
             "POST",
             "/v1/models/1/versions",
-            body=json.dumps(self.v3.to_dict()),
+            body=json.dumps(self.v4.to_dict()),
             status=201,
             content_type="application/json",
         )
 
-        mv = model.new_model_version(labels={"model": "T-800"})
+        mv = model.new_model_version(labels={"model": "T-800"}, model_schema=self.merlin_model_schema)
         assert mv._python_version == "3.7.*"
-        assert mv._id == 3
+        assert mv._id == 4
         assert mv._model._id == 1
         assert mv._labels == {"model": "T-800"}
+        assert mv._model_schema == self.merlin_model_schema
 
     @responses.activate
     def test_serve_traffic(self, model):

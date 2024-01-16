@@ -44,13 +44,13 @@ class VersionEndpoint:
             self._protocol = Protocol(endpoint.protocol)
 
         self._url = endpoint.url
-        if self._protocol == Protocol.HTTP_JSON and ":predict" not in endpoint.url:
+        if self._protocol == Protocol.HTTP_JSON and endpoint.url is not None and ":predict" not in endpoint.url:
             self._url = f"{endpoint.url}:predict"
 
         self._status = Status(endpoint.status)
         self._id = endpoint.id
         self._environment_name = endpoint.environment_name
-        self._environment = Environment(endpoint.environment)
+        self._environment = Environment(endpoint.environment) if endpoint.environment is not None else None
         self._env_vars = endpoint.env_vars
         self._logger = Logger.from_logger_response(endpoint.logger)
         self._resource_request = endpoint.resource_request
@@ -66,12 +66,18 @@ class VersionEndpoint:
             self._autoscaling_policy = AutoscalingPolicy(metrics_type=MetricsType(endpoint.autoscaling_policy.metrics_type),
                                                          target_value=endpoint.autoscaling_policy.target_value)
 
-        if endpoint.transformer is not None:
+        transformer = endpoint.transformer
+        if transformer is not None:
+            image = transformer.image if transformer.image is not None else ""
             self._transformer = Transformer(
-                endpoint.transformer.image, id=endpoint.transformer.id,
-                enabled=endpoint.transformer.enabled, command=endpoint.transformer.command,
-                args=endpoint.transformer.args, transformer_type=endpoint.transformer.transformer_type,
-                resource_request=endpoint.transformer.resource_request, env_vars=endpoint.transformer.env_vars,
+                image, 
+                id=transformer.id if transformer.id is not None else "",
+                enabled=transformer.enabled if transformer.enabled is not None else False, 
+                command=transformer.command,
+                args=transformer.args, 
+                transformer_type=transformer.transformer_type,
+                resource_request=transformer.resource_request, 
+                env_vars=transformer.env_vars,
             )
             
         if log_url is not None:

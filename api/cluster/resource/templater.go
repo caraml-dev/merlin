@@ -58,6 +58,7 @@ const (
 	envModelName            = "CARAML_MODEL_NAME"
 	envModelVersion         = "CARAML_MODEL_VERSION"
 	envModelFullName        = "CARAML_MODEL_FULL_NAME"
+	envModelSchema          = "CARAML_MODEL_SCHEMA"
 	envProject              = "CARAML_PROJECT"
 	envPredictorHost        = "CARAML_PREDICTOR_HOST"
 	envArtifactLocation     = "CARAML_ARTIFACT_LOCATION"
@@ -151,7 +152,10 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		Annotations: annotations,
 	}
 
-	predictorSpec := t.createPredictorSpec(modelService)
+	predictorSpec, err := t.createPredictorSpec(modelService)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
+	}
 	predictorSpec.TopologySpreadConstraints, err = t.createNewInferenceServiceTopologySpreadConstraints(
 		modelService,
 		kservev1beta1.PredictorComponent,
@@ -184,7 +188,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	return inferenceService, nil
 }
 
-func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) kservev1beta1.PredictorSpec {
+func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) (kservev1beta1.PredictorSpec, error) {
 	envVars := modelService.EnvVars
 
 	// Set cpu limit and memory limit to be 2x of the requests
@@ -297,7 +301,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 			},
 		}
 	case models.ModelTypePyFunc, models.ModelTypePyFuncV3:
-		envVars := models.MergeEnvVars(modelService.EnvVars, createPyFuncDefaultEnvVars(modelService))
+		pyfuncDefaultEnv, err := createPyFuncDefaultEnvVars(modelService)
+		if err != nil {
+			return kservev1beta1.PredictorSpec{}, err
+		}
+		envVars := models.MergeEnvVars(modelService.EnvVars, pyfuncDefaultEnv)
+
 		if modelService.Protocol == protocol.UpiV1 {
 			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
 		}
@@ -348,7 +357,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	predictorSpec.MaxReplicas = modelService.ResourceRequest.MaxReplica
 	predictorSpec.Logger = loggerSpec
 
-	return predictorSpec
+	return predictorSpec, nil
 }
 
 func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer) *kservev1beta1.TransformerSpec {
@@ -781,7 +790,8 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 }
 
 // createPyFuncDefaultEnvVars return default env vars for Pyfunc model.
-func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
+func createPyFuncDefaultEnvVars(svc *models.Service) (models.EnvVars, error) {
+
 	envVars := models.EnvVars{
 		models.EnvVar{
 			Name:  envPyFuncModelName,
@@ -816,7 +826,22 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 			Value: svc.Namespace,
 		},
 	}
-	return envVars
+
+	if svc.ModelSchema != nil {
+		compactedfJsonBuffer := new(bytes.Buffer)
+		marshalledSchema, err := json.Marshal(svc.ModelSchema)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Compact(compactedfJsonBuffer, []byte(marshalledSchema)); err == nil {
+			envVars = append(envVars, models.EnvVar{
+				Name:  envModelSchema,
+				Value: compactedfJsonBuffer.String(),
+			})
+		}
+	}
+
+	return envVars, nil
 }
 
 func (t *InferenceServiceTemplater) applyDefaults(service *models.Service) {

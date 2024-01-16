@@ -40,10 +40,10 @@ class Transformer:
         image: str,
         id: str = "",
         enabled: bool = True,
-        command: str = None,
-        args: str = None,
-        resource_request: ResourceRequest = None,
-        env_vars: Dict[str, str] = None,
+        command: Optional[str] = None,
+        args: Optional[str] = None,
+        resource_request: Optional[ResourceRequest] = None,
+        env_vars: Optional[Dict[str, str]] = None,
         transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER,
     ):
         self._id = id

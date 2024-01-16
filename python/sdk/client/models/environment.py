@@ -34,7 +34,7 @@ class Environment(BaseModel):
     """ # noqa: E501
     id: Optional[StrictInt] = None
     name: StrictStr
-    cluster: Optional[StrictStr] = None
+    cluster: StrictStr
     is_default: Optional[StrictBool] = None
     region: Optional[StrictStr] = None
     gcp_project: Optional[StrictStr] = None

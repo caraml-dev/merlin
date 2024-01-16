@@ -77,7 +77,7 @@ class Logger:
         self._prediction = prediction
 
     @classmethod
-    def from_logger_response(cls, response: client.Logger):
+    def from_logger_response(cls, response: Optional[client.Logger]):
         if response is None:
             return Logger()
         model_config = None
@@ -88,10 +88,13 @@ class Logger:
             transformer_config = LoggerConfig(enabled=response.transformer.enabled,
                                               mode=cls._get_logger_mode_from_api_response(response.transformer.mode))
         prediction_config = None
-        if response.prediction is not None:
-            prediction_config = PredictionLoggerConfig(enabled=response.prediction.enabled,
-                                                              raw_features_table=response.prediction.raw_features_table,
-                                                              entities_table=response.prediction.entities_table)
+        prediction_logger = response.prediction
+        if prediction_logger is not None:
+            raw_features_table = prediction_logger.raw_features_table if prediction_logger.raw_features_table is not None else ""
+            entities_table = prediction_logger.entities_table if prediction_logger.entities_table is not None else ""
+            prediction_config = PredictionLoggerConfig(enabled=prediction_logger.enabled,
+                                                              raw_features_table=raw_features_table,
+                                                              entities_table=entities_table)
 
         return Logger(model=model_config, transformer=transformer_config, prediction=prediction_config)
 

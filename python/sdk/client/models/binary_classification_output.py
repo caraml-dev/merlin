@@ -29,10 +29,10 @@ class BinaryClassificationOutput(BaseModel):
     """
     BinaryClassificationOutput
     """ # noqa: E501
-    prediction_score_column: Optional[StrictStr] = None
+    prediction_score_column: StrictStr
     actual_label_column: Optional[StrictStr] = None
-    positive_class_label: Optional[StrictStr] = None
-    negative_class_label: Optional[StrictStr] = None
+    positive_class_label: StrictStr
+    negative_class_label: StrictStr
     score_threshold: Optional[Union[StrictFloat, StrictInt]] = None
     __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_label_column", "positive_class_label", "negative_class_label", "score_threshold"]
 

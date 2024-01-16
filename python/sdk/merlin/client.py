@@ -294,5 +294,5 @@ class MerlinClient:
         )
 
         return self._standard_transformer_api.standard_transformer_simulate_post(
-            body=request.to_dict()
+            body=request
         )

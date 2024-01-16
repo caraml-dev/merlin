@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List
 from pydantic import BaseModel, StrictBool
 from client.models.logger_mode import LoggerMode
 try:
@@ -30,8 +30,8 @@ class LoggerConfig(BaseModel):
     """
     LoggerConfig
     """ # noqa: E501
-    enabled: Optional[StrictBool] = None
-    mode: Optional[LoggerMode] = None
+    enabled: StrictBool
+    mode: LoggerMode
     __properties: ClassVar[List[str]] = ["enabled", "mode"]
 
     model_config = {
