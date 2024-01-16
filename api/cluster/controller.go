@@ -227,7 +227,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.Name, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
-			return nil, errors.Wrapf(err, "unable to check status of inference service: %s", s.Name)
+			return nil, errors.Wrapf(err, "unable to check status of inference service: %s", modelService.Name)
 		}
 		s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
 		if err != nil {

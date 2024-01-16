@@ -471,7 +471,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			checkResult: &inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{}, ""),
+				errors.New("error check"),
 			},
 			deployTimeout:   deployTimeout,
 			createPdbResult: &pdbReactor{pdb, nil},
