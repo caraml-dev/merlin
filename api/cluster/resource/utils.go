@@ -20,7 +20,7 @@ func toKNativeAutoscalerMetrics(metricsType autoscaling.MetricsType, metricsValu
 	case autoscaling.MemoryUtilization:
 		// Calculate memory target value based on memory request * metricsValue
 		// ref: https://github.com/krithika369/turing/blob/6cc3b5f673ccf66e9c1351b2d91382315e86f8ce/api/turing/cluster/knative_service.go#L166
-		memoryTarget := scaleQuantity(resourceReq.MemoryRequest, metricsValue/100)
+		memoryTarget := ScaleQuantity(resourceReq.MemoryRequest, metricsValue/100)
 		// Divide value by (1024^2) to convert to Mi
 		return knautoscaling.Memory, fmt.Sprintf("%.0f", float64(memoryTarget.Value())/math.Pow(1024, 2)), nil
 	case autoscaling.RPS:
@@ -55,8 +55,8 @@ func toKServeDeploymentMode(deploymentMode deployment.Mode) (string, error) {
 }
 
 // ref: https://github.com/knative/serving/blob/release-0.14/pkg/reconciler/revision/resources/queue.go#L115
-// scaleQuantity return fraction value of the resourceQuantity
-func scaleQuantity(resourceQuantity resource.Quantity, fraction float64) resource.Quantity {
+// ScaleQuantity return fraction value of the resourceQuantity
+func ScaleQuantity(resourceQuantity resource.Quantity, fraction float64) resource.Quantity {
 	scaledValue := resourceQuantity.Value()
 
 	scaledMilliValue := int64(math.MaxInt64 - 1)

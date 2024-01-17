@@ -25,6 +25,7 @@ import (
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/mitchellh/copystructure"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
@@ -191,21 +192,25 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) (kservev1beta1.PredictorSpec, error) {
 	envVars := modelService.EnvVars
 
-	// Set cpu limit and memory limit to be 2x of the requests
-	cpuLimit := modelService.ResourceRequest.CPURequest.DeepCopy()
-	cpuLimit.Add(modelService.ResourceRequest.CPURequest)
-	memoryLimit := modelService.ResourceRequest.MemoryRequest.DeepCopy()
-	memoryLimit.Add(modelService.ResourceRequest.MemoryRequest)
+	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
+	limits := map[corev1.ResourceName]resource.Quantity{}
+	if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
+		limits[corev1.ResourceCPU] = ScaleQuantity(
+			modelService.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
+		)
+	}
+	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
+		limits[corev1.ResourceMemory] = ScaleQuantity(
+			modelService.ResourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
+		)
+	}
 
 	resources := corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    modelService.ResourceRequest.CPURequest,
 			corev1.ResourceMemory: modelService.ResourceRequest.MemoryRequest,
 		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuLimit,
-			corev1.ResourceMemory: memoryLimit,
-		},
+		Limits: limits,
 	}
 
 	nodeSelector := map[string]string{}
@@ -361,11 +366,18 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 }
 
 func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer) *kservev1beta1.TransformerSpec {
-	// Set cpu limit and memory limit to be 2x of the requests
-	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
-	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
-	memoryLimit := transformer.ResourceRequest.MemoryRequest.DeepCopy()
-	memoryLimit.Add(transformer.ResourceRequest.MemoryRequest)
+	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
+	limits := map[corev1.ResourceName]resource.Quantity{}
+	if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
+		limits[corev1.ResourceCPU] = ScaleQuantity(
+			transformer.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
+		)
+	}
+	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
+		limits[corev1.ResourceMemory] = ScaleQuantity(
+			transformer.ResourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
+		)
+	}
 
 	envVars := transformer.EnvVars
 
@@ -421,10 +433,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 							corev1.ResourceCPU:    transformer.ResourceRequest.CPURequest,
 							corev1.ResourceMemory: transformer.ResourceRequest.MemoryRequest,
 						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    cpuLimit,
-							corev1.ResourceMemory: memoryLimit,
-						},
+						Limits: limits,
 					},
 					Command:       transformerCommand,
 					Args:          transformerArgs,

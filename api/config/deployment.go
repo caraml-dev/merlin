@@ -49,6 +49,9 @@ type DeploymentConfig struct {
 	PyFuncPublisher PyFuncPublisherConfig
 	// Standard Transformer Config
 	StandardTransformer StandardTransformerConfig
+	// Resource properties
+	UserContainerCPULimitRequestFactor    float64
+	UserContainerMemoryLimitRequestFactor float64
 }
 
 type ResourceRequests struct {

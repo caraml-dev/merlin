@@ -58,8 +58,7 @@ var (
 			"nvidia.com/gpu":      resource.MustParse("1"),
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    getLimit(defaultModelResourceRequests.CPURequest),
-			corev1.ResourceMemory: getLimit(defaultModelResourceRequests.MemoryRequest),
+			corev1.ResourceMemory: ScaleQuantity(defaultModelResourceRequests.MemoryRequest, 2),
 			"nvidia.com/gpu":      resource.MustParse("1"),
 		},
 	}
@@ -1568,12 +1567,14 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			deployConfig := &config.DeploymentConfig{
-				DefaultModelResourceRequests:       defaultModelResourceRequests,
-				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
-				QueueResourcePercentage:            tt.resourcePercentage,
-				PyfuncGRPCOptions:                  "{}",
-				GPUs:                               defaultGPUsConfig,
-				StandardTransformer:                standardTransformerConfig,
+				DefaultModelResourceRequests:          defaultModelResourceRequests,
+				DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+				QueueResourcePercentage:               tt.resourcePercentage,
+				PyfuncGRPCOptions:                     "{}",
+				GPUs:                                  defaultGPUsConfig,
+				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
