@@ -30,7 +30,7 @@ class Project(BaseModel):
     """
     Project
     """ # noqa: E501
-    id: Optional[StrictInt] = None
+    id: StrictInt
     name: StrictStr
     mlflow_tracking_url: Optional[StrictStr] = None
     administrators: Optional[List[StrictStr]] = None

@@ -1410,8 +1410,8 @@ class TestModel:
 
         endpoints = model.list_endpoint()
         assert len(endpoints) == 2
-        assert endpoints[0].id == str(mdl_endpoint_1.id)
-        assert endpoints[1].id == str(mdl_endpoint_2.id)
+        assert endpoints[0].id == mdl_endpoint_1.id
+        assert endpoints[1].id == mdl_endpoint_2.id
 
     @responses.activate
     def test_new_model_version(self, model):
@@ -1463,7 +1463,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1494,7 +1494,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1532,7 +1532,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1604,7 +1604,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100})
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1641,7 +1641,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100})
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1665,7 +1665,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_upi.id)
+        assert endpoint.id == mdl_endpoint_upi.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1696,7 +1696,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_upi.id)
+        assert endpoint.id == mdl_endpoint_upi.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
         )

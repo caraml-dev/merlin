@@ -23,5 +23,5 @@ local-server-test: type-check
 	@pipenv run pytest -n 8 -m local_server_test -W ignore
 
 .PHONY: unit-test
-unit-test: #type-check
+unit-test: type-check
 	@pipenv run pytest -n 1 -m "not integration" -W ignore

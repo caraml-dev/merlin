@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 from typing import Optional
 
+import client
 
 class ResourceRequest:
     """
@@ -36,6 +37,17 @@ class ResourceRequest:
         self._gpu_request = gpu_request
         self._gpu_name = gpu_name
         self.validate()
+
+    @classmethod
+    def from_response(cls, response: client.ResourceRequest) -> ResourceRequest:
+        return ResourceRequest(
+            min_replica=response.min_replica,
+            max_replica=response.max_replica,
+            cpu_request=response.cpu_request,
+            memory_request=response.memory_request,
+            gpu_request=response.gpu_request,
+            gpu_name=response.gpu_name
+        )
 
     @property
     def min_replica(self) -> Optional[int]:

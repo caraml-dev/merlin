@@ -30,6 +30,7 @@ from client import (
     VersionApi,
 )
 
+import client
 from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
@@ -94,7 +95,7 @@ class MerlinClient:
         env_list = self._env_api.environments_get()
         for env in env_list:
             if env.name == env_name:
-                return env
+                return Environment(env)
         return None
 
     def get_default_environment(self) -> Optional[Environment]:
@@ -226,7 +227,7 @@ class MerlinClient:
                 )
             model = self._model_api.projects_project_id_models_post(
                 project_id=int(prj.id),
-                body={"name": model_name, "type": model_type.value},
+                body=client.Model(name=model_name, type=model_type.value)
             )
 
         return Model(model, prj, self._api_client)
@@ -285,12 +286,13 @@ class MerlinClient:
         model_prediction_config: Dict = None,
         protocol: str = "HTTP_JSON",
     ):
+        prediction_config = client.ModelPredictionConfig.from_dict(model_prediction_config) if model_prediction_config is not None else None
         request = StandardTransformerSimulationRequest(
             payload=payload,
             headers=headers,
             config=config,
-            model_prediction_config=model_prediction_config,
-            protocol=protocol,
+            model_prediction_config=prediction_config,
+            protocol=client.Protocol(protocol),
         )
 
         return self._standard_transformer_api.standard_transformer_simulate_post(

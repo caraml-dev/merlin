@@ -33,7 +33,7 @@ class Model(BaseModel):
     id: Optional[StrictInt] = None
     project_id: Optional[StrictInt] = None
     mlflow_experiment_id: Optional[StrictInt] = None
-    name: Optional[StrictStr] = None
+    name: StrictStr
     type: Optional[StrictStr] = Field(default=None, description="Model type")
     mlflow_url: Optional[StrictStr] = None
     endpoints: Optional[List[ModelEndpoint]] = None

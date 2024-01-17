@@ -69,6 +69,7 @@ from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
 from merlin.version import VERSION
 from merlin.model_schema import ModelSchema
+from merlin.util import extract_optional_value_with_default
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -121,8 +122,8 @@ class Project:
         self._updated_at = project.updated_at
         self._url = mlp_url
         self._api_client = api_client
-        self._readers = project.readers
-        self._administrators = project.administrators
+        self._readers = extract_optional_value_with_default(project.readers, [])
+        self._administrators = extract_optional_value_with_default(project.administrators, [])
 
     @property
     def id(self) -> int:
@@ -133,7 +134,7 @@ class Project:
         return self._name
 
     @property
-    def mlflow_tracking_url(self) -> str:
+    def mlflow_tracking_url(self) -> Optional[str]:
         return self._mlflow_tracking_url
 
     @property
@@ -145,11 +146,11 @@ class Project:
         return self._administrators
 
     @property
-    def created_at(self) -> datetime:
+    def created_at(self) -> Optional[datetime]:
         return self._created_at
 
     @property
-    def updated_at(self) -> datetime:
+    def updated_at(self) -> Optional[datetime]:
         return self._updated_at
 
     @property
@@ -202,7 +203,7 @@ class Project:
                 )
             model = model_api.projects_project_id_models_post(
                 project_id=int(self.id),
-                body={"name": model_name, "type": model_type.value},
+                body=client.Model(name=model_name, type=model_type.value),
             )
         else:
             model = m_list[0]
@@ -219,7 +220,7 @@ class Project:
         """
         secret_api = SecretApi(self._api_client)
         secret_api.projects_project_id_secrets_post(
-            project_id=int(self.id), body={"name": name, "data": data}
+            project_id=int(self.id), body=client.Secret(name=name, data=data)
         )
 
     def list_secret(self) -> List[str]:
@@ -232,7 +233,8 @@ class Project:
         secrets = secret_api.projects_project_id_secrets_get(project_id=int(self.id))
         secret_names = []
         for s in secrets:
-            secret_names.append(s.name)
+            if s.name is not None:
+                secret_names.append(s.name)
         return secret_names
 
     def update_secret(self, name: str, data: str):
@@ -249,7 +251,7 @@ class Project:
         secret_api.projects_project_id_secrets_secret_id_patch(
             project_id=int(self.id),
             secret_id=int(match.id),
-            body={"name": name, "data": data},
+            body=client.Secret(name=name, data=data),
         )
 
     def delete_secret(self, name: str):
@@ -303,7 +305,7 @@ class Model:
     def __init__(
         self, model: client.Model, project: Project, api_client: client.ApiClient
     ):
-        self._id = model.id
+        self._id = extract_optional_value_with_default(model.id, 0)
         self._name = model.name
         self._mlflow_experiment_id = model.mlflow_experiment_id
         self._type = ModelType(model.type)
@@ -326,19 +328,20 @@ class Model:
         return self._type
 
     @property
-    def mlflow_url(self) -> str:
+    def mlflow_url(self) -> Optional[str]:
         return self._mlflow_url
 
     @property
-    def mlflow_experiment_id(self) -> int:
-        return int(self._mlflow_experiment_id)
-
+    def mlflow_experiment_id(self) -> Optional[int]:
+        if self._mlflow_experiment_id is not None:
+            return int(self._mlflow_experiment_id)
+        return None
     @property
-    def created_at(self) -> datetime:
+    def created_at(self) -> Optional[datetime]:
         return self._created_at
 
     @property
-    def updated_at(self) -> datetime:
+    def updated_at(self) -> Optional[datetime]:
         return self._updated_at
 
     @property
@@ -357,7 +360,7 @@ class Model:
             model_id=self.id
         )
         for endpoint in mdl_endpoints_list:
-            if endpoint.environment.is_default:
+            if endpoint.environment is not None and endpoint.environment.is_default:
                 return ModelEndpoint(endpoint)
 
         return None
@@ -436,7 +439,7 @@ class Model:
             int(self.id), limit=limit, cursor=cursor, search=search
         )
         versions = version_api_response.data
-        headers = version_api_response.headers
+        headers = extract_optional_value_with_default(version_api_response.headers, {})
         
         next_cursor = headers.get("Next-Cursor") or ""
         result = []
@@ -455,7 +458,7 @@ class Model:
         python_version = f"{version_info.major}.{version_info.minor}.*"  # capture user's python version
         model_schema_payload = model_schema.to_client_model_schema() if model_schema is not None else None
         v = version_api.models_model_id_versions_post(
-            int(self.id), body={"labels": labels, "python_version": python_version, "model_schema": model_schema_payload}
+            int(self.id), body=client.Version(labels=labels, python_version=python_version, model_schema=model_schema_payload)
         )
         return ModelVersion(v, self, self._api_client)
 
@@ -517,19 +520,21 @@ class Model:
                 model_id=self.id, environment_name=target_env, rule=rule
             )
             ep = mdl_epi_api.models_model_id_endpoints_post(
-                model_id=self.id, body=ep.to_dict()
+                model_id=self.id, body=ep
             )
-        else:
+        elif prev_endpoint.id is not None:
             # update: GET and PUT
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_get(
                 model_id=self.id, model_endpoint_id=prev_endpoint.id
             )
-            ep.rule.destinations[0].version_endpoint_id = version_endpoint.id
-            ep.rule.destinations[0].weight = 100
+            if ep.rule is not None and ep.rule.destinations is not None and len(ep.rule.destinations) > 0:
+                ep.rule.destinations[0].version_endpoint_id = version_endpoint.id
+                ep.rule.destinations[0].weight = 100
+            
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_put(
                 model_id=int(self.id),
                 model_endpoint_id=prev_endpoint.id,
-                body=ep.to_dict(),
+                body=ep,
             )
 
         return ModelEndpoint(ep)
@@ -572,6 +577,10 @@ class Model:
             f"Stopping serving traffic for model {self.name} "
             f"in {target_env} environment"
         )
+        if target_endpoint.id is None:
+            raise ValueError(
+                f"model endpoint doesn't have id information"
+            )
         mdl_epi_api.models_model_id_endpoints_model_endpoint_id_delete(
             self.id, target_endpoint.id
         )
@@ -625,17 +634,17 @@ class Model:
         if self.endpoint is None:
             # create model endpoint
             ep = model_endpoint_api.models_model_id_endpoints_post(
-                body={
-                    "model_id": self.id,
-                    "rule": {
-                        "destinations": [
-                            {
-                                "version_endpoint_id": def_version_endpoint.id,
-                                "weight": 100,
-                            }
+                body=client.ModelEndpoint(
+                    model_id=self.id,
+                    rule=client.ModelEndpointRule(
+                        destinations=[
+                            client.ModelEndpointRuleDestination(
+                                version_endpoint_id=def_version_endpoint.id,
+                                weight=100,
+                            )
                         ]
-                    },
-                },
+                    )
+                ),
                 model_id=int(self.id),
             )
             return ModelEndpoint(ep)
@@ -645,12 +654,14 @@ class Model:
             ep = model_endpoint_api.models_model_id_endpoints_model_endpoint_id_get(
                 model_id=int(self.id), model_endpoint_id=def_model_endpoint.id
             )
-            ep.rule.destinations[0].version_endpoint_id = def_version_endpoint.id
-            ep.rule.destinations[0].weight = 100
+            if ep.rule is not None and ep.rule.destinations is not None and len(ep.rule.destinations) > 0:
+                ep.rule.destinations[0].version_endpoint_id = def_version_endpoint.id
+                ep.rule.destinations[0].weight = 100
+            
             ep = model_endpoint_api.models_model_id_endpoints_model_endpoint_id_put(
                 model_id=int(self.id),
                 model_endpoint_id=def_model_endpoint.id,
-                body=ep.to_dict(),
+                body=ep,
             )
 
         return ModelEndpoint(ep)
@@ -685,10 +696,9 @@ class ModelVersion:
         self, version: client.Version, model: Model, api_client: client.ApiClient
     ):
         self._api_client = api_client
-        self._id = version.id
+        self._id = extract_optional_value_with_default(version.id, 0)
         self._mlflow_run_id = version.mlflow_run_id
         self._mlflow_url = version.mlflow_url
-        self._version_endpoints = version.endpoints
         self._created_at = version.created_at
         self._updated_at = version.updated_at
         self._properties = version.properties
@@ -700,16 +710,24 @@ class ModelVersion:
         self._model_schema = ModelSchema.from_model_schema_response(version.model_schema)
         mlflow.set_tracking_uri(model.project.mlflow_tracking_url) # type: ignore  # noqa
 
+        endpoints = None
+        if version.endpoints is not None:
+            endpoints = []
+            for ep in version.endpoints:
+                endpoints.append(VersionEndpoint(ep))
+        self._version_endpoints = endpoints
+
+
     @property
     def id(self) -> int:
         return self._id
 
     @property
-    def mlflow_run_id(self) -> str:
+    def mlflow_run_id(self) -> Optional[str]:
         return self._mlflow_run_id
 
     @property
-    def mlflow_url(self) -> str:
+    def mlflow_url(self) -> Optional[str]:
         return self._mlflow_url
 
     @property
@@ -728,7 +746,7 @@ class ModelVersion:
         :return: VersionEndpoint or None
         """
         for endpoint in self.version_endpoints:
-            if endpoint.environment.is_default:
+            if endpoint.environment is not None and endpoint.environment.is_default:
                 return endpoint
         return None
 
@@ -737,11 +755,11 @@ class ModelVersion:
         return self._properties
 
     @property
-    def created_at(self) -> datetime:
+    def created_at(self) -> Optional[datetime]:
         return self._created_at
 
     @property
-    def updated_at(self) -> datetime:
+    def updated_at(self) -> Optional[datetime]:
         return self._updated_at
 
     @property
@@ -1046,7 +1064,7 @@ class ModelVersion:
         version_api.models_model_id_versions_version_id_patch(
             int(self.model.id),
             int(self.id),
-            body={"custom_predictor": custom_predictor_body},
+            body=client.Version(custom_predictor=custom_predictor_body),
         )
 
     def list_endpoint(self) -> List[VersionEndpoint]:
@@ -1106,7 +1124,7 @@ class ModelVersion:
         target_resource_request = None
         target_image_builder_resource_request = None
         target_autoscaling_policy = None
-        target_env_vars: List[client.models.Environment] = []
+        target_env_vars: List[client.EnvVar] = []
         target_transformer = None
         target_logger = None
 
@@ -1123,6 +1141,9 @@ class ModelVersion:
                 if deployment_mode is not None
                 else target_deployment_mode
             )
+        else:
+            target_deployment_mode = current_endpoint.deployment_mode.value
+            target_protocol = current_endpoint.protocol.value
 
         if deployment_mode is not None:
             target_deployment_mode = deployment_mode.value
@@ -1143,9 +1164,12 @@ class ModelVersion:
                 and resource_request.gpu_name is not None
             ):
                 for env in env_list:
+                    if env.gpus is None:
+                        continue
+                
                     for gpu in env.gpus:
                         if resource_request.gpu_name == gpu.name:
-                            if resource_request.gpu_request not in gpu.values:
+                            if gpu.values is not None and resource_request.gpu_request not in gpu.values:
                                 raise ValueError(
                                     f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
                                 )
@@ -1165,7 +1189,7 @@ class ModelVersion:
 
         if autoscaling_policy is not None:
             target_autoscaling_policy = client.AutoscalingPolicy(
-                metrics_type=autoscaling_policy.metrics_type.value,
+                metrics_type=client.MetricsType(autoscaling_policy.metrics_type.value),
                 target_value=autoscaling_policy.target_value,
             )
 
@@ -1195,26 +1219,30 @@ class ModelVersion:
             env_vars=target_env_vars,
             transformer=target_transformer,
             logger=target_logger,
-            deployment_mode=target_deployment_mode,
+            deployment_mode=client.DeploymentMode(target_deployment_mode),
             autoscaling_policy=target_autoscaling_policy,
-            protocol=target_protocol,
+            protocol=client.Protocol(target_protocol),
             enable_model_observability=enable_model_observability,
         )
         if current_endpoint is not None:
             # This allows a serving deployment to be updated while it is serving
             if current_endpoint.status == Status.SERVING:
-                endpoint.status = Status.SERVING.value
+                endpoint.status = client.EndpointStatus.SERVING
             else:
-                endpoint.status = Status.RUNNING.value
+                endpoint.status = client.EndpointStatus.RUNNING
+
+            if current_endpoint.id is None:
+                raise ValueError("current endpoint must have id")
+            
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_put(
                 int(model.id),
                 int(self.id),
                 current_endpoint.id,
-                body=endpoint.to_dict(),
+                body=endpoint,
             )
         else:
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_post(
-                int(model.id), int(self.id), body=endpoint.to_dict()
+                int(model.id), int(self.id), body=endpoint
             )
         bar = pyprind.ProgBar(
             100,
@@ -1225,8 +1253,11 @@ class ModelVersion:
         while True:
             # Emulate a do-while loop. Re-get the endpoint so that the API server would have
             # started acting after the deployment job has been submitted.
+            if endpoint.id is None:
+                raise ValueError("endpoint id must be set")
+            
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_get(
-                model_id=int(model.id), version_id=int(self.id), endpoint_id=endpoint.id
+                model_id=model.id, version_id=self.id, endpoint_id=endpoint.id
             )
             if endpoint.status != "pending":
                 break
@@ -1234,7 +1265,7 @@ class ModelVersion:
             bar.update()
         bar.stop()
 
-        if endpoint.status != "running" and endpoint.status != "serving":
+        if endpoint.status != "running" and endpoint.status != "serving" and endpoint.message is not None:
             raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
@@ -1275,7 +1306,7 @@ class ModelVersion:
             if endpoint.environment_name == target_env:
                 target_endpoint = endpoint
 
-        if target_endpoint is None:
+        if target_endpoint is None or target_endpoint.id is None:
             print(f"No endpoint found for environment: {target_endpoint}")
             return
 
@@ -1306,23 +1337,23 @@ class ModelVersion:
         job_cfg = client.PredictionJobConfig(
             version=V1,
             kind=PREDICTION_JOB,
-            model={
-                "type": self.model.type.value.upper(),
-                "uri": os.path.join(self.artifact_uri, DEFAULT_MODEL_PATH),
-                "result": {
-                    "type": job_config.result_type.value,
-                    "item_type": job_config.item_type.value,
-                },
-            },
+            model=client.PredictionJobConfigModel(
+                type=self.model.type.value.upper(),
+                uri=os.path.join(self.artifact_uri, DEFAULT_MODEL_PATH),
+                result=client.PredictionJobConfigModelResult(
+                    type=client.ResultType(job_config.result_type.value),
+                    item_type=client.ResultType(job_config.item_type.value),
+                )
+            ),
         )
 
         if isinstance(job_config.source, BigQuerySource):
-            job_cfg.bigquery_source = job_config.source.to_dict()
+            job_cfg.bigquery_source = job_config.source.to_client_bq_source()
         else:
             raise ValueError(f"source type is not supported {type(job_config.source)}")
 
         if isinstance(job_config.sink, BigQuerySink):
-            job_cfg.bigquery_sink = job_config.sink.to_dict()
+            job_cfg.bigquery_sink = job_config.sink.to_client_config()
         else:
             raise ValueError(f"sink type is not supported {type(job_config.sink)}")
 
@@ -1371,15 +1402,19 @@ class ModelVersion:
         while (
             j.status == "pending" or j.status == "running" or j.status == "terminating"
         ):
+            job_id = j.id
+            if job_id is None:
+                raise ValueError("job id must be exist")
+            
             if not sync:
                 j = job_client.models_model_id_versions_version_id_jobs_job_id_get(
-                    model_id=self.model.id, version_id=self.id, job_id=j.id
+                    model_id=self.model.id, version_id=self.id, job_id=job_id
                 )
                 return PredictionJob(j, self._api_client)
             else:
                 try:
                     j = job_client.models_model_id_versions_version_id_jobs_job_id_get(
-                        model_id=self.model.id, version_id=self.id, job_id=j.id
+                        model_id=self.model.id, version_id=self.id, job_id=job_id
                     )
                     retry = DEFAULT_API_CALL_RETRY
                 except Exception:
@@ -1618,7 +1653,7 @@ class ModelVersion:
         else:
             autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
         return client.AutoscalingPolicy(
-            metrics_type=autoscaling_policy.metrics_type.value, 
+            metrics_type=client.MetricsType(autoscaling_policy.metrics_type.value), 
             target_value=autoscaling_policy.target_value)
 
     @staticmethod
@@ -1652,7 +1687,7 @@ class ModelVersion:
                 cpu_request=resource_request.cpu_request, 
                 memory_request=resource_request.memory_request)
 
-        target_env_vars: List[client.models.Environment] = []
+        target_env_vars: List[client.EnvVar] = []
         if transformer.env_vars is not None:
             target_env_vars = ModelVersion._add_env_vars(
                 target_env_vars, transformer.env_vars
@@ -1695,7 +1730,7 @@ def _get_default_target_env_name(env_list: List[client.models.Environment]) -> s
 
 
 def _process_conda_env(
-    conda_env: Union[str, Dict[str, Any]], python_version: str
+    conda_env: Union[str, Dict[str, Any]], python_version: Optional[str]
 ) -> Dict[str, Any]:
     """
     This function will replace/add python version dependency to the conda environment file.
@@ -1717,6 +1752,9 @@ def _process_conda_env(
             spec == name or re.match(name + r"[><=\s]+", spec) is not None
         )
 
+    if python_version is None:
+        raise ValueError("python version must be set")
+    
     new_conda_env = {}
 
     if isinstance(conda_env, str):

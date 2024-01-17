@@ -1497,6 +1497,7 @@ components:
           format: date-time
     Project:
       required:
+      - id
       - name
       type: object
       properties:
@@ -1531,6 +1532,8 @@ components:
           format: date-time
     Model:
       type: object
+      required:
+        - name
       properties:
         id:
           type: integer
