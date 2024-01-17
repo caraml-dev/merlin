@@ -4203,12 +4203,6 @@ func TestCreateTransformerSpec(t *testing.T) {
 	}
 }
 
-func getLimit(quantity resource.Quantity) resource.Quantity {
-	limit := quantity.DeepCopy()
-	limit.Add(quantity)
-	return limit
-}
-
 func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue protocol.Protocol) models.EnvVars {
 	envVars := models.EnvVars{
 		models.EnvVar{
