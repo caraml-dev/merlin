@@ -1193,7 +1193,7 @@ class ModelEndpointsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ModelEndpoint"
+            '201': "ModelEndpoint"
             
         }
         response_data = self.api_client.call_api(
@@ -1264,7 +1264,7 @@ class ModelEndpointsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ModelEndpoint"
+            '201': "ModelEndpoint"
             
         }
         response_data = self.api_client.call_api(
@@ -1335,7 +1335,7 @@ class ModelEndpointsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ModelEndpoint"
+            '201': "ModelEndpoint"
             
         }
         response_data = self.api_client.call_api(

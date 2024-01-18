@@ -45,6 +45,7 @@ class ModelManifest:
     model_full_name: str
     model_dir: str
     project: str
+    model_schema: ModelSchema = None
 
 
 class PushGateway:
@@ -90,7 +91,17 @@ class Config:
         model_version = os.getenv(*MODEL_VERSION)
         model_full_name = os.getenv(*MODEL_FULL_NAME)
         project = os.getenv(*PROJECT)
-        self.model_manifest = ModelManifest(model_name, model_version, model_full_name, model_dir, project)
+        model_schema = None
+        model_schema_from_env_var = os.getenv(MODEL_SCHEMA) 
+        if model_schema_from_env_var is not None:
+            model_schema = ModelSchema.from_json(os.getenv(MODEL_SCHEMA))
+
+        self.model_manifest = ModelManifest(model_name=model_name, 
+                                            model_version=model_version, 
+                                            model_full_name=model_full_name, 
+                                            model_dir=model_dir, 
+                                            project=project,
+                                            model_schema=model_schema)
 
         self.workers = int(os.getenv(*WORKERS))
         self.log_level = self._log_level()
@@ -105,10 +116,6 @@ class Config:
                                         push_url,
                                         push_interval)
         
-        self.model_schema = None
-        model_schema_from_env_var = os.getenv(MODEL_SCHEMA) 
-        if model_schema_from_env_var is not None:
-            self.model_schema = ModelSchema.from_json(os.getenv(MODEL_SCHEMA))
             
         # Publisher
         self.publisher = None

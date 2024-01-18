@@ -1459,7 +1459,7 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
@@ -1528,7 +1528,7 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
@@ -1600,7 +1600,7 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100})
@@ -1661,7 +1661,7 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_upi.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
