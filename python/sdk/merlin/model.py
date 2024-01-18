@@ -525,6 +525,11 @@ class Model:
             ep = mdl_epi_api.models_model_id_endpoints_post(
                 model_id=self.id, body=ep
             )
+            endpoints = mdl_epi_api.models_model_id_endpoints_get(model_id=self.id)
+            prev_endpoint = None
+            for endpoint in endpoints:
+                if endpoint.environment_name == target_env:
+                    print(f"endpoint id {endpoint}")
         elif prev_endpoint.id is not None:
             # update: GET and PUT
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_get(

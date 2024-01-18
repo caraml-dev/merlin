@@ -194,11 +194,11 @@ CLIENT_GO_EXAMPLES_DIR = ./api/client/examples
 TEMP_CLIENT_GO_EXAMPLES_DIR  = ./api/client_examples_temp
 .PHONY: generate-client-go
 generate-client-go:
-	@echo "Generating Go client from openapi.yaml"
+	@echo "Generating Go client from swagger.yaml"
 	@mv ${CLIENT_GO_EXAMPLES_DIR} ${TEMP_CLIENT_GO_EXAMPLES_DIR}
 	@rm -rf ${CLIENT_GO_OUTPUT_DIR}
 	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
-		--input-spec /local/openapi.yaml \
+		--input-spec /local/swagger.yaml \
 		--generator-name go \
 		--output /local/api/client_tmp/. \
 		--config /local/openapi-api-codegen.yaml \
@@ -216,7 +216,7 @@ TEMP_CLIENT_PYTHON_OUTPUT_DIR = ./python/sdk/client_tmp
 generate-client-python:
 	rm -rf ${CLIENT_PYTHON_OUTPUT_DIR}
 	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
-		--input-spec /local/openapi.yaml \
+		--input-spec /local/swagger.yaml \
 		--generator-name python \
 		--output /local/python/sdk/. \
 		--config /local/openapi-sdk-codegen.yaml

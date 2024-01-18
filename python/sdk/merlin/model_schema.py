@@ -18,9 +18,9 @@ import client
 @dataclass_json
 @dataclass
 class ModelSchema:
-    id: int
-    model_id: int
     spec: InferenceSchema
+    id: Optional[int] = None
+    model_id: Optional[int] = None
 
     @classmethod
     def from_model_schema_response(cls, response: Optional[client.ModelSchema]=None) -> Optional[ModelSchema]:

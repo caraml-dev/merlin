@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictInt
 from client.models.schema_spec import SchemaSpec
 try:
@@ -30,8 +30,8 @@ class ModelSchema(BaseModel):
     """
     ModelSchema
     """ # noqa: E501
-    id: StrictInt
-    model_id: StrictInt
+    id: Optional[StrictInt] = None
+    model_id: Optional[StrictInt] = None
     spec: SchemaSpec
     __properties: ClassVar[List[str]] = ["id", "model_id", "spec"]
 

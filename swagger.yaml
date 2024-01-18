@@ -388,7 +388,7 @@ paths:
               "$ref": "#/components/schemas/Version"
         required: false
       responses:
-        '200':
+        '201':
           description: Created
           content:
             "*/*":
@@ -757,7 +757,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
       responses:
         '200':
           description: OK
@@ -779,7 +779,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
       requestBody:
         content:
           "*/*":
@@ -808,7 +808,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          type: integer
       responses:
         '200':
           description: OK
@@ -1026,7 +1026,7 @@ paths:
         schema:
           type: integer
       responses:
-        '201':
+        '200':
           description: Ok
           content:
             "*/*":
@@ -1157,8 +1157,8 @@ paths:
               "$ref": "#/components/schemas/PredictionJob"
         required: false
       responses:
-        '201':
-          description: Created
+        '200':
+          description: OK
           content:
             "*/*":
               schema:
@@ -1276,8 +1276,180 @@ paths:
               schema:
                 "$ref": "#/components/schemas/StandardTransformerSimulationResponse"
       x-codegen-request-body-name: body
+  "/models/{model_id}/schemas":
+    get:
+      summary: List all of the model schemas
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ModelSchema"
+    put:
+      summary: Creating new schemas for a model
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/ModelSchema"
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelSchema"
+      x-codegen-request-body-name: body
+  "/models/{model_id}/schemas/{schema_id}":
+    get:
+      summary: Get detail of the schema
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: schema_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelSchema"
+    delete:
+      summary: Delete schema
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: schema_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: No Content
+    
 components:
   schemas:
+    ModelSchema:
+      type: object
+      required:
+        - spec
+      properties:
+        id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        spec:
+          $ref: '#/components/schemas/SchemaSpec'
+    SchemaSpec:
+      type: object
+      required:
+        - prediction_id_column
+        - model_prediction_output
+        - feature_types
+      properties:
+        prediction_id_column:
+          type: string
+        model_prediction_output:
+          $ref : '#/components/schemas/ModelPredictionOutput'
+        tag_columns:
+          type: array
+          items:
+            type: string
+        feature_types:
+          type: object
+          additionalProperties:
+            $ref : '#/components/schemas/ValueType'
+    ValueType:
+      type: string
+      enum:
+        - float64
+        - int64
+        - boolean
+        - string
+
+    ModelPredictionOutput:
+      type: object
+      discriminator:
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BinaryClassificationOutput'
+      - $ref: '#/components/schemas/RankingOutput'
+      - $ref: '#/components/schemas/RegressionOutput'
+    BinaryClassificationOutput:
+      type: object
+      required:
+        - prediction_score_column
+        - positive_class_label
+        - negative_class_label
+      properties:
+        prediction_score_column:
+          type: string
+        actual_label_column:
+          type: string
+        positive_class_label:
+          type: string
+        negative_class_label:
+          type: string
+        score_threshold:
+          type: number
+    RankingOutput:
+      type: object
+      required:
+        - rank_score_column
+        - prediction_group_id_column
+      properties:
+        rank_score_column:
+          type: string
+        prediction_group_id_column:
+          type: string
+        relevance_score_column:
+          type: string
+    RegressionOutput:
+      type: object
+      required:
+        - prediction_score_column
+      properties:
+        prediction_score_column:
+          type: string
+        actual_score_column:
+          type: string
     EndpointStatus:
       type: string
       enum:
@@ -1289,6 +1461,7 @@ components:
     Environment:
       required:
       - name
+      - cluster
       type: object
       properties:
         id:
@@ -1322,6 +1495,7 @@ components:
           format: date-time
     Project:
       required:
+      - id
       - name
       type: object
       properties:
@@ -1356,6 +1530,8 @@ components:
           format: date-time
     Model:
       type: object
+      required:
+        - name
       properties:
         id:
           type: integer
@@ -1521,6 +1697,8 @@ components:
           format: date-time
         python_version:
           type: string
+        model_schema:
+          "$ref": "#/components/schemas/ModelSchema"
     CustomPredictor:
       type: object
       properties:
@@ -1593,6 +1771,9 @@ components:
           "$ref": "#/components/schemas/PredictionLoggerConfig"
     LoggerConfig:
       type: object
+      required:
+        - enabled
+        - mode
       properties:
         enabled:
           type: boolean
@@ -1600,6 +1781,8 @@ components:
           "$ref": "#/components/schemas/LoggerMode"
     PredictionLoggerConfig:
       type: object
+      required:
+        - enabled
       properties:
         enabled:
           type: boolean
@@ -1687,6 +1870,9 @@ components:
           type: string
     AutoscalingPolicy:
       type: object
+      required:
+        - metrics_type
+        - target_value
       properties:
         metrics_type:
           "$ref": "#/components/schemas/MetricsType"
@@ -1940,9 +2126,14 @@ components:
       - STRING
       - ARRAY
     SaveMode:
-      type: string
-      default: ERRORIFEXISTS
+      type: integer
       enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      x-enum-names:
       - ERRORIFEXISTS
       - OVERWRITE
       - APPEND
@@ -1972,22 +2163,25 @@ components:
       type: object
       properties:
         preprocess:
-          "$ref": "#/components/schemas/PipelineTracing"
+          type: array
+          items:
+            "$ref": "#/components/schemas/PipelineTracing"
         postprocess:
-          "$ref": "#/components/schemas/PipelineTracing"
+          type: array
+          items:
+            "$ref": "#/components/schemas/PipelineTracing"
     PipelineTracing:
-      type: array
-      items:
-        type: object
-        properties:
-          operation_type:
-            type: string
-          specs:
-            "$ref": "#/components/schemas/FreeFormObject"
-          inputs:
-            "$ref": "#/components/schemas/FreeFormObject"
-          outputs:
-            "$ref": "#/components/schemas/FreeFormObject"
+      type: object 
+      properties:
+        operation_type:
+          type: string
+        spec:
+          "$ref": "#/components/schemas/FreeFormObject"
+        input:
+          "$ref": "#/components/schemas/FreeFormObject"
+        output:
+          "$ref": "#/components/schemas/FreeFormObject"
+          
     ModelPredictionConfig:
       type: object
       properties:
@@ -2002,26 +2196,11 @@ components:
           "$ref": "#/components/schemas/FreeFormObject"
     FreeFormObject:
       type: object
-      additionalProperties: true
     Protocol:
       type: string
       enum:
       - HTTP_JSON
       - UPI_V1
-    InferenceSchema:
-      type: object
-      properties:
-        prediction_id_column:
-          type: string
-        model_prediction_output:
-          type: object
-    InferenceType:
-      type: string
-      enum:
-      - BINARY_CLASSIFICATION
-      - MULTICLASS_CLASSIFICATION
-      - REGRESSION
-      - RANKING
   securitySchemes:
     Bearer:
       type: apiKey
