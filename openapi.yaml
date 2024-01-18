@@ -2165,22 +2165,25 @@ components:
       type: object
       properties:
         preprocess:
-          "$ref": "#/components/schemas/PipelineTracing"
+          type: array
+          items:
+            "$ref": "#/components/schemas/PipelineTracing"
         postprocess:
-          "$ref": "#/components/schemas/PipelineTracing"
+          type: array
+          items:
+            "$ref": "#/components/schemas/PipelineTracing"
     PipelineTracing:
-      type: array
-      items:
-        type: object
-        properties:
-          operation_type:
-            type: string
-          specs:
-            "$ref": "#/components/schemas/FreeFormObject"
-          inputs:
-            "$ref": "#/components/schemas/FreeFormObject"
-          outputs:
-            "$ref": "#/components/schemas/FreeFormObject"
+      type: object 
+      properties:
+        operation_type:
+          type: string
+        spec:
+          "$ref": "#/components/schemas/FreeFormObject"
+        input:
+          "$ref": "#/components/schemas/FreeFormObject"
+        output:
+          "$ref": "#/components/schemas/FreeFormObject"
+          
     ModelPredictionConfig:
       type: object
       properties:

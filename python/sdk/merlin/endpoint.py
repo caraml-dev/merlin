@@ -172,7 +172,7 @@ class VersionEndpoint:
 class ModelEndpoint:
     def __init__(self, endpoint: client.ModelEndpoint):
         self._protocol = Protocol.HTTP_JSON
-        if endpoint.protocol:
+        if endpoint.protocol is not None:
             self._protocol = Protocol(endpoint.protocol)
 
         if self._protocol == Protocol.HTTP_JSON:

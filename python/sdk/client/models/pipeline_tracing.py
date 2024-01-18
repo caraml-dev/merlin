@@ -25,15 +25,15 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-class PipelineTracingInner(BaseModel):
+class PipelineTracing(BaseModel):
     """
-    PipelineTracingInner
+    PipelineTracing
     """ # noqa: E501
     operation_type: Optional[StrictStr] = None
-    specs: Optional[Union[str, Any]] = None
-    inputs: Optional[Union[str, Any]] = None
-    outputs: Optional[Union[str, Any]] = None
-    __properties: ClassVar[List[str]] = ["operation_type", "specs", "inputs", "outputs"]
+    spec: Optional[Union[str, Any]] = None
+    input: Optional[Union[str, Any]] = None
+    output: Optional[Union[str, Any]] = None
+    __properties: ClassVar[List[str]] = ["operation_type", "spec", "input", "output"]
 
     model_config = {
         "populate_by_name": True,
@@ -52,7 +52,7 @@ class PipelineTracingInner(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of PipelineTracingInner from a JSON string"""
+        """Create an instance of PipelineTracing from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -75,7 +75,7 @@ class PipelineTracingInner(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of PipelineTracingInner from a dict"""
+        """Create an instance of PipelineTracing from a dict"""
         if obj is None:
             return None
 
@@ -84,9 +84,9 @@ class PipelineTracingInner(BaseModel):
 
         _obj = cls.model_validate({
             "operation_type": obj.get("operation_type"),
-            "specs": obj.get("specs"),
-            "inputs": obj.get("inputs"),
-            "outputs": obj.get("outputs")
+            "spec": obj.get("spec"),
+            "input": obj.get("input"),
+            "output": obj.get("output")
         })
         return _obj
 

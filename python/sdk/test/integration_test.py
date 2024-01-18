@@ -1177,11 +1177,14 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
     resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
 
+    def remove_nulls(d):
+        return {k: v for k, v in d.items() if v is not None}
+
     with open("test/transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
-        exp_resp_valid_wo_tracing = json.load(f)
+        exp_resp_valid_wo_tracing = json.load(f, object_hook=remove_nulls)
 
     with open("test/transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
-        exp_resp_valid_w_tracing = json.load(f)
+        exp_resp_valid_w_tracing = json.load(f, object_hook=remove_nulls)
 
     assert isinstance(resp_wo_tracing, dict)
     assert isinstance(resp_w_tracing, dict)

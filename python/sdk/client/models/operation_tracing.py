@@ -20,7 +20,7 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel
-from client.models.pipeline_tracing_inner import PipelineTracingInner
+from client.models.pipeline_tracing import PipelineTracing
 try:
     from typing import Self
 except ImportError:
@@ -30,8 +30,8 @@ class OperationTracing(BaseModel):
     """
     OperationTracing
     """ # noqa: E501
-    preprocess: Optional[List[PipelineTracingInner]] = None
-    postprocess: Optional[List[PipelineTracingInner]] = None
+    preprocess: Optional[List[PipelineTracing]] = None
+    postprocess: Optional[List[PipelineTracing]] = None
     __properties: ClassVar[List[str]] = ["preprocess", "postprocess"]
 
     model_config = {
@@ -96,8 +96,8 @@ class OperationTracing(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "preprocess": [PipelineTracingInner.from_dict(_item) for _item in obj.get("preprocess")] if obj.get("preprocess") is not None else None,
-            "postprocess": [PipelineTracingInner.from_dict(_item) for _item in obj.get("postprocess")] if obj.get("postprocess") is not None else None
+            "preprocess": [PipelineTracing.from_dict(_item) for _item in obj.get("preprocess")] if obj.get("preprocess") is not None else None,
+            "postprocess": [PipelineTracing.from_dict(_item) for _item in obj.get("postprocess")] if obj.get("postprocess") is not None else None
         })
         return _obj
 

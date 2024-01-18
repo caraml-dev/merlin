@@ -1665,7 +1665,7 @@ class ModelVersion:
 
         if len(new_env_vars) > 0:
             for name, value in new_env_vars.items():
-                target_env_vars.append(client.EnvVar(str(name), str(value)))
+                target_env_vars.append(client.EnvVar(name=str(name), value=str(value)))
         return target_env_vars
 
     @staticmethod

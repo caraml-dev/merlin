@@ -44,7 +44,7 @@ from client.models.model_prediction_config import ModelPredictionConfig
 from client.models.model_prediction_output import ModelPredictionOutput
 from client.models.model_schema import ModelSchema
 from client.models.operation_tracing import OperationTracing
-from client.models.pipeline_tracing_inner import PipelineTracingInner
+from client.models.pipeline_tracing import PipelineTracing
 from client.models.prediction_job import PredictionJob
 from client.models.prediction_job_config import PredictionJobConfig
 from client.models.prediction_job_config_bigquery_sink import PredictionJobConfigBigquerySink
