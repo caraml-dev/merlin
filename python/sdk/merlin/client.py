@@ -44,6 +44,7 @@ from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.util import valid_name_check
 from merlin.version import VERSION
+from merlin.model_schema import ModelSchema
 
 
 class MerlinClient:
@@ -233,7 +234,7 @@ class MerlinClient:
         return Model(model, prj, self._api_client)
 
     def new_model_version(
-        self, model_name: str, project_name: str, labels: Dict[str, str] = None
+        self, model_name: str, project_name: str, labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None
     ) -> ModelVersion:
         """
         Create new model version for the given model and project
@@ -246,7 +247,7 @@ class MerlinClient:
         mdl = self.get_model(model_name, project_name)
         if mdl is None:
             raise ValueError(f"Model with name: {model_name} is not found")
-        return mdl.new_model_version(labels=labels)
+        return mdl.new_model_version(labels=labels, model_schema=model_schema)
 
     def deploy(
         self,

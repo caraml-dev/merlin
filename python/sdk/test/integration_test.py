@@ -22,6 +22,8 @@ from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import StandardTransformer, Transformer
+from merlin.model_schema import ModelSchema
+from merlin.observability.inference import InferenceSchema, ValueType, BinaryClassificationOutput
 from recursive_diff import recursive_eq
 
 import merlin
@@ -126,7 +128,22 @@ def test_xgboost(
 
     undeploy_all_version()
 
-    with merlin.new_model_version() as v:
+    with merlin.new_model_version(model_schema=ModelSchema(spec=InferenceSchema(
+        feature_types={
+            "featureA": ValueType.FLOAT64,
+            "featureB": ValueType.INT64,
+            "featureC": ValueType.STRING,
+            "featureD": ValueType.BOOLEAN
+        },
+        prediction_id_column="prediction_id",
+        model_prediction_output=BinaryClassificationOutput(
+            prediction_score_column="score",
+            actual_label_column="actual",
+            positive_class_label="completed",
+            negative_class_label="non_complete",
+            score_threshold=0.7
+        )
+    ))) as v:
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 

@@ -456,7 +456,10 @@ class Model:
         """
         version_api = VersionApi(self._api_client)
         python_version = f"{version_info.major}.{version_info.minor}.*"  # capture user's python version
-        model_schema_payload = model_schema.to_client_model_schema() if model_schema is not None else None
+        model_schema_payload = None
+        if model_schema is not None:
+            model_schema.model_id = self.id
+            model_schema_payload = model_schema.to_client_model_schema()
         v = version_api.models_model_id_versions_post(
             int(self.id), body=client.Version(labels=labels, python_version=python_version, model_schema=model_schema_payload)
         )
