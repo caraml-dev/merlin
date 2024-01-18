@@ -105,7 +105,11 @@ class Config:
                                         push_url,
                                         push_interval)
         
-        self.model_schema = ModelSchema.from_json(os.getenv(MODEL_SCHEMA))
+        self.model_schema = None
+        model_schema_from_env_var = os.getenv(MODEL_SCHEMA) 
+        if model_schema_from_env_var is not None:
+            self.model_schema = ModelSchema.from_json(os.getenv(MODEL_SCHEMA))
+            
         # Publisher
         self.publisher = None
         publisher_enabled = str_to_bool(os.getenv(*PUBLISHER_ENABLED))
