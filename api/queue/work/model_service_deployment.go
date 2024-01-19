@@ -99,7 +99,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return err
 	}
 
-	// create a new entry if the there is no deployment entry found or if it is in the 'pending' state
+	// create a new entry if there is no deployment entry found or if it is in the 'pending' state
 	if deployment == nil || deployment.Status != models.EndpointPending {
 		log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
 		deployment, err = depl.DeploymentStorage.Save(&models.Deployment{
