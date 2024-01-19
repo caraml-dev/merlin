@@ -83,9 +83,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -233,9 +231,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -279,9 +275,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -327,9 +321,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -375,9 +367,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -430,9 +420,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace: project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
 				return mockStorage
 			},
@@ -484,9 +472,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -524,9 +510,7 @@ func TestExecuteDeployment(t *testing.T) {
 				Namespace:       project.Name,
 			},
 			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
-				mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+				mockStorage := createDefaultMockDeploymentStorage()
 				return mockStorage
 			},
 			storage: func() *mocks.VersionEndpointStorage {
@@ -1020,4 +1004,11 @@ func TestExecuteRedeployment(t *testing.T) {
 			}
 		})
 	}
+}
+
+func createDefaultMockDeploymentStorage() *mocks.DeploymentStorage {
+	mockStorage := &mocks.DeploymentStorage{}
+	mockStorage.On("GetLatestDeployment", mock.Anything, mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+	mockStorage.On("Save", mock.Anything).Return(&models.Deployment{}, nil)
+	return mockStorage
 }
