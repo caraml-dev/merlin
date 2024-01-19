@@ -226,13 +226,14 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	// check the cluster to see if the inference service has already been deployed
 	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.Name, metav1.GetOptions{})
 	if err != nil {
-		if !kerrors.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
+			s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
+			if err != nil {
+				log.Errorf("unable to create inference service %s: %v", isvcName, err)
+				return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
+			}
+		} else {
 			return nil, errors.Wrapf(err, "unable to check status of inference service: %s", modelService.Name)
-		}
-		s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
-		if err != nil {
-			log.Errorf("unable to create inference service %s: %v", isvcName, err)
-			return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
 		}
 	} else {
 		log.Infof("found existing inference service %s; skipping its creation", isvcName)
