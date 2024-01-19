@@ -99,8 +99,16 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return err
 	}
 
-	// create a new entry if there is no deployment entry found or if it is in the 'pending' state
-	if deployment == nil || deployment.Status != models.EndpointPending {
+	// do not create a new entry if the last deployment entry found is in the 'pending' state
+	if deployment != nil && deployment.Status == models.EndpointPending {
+		log.Infof(
+			"found existing deployment in the pending state for model %s version %s revision %s with endpoint id: %s",
+			model.Name,
+			endpoint.VersionID,
+			endpoint.RevisionID,
+			endpoint.ID,
+		)
+	} else {
 		log.Infof("creating deployment for model %s version %s revision %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.RevisionID, endpoint.ID)
 		deployment, err = depl.DeploymentStorage.Save(&models.Deployment{
 			ProjectID:         model.ProjectID,
@@ -113,14 +121,6 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		if err != nil {
 			log.Warnf("unable to create deployment history", err)
 		}
-	} else {
-		log.Infof(
-			"found existing deployment in the pending state for model %s version %s revision %s with endpoint id: %s",
-			model.Name,
-			endpoint.VersionID,
-			endpoint.RevisionID,
-			endpoint.ID,
-		)
 	}
 
 	defer func() {
