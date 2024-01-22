@@ -356,7 +356,7 @@ type PyFuncPublisherConfig struct {
 // KServe inference services
 type InferenceServiceDefaults struct {
 	UserContainerCPULimitRequestFactor    float64 `json:"userContainerLimitCPURequestFactor" default:"0"`
-	UserContainerMemoryLimitRequestFactor float64 `json:"userContainerLimitMemoryRequestFactor" default:"1"`
+	UserContainerMemoryLimitRequestFactor float64 `json:"userContainerLimitMemoryRequestFactor" default:"2"`
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer
