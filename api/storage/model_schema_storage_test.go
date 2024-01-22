@@ -58,6 +58,7 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 						PositiveClassLabel:    "positive",
 						PredictionLabelColumn: "prediction_label",
 						PredictionScoreColumn: "prediction_score",
+						OutputClass:           models.BinaryClassification,
 					},
 				},
 			},
@@ -71,6 +72,7 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 				PredictionGroudIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
+				OutputClass:             models.Ranking,
 			},
 		}
 		_, err = modelSchemaStorage.Save(context.Background(), schema)
@@ -82,6 +84,7 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 				PredictionGroudIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
+				OutputClass:             models.Ranking,
 			},
 		})
 	})
@@ -134,6 +137,7 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 							PositiveClassLabel:    "positive",
 							PredictionLabelColumn: "prediction_label",
 							PredictionScoreColumn: "prediction_score",
+							OutputClass:           models.BinaryClassification,
 						},
 					},
 				},
@@ -153,6 +157,7 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 				PositiveClassLabel:    "positive",
 				PredictionLabelColumn: "prediction_label",
 				PredictionScoreColumn: "prediction_score",
+				OutputClass:           models.BinaryClassification,
 			},
 		}, newSchema.Spec.ModelPredictionOutput)
 		var versions []*models.Version
@@ -166,6 +171,7 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 				PositiveClassLabel:    "positive",
 				PredictionLabelColumn: "prediction_label",
 				PredictionScoreColumn: "prediction_score",
+				OutputClass:           models.BinaryClassification,
 			},
 		}, versions[0].ModelSchema.Spec.ModelPredictionOutput)
 	})
@@ -215,6 +221,7 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 							PositiveClassLabel:    "positive",
 							PredictionLabelColumn: "prediction_label",
 							PredictionScoreColumn: "prediction_score",
+							OutputClass:           models.BinaryClassification,
 						},
 					},
 				},
@@ -235,6 +242,7 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 							PredictionGroudIDColumn: "session_id",
 							RankScoreColumn:         "score",
 							RelevanceScoreColumn:    "relevance_score",
+							OutputClass:             models.Ranking,
 						},
 					},
 				},
@@ -254,6 +262,7 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 						RegressionOutput: &models.RegressionOutput{
 							PredictionScoreColumn: "prediction_score",
 							ActualScoreColumn:     "actual_score",
+							OutputClass:           models.Regression,
 						},
 					},
 				},
@@ -324,6 +333,7 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 						PositiveClassLabel:    "positive",
 						PredictionLabelColumn: "prediction_label",
 						PredictionScoreColumn: "prediction_score",
+						OutputClass:           models.BinaryClassification,
 					},
 				},
 			},
@@ -337,6 +347,7 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 				PredictionGroudIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
+				OutputClass:             models.Ranking,
 			},
 		}
 		_, err = modelSchemaStorage.Save(context.Background(), schema)
@@ -348,6 +359,7 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 				PredictionGroudIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
+				OutputClass:             models.Ranking,
 			},
 		})
 
