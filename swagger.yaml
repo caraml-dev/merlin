@@ -1403,11 +1403,16 @@ components:
         - int64
         - boolean
         - string
-
+    ModelPredictionOutputClass:
+      type: string
+      enum:
+        - BinaryClassificationOutput
+        - RankingOutput
+        - RegressionOutput
     ModelPredictionOutput:
       type: object
       discriminator:
-        propertyName: type
+        propertyName: output_class
       oneOf:
       - $ref: '#/components/schemas/BinaryClassificationOutput'
       - $ref: '#/components/schemas/RankingOutput'
@@ -1429,6 +1434,9 @@ components:
           type: string
         score_threshold:
           type: number
+        output_class:
+          $ref: '#/components/schemas/ModelPredictionOutputClass'
+
     RankingOutput:
       type: object
       required:
@@ -1441,6 +1449,8 @@ components:
           type: string
         relevance_score_column:
           type: string
+        output_class:
+          $ref: '#/components/schemas/ModelPredictionOutputClass'
     RegressionOutput:
       type: object
       required:
@@ -1450,6 +1460,8 @@ components:
           type: string
         actual_score_column:
           type: string
+        output_class:
+          $ref: '#/components/schemas/ModelPredictionOutputClass'
     EndpointStatus:
       type: string
       enum:

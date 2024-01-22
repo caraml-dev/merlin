@@ -12,6 +12,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -20,10 +21,10 @@ var _ MappedNullable = &Model{}
 
 // Model struct for Model
 type Model struct {
-	Id                 *int32  `json:"id,omitempty"`
-	ProjectId          *int32  `json:"project_id,omitempty"`
-	MlflowExperimentId *int32  `json:"mlflow_experiment_id,omitempty"`
-	Name               *string `json:"name,omitempty"`
+	Id                 *int32 `json:"id,omitempty"`
+	ProjectId          *int32 `json:"project_id,omitempty"`
+	MlflowExperimentId *int32 `json:"mlflow_experiment_id,omitempty"`
+	Name               string `json:"name"`
 	// Model type
 	Type      *string         `json:"type,omitempty"`
 	MlflowUrl *string         `json:"mlflow_url,omitempty"`
@@ -32,12 +33,15 @@ type Model struct {
 	UpdatedAt *time.Time      `json:"updated_at,omitempty"`
 }
 
+type _Model Model
+
 // NewModel instantiates a new Model object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewModel() *Model {
+func NewModel(name string) *Model {
 	this := Model{}
+	this.Name = name
 	return &this
 }
 
@@ -145,36 +149,28 @@ func (o *Model) SetMlflowExperimentId(v int32) {
 	o.MlflowExperimentId = &v
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
+// GetName returns the Name field value
 func (o *Model) GetName() string {
-	if o == nil || IsNil(o.Name) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Name
+
+	return o.Name
 }
 
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
 func (o *Model) GetNameOk() (*string, bool) {
-	if o == nil || IsNil(o.Name) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Name, true
+	return &o.Name, true
 }
 
-// HasName returns a boolean if a field has been set.
-func (o *Model) HasName() bool {
-	if o != nil && !IsNil(o.Name) {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
+// SetName sets field value
 func (o *Model) SetName(v string) {
-	o.Name = &v
+	o.Name = v
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
@@ -356,9 +352,7 @@ func (o Model) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.MlflowExperimentId) {
 		toSerialize["mlflow_experiment_id"] = o.MlflowExperimentId
 	}
-	if !IsNil(o.Name) {
-		toSerialize["name"] = o.Name
-	}
+	toSerialize["name"] = o.Name
 	if !IsNil(o.Type) {
 		toSerialize["type"] = o.Type
 	}
@@ -375,6 +369,41 @@ func (o Model) ToMap() (map[string]interface{}, error) {
 		toSerialize["updated_at"] = o.UpdatedAt
 	}
 	return toSerialize, nil
+}
+
+func (o *Model) UnmarshalJSON(bytes []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"name",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &allProperties)
+
+	if err != nil {
+		return err
+	}
+
+	for _, requiredProperty := range requiredProperties {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varModel := _Model{}
+
+	err = json.Unmarshal(bytes, &varModel)
+
+	if err != nil {
+		return err
+	}
+
+	*o = Model(varModel)
+
+	return err
 }
 
 type NullableModel struct {

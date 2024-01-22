@@ -20,6 +20,7 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from pydantic import BaseModel, StrictFloat, StrictInt, StrictStr
+from client.models.model_prediction_output_class import ModelPredictionOutputClass
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +35,8 @@ class BinaryClassificationOutput(BaseModel):
     positive_class_label: StrictStr
     negative_class_label: StrictStr
     score_threshold: Optional[Union[StrictFloat, StrictInt]] = None
-    __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_label_column", "positive_class_label", "negative_class_label", "score_threshold"]
+    output_class: Optional[ModelPredictionOutputClass] = None
+    __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_label_column", "positive_class_label", "negative_class_label", "score_threshold", "output_class"]
 
     model_config = {
         "populate_by_name": True,
@@ -88,7 +90,8 @@ class BinaryClassificationOutput(BaseModel):
             "actual_label_column": obj.get("actual_label_column"),
             "positive_class_label": obj.get("positive_class_label"),
             "negative_class_label": obj.get("negative_class_label"),
-            "score_threshold": obj.get("score_threshold")
+            "score_threshold": obj.get("score_threshold"),
+            "output_class": obj.get("output_class")
         })
         return _obj
 

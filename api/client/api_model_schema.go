@@ -28,7 +28,7 @@ type ApiModelsModelIdSchemasGetRequest struct {
 	modelId    int32
 }
 
-func (r ApiModelsModelIdSchemasGetRequest) Execute() ([]InferenceSchema, *http.Response, error) {
+func (r ApiModelsModelIdSchemasGetRequest) Execute() ([]ModelSchema, *http.Response, error) {
 	return r.ApiService.ModelsModelIdSchemasGetExecute(r)
 }
 
@@ -49,13 +49,13 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasGet(ctx context.Context, mod
 
 // Execute executes the request
 //
-//	@return []InferenceSchema
-func (a *ModelSchemaAPIService) ModelsModelIdSchemasGetExecute(r ApiModelsModelIdSchemasGetRequest) ([]InferenceSchema, *http.Response, error) {
+//	@return []ModelSchema
+func (a *ModelSchemaAPIService) ModelsModelIdSchemasGetExecute(r ApiModelsModelIdSchemasGetRequest) ([]ModelSchema, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue []InferenceSchema
+		localVarReturnValue []ModelSchema
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ModelSchemaAPIService.ModelsModelIdSchemasGet")
@@ -138,31 +138,31 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasGetExecute(r ApiModelsModelI
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiModelsModelIdSchemasPostRequest struct {
+type ApiModelsModelIdSchemasPutRequest struct {
 	ctx        context.Context
 	ApiService *ModelSchemaAPIService
 	modelId    int32
-	body       *InferenceSchema
+	body       *ModelSchema
 }
 
-func (r ApiModelsModelIdSchemasPostRequest) Body(body InferenceSchema) ApiModelsModelIdSchemasPostRequest {
+func (r ApiModelsModelIdSchemasPutRequest) Body(body ModelSchema) ApiModelsModelIdSchemasPutRequest {
 	r.body = &body
 	return r
 }
 
-func (r ApiModelsModelIdSchemasPostRequest) Execute() (*InferenceSchema, *http.Response, error) {
-	return r.ApiService.ModelsModelIdSchemasPostExecute(r)
+func (r ApiModelsModelIdSchemasPutRequest) Execute() (*ModelSchema, *http.Response, error) {
+	return r.ApiService.ModelsModelIdSchemasPutExecute(r)
 }
 
 /*
-ModelsModelIdSchemasPost Creating new schemas for a model
+ModelsModelIdSchemasPut Creating new schemas for a model
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param modelId
-	@return ApiModelsModelIdSchemasPostRequest
+	@return ApiModelsModelIdSchemasPutRequest
 */
-func (a *ModelSchemaAPIService) ModelsModelIdSchemasPost(ctx context.Context, modelId int32) ApiModelsModelIdSchemasPostRequest {
-	return ApiModelsModelIdSchemasPostRequest{
+func (a *ModelSchemaAPIService) ModelsModelIdSchemasPut(ctx context.Context, modelId int32) ApiModelsModelIdSchemasPutRequest {
+	return ApiModelsModelIdSchemasPutRequest{
 		ApiService: a,
 		ctx:        ctx,
 		modelId:    modelId,
@@ -171,16 +171,16 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasPost(ctx context.Context, mo
 
 // Execute executes the request
 //
-//	@return InferenceSchema
-func (a *ModelSchemaAPIService) ModelsModelIdSchemasPostExecute(r ApiModelsModelIdSchemasPostRequest) (*InferenceSchema, *http.Response, error) {
+//	@return ModelSchema
+func (a *ModelSchemaAPIService) ModelsModelIdSchemasPutExecute(r ApiModelsModelIdSchemasPutRequest) (*ModelSchema, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = http.MethodPost
+		localVarHTTPMethod  = http.MethodPut
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue *InferenceSchema
+		localVarReturnValue *ModelSchema
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ModelSchemaAPIService.ModelsModelIdSchemasPost")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ModelSchemaAPIService.ModelsModelIdSchemasPut")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -262,6 +262,114 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasPostExecute(r ApiModelsModel
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type ApiModelsModelIdSchemasSchemaIdDeleteRequest struct {
+	ctx        context.Context
+	ApiService *ModelSchemaAPIService
+	modelId    int32
+	schemaId   int32
+}
+
+func (r ApiModelsModelIdSchemasSchemaIdDeleteRequest) Execute() (*http.Response, error) {
+	return r.ApiService.ModelsModelIdSchemasSchemaIdDeleteExecute(r)
+}
+
+/*
+ModelsModelIdSchemasSchemaIdDelete Delete schema
+
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param schemaId
+	@return ApiModelsModelIdSchemasSchemaIdDeleteRequest
+*/
+func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdDelete(ctx context.Context, modelId int32, schemaId int32) ApiModelsModelIdSchemasSchemaIdDeleteRequest {
+	return ApiModelsModelIdSchemasSchemaIdDeleteRequest{
+		ApiService: a,
+		ctx:        ctx,
+		modelId:    modelId,
+		schemaId:   schemaId,
+	}
+}
+
+// Execute executes the request
+func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdDeleteExecute(r ApiModelsModelIdSchemasSchemaIdDeleteRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ModelSchemaAPIService.ModelsModelIdSchemasSchemaIdDelete")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/models/{model_id}/schemas/{schema_id}"
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", url.PathEscape(parameterValueToString(r.modelId, "modelId")), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"schema_id"+"}", url.PathEscape(parameterValueToString(r.schemaId, "schemaId")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["Bearer"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
 type ApiModelsModelIdSchemasSchemaIdGetRequest struct {
 	ctx        context.Context
 	ApiService *ModelSchemaAPIService
@@ -269,7 +377,7 @@ type ApiModelsModelIdSchemasSchemaIdGetRequest struct {
 	schemaId   int32
 }
 
-func (r ApiModelsModelIdSchemasSchemaIdGetRequest) Execute() (*InferenceSchema, *http.Response, error) {
+func (r ApiModelsModelIdSchemasSchemaIdGetRequest) Execute() (*ModelSchema, *http.Response, error) {
 	return r.ApiService.ModelsModelIdSchemasSchemaIdGetExecute(r)
 }
 
@@ -292,13 +400,13 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdGet(ctx context.Cont
 
 // Execute executes the request
 //
-//	@return InferenceSchema
-func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdGetExecute(r ApiModelsModelIdSchemasSchemaIdGetRequest) (*InferenceSchema, *http.Response, error) {
+//	@return ModelSchema
+func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdGetExecute(r ApiModelsModelIdSchemasSchemaIdGetRequest) (*ModelSchema, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue *InferenceSchema
+		localVarReturnValue *ModelSchema
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ModelSchemaAPIService.ModelsModelIdSchemasSchemaIdGet")

@@ -21,7 +21,7 @@ var _ MappedNullable = &Project{}
 
 // Project struct for Project
 type Project struct {
-	Id                *int32     `json:"id,omitempty"`
+	Id                int32      `json:"id"`
 	Name              string     `json:"name"`
 	MlflowTrackingUrl *string    `json:"mlflow_tracking_url,omitempty"`
 	Administrators    []string   `json:"administrators,omitempty"`
@@ -39,8 +39,9 @@ type _Project Project
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewProject(name string) *Project {
+func NewProject(id int32, name string) *Project {
 	this := Project{}
+	this.Id = id
 	this.Name = name
 	return &this
 }
@@ -53,36 +54,28 @@ func NewProjectWithDefaults() *Project {
 	return &this
 }
 
-// GetId returns the Id field value if set, zero value otherwise.
+// GetId returns the Id field value
 func (o *Project) GetId() int32 {
-	if o == nil || IsNil(o.Id) {
+	if o == nil {
 		var ret int32
 		return ret
 	}
-	return *o.Id
+
+	return o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value if set, nil otherwise
+// GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *Project) GetIdOk() (*int32, bool) {
-	if o == nil || IsNil(o.Id) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Id, true
+	return &o.Id, true
 }
 
-// HasId returns a boolean if a field has been set.
-func (o *Project) HasId() bool {
-	if o != nil && !IsNil(o.Id) {
-		return true
-	}
-
-	return false
-}
-
-// SetId gets a reference to the given int32 and assigns it to the Id field.
+// SetId sets field value
 func (o *Project) SetId(v int32) {
-	o.Id = &v
+	o.Id = v
 }
 
 // GetName returns the Name field value
@@ -375,9 +368,7 @@ func (o Project) MarshalJSON() ([]byte, error) {
 
 func (o Project) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Id) {
-		toSerialize["id"] = o.Id
-	}
+	toSerialize["id"] = o.Id
 	toSerialize["name"] = o.Name
 	if !IsNil(o.MlflowTrackingUrl) {
 		toSerialize["mlflow_tracking_url"] = o.MlflowTrackingUrl
@@ -411,6 +402,7 @@ func (o *Project) UnmarshalJSON(bytes []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"id",
 		"name",
 	}
 

@@ -19,8 +19,8 @@ var _ MappedNullable = &OperationTracing{}
 
 // OperationTracing struct for OperationTracing
 type OperationTracing struct {
-	Preprocess  []PipelineTracingInner `json:"preprocess,omitempty"`
-	Postprocess []PipelineTracingInner `json:"postprocess,omitempty"`
+	Preprocess  []PipelineTracing `json:"preprocess,omitempty"`
+	Postprocess []PipelineTracing `json:"postprocess,omitempty"`
 }
 
 // NewOperationTracing instantiates a new OperationTracing object
@@ -41,9 +41,9 @@ func NewOperationTracingWithDefaults() *OperationTracing {
 }
 
 // GetPreprocess returns the Preprocess field value if set, zero value otherwise.
-func (o *OperationTracing) GetPreprocess() []PipelineTracingInner {
+func (o *OperationTracing) GetPreprocess() []PipelineTracing {
 	if o == nil || IsNil(o.Preprocess) {
-		var ret []PipelineTracingInner
+		var ret []PipelineTracing
 		return ret
 	}
 	return o.Preprocess
@@ -51,7 +51,7 @@ func (o *OperationTracing) GetPreprocess() []PipelineTracingInner {
 
 // GetPreprocessOk returns a tuple with the Preprocess field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OperationTracing) GetPreprocessOk() ([]PipelineTracingInner, bool) {
+func (o *OperationTracing) GetPreprocessOk() ([]PipelineTracing, bool) {
 	if o == nil || IsNil(o.Preprocess) {
 		return nil, false
 	}
@@ -67,15 +67,15 @@ func (o *OperationTracing) HasPreprocess() bool {
 	return false
 }
 
-// SetPreprocess gets a reference to the given []PipelineTracingInner and assigns it to the Preprocess field.
-func (o *OperationTracing) SetPreprocess(v []PipelineTracingInner) {
+// SetPreprocess gets a reference to the given []PipelineTracing and assigns it to the Preprocess field.
+func (o *OperationTracing) SetPreprocess(v []PipelineTracing) {
 	o.Preprocess = v
 }
 
 // GetPostprocess returns the Postprocess field value if set, zero value otherwise.
-func (o *OperationTracing) GetPostprocess() []PipelineTracingInner {
+func (o *OperationTracing) GetPostprocess() []PipelineTracing {
 	if o == nil || IsNil(o.Postprocess) {
-		var ret []PipelineTracingInner
+		var ret []PipelineTracing
 		return ret
 	}
 	return o.Postprocess
@@ -83,7 +83,7 @@ func (o *OperationTracing) GetPostprocess() []PipelineTracingInner {
 
 // GetPostprocessOk returns a tuple with the Postprocess field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OperationTracing) GetPostprocessOk() ([]PipelineTracingInner, bool) {
+func (o *OperationTracing) GetPostprocessOk() ([]PipelineTracing, bool) {
 	if o == nil || IsNil(o.Postprocess) {
 		return nil, false
 	}
@@ -99,8 +99,8 @@ func (o *OperationTracing) HasPostprocess() bool {
 	return false
 }
 
-// SetPostprocess gets a reference to the given []PipelineTracingInner and assigns it to the Postprocess field.
-func (o *OperationTracing) SetPostprocess(v []PipelineTracingInner) {
+// SetPostprocess gets a reference to the given []PipelineTracing and assigns it to the Postprocess field.
+func (o *OperationTracing) SetPostprocess(v []PipelineTracing) {
 	o.Postprocess = v
 }
 

@@ -19,6 +19,7 @@ import (
 type ModelPredictionOutput struct {
 	BinaryClassificationOutput *BinaryClassificationOutput
 	RankingOutput              *RankingOutput
+	RegressionOutput           *RegressionOutput
 }
 
 // BinaryClassificationOutputAsModelPredictionOutput is a convenience function that returns BinaryClassificationOutput wrapped in ModelPredictionOutput
@@ -32,6 +33,13 @@ func BinaryClassificationOutputAsModelPredictionOutput(v *BinaryClassificationOu
 func RankingOutputAsModelPredictionOutput(v *RankingOutput) ModelPredictionOutput {
 	return ModelPredictionOutput{
 		RankingOutput: v,
+	}
+}
+
+// RegressionOutputAsModelPredictionOutput is a convenience function that returns RegressionOutput wrapped in ModelPredictionOutput
+func RegressionOutputAsModelPredictionOutput(v *RegressionOutput) ModelPredictionOutput {
+	return ModelPredictionOutput{
+		RegressionOutput: v,
 	}
 }
 
@@ -65,10 +73,24 @@ func (dst *ModelPredictionOutput) UnmarshalJSON(data []byte) error {
 		dst.RankingOutput = nil
 	}
 
+	// try to unmarshal data into RegressionOutput
+	err = newStrictDecoder(data).Decode(&dst.RegressionOutput)
+	if err == nil {
+		jsonRegressionOutput, _ := json.Marshal(dst.RegressionOutput)
+		if string(jsonRegressionOutput) == "{}" { // empty struct
+			dst.RegressionOutput = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.RegressionOutput = nil
+	}
+
 	if match > 1 { // more than 1 match
 		// reset to nil
 		dst.BinaryClassificationOutput = nil
 		dst.RankingOutput = nil
+		dst.RegressionOutput = nil
 
 		return fmt.Errorf("data matches more than one schema in oneOf(ModelPredictionOutput)")
 	} else if match == 1 {
@@ -88,6 +110,10 @@ func (src ModelPredictionOutput) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.RankingOutput)
 	}
 
+	if src.RegressionOutput != nil {
+		return json.Marshal(&src.RegressionOutput)
+	}
+
 	return nil, nil // no data in oneOf schemas
 }
 
@@ -102,6 +128,10 @@ func (obj *ModelPredictionOutput) GetActualInstance() interface{} {
 
 	if obj.RankingOutput != nil {
 		return obj.RankingOutput
+	}
+
+	if obj.RegressionOutput != nil {
+		return obj.RegressionOutput
 	}
 
 	// all schemas are nil

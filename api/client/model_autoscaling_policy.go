@@ -12,6 +12,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // checks if the AutoscalingPolicy type satisfies the MappedNullable interface at compile time
@@ -19,16 +20,20 @@ var _ MappedNullable = &AutoscalingPolicy{}
 
 // AutoscalingPolicy struct for AutoscalingPolicy
 type AutoscalingPolicy struct {
-	MetricsType *MetricsType `json:"metrics_type,omitempty"`
-	TargetValue *float32     `json:"target_value,omitempty"`
+	MetricsType MetricsType `json:"metrics_type"`
+	TargetValue float32     `json:"target_value"`
 }
+
+type _AutoscalingPolicy AutoscalingPolicy
 
 // NewAutoscalingPolicy instantiates a new AutoscalingPolicy object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAutoscalingPolicy() *AutoscalingPolicy {
+func NewAutoscalingPolicy(metricsType MetricsType, targetValue float32) *AutoscalingPolicy {
 	this := AutoscalingPolicy{}
+	this.MetricsType = metricsType
+	this.TargetValue = targetValue
 	return &this
 }
 
@@ -40,68 +45,52 @@ func NewAutoscalingPolicyWithDefaults() *AutoscalingPolicy {
 	return &this
 }
 
-// GetMetricsType returns the MetricsType field value if set, zero value otherwise.
+// GetMetricsType returns the MetricsType field value
 func (o *AutoscalingPolicy) GetMetricsType() MetricsType {
-	if o == nil || IsNil(o.MetricsType) {
+	if o == nil {
 		var ret MetricsType
 		return ret
 	}
-	return *o.MetricsType
+
+	return o.MetricsType
 }
 
-// GetMetricsTypeOk returns a tuple with the MetricsType field value if set, nil otherwise
+// GetMetricsTypeOk returns a tuple with the MetricsType field value
 // and a boolean to check if the value has been set.
 func (o *AutoscalingPolicy) GetMetricsTypeOk() (*MetricsType, bool) {
-	if o == nil || IsNil(o.MetricsType) {
+	if o == nil {
 		return nil, false
 	}
-	return o.MetricsType, true
+	return &o.MetricsType, true
 }
 
-// HasMetricsType returns a boolean if a field has been set.
-func (o *AutoscalingPolicy) HasMetricsType() bool {
-	if o != nil && !IsNil(o.MetricsType) {
-		return true
-	}
-
-	return false
-}
-
-// SetMetricsType gets a reference to the given MetricsType and assigns it to the MetricsType field.
+// SetMetricsType sets field value
 func (o *AutoscalingPolicy) SetMetricsType(v MetricsType) {
-	o.MetricsType = &v
+	o.MetricsType = v
 }
 
-// GetTargetValue returns the TargetValue field value if set, zero value otherwise.
+// GetTargetValue returns the TargetValue field value
 func (o *AutoscalingPolicy) GetTargetValue() float32 {
-	if o == nil || IsNil(o.TargetValue) {
+	if o == nil {
 		var ret float32
 		return ret
 	}
-	return *o.TargetValue
+
+	return o.TargetValue
 }
 
-// GetTargetValueOk returns a tuple with the TargetValue field value if set, nil otherwise
+// GetTargetValueOk returns a tuple with the TargetValue field value
 // and a boolean to check if the value has been set.
 func (o *AutoscalingPolicy) GetTargetValueOk() (*float32, bool) {
-	if o == nil || IsNil(o.TargetValue) {
+	if o == nil {
 		return nil, false
 	}
-	return o.TargetValue, true
+	return &o.TargetValue, true
 }
 
-// HasTargetValue returns a boolean if a field has been set.
-func (o *AutoscalingPolicy) HasTargetValue() bool {
-	if o != nil && !IsNil(o.TargetValue) {
-		return true
-	}
-
-	return false
-}
-
-// SetTargetValue gets a reference to the given float32 and assigns it to the TargetValue field.
+// SetTargetValue sets field value
 func (o *AutoscalingPolicy) SetTargetValue(v float32) {
-	o.TargetValue = &v
+	o.TargetValue = v
 }
 
 func (o AutoscalingPolicy) MarshalJSON() ([]byte, error) {
@@ -114,13 +103,45 @@ func (o AutoscalingPolicy) MarshalJSON() ([]byte, error) {
 
 func (o AutoscalingPolicy) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.MetricsType) {
-		toSerialize["metrics_type"] = o.MetricsType
-	}
-	if !IsNil(o.TargetValue) {
-		toSerialize["target_value"] = o.TargetValue
-	}
+	toSerialize["metrics_type"] = o.MetricsType
+	toSerialize["target_value"] = o.TargetValue
 	return toSerialize, nil
+}
+
+func (o *AutoscalingPolicy) UnmarshalJSON(bytes []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"metrics_type",
+		"target_value",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &allProperties)
+
+	if err != nil {
+		return err
+	}
+
+	for _, requiredProperty := range requiredProperties {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varAutoscalingPolicy := _AutoscalingPolicy{}
+
+	err = json.Unmarshal(bytes, &varAutoscalingPolicy)
+
+	if err != nil {
+		return err
+	}
+
+	*o = AutoscalingPolicy(varAutoscalingPolicy)
+
+	return err
 }
 
 type NullableAutoscalingPolicy struct {

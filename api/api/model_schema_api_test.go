@@ -8,6 +8,7 @@ import (
 
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/errors"
+	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -295,7 +296,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					"model_prediction_output": {
 						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
-						"relevance_score": "relevance_score"
+						"relevance_score": "relevance_score",
+						"output_class": "RankingOutput"
 					}
 				}
 			}`),
@@ -316,6 +318,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionGroudIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
 							},
 						},
 					},
@@ -335,6 +338,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionGroudIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
 							},
 						},
 					},
@@ -359,6 +363,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionGroudIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
 							},
 						},
 					},
@@ -384,7 +389,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"negative_class_label": "negative",
 						"prediction_score_column": "prediction_score",
 						"prediction_label_column": "prediction_label",
-						"positive_class_label": "positive"
+						"positive_class_label": "positive",
+						"output_class": "BinaryClassificationOutput"
 					}
 				}
 			}`),
@@ -407,6 +413,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionScoreColumn: "prediction_score",
 								PredictionLabelColumn: "prediction_label",
 								PositiveClassLabel:    "positive",
+								OutputClass:           models.BinaryClassification,
 							},
 						},
 					},
@@ -428,6 +435,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionScoreColumn: "prediction_score",
 								PredictionLabelColumn: "prediction_label",
 								PositiveClassLabel:    "positive",
+								OutputClass:           models.BinaryClassification,
 							},
 						},
 					},
@@ -454,6 +462,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionScoreColumn: "prediction_score",
 								PredictionLabelColumn: "prediction_label",
 								PositiveClassLabel:    "positive",
+								OutputClass:           models.BinaryClassification,
 							},
 						},
 					},
@@ -476,7 +485,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					},
 					"model_prediction_output": {
 						"prediction_score_column": "prediction_score",
-						"actual_score_column": "actual_score"
+						"actual_score_column": "actual_score",
+						"output_class": "RegressionOutput"
 					}
 				}
 			}`),
@@ -496,6 +506,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 							RegressionOutput: &models.RegressionOutput{
 								PredictionScoreColumn: "prediction_score",
 								ActualScoreColumn:     "actual_score",
+								OutputClass:           models.Regression,
 							},
 						},
 					},
@@ -514,6 +525,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 							RegressionOutput: &models.RegressionOutput{
 								PredictionScoreColumn: "prediction_score",
 								ActualScoreColumn:     "actual_score",
+								OutputClass:           models.Regression,
 							},
 						},
 					},
@@ -537,6 +549,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 							RegressionOutput: &models.RegressionOutput{
 								PredictionScoreColumn: "prediction_score",
 								ActualScoreColumn:     "actual_score",
+								OutputClass:           models.Regression,
 							},
 						},
 					},
@@ -560,7 +573,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					"model_prediction_output": {
 						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
-						"relevance_score": "relevance_score"
+						"relevance_score": "relevance_score",
+						"output_class": "RankingOutput"
 					}
 				}
 			}`),
@@ -581,6 +595,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 								PredictionGroudIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
 							},
 						},
 					},
@@ -603,9 +618,38 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			var modelSchema *models.ModelSchema
 			err := json.Unmarshal(tt.body, &modelSchema)
 			require.NoError(t, err)
+
+			validate, _ := internalValidator.NewValidator()
+			err = validate.Struct(modelSchema)
+			require.NoError(t, err)
+
 			resp := ctrl.CreateOrUpdateSchema(&http.Request{}, tt.vars, modelSchema)
 			assertEqualResponses(t, tt.expected, resp)
 		})
+	}
+}
+
+func Benchmark_Unmarshal(b *testing.B) {
+	data := []byte(` {
+			"prediction_id_column":"prediction_id",
+			"tag_columns": ["tags"],
+			"feature_types": {
+				"featureA": "float64",
+				"featureB": "int64",
+				"featureC": "boolean"
+			},
+			"model_prediction_output": {
+				"actual_label_column": "actual_label",
+				"negative_class_label": "negative",
+				"prediction_score_column": "prediction_score",
+				"prediction_label_column": "prediction_label",
+				"positive_class_label": "positive",
+				"output_class": "BinaryClassificationOutput"
+			}
+	}`)
+	for i := 0; i < b.N; i++ {
+		var schemaSpec models.SchemaSpec
+		_ = json.Unmarshal(data, &schemaSpec)
 	}
 }
 

@@ -32,7 +32,7 @@ type Version struct {
 	CreatedAt       *time.Time             `json:"created_at,omitempty"`
 	UpdatedAt       *time.Time             `json:"updated_at,omitempty"`
 	PythonVersion   *string                `json:"python_version,omitempty"`
-	Schema          *InferenceSchema       `json:"schema,omitempty"`
+	ModelSchema     *ModelSchema           `json:"model_schema,omitempty"`
 }
 
 // NewVersion instantiates a new Version object
@@ -436,36 +436,36 @@ func (o *Version) SetPythonVersion(v string) {
 	o.PythonVersion = &v
 }
 
-// GetSchema returns the Schema field value if set, zero value otherwise.
-func (o *Version) GetSchema() InferenceSchema {
-	if o == nil || IsNil(o.Schema) {
-		var ret InferenceSchema
+// GetModelSchema returns the ModelSchema field value if set, zero value otherwise.
+func (o *Version) GetModelSchema() ModelSchema {
+	if o == nil || IsNil(o.ModelSchema) {
+		var ret ModelSchema
 		return ret
 	}
-	return *o.Schema
+	return *o.ModelSchema
 }
 
-// GetSchemaOk returns a tuple with the Schema field value if set, nil otherwise
+// GetModelSchemaOk returns a tuple with the ModelSchema field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Version) GetSchemaOk() (*InferenceSchema, bool) {
-	if o == nil || IsNil(o.Schema) {
+func (o *Version) GetModelSchemaOk() (*ModelSchema, bool) {
+	if o == nil || IsNil(o.ModelSchema) {
 		return nil, false
 	}
-	return o.Schema, true
+	return o.ModelSchema, true
 }
 
-// HasSchema returns a boolean if a field has been set.
-func (o *Version) HasSchema() bool {
-	if o != nil && !IsNil(o.Schema) {
+// HasModelSchema returns a boolean if a field has been set.
+func (o *Version) HasModelSchema() bool {
+	if o != nil && !IsNil(o.ModelSchema) {
 		return true
 	}
 
 	return false
 }
 
-// SetSchema gets a reference to the given InferenceSchema and assigns it to the Schema field.
-func (o *Version) SetSchema(v InferenceSchema) {
-	o.Schema = &v
+// SetModelSchema gets a reference to the given ModelSchema and assigns it to the ModelSchema field.
+func (o *Version) SetModelSchema(v ModelSchema) {
+	o.ModelSchema = &v
 }
 
 func (o Version) MarshalJSON() ([]byte, error) {
@@ -514,8 +514,8 @@ func (o Version) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.PythonVersion) {
 		toSerialize["python_version"] = o.PythonVersion
 	}
-	if !IsNil(o.Schema) {
-		toSerialize["schema"] = o.Schema
+	if !IsNil(o.ModelSchema) {
+		toSerialize["model_schema"] = o.ModelSchema
 	}
 	return toSerialize, nil
 }

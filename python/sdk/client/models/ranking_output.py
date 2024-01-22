@@ -20,6 +20,7 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr
+from client.models.model_prediction_output_class import ModelPredictionOutputClass
 try:
     from typing import Self
 except ImportError:
@@ -32,7 +33,8 @@ class RankingOutput(BaseModel):
     rank_score_column: StrictStr
     prediction_group_id_column: StrictStr
     relevance_score_column: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["rank_score_column", "prediction_group_id_column", "relevance_score_column"]
+    output_class: Optional[ModelPredictionOutputClass] = None
+    __properties: ClassVar[List[str]] = ["rank_score_column", "prediction_group_id_column", "relevance_score_column", "output_class"]
 
     model_config = {
         "populate_by_name": True,
@@ -84,7 +86,8 @@ class RankingOutput(BaseModel):
         _obj = cls.model_validate({
             "rank_score_column": obj.get("rank_score_column"),
             "prediction_group_id_column": obj.get("prediction_group_id_column"),
-            "relevance_score_column": obj.get("relevance_score_column")
+            "relevance_score_column": obj.get("relevance_score_column"),
+            "output_class": obj.get("output_class")
         })
         return _obj
 

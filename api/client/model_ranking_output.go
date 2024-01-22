@@ -12,6 +12,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // checks if the RankingOutput type satisfies the MappedNullable interface at compile time
@@ -19,17 +20,23 @@ var _ MappedNullable = &RankingOutput{}
 
 // RankingOutput struct for RankingOutput
 type RankingOutput struct {
-	RankScoreColumn       *string `json:"rank_score_column,omitempty"`
-	PredictionScoreColumn *string `json:"prediction_score_column,omitempty"`
-	RelevanceScoreColumn  *string `json:"relevance_score_column,omitempty"`
+	RankScoreColumn         string                     `json:"rank_score_column"`
+	PredictionGroupIdColumn string                     `json:"prediction_group_id_column"`
+	RelevanceScoreColumn    *string                    `json:"relevance_score_column,omitempty"`
+	OutputClass             ModelPredictionOutputClass `json:"output_class"`
 }
+
+type _RankingOutput RankingOutput
 
 // NewRankingOutput instantiates a new RankingOutput object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRankingOutput() *RankingOutput {
+func NewRankingOutput(rankScoreColumn string, predictionGroupIdColumn string, outputClass ModelPredictionOutputClass) *RankingOutput {
 	this := RankingOutput{}
+	this.RankScoreColumn = rankScoreColumn
+	this.PredictionGroupIdColumn = predictionGroupIdColumn
+	this.OutputClass = outputClass
 	return &this
 }
 
@@ -41,68 +48,52 @@ func NewRankingOutputWithDefaults() *RankingOutput {
 	return &this
 }
 
-// GetRankScoreColumn returns the RankScoreColumn field value if set, zero value otherwise.
+// GetRankScoreColumn returns the RankScoreColumn field value
 func (o *RankingOutput) GetRankScoreColumn() string {
-	if o == nil || IsNil(o.RankScoreColumn) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.RankScoreColumn
+
+	return o.RankScoreColumn
 }
 
-// GetRankScoreColumnOk returns a tuple with the RankScoreColumn field value if set, nil otherwise
+// GetRankScoreColumnOk returns a tuple with the RankScoreColumn field value
 // and a boolean to check if the value has been set.
 func (o *RankingOutput) GetRankScoreColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.RankScoreColumn) {
+	if o == nil {
 		return nil, false
 	}
-	return o.RankScoreColumn, true
+	return &o.RankScoreColumn, true
 }
 
-// HasRankScoreColumn returns a boolean if a field has been set.
-func (o *RankingOutput) HasRankScoreColumn() bool {
-	if o != nil && !IsNil(o.RankScoreColumn) {
-		return true
-	}
-
-	return false
-}
-
-// SetRankScoreColumn gets a reference to the given string and assigns it to the RankScoreColumn field.
+// SetRankScoreColumn sets field value
 func (o *RankingOutput) SetRankScoreColumn(v string) {
-	o.RankScoreColumn = &v
+	o.RankScoreColumn = v
 }
 
-// GetPredictionScoreColumn returns the PredictionScoreColumn field value if set, zero value otherwise.
-func (o *RankingOutput) GetPredictionScoreColumn() string {
-	if o == nil || IsNil(o.PredictionScoreColumn) {
+// GetPredictionGroupIdColumn returns the PredictionGroupIdColumn field value
+func (o *RankingOutput) GetPredictionGroupIdColumn() string {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.PredictionScoreColumn
+
+	return o.PredictionGroupIdColumn
 }
 
-// GetPredictionScoreColumnOk returns a tuple with the PredictionScoreColumn field value if set, nil otherwise
+// GetPredictionGroupIdColumnOk returns a tuple with the PredictionGroupIdColumn field value
 // and a boolean to check if the value has been set.
-func (o *RankingOutput) GetPredictionScoreColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.PredictionScoreColumn) {
+func (o *RankingOutput) GetPredictionGroupIdColumnOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return o.PredictionScoreColumn, true
+	return &o.PredictionGroupIdColumn, true
 }
 
-// HasPredictionScoreColumn returns a boolean if a field has been set.
-func (o *RankingOutput) HasPredictionScoreColumn() bool {
-	if o != nil && !IsNil(o.PredictionScoreColumn) {
-		return true
-	}
-
-	return false
-}
-
-// SetPredictionScoreColumn gets a reference to the given string and assigns it to the PredictionScoreColumn field.
-func (o *RankingOutput) SetPredictionScoreColumn(v string) {
-	o.PredictionScoreColumn = &v
+// SetPredictionGroupIdColumn sets field value
+func (o *RankingOutput) SetPredictionGroupIdColumn(v string) {
+	o.PredictionGroupIdColumn = v
 }
 
 // GetRelevanceScoreColumn returns the RelevanceScoreColumn field value if set, zero value otherwise.
@@ -137,6 +128,30 @@ func (o *RankingOutput) SetRelevanceScoreColumn(v string) {
 	o.RelevanceScoreColumn = &v
 }
 
+// GetOutputClass returns the OutputClass field value
+func (o *RankingOutput) GetOutputClass() ModelPredictionOutputClass {
+	if o == nil {
+		var ret ModelPredictionOutputClass
+		return ret
+	}
+
+	return o.OutputClass
+}
+
+// GetOutputClassOk returns a tuple with the OutputClass field value
+// and a boolean to check if the value has been set.
+func (o *RankingOutput) GetOutputClassOk() (*ModelPredictionOutputClass, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.OutputClass, true
+}
+
+// SetOutputClass sets field value
+func (o *RankingOutput) SetOutputClass(v ModelPredictionOutputClass) {
+	o.OutputClass = v
+}
+
 func (o RankingOutput) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -147,16 +162,50 @@ func (o RankingOutput) MarshalJSON() ([]byte, error) {
 
 func (o RankingOutput) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.RankScoreColumn) {
-		toSerialize["rank_score_column"] = o.RankScoreColumn
-	}
-	if !IsNil(o.PredictionScoreColumn) {
-		toSerialize["prediction_score_column"] = o.PredictionScoreColumn
-	}
+	toSerialize["rank_score_column"] = o.RankScoreColumn
+	toSerialize["prediction_group_id_column"] = o.PredictionGroupIdColumn
 	if !IsNil(o.RelevanceScoreColumn) {
 		toSerialize["relevance_score_column"] = o.RelevanceScoreColumn
 	}
+	toSerialize["output_class"] = o.OutputClass
 	return toSerialize, nil
+}
+
+func (o *RankingOutput) UnmarshalJSON(bytes []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"rank_score_column",
+		"prediction_group_id_column",
+		"output_class",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &allProperties)
+
+	if err != nil {
+		return err
+	}
+
+	for _, requiredProperty := range requiredProperties {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varRankingOutput := _RankingOutput{}
+
+	err = json.Unmarshal(bytes, &varRankingOutput)
+
+	if err != nil {
+		return err
+	}
+
+	*o = RankingOutput(varRankingOutput)
+
+	return err
 }
 
 type NullableRankingOutput struct {

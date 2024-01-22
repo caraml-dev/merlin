@@ -23,7 +23,7 @@ var _ MappedNullable = &Environment{}
 type Environment struct {
 	Id                                  *int32                        `json:"id,omitempty"`
 	Name                                string                        `json:"name"`
-	Cluster                             *string                       `json:"cluster,omitempty"`
+	Cluster                             string                        `json:"cluster"`
 	IsDefault                           *bool                         `json:"is_default,omitempty"`
 	Region                              *string                       `json:"region,omitempty"`
 	GcpProject                          *string                       `json:"gcp_project,omitempty"`
@@ -41,9 +41,10 @@ type _Environment Environment
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewEnvironment(name string) *Environment {
+func NewEnvironment(name string, cluster string) *Environment {
 	this := Environment{}
 	this.Name = name
+	this.Cluster = cluster
 	return &this
 }
 
@@ -111,36 +112,28 @@ func (o *Environment) SetName(v string) {
 	o.Name = v
 }
 
-// GetCluster returns the Cluster field value if set, zero value otherwise.
+// GetCluster returns the Cluster field value
 func (o *Environment) GetCluster() string {
-	if o == nil || IsNil(o.Cluster) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Cluster
+
+	return o.Cluster
 }
 
-// GetClusterOk returns a tuple with the Cluster field value if set, nil otherwise
+// GetClusterOk returns a tuple with the Cluster field value
 // and a boolean to check if the value has been set.
 func (o *Environment) GetClusterOk() (*string, bool) {
-	if o == nil || IsNil(o.Cluster) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Cluster, true
+	return &o.Cluster, true
 }
 
-// HasCluster returns a boolean if a field has been set.
-func (o *Environment) HasCluster() bool {
-	if o != nil && !IsNil(o.Cluster) {
-		return true
-	}
-
-	return false
-}
-
-// SetCluster gets a reference to the given string and assigns it to the Cluster field.
+// SetCluster sets field value
 func (o *Environment) SetCluster(v string) {
-	o.Cluster = &v
+	o.Cluster = v
 }
 
 // GetIsDefault returns the IsDefault field value if set, zero value otherwise.
@@ -445,9 +438,7 @@ func (o Environment) ToMap() (map[string]interface{}, error) {
 		toSerialize["id"] = o.Id
 	}
 	toSerialize["name"] = o.Name
-	if !IsNil(o.Cluster) {
-		toSerialize["cluster"] = o.Cluster
-	}
+	toSerialize["cluster"] = o.Cluster
 	if !IsNil(o.IsDefault) {
 		toSerialize["is_default"] = o.IsDefault
 	}
@@ -484,6 +475,7 @@ func (o *Environment) UnmarshalJSON(bytes []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"name",
+		"cluster",
 	}
 
 	allProperties := make(map[string]interface{})

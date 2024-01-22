@@ -20,6 +20,7 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr
+from client.models.model_prediction_output_class import ModelPredictionOutputClass
 try:
     from typing import Self
 except ImportError:
@@ -31,7 +32,8 @@ class RegressionOutput(BaseModel):
     """ # noqa: E501
     prediction_score_column: StrictStr
     actual_score_column: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_score_column"]
+    output_class: Optional[ModelPredictionOutputClass] = None
+    __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_score_column", "output_class"]
 
     model_config = {
         "populate_by_name": True,
@@ -82,7 +84,8 @@ class RegressionOutput(BaseModel):
 
         _obj = cls.model_validate({
             "prediction_score_column": obj.get("prediction_score_column"),
-            "actual_score_column": obj.get("actual_score_column")
+            "actual_score_column": obj.get("actual_score_column"),
+            "output_class": obj.get("output_class")
         })
         return _obj
 

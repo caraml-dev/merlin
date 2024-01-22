@@ -10,11 +10,12 @@ import (
 
 type InferenceType string
 
+type ModelPredictionOutputClass string
+
 const (
-	BinaryClassification     = "BINARY_CLASSIFICATION"
-	MulticlassClassification = "MULTICLASS_CLASSIFICATION"
-	Regression               = "REGRESSION"
-	Ranking                  = "RANKING"
+	BinaryClassification ModelPredictionOutputClass = "BinaryClassificationOutput"
+	Regression           ModelPredictionOutputClass = "RegressionOutput"
+	Ranking              ModelPredictionOutputClass = "RankingOutput"
 )
 
 type ValueType string
@@ -66,57 +67,36 @@ func newStrictDecoder(data []byte) *json.Decoder {
 
 func (m *ModelPredictionOutput) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into BinaryClassificationOutput
-	err = newStrictDecoder(data).Decode(&m.BinaryClassificationOutput)
-	if err == nil {
-		jsonBinaryClassificationOutput, _ := json.Marshal(m.BinaryClassificationOutput)
-		if string(jsonBinaryClassificationOutput) == "{}" { // empty struct
-			m.BinaryClassificationOutput = nil
-		} else {
-			match++
+	outputClassStruct := struct {
+		OutputClass ModelPredictionOutputClass `json:"output_class"`
+	}{}
+	err = json.Unmarshal(data, &outputClassStruct)
+	if err != nil {
+		return err
+	}
+
+	strictDecoder := newStrictDecoder(data)
+	switch outputClassStruct.OutputClass {
+	case BinaryClassification:
+		err := strictDecoder.Decode(&m.BinaryClassificationOutput)
+		if err != nil {
+			return err
 		}
-	} else {
-		m.BinaryClassificationOutput = nil
-	}
-
-	// try to unmarshal data into RankingOutput
-	err = newStrictDecoder(data).Decode(&m.RankingOutput)
-	if err == nil {
-		jsonRankingOutput, _ := json.Marshal(m.RankingOutput)
-		if string(jsonRankingOutput) == "{}" { // empty struct
-			m.RankingOutput = nil
-		} else {
-			match++
+	case Regression:
+		err := strictDecoder.Decode(&m.RegressionOutput)
+		if err != nil {
+			return err
 		}
-	} else {
-		m.RankingOutput = nil
-	}
-
-	// try to unmarshal data into RegresionOutput
-	err = newStrictDecoder(data).Decode(&m.RegressionOutput)
-	if err == nil {
-		jsonRegressionOutput, _ := json.Marshal(m.RegressionOutput)
-		if string(jsonRegressionOutput) == "{}" { // empty struct
-			m.RegressionOutput = nil
-		} else {
-			match++
+	case Ranking:
+		err := strictDecoder.Decode(&m.RankingOutput)
+		if err != nil {
+			return err
 		}
-	} else {
-		m.RegressionOutput = nil
+	default:
+		return fmt.Errorf("output class %v it not supported", outputClassStruct.OutputClass)
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		m.BinaryClassificationOutput = nil
-		m.RankingOutput = nil
-		m.RegressionOutput = nil
-		return fmt.Errorf("data matches more than one schema in oneOf(ModelPredictionOutput)")
-	} else if match == 1 {
-		return nil // exactly one match
-	}
-
-	return fmt.Errorf("data failed to match schemas in oneOf(ModelPredictionOutput)")
+	return nil
 }
 
 func (m ModelPredictionOutput) MarshalJSON() ([]byte, error) {
@@ -136,21 +116,24 @@ func (m ModelPredictionOutput) MarshalJSON() ([]byte, error) {
 }
 
 type BinaryClassificationOutput struct {
-	ActualLabelColumn     string   `json:"actual_label_column"`
-	NegativeClassLabel    string   `json:"negative_class_label"`
-	PredictionScoreColumn string   `json:"prediction_score_column"`
-	PredictionLabelColumn string   `json:"prediction_label_column"`
-	PositiveClassLabel    string   `json:"positive_class_label"`
-	ScoreThreshold        *float64 `json:"score_threshold,omitempty"`
+	ActualLabelColumn     string                     `json:"actual_label_column"`
+	NegativeClassLabel    string                     `json:"negative_class_label"`
+	PredictionScoreColumn string                     `json:"prediction_score_column"`
+	PredictionLabelColumn string                     `json:"prediction_label_column"`
+	PositiveClassLabel    string                     `json:"positive_class_label"`
+	ScoreThreshold        *float64                   `json:"score_threshold,omitempty"`
+	OutputClass           ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }
 
 type RankingOutput struct {
-	PredictionGroudIDColumn string `json:"prediction_group_id_column"`
-	RankScoreColumn         string `json:"rank_score_column"`
-	RelevanceScoreColumn    string `json:"relevance_score"`
+	PredictionGroudIDColumn string                     `json:"prediction_group_id_column"`
+	RankScoreColumn         string                     `json:"rank_score_column"`
+	RelevanceScoreColumn    string                     `json:"relevance_score"`
+	OutputClass             ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }
 
 type RegressionOutput struct {
-	PredictionScoreColumn string `json:"prediction_score_column"`
-	ActualScoreColumn     string `json:"actual_score_column"`
+	PredictionScoreColumn string                     `json:"prediction_score_column"`
+	ActualScoreColumn     string                     `json:"actual_score_column"`
+	OutputClass           ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }

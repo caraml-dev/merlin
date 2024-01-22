@@ -70,6 +70,7 @@ from client.models.model_endpoint_rule import ModelEndpointRule
 from client.models.model_endpoint_rule_destination import ModelEndpointRuleDestination
 from client.models.model_prediction_config import ModelPredictionConfig
 from client.models.model_prediction_output import ModelPredictionOutput
+from client.models.model_prediction_output_class import ModelPredictionOutputClass
 from client.models.model_schema import ModelSchema
 from client.models.operation_tracing import OperationTracing
 from client.models.pipeline_tracing import PipelineTracing

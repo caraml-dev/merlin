@@ -12,6 +12,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // checks if the LoggerConfig type satisfies the MappedNullable interface at compile time
@@ -19,16 +20,20 @@ var _ MappedNullable = &LoggerConfig{}
 
 // LoggerConfig struct for LoggerConfig
 type LoggerConfig struct {
-	Enabled *bool       `json:"enabled,omitempty"`
-	Mode    *LoggerMode `json:"mode,omitempty"`
+	Enabled bool       `json:"enabled"`
+	Mode    LoggerMode `json:"mode"`
 }
+
+type _LoggerConfig LoggerConfig
 
 // NewLoggerConfig instantiates a new LoggerConfig object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLoggerConfig() *LoggerConfig {
+func NewLoggerConfig(enabled bool, mode LoggerMode) *LoggerConfig {
 	this := LoggerConfig{}
+	this.Enabled = enabled
+	this.Mode = mode
 	return &this
 }
 
@@ -40,68 +45,52 @@ func NewLoggerConfigWithDefaults() *LoggerConfig {
 	return &this
 }
 
-// GetEnabled returns the Enabled field value if set, zero value otherwise.
+// GetEnabled returns the Enabled field value
 func (o *LoggerConfig) GetEnabled() bool {
-	if o == nil || IsNil(o.Enabled) {
+	if o == nil {
 		var ret bool
 		return ret
 	}
-	return *o.Enabled
+
+	return o.Enabled
 }
 
-// GetEnabledOk returns a tuple with the Enabled field value if set, nil otherwise
+// GetEnabledOk returns a tuple with the Enabled field value
 // and a boolean to check if the value has been set.
 func (o *LoggerConfig) GetEnabledOk() (*bool, bool) {
-	if o == nil || IsNil(o.Enabled) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Enabled, true
+	return &o.Enabled, true
 }
 
-// HasEnabled returns a boolean if a field has been set.
-func (o *LoggerConfig) HasEnabled() bool {
-	if o != nil && !IsNil(o.Enabled) {
-		return true
-	}
-
-	return false
-}
-
-// SetEnabled gets a reference to the given bool and assigns it to the Enabled field.
+// SetEnabled sets field value
 func (o *LoggerConfig) SetEnabled(v bool) {
-	o.Enabled = &v
+	o.Enabled = v
 }
 
-// GetMode returns the Mode field value if set, zero value otherwise.
+// GetMode returns the Mode field value
 func (o *LoggerConfig) GetMode() LoggerMode {
-	if o == nil || IsNil(o.Mode) {
+	if o == nil {
 		var ret LoggerMode
 		return ret
 	}
-	return *o.Mode
+
+	return o.Mode
 }
 
-// GetModeOk returns a tuple with the Mode field value if set, nil otherwise
+// GetModeOk returns a tuple with the Mode field value
 // and a boolean to check if the value has been set.
 func (o *LoggerConfig) GetModeOk() (*LoggerMode, bool) {
-	if o == nil || IsNil(o.Mode) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Mode, true
+	return &o.Mode, true
 }
 
-// HasMode returns a boolean if a field has been set.
-func (o *LoggerConfig) HasMode() bool {
-	if o != nil && !IsNil(o.Mode) {
-		return true
-	}
-
-	return false
-}
-
-// SetMode gets a reference to the given LoggerMode and assigns it to the Mode field.
+// SetMode sets field value
 func (o *LoggerConfig) SetMode(v LoggerMode) {
-	o.Mode = &v
+	o.Mode = v
 }
 
 func (o LoggerConfig) MarshalJSON() ([]byte, error) {
@@ -114,13 +103,45 @@ func (o LoggerConfig) MarshalJSON() ([]byte, error) {
 
 func (o LoggerConfig) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Enabled) {
-		toSerialize["enabled"] = o.Enabled
-	}
-	if !IsNil(o.Mode) {
-		toSerialize["mode"] = o.Mode
-	}
+	toSerialize["enabled"] = o.Enabled
+	toSerialize["mode"] = o.Mode
 	return toSerialize, nil
+}
+
+func (o *LoggerConfig) UnmarshalJSON(bytes []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"enabled",
+		"mode",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &allProperties)
+
+	if err != nil {
+		return err
+	}
+
+	for _, requiredProperty := range requiredProperties {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varLoggerConfig := _LoggerConfig{}
+
+	err = json.Unmarshal(bytes, &varLoggerConfig)
+
+	if err != nil {
+		return err
+	}
+
+	*o = LoggerConfig(varLoggerConfig)
+
+	return err
 }
 
 type NullableLoggerConfig struct {
