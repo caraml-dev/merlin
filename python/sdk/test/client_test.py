@@ -47,7 +47,7 @@ mlflow_tracking_url = "http://mlflow.api.merlin.dev"
 created_at = "2019-08-29T08:13:12.377Z"
 updated_at = "2019-08-29T08:13:12.377Z"
 
-default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
+default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
 env_1 = cl.Environment(
     id=1,
     name="dev",
@@ -75,6 +75,11 @@ mdl_endpoint_1 = cl.ModelEndpoint(
     updated_at=updated_at,
 )
 
+
+def serialize_datetime(obj):
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    raise TypeError("Type is not serializable")
 
 @responses.activate
 def test_get_project(mock_url, mock_oauth, use_google_oauth):
@@ -122,7 +127,7 @@ def test_create_invalid_project_name(
 
 @responses.activate
 def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
-    project_id = "1010"
+    project_id = 1010
     mlflow_experiment_id = 1
     model_name = "my-model"
     project_name = "my-project"
@@ -150,13 +155,17 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
                         "created_at": "{created_at}",
                         "updated_at": "{updated_at}"
                       }}""",
-        status=200,
+        status=201,
         content_type="application/json",
     )
 
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     prj = cl.Project(
-        project_id, project_name, mlflow_tracking_url, created_at, updated_at
+       id=project_id, 
+       name=project_name, 
+       mlflow_tracking_url=mlflow_tracking_url, 
+       created_at=created_at, 
+       updated_at=updated_at
     )
     project = Project(prj, mock_url, api_client)
     with mock.patch.object(client, "get_project", return_value=project):
@@ -205,7 +214,7 @@ def test_create_invalid_model_name(mock_url, api_client, mock_oauth, use_google_
 
 @responses.activate
 def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth):
-    project_id = "1010"
+    project_id = 1010
     mlflow_experiment_id = 1
     model_name = "my-model"
     project_name = "my-project"
@@ -233,14 +242,18 @@ def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth):
     responses.add(
         "GET",
         f"/api/v1/models/1/endpoints",
-        body=json.dumps([mdl_endpoint_1.to_dict()]),
+        body=json.dumps([mdl_endpoint_1.to_dict()], default=serialize_datetime),
         status=200,
         content_type="application/json",
     )
 
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     prj = cl.Project(
-        project_id, project_name, mlflow_tracking_url, created_at, updated_at
+        id=project_id, 
+        name=project_name, 
+        mlflow_tracking_url=mlflow_tracking_url, 
+        created_at=created_at, 
+        updated_at=updated_at
     )
     project = Project(prj, mock_url, api_client)
     with mock.patch.object(client, "get_project", return_value=project):
@@ -291,25 +304,29 @@ def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
                         "created_at": "{created_at}",
                         "updated_at": "{updated_at}"
                       }}""",
-        status=200,
+        status=201,
         content_type="application/json",
     )
 
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     prj = cl.Project(
-        project_id, project_name, mlflow_tracking_url, created_at, updated_at
+        id=project_id, 
+        name=project_name, 
+        mlflow_tracking_url=mlflow_tracking_url, 
+        created_at=created_at, 
+        updated_at=updated_at
     )
     project = Project(prj, mock_url, api_client)
     mdl = cl.Model(
-        model_id,
-        project_id,
-        mlflow_experiment_id,
-        model_name,
-        model_type.value,
-        mlflow_url,
-        None,
-        created_at,
-        updated_at,
+        id=model_id,
+        project_id=project_id,
+        mlflow_experiment_id=mlflow_experiment_id,
+        name=model_name,
+        type=model_type.value,
+        mlflow_url=mlflow_url,
+        endpoints=None,
+        created_at=created_at,
+        updated_at=updated_at,
     )
     mdl = Model(mdl, project, api_client)
     with mock.patch.object(client, "get_model", return_value=mdl):

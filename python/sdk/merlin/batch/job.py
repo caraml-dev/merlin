@@ -14,6 +14,7 @@
 
 import client
 from enum import Enum
+from typing import Optional
 
 from merlin.util import autostr
 
@@ -40,7 +41,7 @@ class PredictionJob:
         self._error = job.error
 
     @property
-    def id(self) -> int:
+    def id(self) -> Optional[int]:
         """
         ID of prediction job
 
@@ -49,7 +50,7 @@ class PredictionJob:
         return self._id
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """
         Prediction job name
 
@@ -67,7 +68,7 @@ class PredictionJob:
         return JobStatus(self._status)
 
     @property
-    def error(self) -> str:
+    def error(self) -> Optional[str]:
         """
         Error message containing the reason of failed job
 

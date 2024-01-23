@@ -67,6 +67,7 @@ func (service *versionsService) query() *gorm.DB {
 				Joins("JOIN environments on environments.name = version_endpoints.environment_name")
 		}).
 		Preload("Model").
+		Preload("ModelSchema").
 		Joins("JOIN models on models.id = versions.model_id")
 }
 

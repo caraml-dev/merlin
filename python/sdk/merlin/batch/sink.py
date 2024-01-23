@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import MutableMapping, Mapping, Any, Optional
 
+import client
 from merlin.batch.big_query_util import valid_table_id, valid_column
 
 
@@ -132,3 +133,17 @@ class BigQuerySink(Sink):
             'save_mode': self._save_mode.value,
             'options': opts
         }
+
+    def to_client_config(self) -> client.PredictionJobConfigBigquerySink:
+        opts = {}
+        if self.options is not None:
+            for k, v in self.options.items():
+                opts[k] = v
+
+        return client.PredictionJobConfigBigquerySink(
+            table=self._table,
+            staging_bucket=self._staging_bucket,
+            result_column=self._result_column,
+            save_mode=client.SaveMode(self._save_mode.value),
+            options=opts
+        )

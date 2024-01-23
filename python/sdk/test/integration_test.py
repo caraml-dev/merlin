@@ -22,6 +22,8 @@ from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import StandardTransformer, Transformer
+from merlin.model_schema import ModelSchema
+from merlin.observability.inference import InferenceSchema, ValueType, BinaryClassificationOutput
 from recursive_diff import recursive_eq
 
 import merlin
@@ -126,7 +128,22 @@ def test_xgboost(
 
     undeploy_all_version()
 
-    with merlin.new_model_version() as v:
+    with merlin.new_model_version(model_schema=ModelSchema(spec=InferenceSchema(
+        feature_types={
+            "featureA": ValueType.FLOAT64,
+            "featureB": ValueType.INT64,
+            "featureC": ValueType.STRING,
+            "featureD": ValueType.BOOLEAN
+        },
+        prediction_id_column="prediction_id",
+        model_prediction_output=BinaryClassificationOutput(
+            prediction_score_column="score",
+            actual_label_column="actual",
+            positive_class_label="completed",
+            negative_class_label="non_complete",
+            score_threshold=0.7
+        )
+    ))) as v:
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
@@ -1177,11 +1194,14 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
     resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
 
+    def remove_nulls(d):
+        return {k: v for k, v in d.items() if v is not None}
+
     with open("test/transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
-        exp_resp_valid_wo_tracing = json.load(f)
+        exp_resp_valid_wo_tracing = json.load(f, object_hook=remove_nulls)
 
     with open("test/transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
-        exp_resp_valid_w_tracing = json.load(f)
+        exp_resp_valid_w_tracing = json.load(f, object_hook=remove_nulls)
 
     assert isinstance(resp_wo_tracing, dict)
     assert isinstance(resp_w_tracing, dict)

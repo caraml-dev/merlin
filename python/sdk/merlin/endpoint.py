@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 import client
 from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
@@ -25,8 +25,8 @@ from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.util import autostr, get_url
 from merlin.resource_request import ResourceRequest
-from merlin.transformer import Transformer
-
+from merlin.transformer import Transformer, TransformerType
+from merlin.util import extract_optional_value_with_default
 
 class Status(Enum):
     PENDING = 'pending'
@@ -44,16 +44,16 @@ class VersionEndpoint:
             self._protocol = Protocol(endpoint.protocol)
 
         self._url = endpoint.url
-        if self._protocol == Protocol.HTTP_JSON and ":predict" not in endpoint.url:
+        if self._protocol == Protocol.HTTP_JSON and endpoint.url is not None and ":predict" not in endpoint.url:
             self._url = f"{endpoint.url}:predict"
 
         self._status = Status(endpoint.status)
         self._id = endpoint.id
         self._environment_name = endpoint.environment_name
-        self._environment = Environment(endpoint.environment)
+        self._environment = Environment(endpoint.environment) if endpoint.environment is not None else None
         self._env_vars = endpoint.env_vars
         self._logger = Logger.from_logger_response(endpoint.logger)
-        self._resource_request = endpoint.resource_request
+        self._resource_request = ResourceRequest.from_response(endpoint.resource_request) if endpoint.resource_request is not None else None
         self._deployment_mode = DeploymentMode.SERVERLESS if not endpoint.deployment_mode \
             else DeploymentMode(endpoint.deployment_mode)
 
@@ -66,18 +66,42 @@ class VersionEndpoint:
             self._autoscaling_policy = AutoscalingPolicy(metrics_type=MetricsType(endpoint.autoscaling_policy.metrics_type),
                                                          target_value=endpoint.autoscaling_policy.target_value)
 
-        if endpoint.transformer is not None:
+        transformer = endpoint.transformer
+        if transformer is not None:
+            image = transformer.image if transformer.image is not None else ""
+            transformer_type_value = extract_optional_value_with_default(transformer.transformer_type, TransformerType.STANDARD_TRANSFORMER.value)
+            transformer_type = TransformerType(transformer_type_value)
+            
+            transformer_request = None
+            if transformer.resource_request is not None:
+                transformer_request = ResourceRequest(
+                    min_replica=transformer.resource_request.min_replica,
+                    max_replica=transformer.resource_request.max_replica,
+                    cpu_request=transformer.resource_request.cpu_request,
+                    memory_request=transformer.resource_request.memory_request
+                )
+
+            env_vars: Dict[str, str] = {}
+            if transformer.env_vars is not None:
+                for env_var in transformer.env_vars:
+                    if env_var.name is not None and env_var.value is not None:
+                        env_vars[env_var.name] = env_var.value
+
             self._transformer = Transformer(
-                endpoint.transformer.image, id=endpoint.transformer.id,
-                enabled=endpoint.transformer.enabled, command=endpoint.transformer.command,
-                args=endpoint.transformer.args, transformer_type=endpoint.transformer.transformer_type,
-                resource_request=endpoint.transformer.resource_request, env_vars=endpoint.transformer.env_vars,
+                image, 
+                id=extract_optional_value_with_default(transformer.id, ""),
+                enabled=extract_optional_value_with_default(transformer.enabled, False), 
+                command=transformer.command,
+                args=transformer.args, 
+                transformer_type=transformer_type,
+                resource_request=transformer_request, 
+                env_vars=env_vars,
             )
             
         if log_url is not None:
             self._log_url = log_url
 
-        self._enable_model_observability = endpoint.enable_model_observability
+        self._enable_model_observability = extract_optional_value_with_default(endpoint.enable_model_observability, False)
 
     @property
     def url(self):
@@ -88,15 +112,15 @@ class VersionEndpoint:
         return self._status
 
     @property
-    def id(self) -> str:
+    def id(self) -> Optional[str]:
         return self._id
 
     @property
-    def environment_name(self) -> str:
+    def environment_name(self) -> Optional[str]:
         return self._environment_name
 
     @property
-    def environment(self) -> Environment:
+    def environment(self) -> Optional[Environment]:
         return self._environment
 
     @property
@@ -104,7 +128,8 @@ class VersionEndpoint:
         env_vars = {}
         if self._env_vars:
             for ev in self._env_vars:
-                env_vars[ev.name] = ev.value
+                if ev.name is not None and ev.value is not None:
+                    env_vars[ev.name] = ev.value
         return env_vars
 
     @property
@@ -128,7 +153,7 @@ class VersionEndpoint:
         return self._protocol
     
     @property
-    def resource_request(self) -> ResourceRequest:
+    def resource_request(self) -> Optional[ResourceRequest]:
         return self._resource_request
     
     @property
@@ -147,7 +172,7 @@ class VersionEndpoint:
 class ModelEndpoint:
     def __init__(self, endpoint: client.ModelEndpoint):
         self._protocol = Protocol.HTTP_JSON
-        if endpoint.protocol:
+        if endpoint.protocol is not None:
             self._protocol = Protocol(endpoint.protocol)
 
         if self._protocol == Protocol.HTTP_JSON:
@@ -155,9 +180,9 @@ class ModelEndpoint:
         else:
             self._url = endpoint.url
         self._status = Status(endpoint.status)
-        self._id = endpoint.id
+        self._id = extract_optional_value_with_default(endpoint.id, 0)
         self._environment_name = endpoint.environment_name
-        self._environment = Environment(endpoint.environment)
+        self._environment = Environment(endpoint.environment) if endpoint.environment is not None else None
 
 
     @property
@@ -169,15 +194,15 @@ class ModelEndpoint:
         return self._status
 
     @property
-    def id(self) -> str:
-        return str(self._id)
+    def id(self) -> int:
+        return self._id
 
     @property
-    def environment_name(self) -> str:
+    def environment_name(self) -> Optional[str]:
         return self._environment_name
 
     @property
-    def environment(self) -> Environment:
+    def environment(self) -> Optional[Environment]:
         return self._environment
 
     @property

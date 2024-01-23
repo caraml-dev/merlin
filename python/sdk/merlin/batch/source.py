@@ -15,7 +15,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, MutableMapping, Mapping, Any, Optional
 from merlin.batch.big_query_util import valid_table_id, valid_columns
-
+import client
 
 class Source(ABC):
     @abstractmethod
@@ -98,3 +98,15 @@ class BigQuerySource(Source):
             'features': self._features,
             'options': opts
         }
+
+    def to_client_bq_source(self) -> client.PredictionJobConfigBigquerySource:
+        opts = {}
+        if self.options is not None:
+            for k, v in self.options.items():
+                opts[k] = v
+
+        return client.PredictionJobConfigBigquerySource(
+            table=self._table,
+            features=list(self._features),
+            options=opts
+        )

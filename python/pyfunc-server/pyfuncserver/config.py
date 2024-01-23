@@ -5,6 +5,7 @@ from typing import Optional
 
 from merlin.protocol import Protocol
 from dataclasses import dataclass
+from merlin.model_schema import ModelSchema
 
 # Following environment variables are expected to be populated by Merlin
 HTTP_PORT = ("CARAML_HTTP_PORT", 8080)
@@ -13,6 +14,7 @@ MODEL_VERSION = ("CARAML_MODEL_VERSION", "1")
 MODEL_FULL_NAME = ("CARAML_MODEL_FULL_NAME", "model-1")
 PROJECT = ("CARAML_PROJECT", "project")
 PROTOCOL = ("CARAML_PROTOCOL", "HTTP_JSON")
+MODEL_SCHEMA = "CARAML_MODEL_SCHEMA"
 
 WORKERS = ("WORKERS", 1)
 GRPC_PORT = ("CARAML_GRPC_PORT", 9000)
@@ -32,6 +34,7 @@ PUBLISHER_KAFKA_CONFIG = ("PUBLISHER_KAFKA_CONFIG", "{}")
 PUBLISHER_SAMPLING_RATIO = ("PUBLISHER_SAMPLING_RATIO", 0.01)
 PUBLISHER_ENABLED = ("PUBLISHER_ENABLED", "false")
 
+
 @dataclass
 class ModelManifest:
     """
@@ -42,6 +45,7 @@ class ModelManifest:
     model_full_name: str
     model_dir: str
     project: str
+    model_schema: ModelSchema = None
 
 
 class PushGateway:
@@ -87,7 +91,17 @@ class Config:
         model_version = os.getenv(*MODEL_VERSION)
         model_full_name = os.getenv(*MODEL_FULL_NAME)
         project = os.getenv(*PROJECT)
-        self.model_manifest = ModelManifest(model_name, model_version, model_full_name, model_dir, project)
+        model_schema = None
+        model_schema_from_env_var = os.getenv(MODEL_SCHEMA) 
+        if model_schema_from_env_var is not None:
+            model_schema = ModelSchema.from_json(os.getenv(MODEL_SCHEMA))
+
+        self.model_manifest = ModelManifest(model_name=model_name, 
+                                            model_version=model_version, 
+                                            model_full_name=model_full_name, 
+                                            model_dir=model_dir, 
+                                            project=project,
+                                            model_schema=model_schema)
 
         self.workers = int(os.getenv(*WORKERS))
         self.log_level = self._log_level()
@@ -102,6 +116,7 @@ class Config:
                                         push_url,
                                         push_interval)
         
+            
         # Publisher
         self.publisher = None
         publisher_enabled = str_to_bool(os.getenv(*PUBLISHER_ENABLED))

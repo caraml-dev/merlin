@@ -1,1645 +1,2071 @@
-# Copyright 2020 The Merlin Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-swagger: "2.0"
+openapi: 3.0.1
 info:
-  title: "Merlin"
-  description: "API Guide for accessing Merlin's model management, deployment, and serving functionalities"
-  version: "0.14.0"
-host: "localhost:8080"
-basePath: "/v1"
+  title: Merlin
+  description: API Guide for accessing Merlin's model management, deployment, and
+    serving functionalities
+  version: 0.14.0
+servers:
+- url: http://localhost:8080/v1
+security:
+- Bearer: []
 tags:
-  - name: "project"
-    description: "Project Management API. Project is used to namespace model, secret, and user access"
-  - name: "models"
-    description: "Model Management API. API to manage ML model in Merlin."
-  - name: "version"
-    description: "Model Version Management API. Model version represents the iteration of an ML model"
-  - name: "endpoint"
-    description: "Deployment Management API. Endpoint represent a deployment of a specific model version"
-  - name: "model_endpoints"
-    description: "Serving Traffic Management API. API to manage traffic routing to a running endpoint."
-  - name: "secret"
-    description: "Secret Management API. Secret is stored securely inside merlin and can be used to run prediction job"
-  - name: "alert"
-    description: "Alert Management API."
-  - name: "environment"
-    description: "Environment is the infrastructure on which model deployments / batch predictions are running"
-  - name: "prediction_jobs"
-    description: "Batch prediction job API. Run a prediction as a batch job using model in Merlin"
-  - name: "log"
-    description: "Log API for accessing log in the container running a model deployment"
-schemes:
-  - "http"
+- name: project
+  description: Project Management API. Project is used to namespace model, secret,
+    and user access
+- name: models
+  description: Model Management API. API to manage ML model in Merlin.
+- name: version
+  description: Model Version Management API. Model version represents the iteration
+    of an ML model
+- name: endpoint
+  description: Deployment Management API. Endpoint represent a deployment of a specific
+    model version
+- name: model_endpoints
+  description: Serving Traffic Management API. API to manage traffic routing to a
+    running endpoint.
+- name: secret
+  description: Secret Management API. Secret is stored securely inside merlin and
+    can be used to run prediction job
+- name: alert
+  description: Alert Management API.
+- name: environment
+  description: Environment is the infrastructure on which model deployments / batch
+    predictions are running
+- name: prediction_jobs
+  description: Batch prediction job API. Run a prediction as a batch job using model
+    in Merlin
+- name: log
+  description: Log API for accessing log in the container running a model deployment
 paths:
   "/environments":
     get:
-      tags: ["environment"]
-      summary: "List available environment"
-      description: "Environment can be filtered by optional `name` parameter"
+      tags:
+      - environment
+      summary: List available environment
+      description: Environment can be filtered by optional `name` parameter
       parameters:
-        - in: "query"
-          name: "name"
-          required: false
-          type: "string"
+      - name: name
+        in: query
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Environment"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Environment"
   "/projects":
     get:
-      tags: ["project"]
-      summary: "List existing projects"
-      description: "Projects can be filtered by optional `name` parameter"
+      tags:
+      - project
+      summary: List existing projects
+      description: Projects can be filtered by optional `name` parameter
       parameters:
-        - in: "query"
-          name: "name"
-          required: false
-          type: "string"
+      - name: name
+        in: query
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Project"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Project"
     post:
-      tags: ["project"]
-      summary: "Create new project"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "Project object that has to be added"
-          required: true
-          schema:
-            $ref: "#/definitions/Project"
+      tags:
+      - project
+      summary: Create new project
+      requestBody:
+        description: Project object that has to be added
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Project"
+        required: true
       responses:
-        201:
-          description: "Created"
-          schema:
-            $ref: "#/definitions/Project"
-        400:
-          description: "Invalid request format"
-        409:
-          description: "Project with the same name already exists"
+        '201':
+          description: Created
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Project"
+        '400':
+          description: Invalid request format
+          content: {}
+        '409':
+          description: Project with the same name already exists
+          content: {}
+      x-codegen-request-body-name: body
   "/projects/{project_id}":
     get:
-      tags: ["project"]
-      summary: "Get project"
+      tags:
+      - project
+      summary: Get project
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "project id of the project to be retrieved"
-          type: "integer"
-          required: true
+      - name: project_id
+        in: path
+        description: project id of the project to be retrieved
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "Ok"
-          schema:
-            $ref: "#/definitions/Project"
-        404:
-          description: "Project Not Found"
+        '200':
+          description: Ok
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Project"
+        '404':
+          description: Project Not Found
+          content: {}
     put:
-      tags: ["project"]
-      summary: "Update project"
+      tags:
+      - project
+      summary: Update project
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "project id of the project to be updated"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          description: "Project object that has to be updated"
-          required: true
-          schema:
-            $ref: "#/definitions/Project"
+      - name: project_id
+        in: path
+        description: project id of the project to be updated
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        description: Project object that has to be updated
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Project"
+        required: true
       responses:
-        200:
-          description: "Ok"
-          schema:
-            $ref: "#/definitions/Project"
-        400:
-          description: "Invalid request format"
+        '200':
+          description: Ok
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Project"
+        '400':
+          description: Invalid request format
+          content: {}
+      x-codegen-request-body-name: body
   "/projects/{project_id}/models/{model_id}":
     get:
-      tags: ["models"]
-      summary: "Get model"
+      tags:
+      - models
+      summary: Get model
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "project id of the project to be retrieved"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_id"
-          description: "model id of the model to be retrieved"
-          type: "integer"
-          required: true
+      - name: project_id
+        in: path
+        description: project id of the project to be retrieved
+        required: true
+        schema:
+          type: integer
+      - name: model_id
+        in: path
+        description: model id of the model to be retrieved
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Model"
-        404:
-          description: "Project/Model with given id not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Model"
+        '404':
+          description: Project/Model with given id not found
+          content: {}
     delete:
-      tags: ["models"]
-      summary: "Delete model"
+      tags:
+      - models
+      summary: Delete model
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "project id of the project to be deleted"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_id"
-          description: "model id of the model to be deleted"
-          type: "integer"
-          required: true
+      - name: project_id
+        in: path
+        description: project id of the project to be deleted
+        required: true
+        schema:
+          type: integer
+      - name: model_id
+        in: path
+        description: model id of the model to be deleted
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "integer"
-        404:
-          description: "Project/Model with given id not found"
-        400:
-          description: "There are other entity still using this model (model version endpoint / model endpoint / prediction jobs)"
-        500:
-          description: "Deletion failed"
-
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: integer
+        '400':
+          description: There are other entity still using this model (model version
+            endpoint / model endpoint / prediction jobs)
+          content: {}
+        '404':
+          description: Project/Model with given id not found
+          content: {}
+        '500':
+          description: Deletion failed
+          content: {}
   "/projects/{project_id}/models":
     get:
-      tags: ["models"]
-      summary: "List existing models"
+      tags:
+      - models
+      summary: List existing models
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "Filter list of models by specific `project_id`"
-          type: "integer"
-          required: true
-        - in: "query"
-          name: "name"
-          description: "Filter list of models by specific models `name`"
-          type: "string"
-          required: false
+      - name: project_id
+        in: path
+        description: Filter list of models by specific `project_id`
+        required: true
+        schema:
+          type: integer
+      - name: name
+        in: query
+        description: Filter list of models by specific models `name`
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Model"
-        404:
-          description: "Project with given `project_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Model"
+        '404':
+          description: Project with given `project_id` not found
+          content: {}
     post:
-      tags: ["models"]
-      summary: "Register a new models"
+      tags:
+      - models
+      summary: Register a new models
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "Create new model in a specific `project_id`"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/Model"
+      - name: project_id
+        in: path
+        description: Create new model in a specific `project_id`
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Model"
+        required: false
       responses:
-        201:
-          description: "Created"
-          schema:
-            $ref: "#/definitions/Model"
-        400:
-          description: "Invalid request format"
-        404:
-          description: "Project with given `project_id` not found"
+        '201':
+          description: Created
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Model"
+        '400':
+          description: Invalid request format
+          content: {}
+        '404':
+          description: Project with given `project_id` not found
+          content: {}
+      x-codegen-request-body-name: body
   "/projects/{project_id}/jobs":
     get:
-      tags: ["prediction_jobs"]
-      summary: "List all prediction jobs created using the model"
+      tags:
+      - prediction_jobs
+      summary: List all prediction jobs created using the model
       parameters:
-        - in: "path"
-          name: "project_id"
-          type: "integer"
-          required: true
-        - in: "query"
-          name: "id"
-          type: "integer"
-        - in: "query"
-          name: "name"
-          type: "string"
-        - in: "query"
-          name: "model_id"
-          type: "integer"
-        - in: "query"
-          name: "version_id"
-          type: "integer"
-        - in: "query"
-          name: "status"
-          type: "string"
-        - in: "query"
-          name: "error"
-          type: "string"
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: query
+        schema:
+          type: integer
+      - name: name
+        in: query
+        schema:
+          type: string
+      - name: model_id
+        in: query
+        schema:
+          type: integer
+      - name: version_id
+        in: query
+        schema:
+          type: integer
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: error
+        in: query
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/PredictionJob"
-        404:
-          description: "Project with given `project_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/PredictionJob"
+        '404':
+          description: Project with given `project_id` not found
+          content: {}
   "/models/{model_id}/versions":
     get:
-      tags: ["version"]
-      summary: "List versions of the models"
+      tags:
+      - version
+      summary: List versions of the models
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "query"
-          name: "limit"
-          type: "integer"
-          required: false
-        - in: "query"
-          name: "cursor"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "search"
-          type: "string"
-          required: false
-          description: |
-            Search query to filter the model versions. These searches are currently supported:
-            - Search by "mlflow_run_id" e.g. `?search=cfca7716b45f4b149479630a98332a13`
-            - Search by "environment_name" e.g `?search=environment_name:myenv`
-            - Search by "labels" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)`
-            - Search by "environment_name" and "labels" e.g.
-              `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)`
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: search
+        in: query
+        description: |
+          Search query to filter the model versions. These searches are currently supported:
+          - Search by "mlflow_run_id" e.g. `?search=cfca7716b45f4b149479630a98332a13`
+          - Search by "environment_name" e.g `?search=environment_name:myenv`
+          - Search by "labels" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)`
+          - Search by "environment_name" and "labels" e.g.
+            `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)`
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
+        '200':
+          description: OK
           headers:
             Next-Cursor:
-              type: string
-              description: "Pointer to used for next page request"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Version"
-        404:
-          description: "Model with given `model_id` not found"
+              description: Pointer to used for next page request
+              schema:
+                type: string
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Version"
+        '404':
+          description: Model with given `model_id` not found
+          content: {}
     post:
-      tags: ["version"]
-      summary: "Log a new version of the models"
+      tags:
+      - version
+      summary: Log a new version of the models
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/Version"
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Version"
+        required: false
       responses:
-        200:
-          description: "Created"
-          schema:
-            $ref: "#/definitions/Version"
+        '201':
+          description: Created
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Version"
+      x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}":
     get:
-      tags: ["version"]
-      summary: "Get version by ID from model"
+      tags:
+      - version
+      summary: Get version by ID from model
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/Version"
-        404:
-          description: "Model with given `model_id` not found"
-    patch:
-      tags: ["version"]
-      summary: "Patch the version "
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/Version"
-      responses:
-        200:
-          description: "OK"
-        400:
-          description: "Invalid request format"
-        404:
-          description: "Version with given `version_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Version"
+        '404':
+          description: Model with given `model_id` not found
+          content: {}
     delete:
-      tags: ["version"]
-      summary: "Delete version by ID from model"
+      tags:
+      - version
+      summary: Delete version by ID from model
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "integer"
-        404:
-          description: "Model with given `model_id` not found"
-        400:
-          description: "There are other entity still using this model (model version endpoint / prediction jobs)"
-        500:
-          description: "Deletion failed"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: integer
+        '400':
+          description: There are other entity still using this model (model version
+            endpoint / prediction jobs)
+          content: {}
+        '404':
+          description: Model with given `model_id` not found
+          content: {}
+        '500':
+          description: Deletion failed
+          content: {}
+    patch:
+      tags:
+      - version
+      summary: 'Patch the version '
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Version"
+        required: false
+      responses:
+        '200':
+          description: OK
+          content: {}
+        '400':
+          description: Invalid request format
+          content: {}
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
+      x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/endpoint":
     get:
-      tags: ["endpoint"]
-      summary: "List all endpoint of a model version"
+      tags:
+      - endpoint
+      summary: List all endpoint of a model version
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/VersionEndpoint"
-        404:
-          description: "Version with given `version_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/VersionEndpoint"
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
     post:
-      tags: ["endpoint"]
-      summary: "Deploy specific version of the models"
+      tags:
+      - endpoint
+      summary: Deploy specific version of the models
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/VersionEndpoint"
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/VersionEndpoint"
+        required: false
       responses:
-        201:
-          description: "Created"
-          schema:
-            $ref: "#/definitions/VersionEndpoint"
-        404:
-          description: "Version with given `version_id` not found"
+        '201':
+          description: Created
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VersionEndpoint"
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
+      x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}":
     get:
-      tags: ["endpoint"]
-      summary: "Get version endpoint resource"
+      tags:
+      - endpoint
+      summary: Get version endpoint resource
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "endpoint_id"
-          type: "string"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/VersionEndpoint"
-        404:
-          description: "Version endpoint with given `endpoint_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VersionEndpoint"
+        '404':
+          description: Version endpoint with given `endpoint_id` not found
+          content: {}
     put:
-      tags: ["endpoint"]
-      summary: "Modify version endpoint, this API will redeploy the associated deployment"
+      tags:
+      - endpoint
+      summary: Modify version endpoint, this API will redeploy the associated deployment
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "endpoint_id"
-          type: "string"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/VersionEndpoint"
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/VersionEndpoint"
+        required: false
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/VersionEndpoint"
-        404:
-          description: "Version endpoint with given `endpoint_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VersionEndpoint"
+        '404':
+          description: Version endpoint with given `endpoint_id` not found
+          content: {}
+      x-codegen-request-body-name: body
     delete:
-      tags: ["endpoint"]
-      summary: "Undeploy the specified model version deployment"
+      tags:
+      - endpoint
+      summary: Undeploy the specified model version deployment
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "endpoint_id"
-          type: "string"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-        404:
-          description: "Version endpoint with given `endpoint_id` not found"
+        '200':
+          description: OK
+          content: {}
+        '404':
+          description: Version endpoint with given `endpoint_id` not found
+          content: {}
   "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}/containers":
     get:
-      tags: ["endpoint"]
-      summary: "Get all container belong to a version endpoint"
+      tags:
+      - endpoint
+      summary: Get all container belong to a version endpoint
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "endpoint_id"
-          type: "string"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/Container"
-        404:
-          description: "Version endpoint with given `endpoint_id` not found"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Container"
+        '404':
+          description: Version endpoint with given `endpoint_id` not found
+          content: {}
   "/projects/{project_id}/model_endpoints":
     get:
-      tags: ["model_endpoints"]
-      summary: "List existing model endpoints for all models in particular project"
+      tags:
+      - model_endpoints
+      summary: List existing model endpoints for all models in particular project
       parameters:
-        - in: "path"
-          name: "project_id"
-          description: "Filter list of model endpoints by specific `project_id`"
-          type: "integer"
-          required: true
-        - in: "query"
-          name: "region"
-          description: "Filter list of model endpoints by specific environment's `region`"
-          type: "string"
-          required: false
+      - name: project_id
+        in: path
+        description: Filter list of model endpoints by specific `project_id`
+        required: true
+        schema:
+          type: integer
+      - name: region
+        in: query
+        description: Filter list of model endpoints by specific environment's `region`
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ModelEndpoint"
-
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ModelEndpoint"
   "/models/{model_id}/endpoints":
     get:
-      tags: ["model_endpoints"]
-      summary: "List model endpoint"
+      tags:
+      - model_endpoints
+      summary: List model endpoint
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ModelEndpoint"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ModelEndpoint"
     post:
-      tags: ["model_endpoints"]
-      summary: "Create a model endpoint"
+      tags:
+      - model_endpoints
+      summary: Create a model endpoint
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          description: "Model endpoint object that has to be added"
-          required: true
-          schema:
-            $ref: "#/definitions/ModelEndpoint"
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        description: Model endpoint object that has to be added
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/ModelEndpoint"
+        required: true
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ModelEndpoint"
-
+        '201':
+          description: Created
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelEndpoint"
+      x-codegen-request-body-name: body
   "/models/{model_id}/endpoints/{model_endpoint_id}":
     get:
-      tags: ["model_endpoints"]
-      summary: "Get a model endpoint"
+      tags:
+      - model_endpoints
+      summary: Get a model endpoint
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_endpoint_id"
-          type: "string"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: model_endpoint_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ModelEndpoint"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelEndpoint"
     put:
-      tags: ["model_endpoints"]
-      summary: "Update model endpoint data. Mainly used to update its rule."
+      tags:
+      - model_endpoints
+      summary: Update model endpoint data. Mainly used to update its rule.
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_endpoint_id"
-          type: "string"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/ModelEndpoint"
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: model_endpoint_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/ModelEndpoint"
+        required: false
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ModelEndpoint"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelEndpoint"
+      x-codegen-request-body-name: body
     delete:
-      tags: ["model_endpoints"]
-      summary: "Stop serving traffic to the model endpoint, then delete it."
+      tags:
+      - model_endpoints
+      summary: Stop serving traffic to the model endpoint, then delete it.
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_endpoint_id"
-          type: "string"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: model_endpoint_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-
+        '200':
+          description: OK
+          content: {}
   "/alerts/teams":
     get:
-      tags: ["models", "alert"]
-      summary: "Lists teams for alert notification channel."
+      tags:
+      - models
+      - alert
+      summary: Lists teams for alert notification channel.
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              type: "string"
-
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  type: string
   "/models/{model_id}/alerts":
     get:
-      tags: ["models", "alert"]
-      summary: "Lists alerts for given model."
+      tags:
+      - models
+      - alert
+      summary: Lists alerts for given model.
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ModelEndpointAlert"
-
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ModelEndpointAlert"
   "/models/{model_id}/endpoints/{model_endpoint_id}/alert":
     get:
-      tags: ["models", "alert"]
-      summary: "Gets alert for given model endpoint."
+      tags:
+      - models
+      - alert
+      summary: Gets alert for given model endpoint.
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_endpoint_id"
-          type: "string"
-          required: true
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: model_endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ModelEndpointAlert"
-    post:
-      tags: ["models", "alert"]
-      summary: "Creates alert for given model endpoint."
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_endpoint_id"
-          type: "string"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/ModelEndpointAlert"
-      responses:
-        201:
-          description: "Created"
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelEndpointAlert"
     put:
-      tags: ["models", "alert"]
-      summary: "Creates alert for given model endpoint."
+      tags:
+      - models
+      - alert
+      summary: Creates alert for given model endpoint.
       parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "model_endpoint_id"
-          type: "string"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/ModelEndpointAlert"
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: model_endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/ModelEndpointAlert"
+        required: false
       responses:
-        200:
-          description: "Ok"
-
+        '200':
+          description: Ok
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+      - models
+      - alert
+      summary: Creates alert for given model endpoint.
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: model_endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/ModelEndpointAlert"
+        required: false
+      responses:
+        '201':
+          description: Created
+          content: {}
+      x-codegen-request-body-name: body
   "/logs":
     get:
-      tags: ["log"]
-      summary: "Retrieve log from a container"
+      tags:
+      - log
+      summary: Retrieve log from a container
       parameters:
-        - in: "query"
-          name: "project_name"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "model_id"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "model_name"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "version_id"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "prediction_job_id"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "cluster"
-          type: "string"
-          required: true
-        - in: "query"
-          name: "namespace"
-          type: "string"
-          required: true
-        - in: "query"
-          name: "component_type"
-          type: "string"
-          required: true
+      - name: project_name
+        in: query
+        schema:
+          type: string
+      - name: model_id
+        in: query
+        schema:
+          type: string
+      - name: model_name
+        in: query
+        schema:
+          type: string
+      - name: version_id
+        in: query
+        schema:
+          type: string
+      - name: prediction_job_id
+        in: query
+        schema:
+          type: string
+      - name: cluster
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: namespace
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: component_type
+        in: query
+        required: true
+        schema:
+          type: string
           enum:
-            - image_builder
-            - model
-            - transformer
-            - batch_job_driver
-            - batch_job_executor
-        - in: "query"
-          name: "container_name"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "prefix"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "follow"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "previous"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "since_seconds"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "since_time"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "timestamps"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "tail_lines"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "limit_bytes"
-          type: "string"
-          required: false
-      responses:
-        200:
-          description: "OK"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-  "/projects/{project_id}/secrets":
-    post:
-      tags: ["secret"]
-      summary: "Create secret"
-      parameters:
-        - in: "path"
-          name: "project_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/Secret"
-      responses:
-        201:
-          description: "Created"
-          schema:
-            $ref: "#/definitions/Secret"
-    get:
-      tags: ["secret"]
-      summary: "List secret"
-      parameters:
-        - in: "path"
-          name: "project_id"
-          type: "integer"
-          required: true
-      responses:
-        201:
-          description: "Ok"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Secret"
-
-  "/projects/{project_id}/secrets/{secret_id}":
-    patch:
-      tags: ["secret"]
-      summary: "Update secret"
-      parameters:
-        - in: "path"
-          name: "project_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "secret_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/Secret"
-      responses:
-        200:
-          description: "Updated"
-          schema:
-            $ref: "#/definitions/Secret"
-    delete:
-      tags: ["secret"]
-      summary: "Delete secret"
-      parameters:
-        - in: "path"
-          name: "project_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "secret_id"
-          type: "integer"
-          required: true
-      responses:
-        204:
-          description: "No content"
-  "/models/{model_id}/versions/{version_id}/jobs":
-    get:
-      tags: ["prediction_jobs"]
-      summary: "List all prediction jobs of a model version"
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-      responses:
-        200:
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/PredictionJob"
-        404:
-          description: "Version with given `version_id` not found"
-    post:
-      tags: ["prediction_jobs"]
-      summary: "Create a prediction job from the given model version"
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/PredictionJob"
-      responses:
-        201:
-          description: "Created"
-          schema:
-            $ref: "#/definitions/PredictionJob"
-        404:
-          description: "Version with given `version_id` not found"
-  "/models/{model_id}/versions/{version_id}/jobs/{job_id}":
-    get:
-      tags: ["prediction_jobs"]
-      summary: "Get prediction jobs with given id"
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "job_id"
-          type: "integer"
-          required: true
-      responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/PredictionJob"
-        404:
-          description: "Prediction job with given ID is not found"
-  "/models/{model_id}/versions/{version_id}/jobs/{job_id}/stop":
-    put:
-      tags: ["prediction_jobs"]
-      summary: "Stop prediction jobs with given id"
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "job_id"
-          type: "integer"
-          required: true
-      responses:
-        204:
-          description: "No content"
-        404:
-          description: "Prediction job with given ID is not found"
-  "/models/{model_id}/versions/{version_id}/jobs/{job_id}/containers":
-    get:
-      tags: ["prediction_jobs"]
-      summary: "Get all container belong to a prediction job"
-      parameters:
-        - in: "path"
-          name: "model_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "version_id"
-          type: "integer"
-          required: true
-        - in: "path"
-          name: "job_id"
-          type: "string"
-          required: true
-      responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/Container"
-        404:
-          description: "Version endpoint with given `endpoint_id` not found"
-  "/standard_transformer/simulate":
-    post:
-      tags: ["standard_transformer"]
-      summary: "Simulate standard transformer"
-      parameters:
-        - in: "body"
-          name: "body"
-          schema:
-            $ref: "#/definitions/StandardTransformerSimulationRequest"
-      responses:
-        200:
-          description: "OK"
-          schema:
-            $ref: "#/definitions/StandardTransformerSimulationResponse"
-
-definitions:
-  EndpointStatus:
-    type: "string"
-    enum:
-      - "pending"
-      - "running"
-      - "serving"
-      - "failed"
-      - "terminated"
-
-  Environment:
-    type: "object"
-    required:
-      - name
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      name:
-        type: "string"
-      cluster:
-        type: "string"
-      is_default:
-        type: "boolean"
-      region:
-        type: "string"
-      gcp_project:
-        type: "string"
-      default_resource_request:
-        $ref: "#/definitions/ResourceRequest"
-      default_transformer_resource_request:
-        $ref: "#/definitions/ResourceRequest"
-      default_prediction_job_resource_request:
-        $ref: "#/definitions/PredictionJobResourceRequest"
-      gpus:
-        type: "array"
-        items:
-          $ref: "#/definitions/GPUConfig"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  Project:
-    type: "object"
-    required:
-      - name
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      name:
-        type: "string"
-      mlflow_tracking_url:
-        type: "string"
-      administrators:
-        type: "array"
-        items:
-          type: "string"
-      readers:
-        type: "array"
-        items:
-          type: "string"
-      team:
-        type: "string"
-      stream:
-        type: "string"
-      labels:
-        type: "array"
-        items:
-          $ref: "#/definitions/Label"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  Model:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      project_id:
-        type: "integer"
-        format: "int32"
-      mlflow_experiment_id:
-        type: "integer"
-        format: "int32"
-      name:
-        type: "string"
-      type:
-        type: "string"
-        description: "Model type"
-        enum:
-          - "xgboost"
-          - "tensorflow"
-          - "sklearn"
-          - "pytorch"
-          - "pyfunc"
-          - "pyfunc_v2"
-          - "pyfunc_v3"
-          - "custom"
-      mlflow_url:
-        type: "string"
-      endpoints:
-        type: "array"
-        items:
-          $ref: "#/definitions/ModelEndpoint"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  ModelEndpoint:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      model_id:
-        type: "integer"
-        format: "int32"
-      model:
-        $ref: "#/definitions/Model"
-      status:
-        $ref: "#/definitions/EndpointStatus"
-      url:
-        type: "string"
-        format: "hostname"
-      rule:
-        $ref: "#/definitions/ModelEndpointRule"
-      environment_name:
-        type: "string"
-      environment:
-        $ref: "#/definitions/Environment"
-      protocol:
-        $ref: "#/definitions/Protocol"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  ModelEndpointRule:
-    type: "object"
-    properties:
-      destinations:
-        type: "array"
-        items:
-          $ref: "#/definitions/ModelEndpointRuleDestination"
-      mirror:
-        $ref: "#/definitions/VersionEndpoint"
-
-  ModelEndpointRuleDestination:
-    type: "object"
-    properties:
-      version_endpoint_id:
-        type: "string"
-        format: "uuid"
-      version_endpoint:
-        $ref: "#/definitions/VersionEndpoint"
-      weight:
-        type: "integer"
-
-  ModelEndpointAlert:
-    type: "object"
-    properties:
-      model_id:
-        type: "integer"
-      model_endpoint_id:
-        type: "integer"
-      environment_name:
-        type: "string"
-      team_name:
-        type: "string"
-      alert_conditions:
-        type: "array"
-        items:
-          $ref: "#/definitions/ModelEndpointAlertCondition"
-
-  ModelEndpointAlertCondition:
-    type: "object"
-    properties:
-      enabled:
-        type: "boolean"
-      metric_type:
-        $ref: "#/definitions/AlertConditionMetricType"
-      severity:
-        $ref: "#/definitions/AlertConditionSeverity"
-      target:
-        type: "number"
-      percentile:
-        type: "number"
-      unit:
-        type: "string"
-
-  AlertConditionMetricType:
-    type: "string"
-    enum:
-      - "throughput"
-      - "latency"
-      - "error_rate"
-      - "cpu"
-      - "memory"
-
-  AlertConditionSeverity:
-    type: "string"
-    enum:
-      - "WARNING"
-      - "CRITICAL"
-
-  Version:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      model_id:
-        type: "integer"
-        format: "int32"
-      mlflow_run_id:
-        type: "string"
-      mlflow_url:
-        type: "string"
-      artifact_uri:
-        type: "string"
-        format: "hostname"
-      endpoints:
-        type: "array"
-        items:
-          $ref: "#/definitions/VersionEndpoint"
-      properties:
-        type: "object"
-      labels:
-        type: "object"
-        additionalProperties:
-          type: "string"
-      custom_predictor:
-        $ref: "#/definitions/CustomPredictor"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-      python_version:
-        type: "string"
-
-  CustomPredictor:
-    type: "object"
-    properties:
-      image:
-        type: "string"
-      command:
-        type: "string"
-      args:
-        type: "string"
-
-  VersionEndpoint:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      version_id:
-        type: "integer"
-        format: "int32"
-      status:
-        $ref: "#/definitions/EndpointStatus"
-      url:
-        type: "string"
-        format: "hostname"
-      service_name:
-        type: "string"
-        format: "hostname"
-      environment_name:
-        type: "string"
-      environment:
-        $ref: "#/definitions/Environment"
-      monitoring_url:
-        type: "string"
-        format: "hostname"
-      message:
-        type: "string"
-      resource_request:
-        $ref: "#/definitions/ResourceRequest"
-      image_builder_resource_request:
-        $ref: "#/definitions/ResourceRequest"
-      env_vars:
-        type: "array"
-        items:
-          $ref: "#/definitions/EnvVar"
-      transformer:
-        $ref: "#/definitions/Transformer"
-      logger:
-        $ref: "#/definitions/Logger"
-      deployment_mode:
-        $ref: "#/definitions/DeploymentMode"
-      autoscaling_policy:
-        $ref: "#/definitions/AutoscalingPolicy"
-      protocol:
-        $ref: "#/definitions/Protocol"
-      enable_model_observability:
-        type: "boolean"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  Logger:
-    type: "object"
-    properties:
-      model:
-        $ref: "#/definitions/LoggerConfig"
-      transformer:
-        $ref: "#/definitions/LoggerConfig"
-      prediction:
-        $ref: "#/definitions/PredictionLoggerConfig"
-
-  LoggerConfig:
-    type: "object"
-    properties:
-      enabled:
-        type: "boolean"
-      mode:
-        $ref: "#/definitions/LoggerMode"
-
-  PredictionLoggerConfig:
-    type: "object"
-    properties:
-      enabled:
-        type: "boolean"
-      raw_features_table:
-        type: "string"
-      entities_table:
-        type: "string"
-
-  LoggerMode:
-    type: "string"
-    enum:
-      - "all"
-      - "request"
-      - "response"
-
-  Transformer:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-      enabled:
-        type: "boolean"
-      transformer_type:
-        type: "string"
-      image:
-        type: "string"
-      command:
-        type: "string"
-      args:
-        type: "string"
-      resource_request:
-        $ref: "#/definitions/ResourceRequest"
-      env_vars:
-        type: "array"
-        items:
-          $ref: "#/definitions/EnvVar"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  DeploymentMode:
-    type: string
-    enum:
-      - serverless
-      - raw_deployment
-    default: serverless
-
-  Container:
-    type: "object"
-    properties:
-      name:
-        type: "string"
-      pod_name:
-        type: "string"
-      component_type:
-        type: "string"
-        enum:
           - image_builder
           - model
           - transformer
           - batch_job_driver
           - batch_job_executor
-      namespace:
-        type: "string"
-      cluster:
-        type: "string"
-      gcp_project:
-        type: "string"
-      version_endpoint_id:
-        type: "integer"
-        format: "int32"
-
-  ResourceRequest:
-    type: "object"
-    properties:
-      min_replica:
-        type: "integer"
-      max_replica:
-        type: "integer"
-      cpu_request:
-        type: "string"
-      memory_request:
-        type: "string"
-      gpu_name:
-        type: "string"
-      gpu_request:
-        type: "string"
-
-  AutoscalingPolicy:
-    type: "object"
-    properties:
-      metrics_type:
-        $ref: "#/definitions/MetricsType"
-      target_value:
-        type: "number"
-
-  MetricsType:
-    type: "string"
-    enum:
-      - "concurrency"
-      - "cpu_utilization"
-      - "memory_utilization"
-      - "rps"
-
-  EnvVar:
-    type: "object"
-    properties:
-      name:
-        type: "string"
-      value:
-        type: "string"
-
-  Label:
-    type: "object"
-    properties:
-      key:
-        type: "string"
-      value:
-        type: "string"
-
-  Secret:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      name:
-        type: "string"
-      data:
-        type: "string"
-
-  PredictionJob:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int32"
-      name:
-        type: "string"
-      version_id:
-        type: "integer"
-        format: "int32"
-      model_id:
-        type: "integer"
-        format: "int32"
-      project_id:
-        type: "integer"
-        format: "int32"
-      environment_name:
-        type: "string"
-      environment:
-        $ref: "#/definitions/Environment"
-      config:
-        $ref: "#/definitions/Config"
-      status:
-        type: "string"
-      error:
-        type: "string"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-
-  Config:
-    type: "object"
-    properties:
-      job_config:
-        $ref: "#/definitions/PredictionJobConfig"
-      image_ref:
-        type: "string"
-      service_account_name:
-        type: "string"
-      resource_request:
-        $ref: "#/definitions/PredictionJobResourceRequest"
-      image_builder_resource_request:
-        $ref: "#/definitions/ResourceRequest"
-      env_vars:
-        type: "array"
-        items:
-          $ref: "#/definitions/EnvVar"
-
-  GPUConfig:
-    type: "object"
-    properties:
-      name:
-        type: "string"
-      values:
-        type: "array"
-        items:
+      - name: container_name
+        in: query
+        schema:
           type: string
-      resource_type:
-        type: "string"
-      node_selector:
-        type: "object"
-        additionalProperties:
-          type: "string"
-      tolerations:
-        type: "array"
-        items:
-          $ref: "#/definitions/GPUToleration"
-      min_monthly_cost_per_gpu:
-        type: "number"
-      max_monthly_cost_per_gpu:
-        type: "number"
-
-  GPUToleration:
-    type: "object"
-    properties:
-      key:
-        type: "string"
-      operator:
-        type: "string"
-      value:
-        type: "string"
-      effect:
-        type: "string"
-      toleration_seconds:
-        type: "integer"
-        format: "int64"
-
-  PredictionJobResourceRequest:
-    type: "object"
-    properties:
-      driver_cpu_request:
-        type: "string"
-      driver_memory_request:
-        type: "string"
-      executor_cpu_request:
-        type: "string"
-      executor_memory_request:
-        type: "string"
-      executor_replica:
-        type: "integer"
-        format: "int32"
-
-  PredictionJobConfig:
-    type: object
-    properties:
-      version:
-        type: string
-      kind:
-        type: string
-      name:
-        type: string
-      bigquery_source:
-        type: object
-        properties:
-          table:
+      - name: prefix
+        in: query
+        schema:
+          type: string
+      - name: follow
+        in: query
+        schema:
+          type: string
+      - name: previous
+        in: query
+        schema:
+          type: string
+      - name: since_seconds
+        in: query
+        schema:
+          type: string
+      - name: since_time
+        in: query
+        schema:
+          type: string
+      - name: timestamps
+        in: query
+        schema:
+          type: string
+      - name: tail_lines
+        in: query
+        schema:
+          type: string
+      - name: limit_bytes
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content: {}
+  "/projects/{project_id}/secrets":
+    get:
+      tags:
+      - secret
+      summary: List secret
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Secret"
+    post:
+      tags:
+      - secret
+      summary: Create secret
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Secret"
+        required: false
+      responses:
+        '201':
+          description: Created
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Secret"
+      x-codegen-request-body-name: body
+  "/projects/{project_id}/secrets/{secret_id}":
+    delete:
+      tags:
+      - secret
+      summary: Delete secret
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: secret_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: No content
+          content: {}
+    patch:
+      tags:
+      - secret
+      summary: Update secret
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: secret_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/Secret"
+        required: false
+      responses:
+        '200':
+          description: Updated
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Secret"
+      x-codegen-request-body-name: body
+  "/models/{model_id}/versions/{version_id}/jobs":
+    get:
+      tags:
+      - prediction_jobs
+      summary: List all prediction jobs of a model version
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/PredictionJob"
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
+    post:
+      tags:
+      - prediction_jobs
+      summary: Create a prediction job from the given model version
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/PredictionJob"
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PredictionJob"
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
+      x-codegen-request-body-name: body
+  "/models/{model_id}/versions/{version_id}/jobs/{job_id}":
+    get:
+      tags:
+      - prediction_jobs
+      summary: Get prediction jobs with given id
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PredictionJob"
+        '404':
+          description: Prediction job with given ID is not found
+          content: {}
+  "/models/{model_id}/versions/{version_id}/jobs/{job_id}/stop":
+    put:
+      tags:
+      - prediction_jobs
+      summary: Stop prediction jobs with given id
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: No content
+          content: {}
+        '404':
+          description: Prediction job with given ID is not found
+          content: {}
+  "/models/{model_id}/versions/{version_id}/jobs/{job_id}/containers":
+    get:
+      tags:
+      - prediction_jobs
+      summary: Get all container belong to a prediction job
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Container"
+        '404':
+          description: Version endpoint with given `endpoint_id` not found
+          content: {}
+  "/standard_transformer/simulate":
+    post:
+      tags:
+      - standard_transformer
+      summary: Simulate standard transformer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/StandardTransformerSimulationRequest"
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/StandardTransformerSimulationResponse"
+      x-codegen-request-body-name: body
+  "/models/{model_id}/schemas":
+    get:
+      summary: List all of the model schemas
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ModelSchema"
+    put:
+      summary: Creating new schemas for a model
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/ModelSchema"
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelSchema"
+      x-codegen-request-body-name: body
+  "/models/{model_id}/schemas/{schema_id}":
+    get:
+      summary: Get detail of the schema
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: schema_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ModelSchema"
+    delete:
+      summary: Delete schema
+      tags:
+      - model_schema
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: schema_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: No Content
+    
+components:
+  schemas:
+    ModelSchema:
+      type: object
+      required:
+        - spec
+      properties:
+        id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        spec:
+          $ref: '#/components/schemas/SchemaSpec'
+    SchemaSpec:
+      type: object
+      required:
+        - prediction_id_column
+        - model_prediction_output
+        - feature_types
+      properties:
+        prediction_id_column:
+          type: string
+        model_prediction_output:
+          $ref : '#/components/schemas/ModelPredictionOutput'
+        tag_columns:
+          type: array
+          items:
             type: string
-          features:
-            type: array
-            items:
-              type: string
-          options:
-            type: object
-            additionalProperties:
-              type: string
-      gcs_source:
-        type: object
-        properties:
-          format:
-            $ref: "#/definitions/FileFormat"
-          uri:
+        feature_types:
+          type: object
+          additionalProperties:
+            $ref : '#/components/schemas/ValueType'
+    ValueType:
+      type: string
+      enum:
+        - float64
+        - int64
+        - boolean
+        - string
+    ModelPredictionOutputClass:
+      type: string
+      enum:
+        - BinaryClassificationOutput
+        - RankingOutput
+        - RegressionOutput
+    ModelPredictionOutput:
+      type: object
+      discriminator:
+        propertyName: output_class
+      oneOf:
+      - $ref: '#/components/schemas/BinaryClassificationOutput'
+      - $ref: '#/components/schemas/RankingOutput'
+      - $ref: '#/components/schemas/RegressionOutput'
+    BinaryClassificationOutput:
+      type: object
+      required:
+        - prediction_score_column
+        - positive_class_label
+        - negative_class_label
+      properties:
+        prediction_score_column:
+          type: string
+        actual_label_column:
+          type: string
+        positive_class_label:
+          type: string
+        negative_class_label:
+          type: string
+        score_threshold:
+          type: number
+        output_class:
+          $ref: '#/components/schemas/ModelPredictionOutputClass'
+
+    RankingOutput:
+      type: object
+      required:
+        - rank_score_column
+        - prediction_group_id_column
+      properties:
+        rank_score_column:
+          type: string
+        prediction_group_id_column:
+          type: string
+        relevance_score_column:
+          type: string
+        output_class:
+          $ref: '#/components/schemas/ModelPredictionOutputClass'
+    RegressionOutput:
+      type: object
+      required:
+        - prediction_score_column
+      properties:
+        prediction_score_column:
+          type: string
+        actual_score_column:
+          type: string
+        output_class:
+          $ref: '#/components/schemas/ModelPredictionOutputClass'
+    EndpointStatus:
+      type: string
+      enum:
+      - pending
+      - running
+      - serving
+      - failed
+      - terminated
+    Environment:
+      required:
+      - name
+      - cluster
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        cluster:
+          type: string
+        is_default:
+          type: boolean
+        region:
+          type: string
+        gcp_project:
+          type: string
+        default_resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
+        default_transformer_resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
+        default_prediction_job_resource_request:
+          "$ref": "#/components/schemas/PredictionJobResourceRequest"
+        gpus:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GPUConfig"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Project:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        mlflow_tracking_url:
+          type: string
+        administrators:
+          type: array
+          items:
             type: string
-          features:
-            type: array
-            items:
-              type: string
-          options:
-            type: object
-            additionalProperties:
-              type: string
-      model:
-        type: object
-        properties:
-          type:
+        readers:
+          type: array
+          items:
             type: string
-            enum:
+        team:
+          type: string
+        stream:
+          type: string
+        labels:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Label"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Model:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+          format: int32
+        project_id:
+          type: integer
+          format: int32
+        mlflow_experiment_id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        type:
+          type: string
+          description: Model type
+          enum:
+          - xgboost
+          - tensorflow
+          - sklearn
+          - pytorch
+          - pyfunc
+          - pyfunc_v2
+          - pyfunc_v3
+          - custom
+        mlflow_url:
+          type: string
+        endpoints:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ModelEndpoint"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ModelEndpoint:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        model:
+          "$ref": "#/components/schemas/Model"
+        status:
+          "$ref": "#/components/schemas/EndpointStatus"
+        url:
+          type: string
+          format: hostname
+        rule:
+          "$ref": "#/components/schemas/ModelEndpointRule"
+        environment_name:
+          type: string
+        environment:
+          "$ref": "#/components/schemas/Environment"
+        protocol:
+          "$ref": "#/components/schemas/Protocol"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ModelEndpointRule:
+      type: object
+      properties:
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ModelEndpointRuleDestination"
+        mirror:
+          "$ref": "#/components/schemas/VersionEndpoint"
+    ModelEndpointRuleDestination:
+      type: object
+      properties:
+        version_endpoint_id:
+          type: string
+          format: uuid
+        version_endpoint:
+          "$ref": "#/components/schemas/VersionEndpoint"
+        weight:
+          type: integer
+    ModelEndpointAlert:
+      type: object
+      properties:
+        model_id:
+          type: integer
+        model_endpoint_id:
+          type: integer
+        environment_name:
+          type: string
+        team_name:
+          type: string
+        alert_conditions:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ModelEndpointAlertCondition"
+    ModelEndpointAlertCondition:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        metric_type:
+          "$ref": "#/components/schemas/AlertConditionMetricType"
+        severity:
+          "$ref": "#/components/schemas/AlertConditionSeverity"
+        target:
+          type: number
+        percentile:
+          type: number
+        unit:
+          type: string
+    AlertConditionMetricType:
+      type: string
+      enum:
+      - throughput
+      - latency
+      - error_rate
+      - cpu
+      - memory
+    AlertConditionSeverity:
+      type: string
+      enum:
+      - WARNING
+      - CRITICAL
+    Version:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        mlflow_run_id:
+          type: string
+        mlflow_url:
+          type: string
+        artifact_uri:
+          type: string
+          format: hostname
+        endpoints:
+          type: array
+          items:
+            "$ref": "#/components/schemas/VersionEndpoint"
+        properties:
+          type: object
+          properties: {}
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+        custom_predictor:
+          "$ref": "#/components/schemas/CustomPredictor"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        python_version:
+          type: string
+        model_schema:
+          "$ref": "#/components/schemas/ModelSchema"
+    CustomPredictor:
+      type: object
+      properties:
+        image:
+          type: string
+        command:
+          type: string
+        args:
+          type: string
+    VersionEndpoint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version_id:
+          type: integer
+          format: int32
+        status:
+          "$ref": "#/components/schemas/EndpointStatus"
+        url:
+          type: string
+          format: hostname
+        service_name:
+          type: string
+          format: hostname
+        environment_name:
+          type: string
+        environment:
+          "$ref": "#/components/schemas/Environment"
+        monitoring_url:
+          type: string
+          format: hostname
+        message:
+          type: string
+        resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
+        image_builder_resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
+        env_vars:
+          type: array
+          items:
+            "$ref": "#/components/schemas/EnvVar"
+        transformer:
+          "$ref": "#/components/schemas/Transformer"
+        logger:
+          "$ref": "#/components/schemas/Logger"
+        deployment_mode:
+          "$ref": "#/components/schemas/DeploymentMode"
+        autoscaling_policy:
+          "$ref": "#/components/schemas/AutoscalingPolicy"
+        protocol:
+          "$ref": "#/components/schemas/Protocol"
+        enable_model_observability:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Logger:
+      type: object
+      properties:
+        model:
+          "$ref": "#/components/schemas/LoggerConfig"
+        transformer:
+          "$ref": "#/components/schemas/LoggerConfig"
+        prediction:
+          "$ref": "#/components/schemas/PredictionLoggerConfig"
+    LoggerConfig:
+      type: object
+      required:
+        - enabled
+        - mode
+      properties:
+        enabled:
+          type: boolean
+        mode:
+          "$ref": "#/components/schemas/LoggerMode"
+    PredictionLoggerConfig:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        raw_features_table:
+          type: string
+        entities_table:
+          type: string
+    LoggerMode:
+      type: string
+      enum:
+      - all
+      - request
+      - response
+    Transformer:
+      type: object
+      properties:
+        id:
+          type: string
+        enabled:
+          type: boolean
+        transformer_type:
+          type: string
+        image:
+          type: string
+        command:
+          type: string
+        args:
+          type: string
+        resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
+        env_vars:
+          type: array
+          items:
+            "$ref": "#/components/schemas/EnvVar"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    DeploymentMode:
+      type: string
+      default: serverless
+      enum:
+      - serverless
+      - raw_deployment
+    Container:
+      type: object
+      properties:
+        name:
+          type: string
+        pod_name:
+          type: string
+        component_type:
+          type: string
+          enum:
+          - image_builder
+          - model
+          - transformer
+          - batch_job_driver
+          - batch_job_executor
+        namespace:
+          type: string
+        cluster:
+          type: string
+        gcp_project:
+          type: string
+        version_endpoint_id:
+          type: integer
+          format: int32
+    ResourceRequest:
+      type: object
+      properties:
+        min_replica:
+          type: integer
+        max_replica:
+          type: integer
+        cpu_request:
+          type: string
+        memory_request:
+          type: string
+        gpu_name:
+          type: string
+        gpu_request:
+          type: string
+    AutoscalingPolicy:
+      type: object
+      required:
+        - metrics_type
+        - target_value
+      properties:
+        metrics_type:
+          "$ref": "#/components/schemas/MetricsType"
+        target_value:
+          type: number
+    MetricsType:
+      type: string
+      enum:
+      - concurrency
+      - cpu_utilization
+      - memory_utilization
+      - rps
+    EnvVar:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    Label:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    Secret:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        data:
+          type: string
+    PredictionJob:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        version_id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        project_id:
+          type: integer
+          format: int32
+        environment_name:
+          type: string
+        environment:
+          "$ref": "#/components/schemas/Environment"
+        config:
+          "$ref": "#/components/schemas/Config"
+        status:
+          type: string
+        error:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Config:
+      type: object
+      properties:
+        job_config:
+          "$ref": "#/components/schemas/PredictionJobConfig"
+        image_ref:
+          type: string
+        service_account_name:
+          type: string
+        resource_request:
+          "$ref": "#/components/schemas/PredictionJobResourceRequest"
+        image_builder_resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
+        env_vars:
+          type: array
+          items:
+            "$ref": "#/components/schemas/EnvVar"
+    GPUConfig:
+      type: object
+      properties:
+        name:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+        resource_type:
+          type: string
+        node_selector:
+          type: object
+          additionalProperties:
+            type: string
+        tolerations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GPUToleration"
+        min_monthly_cost_per_gpu:
+          type: number
+        max_monthly_cost_per_gpu:
+          type: number
+    GPUToleration:
+      type: object
+      properties:
+        key:
+          type: string
+        operator:
+          type: string
+        value:
+          type: string
+        effect:
+          type: string
+        toleration_seconds:
+          type: integer
+          format: int64
+    PredictionJobResourceRequest:
+      type: object
+      properties:
+        driver_cpu_request:
+          type: string
+        driver_memory_request:
+          type: string
+        executor_cpu_request:
+          type: string
+        executor_memory_request:
+          type: string
+        executor_replica:
+          type: integer
+          format: int32
+    PredictionJobConfig:
+      type: object
+      properties:
+        version:
+          type: string
+        kind:
+          type: string
+        name:
+          type: string
+        bigquery_source:
+          type: object
+          properties:
+            table:
+              type: string
+            features:
+              type: array
+              items:
+                type: string
+            options:
+              type: object
+              additionalProperties:
+                type: string
+        gcs_source:
+          type: object
+          properties:
+            format:
+              "$ref": "#/components/schemas/FileFormat"
+            uri:
+              type: string
+            features:
+              type: array
+              items:
+                type: string
+            options:
+              type: object
+              additionalProperties:
+                type: string
+        model:
+          type: object
+          properties:
+            type:
+              type: string
+              default: INVALID_MODEL_TYPE
+              enum:
               - INVALID_MODEL_TYPE
               - XGBOOST
               - TENSORFLOW
@@ -1649,153 +2075,146 @@ definitions:
               - PYFUNC
               - PYFUNC_V2
               - CUSTOM
-            default: INVALID_MODEL_TYPE
-          uri:
-            type: string
-          result:
-            type: object
-            properties:
-              type:
-                $ref: "#/definitions/ResultType"
-              item_type:
-                $ref: "#/definitions/ResultType"
-                title: only if type is array
-          options:
-            type: object
-            additionalProperties:
+            uri:
               type: string
-      bigquery_sink:
-        type: object
-        properties:
-          table:
-            type: string
-          staging_bucket:
-            type: string
-          result_column:
-            type: string
-          save_mode:
-            $ref: "#/definitions/SaveMode"
-          options:
-            type: object
-            additionalProperties:
+            result:
+              type: object
+              properties:
+                type:
+                  "$ref": "#/components/schemas/ResultType"
+                item_type:
+                  "$ref": "#/components/schemas/ResultType"
+            options:
+              type: object
+              additionalProperties:
+                type: string
+        bigquery_sink:
+          type: object
+          properties:
+            table:
               type: string
-      gcs_sink:
-        type: object
-        properties:
-          format:
-            $ref: "#/definitions/FileFormat"
-          uri:
-            type: string
-          result_column:
-            type: string
-          save_mode:
-            $ref: "#/definitions/SaveMode"
-          options:
-            type: object
-            additionalProperties:
+            staging_bucket:
               type: string
-  FileFormat:
-    type: string
-    enum:
+            result_column:
+              type: string
+            save_mode:
+              "$ref": "#/components/schemas/SaveMode"
+            options:
+              type: object
+              additionalProperties:
+                type: string
+        gcs_sink:
+          type: object
+          properties:
+            format:
+              "$ref": "#/components/schemas/FileFormat"
+            uri:
+              type: string
+            result_column:
+              type: string
+            save_mode:
+              "$ref": "#/components/schemas/SaveMode"
+            options:
+              type: object
+              additionalProperties:
+                type: string
+    FileFormat:
+      type: string
+      default: INVALID_FILE_FORMAT
+      enum:
       - INVALID_FILE_FORMAT
       - CSV
       - PARQUET
       - AVRO
       - JSON
-    default: INVALID_FILE_FORMAT
-  ResultType:
-    type: string
-    enum:
+    ResultType:
+      type: string
+      default: DOUBLE
+      enum:
       - DOUBLE
       - FLOAT
       - INTEGER
       - LONG
       - STRING
       - ARRAY
-    default: DOUBLE
-  SaveMode:
-    type: string
-    enum:
+    SaveMode:
+      type: integer
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      x-enum-names:
       - ERRORIFEXISTS
       - OVERWRITE
       - APPEND
       - IGNORE
       - ERROR
-    default: ERRORIFEXISTS
-
-  StandardTransformerSimulationRequest:
-    type: object
-    properties:
-      payload:
-        $ref: "#/definitions/FreeFormObject"
-      headers:
-        $ref: "#/definitions/FreeFormObject"
-      config:
-        $ref: "#/definitions/FreeFormObject"
-      model_prediction_config:
-        $ref: "#/definitions/ModelPredictionConfig"
-      protocol:
-        $ref: "#/definitions/Protocol"
-
-  StandardTransformerSimulationResponse:
-    type: object
-    properties:
-      response:
-        $ref: "#/definitions/FreeFormObject"
-      operation_tracing:
-        $ref: "#/definitions/OperationTracing"
-
-  OperationTracing:
-    type: object
-    properties:
-      preprocess:
-        $ref: "#/definitions/PipelineTracing"
-      postprocess:
-        $ref: "#/definitions/PipelineTracing"
-
-  PipelineTracing:
-    type: array
-    items:
+    StandardTransformerSimulationRequest:
       type: object
+      properties:
+        payload:
+          "$ref": "#/components/schemas/FreeFormObject"
+        headers:
+          "$ref": "#/components/schemas/FreeFormObject"
+        config:
+          "$ref": "#/components/schemas/FreeFormObject"
+        model_prediction_config:
+          "$ref": "#/components/schemas/ModelPredictionConfig"
+        protocol:
+          "$ref": "#/components/schemas/Protocol"
+    StandardTransformerSimulationResponse:
+      type: object
+      properties:
+        response:
+          "$ref": "#/components/schemas/FreeFormObject"
+        operation_tracing:
+          "$ref": "#/components/schemas/OperationTracing"
+    OperationTracing:
+      type: object
+      properties:
+        preprocess:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PipelineTracing"
+        postprocess:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PipelineTracing"
+    PipelineTracing:
+      type: object 
       properties:
         operation_type:
           type: string
-        specs:
-          $ref: "#/definitions/FreeFormObject"
-        inputs:
-          $ref: "#/definitions/FreeFormObject"
-        outputs:
-          $ref: "#/definitions/FreeFormObject"
-
-  ModelPredictionConfig:
-    type: object
-    properties:
-      mock_response:
-        $ref: "#/definitions/MockResponse"
-
-  MockResponse:
-    type: object
-    properties:
-      body:
-        $ref: "#/definitions/FreeFormObject"
-      headers:
-        $ref: "#/definitions/FreeFormObject"
-
-  FreeFormObject:
-    type: object
-    additionalProperties: true
-
-  Protocol:
-    type: "string"
-    enum:
-      - "HTTP_JSON"
-      - "UPI_V1"
-
-securityDefinitions:
-  Bearer:
-    type: apiKey
-    name: Authorization
-    in: header
-
-security:
-  - Bearer: []
+        spec:
+          "$ref": "#/components/schemas/FreeFormObject"
+        input:
+          "$ref": "#/components/schemas/FreeFormObject"
+        output:
+          "$ref": "#/components/schemas/FreeFormObject"
+          
+    ModelPredictionConfig:
+      type: object
+      properties:
+        mock_response:
+          "$ref": "#/components/schemas/MockResponse"
+    MockResponse:
+      type: object
+      properties:
+        body:
+          "$ref": "#/components/schemas/FreeFormObject"
+        headers:
+          "$ref": "#/components/schemas/FreeFormObject"
+    FreeFormObject:
+      type: object
+    Protocol:
+      type: string
+      enum:
+      - HTTP_JSON
+      - UPI_V1
+  securitySchemes:
+    Bearer:
+      type: apiKey
+      name: Authorization
+      in: header

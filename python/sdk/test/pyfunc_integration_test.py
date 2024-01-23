@@ -196,17 +196,15 @@ def test_pyfunc_model_observability(
     undeploy_all_version()
     with merlin.new_model_version() as v:
         iris = load_iris()
-        y = iris["target"]
-        X = iris["data"]
-        xgb_path = train_xgboost_model(X, y)
+        y = iris['target']
+        X = iris['data']
 
-        v.log_pyfunc_model(
-            model_instance=ModelObservabilityModel(),
-            conda_env="test/pyfunc/env.yaml",
-            code_dir=["test"],
-            artifacts={"xgb_model": xgb_path},
-        )
+        v.log_pyfunc_model(model_instance=ModelObservabilityModel(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"],
+                           artifacts={"xgb_model": XGB_PATH})
 
+    
     endpoint = merlin.deploy(v, enable_model_observability=True)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)

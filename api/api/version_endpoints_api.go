@@ -171,7 +171,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	endpoint, err := c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 	if err != nil {
-		if errors.Is(err, merror.InvalidInputError) {
+		if errors.Is(err, merror.ErrInvalidInput) {
 			return BadRequest(fmt.Sprintf("Unable to process model version input: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %v", err))
@@ -236,7 +236,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 		endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 		if err != nil {
-			if errors.Is(err, merror.InvalidInputError) {
+			if errors.Is(err, merror.ErrInvalidInput) {
 				return BadRequest(fmt.Sprintf("Unable to deploy model version: %v", err))
 			}
 
