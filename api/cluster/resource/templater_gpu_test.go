@@ -58,6 +58,7 @@ var (
 			"nvidia.com/gpu":      resource.MustParse("1"),
 		},
 		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("8"),
 			corev1.ResourceMemory: ScaleQuantity(defaultModelResourceRequests.MemoryRequest, 2),
 			"nvidia.com/gpu":      resource.MustParse("1"),
 		},
@@ -1573,6 +1574,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				PyfuncGRPCOptions:                     "{}",
 				GPUs:                                  defaultGPUsConfig,
 				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}

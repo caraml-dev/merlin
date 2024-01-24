@@ -59,6 +59,7 @@ var (
 			corev1.ResourceMemory: defaultModelResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
+			corev1.ResourceCPU: resource.MustParse("8"),
 			corev1.ResourceMemory: ScaleQuantity(
 				defaultModelResourceRequests.MemoryRequest,
 				userContainerMemoryLimitRequestFactor,
@@ -79,6 +80,7 @@ var (
 			corev1.ResourceMemory: defaultTransformerResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("8"),
 			corev1.ResourceMemory: ScaleQuantity(defaultTransformerResourceRequests.MemoryRequest, 2),
 		},
 	}
@@ -96,6 +98,7 @@ var (
 			corev1.ResourceMemory: userResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("8"),
 			corev1.ResourceMemory: ScaleQuantity(userResourceRequests.MemoryRequest, 2),
 		},
 	}
@@ -166,6 +169,7 @@ var (
 		SamplingRatioRate: 0.01,
 	}
 
+	userContainerCPULDefaultLimit         = "8"
 	userContainerCPULimitRequestFactor    = float64(0)
 	userContainerMemoryLimitRequestFactor = float64(2)
 )
@@ -1874,6 +1878,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				PyfuncGRPCOptions:                     "{}",
 				StandardTransformer:                   standardTransformerConfig,
 				PyFuncPublisher:                       pyfuncPublisherConfig,
+				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -2569,6 +2574,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				QueueResourcePercentage:               queueResourcePercentage,
 				PyfuncGRPCOptions:                     "{}",
 				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -3062,6 +3068,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
 				QueueResourcePercentage:               queueResourcePercentage,
 				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -4010,6 +4017,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					},
 				},
 				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -4031,6 +4039,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 	cpuRequest := resource.MustParse("1")
 	memoryRequest := resource.MustParse("1Gi")
 
+	cpuLimit := resource.MustParse("8")
 	memoryLimit := ScaleQuantity(memoryRequest, 2)
 
 	// Liveness probe config for the transformers
@@ -4093,6 +4102,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 				},
 				&config.DeploymentConfig{
 					StandardTransformer:                   standardTransformerConfig,
+					UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 				},
@@ -4125,6 +4135,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryRequest,
 								},
 								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    cpuLimit,
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
@@ -4161,6 +4172,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 					},
 				},
 				&config.DeploymentConfig{
+					UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
 					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 				},
@@ -4180,6 +4192,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryRequest,
 								},
 								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    cpuLimit,
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
@@ -4197,7 +4210,8 @@ func TestCreateTransformerSpec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tpl := NewInferenceServiceTemplater(*tt.args.config)
-			got := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer)
+			got, err := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

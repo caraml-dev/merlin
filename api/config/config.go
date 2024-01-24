@@ -355,6 +355,7 @@ type PyFuncPublisherConfig struct {
 // InferenceServiceDefaults captures some of the configurable defaults specific to
 // KServe inference services
 type InferenceServiceDefaults struct {
+	UserContainerCPULDefaultLimit         string  `json:"userContainerCPULDefaultLimit" default:"8"`
 	UserContainerCPULimitRequestFactor    float64 `json:"userContainerLimitCPURequestFactor" default:"0"`
 	UserContainerMemoryLimitRequestFactor float64 `json:"userContainerLimitMemoryRequestFactor" default:"2"`
 }

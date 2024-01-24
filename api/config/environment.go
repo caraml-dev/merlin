@@ -184,6 +184,7 @@ func ParseDeploymentConfig(envCfg *EnvironmentConfig, cfg *Config) DeploymentCon
 		GPUs:                                  envCfg.GPUs,
 		StandardTransformer:                   cfg.StandardTransformerConfig,
 		PyFuncPublisher:                       cfg.PyFuncPublisherConfig,
+		UserContainerCPULDefaultLimit:         cfg.InferenceServiceDefaults.UserContainerCPULDefaultLimit,
 		UserContainerCPULimitRequestFactor:    cfg.InferenceServiceDefaults.UserContainerCPULimitRequestFactor,
 		UserContainerMemoryLimitRequestFactor: cfg.InferenceServiceDefaults.UserContainerMemoryLimitRequestFactor,
 	}

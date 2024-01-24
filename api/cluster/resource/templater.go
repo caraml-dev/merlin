@@ -173,7 +173,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	}
 
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
+		inferenceService.Spec.Transformer, err = t.createTransformerSpec(modelService, modelService.Transformer)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
@@ -198,6 +198,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		limits[corev1.ResourceCPU] = ScaleQuantity(
 			modelService.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
 		)
+	} else {
+		var err error
+		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPULDefaultLimit)
+		if err != nil {
+			return kservev1beta1.PredictorSpec{}, err
+		}
 	}
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
 		limits[corev1.ResourceMemory] = ScaleQuantity(
@@ -365,13 +371,22 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	return predictorSpec, nil
 }
 
-func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer) *kservev1beta1.TransformerSpec {
+func (t *InferenceServiceTemplater) createTransformerSpec(
+	modelService *models.Service,
+	transformer *models.Transformer,
+) (*kservev1beta1.TransformerSpec, error) {
 	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
 	limits := map[corev1.ResourceName]resource.Quantity{}
 	if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
 		limits[corev1.ResourceCPU] = ScaleQuantity(
 			transformer.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
 		)
+	} else {
+		var err error
+		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPULDefaultLimit)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
 		limits[corev1.ResourceMemory] = ScaleQuantity(
@@ -449,7 +464,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 		},
 	}
 
-	return transformerSpec
+	return transformerSpec, nil
 }
 
 func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelService *models.Service, envVars models.EnvVars) models.EnvVars {

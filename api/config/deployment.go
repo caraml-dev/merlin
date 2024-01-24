@@ -50,6 +50,7 @@ type DeploymentConfig struct {
 	// Standard Transformer Config
 	StandardTransformer StandardTransformerConfig
 	// Resource properties
+	UserContainerCPULDefaultLimit         string
 	UserContainerCPULimitRequestFactor    float64
 	UserContainerMemoryLimitRequestFactor float64
 }
