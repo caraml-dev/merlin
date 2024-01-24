@@ -137,6 +137,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		ArtifactURI:   run.Info.ArtifactURI,
 		Labels:        versionPost.Labels,
 		PythonVersion: versionPost.PythonVersion,
+		ModelSchema:   versionPost.ModelSchema,
 	}
 
 	version, _ = c.VersionsService.Save(ctx, version, c.FeatureToggleConfig.MonitoringConfig)

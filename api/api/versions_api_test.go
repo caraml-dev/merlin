@@ -708,6 +708,170 @@ func TestPatchVersion(t *testing.T) {
 				data: Error{Message: "Error patching model version: Error creating secret: db is down"},
 			},
 		},
+		{
+			desc: "Should success update model schema",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionPatch{
+				Properties: &models.KV{
+					"name":       "model-1",
+					"created_by": "anonymous",
+				},
+				ModelSchema: &models.ModelSchema{
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+					},
+					ModelID: models.ID(1),
+				},
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
+					&models.Version{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "pyfunc",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL: "http://mlflow.com",
+					}, nil)
+				svc.On("Save", mock.Anything, &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					Properties: models.KV{
+						"name":       "model-1",
+						"created_by": "anonymous",
+					},
+					ModelSchema: &models.ModelSchema{
+						Spec: &models.SchemaSpec{
+							PredictionIDColumn: "prediction_id",
+							ModelPredictionOutput: &models.ModelPredictionOutput{
+								RankingOutput: &models.RankingOutput{
+									PredictionGroudIDColumn: "session_id",
+									RankScoreColumn:         "score",
+									RelevanceScoreColumn:    "relevance_score",
+									OutputClass:             models.Ranking,
+								},
+							},
+							FeatureTypes: map[string]models.ValueType{
+								"featureA": models.Float64,
+								"featureB": models.Int64,
+								"featureC": models.Boolean,
+							},
+						},
+						ModelID: models.ID(1),
+					},
+				}, mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					Properties: models.KV{
+						"name":       "model-1",
+						"created_by": "anonymous",
+					},
+					ModelSchema: &models.ModelSchema{
+						Spec: &models.SchemaSpec{
+							PredictionIDColumn: "prediction_id",
+							ModelPredictionOutput: &models.ModelPredictionOutput{
+								RankingOutput: &models.RankingOutput{
+									PredictionGroudIDColumn: "session_id",
+									RankScoreColumn:         "score",
+									RelevanceScoreColumn:    "relevance_score",
+									OutputClass:             models.Ranking,
+								},
+							},
+							FeatureTypes: map[string]models.ValueType{
+								"featureA": models.Float64,
+								"featureB": models.Int64,
+								"featureC": models.Boolean,
+							},
+						},
+						ModelID: models.ID(1),
+					},
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					Properties: models.KV{
+						"name":       "model-1",
+						"created_by": "anonymous",
+					},
+					ModelSchema: &models.ModelSchema{
+						Spec: &models.SchemaSpec{
+							PredictionIDColumn: "prediction_id",
+							ModelPredictionOutput: &models.ModelPredictionOutput{
+								RankingOutput: &models.RankingOutput{
+									PredictionGroudIDColumn: "session_id",
+									RankScoreColumn:         "score",
+									RelevanceScoreColumn:    "relevance_score",
+									OutputClass:             models.Ranking,
+								},
+							},
+							FeatureTypes: map[string]models.ValueType{
+								"featureA": models.Float64,
+								"featureB": models.Int64,
+								"featureC": models.Boolean,
+							},
+						},
+						ModelID: models.ID(1),
+					},
+				},
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -1152,6 +1316,158 @@ func TestCreateVersion(t *testing.T) {
 					},
 					MlflowURL:     "http://mlflow.com",
 					PythonVersion: DEFAULT_PYTHON_VERSION,
+				},
+			},
+		},
+		{
+			desc: "Should successfully create version with model schema",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				ModelSchema: &models.ModelSchema{
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+					},
+					ModelID: models.ID(1),
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{
+					Info: mlflow.Info{
+						RunID:       "1",
+						ArtifactURI: "artifact/url/run",
+					},
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{
+					ModelID:       models.ID(1),
+					RunID:         "1",
+					ArtifactURI:   "artifact/url/run",
+					PythonVersion: DEFAULT_PYTHON_VERSION,
+					ModelSchema: &models.ModelSchema{
+						Spec: &models.SchemaSpec{
+							PredictionIDColumn: "prediction_id",
+							ModelPredictionOutput: &models.ModelPredictionOutput{
+								RankingOutput: &models.RankingOutput{
+									PredictionGroudIDColumn: "session_id",
+									RankScoreColumn:         "score",
+									RelevanceScoreColumn:    "relevance_score",
+									OutputClass:             models.Ranking,
+								},
+							},
+							FeatureTypes: map[string]models.ValueType{
+								"featureA": models.Float64,
+								"featureB": models.Int64,
+								"featureC": models.Boolean,
+							},
+						},
+						ModelID: models.ID(1),
+					},
+				}, mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "sklearn",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL:     "http://mlflow.com",
+					PythonVersion: DEFAULT_PYTHON_VERSION,
+					ModelSchema: &models.ModelSchema{
+						Spec: &models.SchemaSpec{
+							PredictionIDColumn: "prediction_id",
+							ModelPredictionOutput: &models.ModelPredictionOutput{
+								RankingOutput: &models.RankingOutput{
+									PredictionGroudIDColumn: "session_id",
+									RankScoreColumn:         "score",
+									RelevanceScoreColumn:    "relevance_score",
+									OutputClass:             models.Ranking,
+								},
+							},
+							FeatureTypes: map[string]models.ValueType{
+								"featureA": models.Float64,
+								"featureB": models.Int64,
+								"featureC": models.Boolean,
+							},
+						},
+						ModelID: models.ID(1),
+					},
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusCreated,
+				data: &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "sklearn",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL:     "http://mlflow.com",
+					PythonVersion: DEFAULT_PYTHON_VERSION,
+					ModelSchema: &models.ModelSchema{
+						Spec: &models.SchemaSpec{
+							PredictionIDColumn: "prediction_id",
+							ModelPredictionOutput: &models.ModelPredictionOutput{
+								RankingOutput: &models.RankingOutput{
+									PredictionGroudIDColumn: "session_id",
+									RankScoreColumn:         "score",
+									RelevanceScoreColumn:    "relevance_score",
+									OutputClass:             models.Ranking,
+								},
+							},
+							FeatureTypes: map[string]models.ValueType{
+								"featureA": models.Float64,
+								"featureB": models.Int64,
+								"featureC": models.Boolean,
+							},
+						},
+						ModelID: models.ID(1),
+					},
 				},
 			},
 		},

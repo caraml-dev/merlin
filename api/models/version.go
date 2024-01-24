@@ -40,13 +40,15 @@ type Version struct {
 }
 
 type VersionPost struct {
-	Labels        KV     `json:"labels" gorm:"labels"`
-	PythonVersion string `json:"python_version" gorm:"python_version"`
+	Labels        KV           `json:"labels" gorm:"labels"`
+	PythonVersion string       `json:"python_version" gorm:"python_version"`
+	ModelSchema   *ModelSchema `json:"model_schema"`
 }
 
 type VersionPatch struct {
 	Properties      *KV              `json:"properties,omitempty"`
 	CustomPredictor *CustomPredictor `json:"custom_predictor,omitempty"`
+	ModelSchema     *ModelSchema     `json:"model_schema"`
 }
 
 type CustomPredictor struct {
@@ -100,6 +102,10 @@ func (v *Version) Patch(patch *VersionPatch) error {
 		}
 		v.CustomPredictor = patch.CustomPredictor
 	}
+	if patch.ModelSchema != nil {
+		v.ModelSchema = patch.ModelSchema
+	}
+
 	return nil
 }
 

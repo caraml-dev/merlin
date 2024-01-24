@@ -783,6 +783,10 @@ class ModelVersion:
         model_id = self.model.id
         base_url = guess_mlp_ui_url(self.model.project.url)
         return f"{base_url}/projects/{project_id}/models/{model_id}/versions"
+    
+    @property
+    def model_schema(self) -> Optional[ModelSchema]:
+        return self._model_schema
 
     def start(self):
         """

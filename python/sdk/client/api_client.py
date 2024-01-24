@@ -296,6 +296,7 @@ class ApiClient:
             # if not found, look for '1XX', '2XX', etc.
             response_type = response_types_map.get(str(response_data.status)[0] + "XX", None)
 
+        print(f"response status ----- {response_data.status}")
         if not 200 <= response_data.status <= 299:
             if response_data.status == 400:
                 raise BadRequestException(http_resp=response_data)
@@ -328,6 +329,7 @@ class ApiClient:
                 match = re.search(r"charset=([a-zA-Z\-\d]+)[\s;]?", content_type)
             encoding = match.group(1) if match else "utf-8"
             response_text = response_data.data.decode(encoding)
+            print(f"response_text ------ {response_text}")
             return_data = self.deserialize(response_text, response_type)
 
         return ApiResponse(
