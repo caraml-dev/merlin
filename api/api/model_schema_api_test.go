@@ -371,6 +371,98 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 		},
 		{
+			desc: "success create ranking schema, with specifying model id",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: []byte(`{
+				"spec": {
+					"prediction_id_column":"prediction_id",
+					"tag_columns": ["tags"],
+					"feature_types": {
+						"featureA": "float64",
+						"featureB": "int64",
+						"featureC": "boolean"
+					},
+					"model_prediction_output": {
+						"prediction_group_id_column": "session_id",
+						"rank_score_column": "score",
+						"relevance_score": "relevance_score",
+						"output_class": "RankingOutput"
+					}
+				},
+				"model_id": 1
+			}`),
+			modelSchemaService: func() *mocks.ModelSchemaService {
+				mockSvc := &mocks.ModelSchemaService{}
+				mockSvc.On("Save", mock.Anything, &models.ModelSchema{
+					ModelID: models.ID(1),
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						TagColumns:         []string{"tags"},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+					},
+				}).Return(&models.ModelSchema{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						TagColumns:         []string{"tags"},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+					},
+				}, nil)
+				return mockSvc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: &models.ModelSchema{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						TagColumns:         []string{"tags"},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			desc: "success create binary classification schema",
 			vars: map[string]string{
 				"model_id": "1",
@@ -605,6 +697,38 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error save model schema: peer connection is reset"},
+			},
+		},
+		{
+			desc: "model id mismatch",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: []byte(`{
+				"spec": {
+					"prediction_id_column":"prediction_id",
+					"tag_columns": ["tags"],
+					"feature_types": {
+						"featureA": "float64",
+						"featureB": "int64",
+						"featureC": "boolean"
+					},
+					"model_prediction_output": {
+						"prediction_group_id_column": "session_id",
+						"rank_score_column": "score",
+						"relevance_score": "relevance_score",
+						"output_class": "RankingOutput"
+					}
+				},
+				"model_id": 2
+			}`),
+			modelSchemaService: func() *mocks.ModelSchemaService {
+				mockSvc := &mocks.ModelSchemaService{}
+				return mockSvc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Mismatch model id between request path and body"},
 			},
 		},
 	}

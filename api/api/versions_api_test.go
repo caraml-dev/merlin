@@ -624,7 +624,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 		},
 		{
-			desc: "Should return 500 if request body is not valud",
+			desc: "Should return 500 if request body is not valid",
 			vars: map[string]string{
 				"model_id":   "1",
 				"version_id": "1",
@@ -872,6 +872,63 @@ func TestPatchVersion(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Should fail update model schema when there is mismatch of model id",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionPatch{
+				Properties: &models.KV{
+					"name":       "model-1",
+					"created_by": "anonymous",
+				},
+				ModelSchema: &models.ModelSchema{
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+					},
+					ModelID: models.ID(5),
+				},
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
+					&models.Version{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "pyfunc",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL: "http://mlflow.com",
+					}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{
+					Message: "Error validating version: mismatch model id between version and model schema",
+				},
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -1001,6 +1058,67 @@ func TestCreateVersion(t *testing.T) {
 						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
 					PythonVersion: "3.10.*",
+				},
+			},
+		},
+		{
+			desc: "Should fail create version when save model returning error",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"service.type":     "GO-FOOD",
+					"1-targeting_date": "2021-02-01",
+					"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
+				},
+				PythonVersion: "3.10.*",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{
+					Info: mlflow.Info{
+						RunID:       "1",
+						ArtifactURI: "artifact/url/run",
+					},
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{
+					ModelID:     models.ID(1),
+					RunID:       "1",
+					ArtifactURI: "artifact/url/run",
+					Labels: models.KV{
+						"service.type":     "GO-FOOD",
+						"1-targeting_date": "2021-02-01",
+						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
+					},
+					PythonVersion: "3.10.*",
+				}, mock.Anything).Return(nil, fmt.Errorf("pq constraint violation"))
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{
+					Message: "Failed to save version: pq constraint violation",
 				},
 			},
 		},
@@ -1468,6 +1586,69 @@ func TestCreateVersion(t *testing.T) {
 						},
 						ModelID: models.ID(1),
 					},
+				},
+			},
+		},
+		{
+			desc: "Should fail create version with model schema, when there is mismatch model if between version and model schema",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				ModelSchema: &models.ModelSchema{
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+								OutputClass:             models.Ranking,
+							},
+						},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.Boolean,
+						},
+					},
+					ModelID: models.ID(5),
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{
+					Info: mlflow.Info{
+						RunID:       "1",
+						ArtifactURI: "artifact/url/run",
+					},
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{
+					Message: "Error validating version: mismatch model id between version and model schema",
 				},
 			},
 		},
