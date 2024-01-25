@@ -82,6 +82,7 @@ class VersionEndpoint:
                 )
 
             env_vars: Dict[str, str] = {}
+            self._transformer: Optional[Transformer] = None
             if transformer.env_vars is not None:
                 for env_var in transformer.env_vars:
                     if env_var.name is not None and env_var.value is not None:
@@ -97,7 +98,7 @@ class VersionEndpoint:
                 resource_request=transformer_request, 
                 env_vars=env_vars,
             )
-            
+
         if log_url is not None:
             self._log_url = log_url
 
@@ -157,7 +158,7 @@ class VersionEndpoint:
         return self._resource_request
     
     @property
-    def transformer(self) -> Transformer:
+    def transformer(self) -> Optional[Transformer]:
         return self._transformer
     
     @property
