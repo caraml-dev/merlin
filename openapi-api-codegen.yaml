@@ -1,5 +1,6 @@
 packageName: client
 enumClassPrefix: true
+useOneOfDiscriminatorLookup: true
 # Global Properties
 globalProperties:
   apiTests: false

@@ -104,6 +104,26 @@ class ModelPredictionOutput(BaseModel):
         error_messages = []
         match = 0
 
+        # use oneOf discriminator to lookup the data type
+        _data_type = json.loads(json_str).get("output_class")
+        if not _data_type:
+            raise ValueError("Failed to lookup data type from the field `output_class` in the input.")
+
+        # check if data type is `BinaryClassificationOutput`
+        if _data_type == "BinaryClassificationOutput":
+            instance.actual_instance = BinaryClassificationOutput.from_json(json_str)
+            return instance
+
+        # check if data type is `RankingOutput`
+        if _data_type == "RankingOutput":
+            instance.actual_instance = RankingOutput.from_json(json_str)
+            return instance
+
+        # check if data type is `RegressionOutput`
+        if _data_type == "RegressionOutput":
+            instance.actual_instance = RegressionOutput.from_json(json_str)
+            return instance
+
         # deserialize data into BinaryClassificationOutput
         try:
             instance.actual_instance = BinaryClassificationOutput.from_json(json_str)

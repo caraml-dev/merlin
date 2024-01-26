@@ -33,7 +33,7 @@ class RankingOutput(BaseModel):
     rank_score_column: StrictStr
     prediction_group_id_column: StrictStr
     relevance_score_column: Optional[StrictStr] = None
-    output_class: Optional[ModelPredictionOutputClass] = None
+    output_class: ModelPredictionOutputClass
     __properties: ClassVar[List[str]] = ["rank_score_column", "prediction_group_id_column", "relevance_score_column", "output_class"]
 
     model_config = {

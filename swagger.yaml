@@ -1423,6 +1423,7 @@ components:
         - prediction_score_column
         - positive_class_label
         - negative_class_label
+        - output_class
       properties:
         prediction_score_column:
           type: string
@@ -1442,6 +1443,7 @@ components:
       required:
         - rank_score_column
         - prediction_group_id_column
+        - output_class
       properties:
         rank_score_column:
           type: string
@@ -1455,6 +1457,7 @@ components:
       type: object
       required:
         - prediction_score_column
+        - output_class
       properties:
         prediction_score_column:
           type: string
