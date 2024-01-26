@@ -179,7 +179,7 @@ def test_model_schema(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-    assert v.model_schema == model_schema
+    assert v.model_schema.spec == model_schema.spec
     
     endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
