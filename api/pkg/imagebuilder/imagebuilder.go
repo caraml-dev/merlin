@@ -44,6 +44,7 @@ import (
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/utils"
 )
 
 var maxCheckImageRetry uint64 = 2
@@ -95,8 +96,7 @@ type imageBuilder struct {
 const (
 	containerName    = "pyfunc-image-builder"
 	kanikoSecretName = "kaniko-secret"
-	// jobCompletionTickDurationSecond is the interval at which the API server checks if a job has completed
-	jobCompletionTickDurationSecond = 5
+
 	// jobDeletionTimeoutSeconds is the maximum time to wait for a job to be deleted from a cluster
 	jobDeletionTimeoutSeconds = 30
 	// jobDeletionTickDurationMilliseconds is the interval at which the API server checks if a job has been deleted
@@ -402,48 +402,114 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 	return false, nil
 }
 
-func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) error {
+func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) (err error) {
 	timeout := time.After(c.config.BuildTimeoutDuration)
-	ticker := time.NewTicker(time.Second * jobCompletionTickDurationSecond)
-	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
-	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
+
+	jobConditionTable := ""
+	podContainerTable := ""
+	podLastTerminationMessage := ""
+
+	defer func() {
+		if jobConditionTable != "" {
+			err = fmt.Errorf("%w\n\nJob conditions:\n%s", err, jobConditionTable)
+		}
+
+		if podContainerTable != "" {
+			err = fmt.Errorf("%w\n\nPod container status:\n%s", err, podContainerTable)
+		}
+
+		if podLastTerminationMessage != "" {
+			err = fmt.Errorf("%w\n\nPod last termination message:\n%s", err, podLastTerminationMessage)
+		}
+	}()
+
+	jobWatcher, err := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace).Watch(ctx, metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", job.Name),
+	})
+	if err != nil {
+		err = fmt.Errorf("unable to initialize image builder job watcher [%s]: %w", job.Name, err)
+		return
+	}
+	defer jobWatcher.Stop()
+
+	podWatcher, err := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace).Watch(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("job-name=%s", job.Name),
+	})
+	if err != nil {
+		err = fmt.Errorf("unable to initialize image builder's pod watcher [%s]: %w", job.Name, err)
+		return
+	}
+	defer podWatcher.Stop()
 
 	for {
 		select {
 		case <-timeout:
 			log.Errorf("timeout waiting for kaniko job completion %s", job.Name)
 			return ErrTimeoutBuilImage
-		case <-ticker.C:
-			j, err := jobClient.Get(ctx, job.Name, metav1.GetOptions{})
-			if err != nil {
-				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
+
+		case jobEvent := <-jobWatcher.ResultChan():
+			job, ok := jobEvent.Object.(*batchv1.Job)
+			if !ok {
+				return fmt.Errorf("unable to cast job event object to job: %v", jobEvent)
+			}
+			log.Debugf("job event received [%s]", job.Name)
+
+			if len(job.Status.Conditions) > 0 {
+				log.Debugf("len(job.Status.Conditions) == %d", len(job.Status.Conditions))
+				jobConditionTable, err = parseJobConditions(job.Status.Conditions)
+			}
+
+			if job.Status.Succeeded == 1 {
+				log.Debugf("job [%s] completed successfully", job.Name)
+				return nil
+			}
+
+			if job.Status.Failed == 1 {
+				log.Errorf("job [%s] failed", job.Name)
 				return ErrUnableToBuildImage{
-					Message: err.Error(),
+					Message: "failed building pyfunc image",
 				}
 			}
 
-			if j.Status.Succeeded == 1 {
-				// successfully created pod
-				return nil
-			} else if j.Status.Failed == 1 {
-				podList, err := podClient.List(ctx, metav1.ListOptions{
-					LabelSelector: fmt.Sprintf("job-name=%s", j.Name),
-				})
-				pods := podList.Items
-				errMessage := ""
-				if err == nil && len(pods) > 0 {
-					sort.Slice(pods, func(i, j int) bool {
-						return pods[j].CreationTimestamp.Unix() > pods[i].CreationTimestamp.Unix()
-					})
-					errMessage = pods[0].Status.ContainerStatuses[0].State.Terminated.Message
-				}
-				log.Errorf("failed building pyfunc image %s: %v", job.Name, j.Status)
-				return ErrUnableToBuildImage{
-					Message: errMessage,
-				}
+		case podEvent := <-podWatcher.ResultChan():
+			pod, ok := podEvent.Object.(*v1.Pod)
+			if !ok {
+				return fmt.Errorf("unable to cast pod event object to pod: %v", podEvent)
+			}
+			log.Debugf("pod event received [%s]", pod.Name)
+
+			if len(pod.Status.ContainerStatuses) > 0 {
+				podContainerTable, podLastTerminationMessage, err = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
 			}
 		}
 	}
+}
+
+func parseJobConditions(jobConditions []batchv1.JobCondition) (string, error) {
+	var err error
+
+	jobConditionHeaders := []string{"TIMESTAMP", "TYPE", "REASON", "MESSAGE"}
+	jobConditionRows := [][]string{}
+
+	sort.Slice(jobConditions, func(i, j int) bool {
+		return jobConditions[i].LastProbeTime.Before(&jobConditions[j].LastProbeTime)
+	})
+
+	for _, condition := range jobConditions {
+		jobConditionRows = append(jobConditionRows, []string{
+			condition.LastProbeTime.Format(time.RFC1123),
+			string(condition.Type),
+			condition.Reason,
+			condition.Message,
+		})
+
+		err = ErrUnableToBuildImage{
+			Message: condition.Reason,
+		}
+	}
+
+	jobTable := utils.LogTable(jobConditionHeaders, jobConditionRows)
+	return jobTable, err
 }
 
 func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) error {

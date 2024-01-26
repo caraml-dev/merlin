@@ -41,6 +41,7 @@ require (
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
+	github.com/jedib0t/go-pretty/v6 v6.5.3
 	github.com/jinzhu/copier v0.3.5
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kserve/kserve v0.8.0
@@ -63,7 +64,7 @@ require (
 	github.com/rs/cors v1.8.2
 	github.com/soheilhy/cmux v0.1.4
 	github.com/spaolacci/murmur3 v1.1.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.32.0
 	go.opencensus.io v0.24.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.0
@@ -180,7 +181,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mattn/go-runewidth v0.0.12 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -222,8 +223,8 @@ require (
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.8.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gonum.org/v1/gonum v0.9.1 // indirect
