@@ -81,18 +81,21 @@ class ModelSchema:
                 actual_label_column=prediction_output.actual_label_column,
                 positive_class_label=prediction_output.positive_class_label,
                 negative_class_label=prediction_output.negative_class_label,
-                score_threshold=prediction_output.score_threshold
+                score_threshold=prediction_output.score_threshold,
+                output_class=client.ModelPredictionOutputClass(BinaryClassificationOutput.__name__)
             ))
         elif isinstance(prediction_output, RegressionOutput):
             return client.ModelPredictionOutput(client.RegressionOutput(
                 actual_score_column=prediction_output.actual_score_column,
-                prediction_score_column=prediction_output.prediction_score_column
+                prediction_score_column=prediction_output.prediction_score_column,
+                output_class=client.ModelPredictionOutputClass(RegressionOutput.__name__)
             ))
         elif isinstance(prediction_output, RankingOutput):
             return client.ModelPredictionOutput(client.RankingOutput(
                 relevance_score_column=prediction_output.relevance_score_column,
                 prediction_group_id_column=prediction_output.prediction_group_id_column,
-                rank_score_column=prediction_output.rank_score_column
+                rank_score_column=prediction_output.rank_score_column,
+                output_class=client.ModelPredictionOutputClass(RankingOutput.__name__)
             ))
         
         raise ValueError("model prediction output is not recognized")

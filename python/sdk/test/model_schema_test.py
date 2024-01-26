@@ -26,7 +26,8 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                             actual_label_column="actual_label",
                             positive_class_label="positive",
                             negative_class_label="negative",
-                            score_threshold=0.5
+                            score_threshold=0.5,
+                            output_class=client.ModelPredictionOutputClass.BINARYCLASSIFICATIONOUTPUT
                         )
                     ) 
                 )
@@ -70,7 +71,8 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                     model_prediction_output=client.ModelPredictionOutput(
                         client.RegressionOutput(
                             prediction_score_column="prediction_score",
-                            actual_score_column="actual_score"
+                            actual_score_column="actual_score",
+                            output_class=client.ModelPredictionOutputClass.REGRESSIONOUTPUT
                         )
                     ) 
                 )
@@ -112,7 +114,8 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                         client.RankingOutput(
                             rank_score_column="score",
                             prediction_group_id_column="session_id",
-                            relevance_score_column="relevance_score"
+                            relevance_score_column="relevance_score",
+                            output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT
                         )
                     ) 
                 )

@@ -49,6 +49,11 @@ func (m *ModelSchemaController) CreateOrUpdateSchema(r *http.Request, vars map[s
 	if !ok {
 		return BadRequest("Unable to parse request body")
 	}
+
+	if modelSchema.ModelID > 0 && modelSchema.ModelID != modelID {
+		return BadRequest("Mismatch model id between request path and body")
+	}
+
 	modelSchema.ModelID = modelID
 	schema, err := m.ModelSchemaService.Save(ctx, modelSchema)
 	if err != nil {

@@ -30,7 +30,7 @@ const (
 type ModelSchema struct {
 	ID      ID          `json:"id"`
 	Spec    *SchemaSpec `json:"spec,omitempty"`
-	ModelID ID          `json:"-"`
+	ModelID ID          `json:"model_id"`
 }
 
 type SchemaSpec struct {

@@ -1,6 +1,7 @@
 projectName: merlin-sdk
 packageName: client
 generateSourceCodeOnly: true
+useOneOfDiscriminatorLookup: true
 # Global Properties
 globalProperties:
   apiTests: false

@@ -18,6 +18,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -40,13 +41,15 @@ type Version struct {
 }
 
 type VersionPost struct {
-	Labels        KV     `json:"labels" gorm:"labels"`
-	PythonVersion string `json:"python_version" gorm:"python_version"`
+	Labels        KV           `json:"labels" gorm:"labels"`
+	PythonVersion string       `json:"python_version" gorm:"python_version"`
+	ModelSchema   *ModelSchema `json:"model_schema"`
 }
 
 type VersionPatch struct {
 	Properties      *KV              `json:"properties,omitempty"`
 	CustomPredictor *CustomPredictor `json:"custom_predictor,omitempty"`
+	ModelSchema     *ModelSchema     `json:"model_schema"`
 }
 
 type CustomPredictor struct {
@@ -90,17 +93,30 @@ func (kv *KV) Scan(value interface{}) error {
 	return json.Unmarshal(b, &kv)
 }
 
-func (v *Version) Patch(patch *VersionPatch) error {
+func (v *Version) Validate() error {
+	if v.CustomPredictor != nil && v.Model.Type == ModelTypeCustom {
+		if err := v.CustomPredictor.IsValid(); err != nil {
+			return err
+		}
+	}
+	if v.ModelSchema != nil {
+		if v.ModelSchema.ModelID > 0 && v.ModelSchema.ModelID != v.ModelID {
+			return fmt.Errorf("mismatch model id between version and model schema")
+		}
+	}
+	return nil
+}
+
+func (v *Version) Patch(patch *VersionPatch) {
 	if patch.Properties != nil {
 		v.Properties = *patch.Properties
 	}
 	if patch.CustomPredictor != nil && v.Model.Type == ModelTypeCustom {
-		if err := patch.CustomPredictor.IsValid(); err != nil {
-			return err
-		}
 		v.CustomPredictor = patch.CustomPredictor
 	}
-	return nil
+	if patch.ModelSchema != nil {
+		v.ModelSchema = patch.ModelSchema
+	}
 }
 
 func (v *Version) BeforeCreate(db *gorm.DB) error {

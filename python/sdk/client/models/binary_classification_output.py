@@ -35,7 +35,7 @@ class BinaryClassificationOutput(BaseModel):
     positive_class_label: StrictStr
     negative_class_label: StrictStr
     score_threshold: Optional[Union[StrictFloat, StrictInt]] = None
-    output_class: Optional[ModelPredictionOutputClass] = None
+    output_class: ModelPredictionOutputClass
     __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_label_column", "positive_class_label", "negative_class_label", "score_threshold", "output_class"]
 
     model_config = {

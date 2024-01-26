@@ -128,7 +128,37 @@ def test_xgboost(
 
     undeploy_all_version()
 
-    with merlin.new_model_version(model_schema=ModelSchema(spec=InferenceSchema(
+    with merlin.new_model_version() as v:
+        # Upload the serialized model to MLP
+        merlin.log_model(model_dir=model_dir)
+
+    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
+
+    merlin.undeploy(v)
+
+@pytest.mark.integration
+@pytest.mark.dependency()
+@pytest.mark.parametrize(
+    "deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS]
+)
+def test_model_schema(
+    integration_test_url, project_name, deployment_mode, use_google_oauth, requests
+):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model(
+        f"model-schema-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST
+    )
+
+    model_dir = "test/xgboost-model"
+
+    undeploy_all_version()
+    model_schema = ModelSchema(spec=InferenceSchema(
         feature_types={
             "featureA": ValueType.FLOAT64,
             "featureB": ValueType.INT64,
@@ -143,10 +173,14 @@ def test_xgboost(
             negative_class_label="non_complete",
             score_threshold=0.7
         )
-    ))) as v:
+    ))
+
+    with merlin.new_model_version(model_schema=model_schema) as v:
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
+    assert v.model_schema.spec == model_schema.spec
+    
     endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -155,6 +189,7 @@ def test_xgboost(
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
 
 
 @pytest.mark.integration
