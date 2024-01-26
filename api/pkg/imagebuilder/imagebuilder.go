@@ -410,6 +410,10 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) (
 	podLastTerminationMessage := ""
 
 	defer func() {
+		if err == nil {
+			return
+		}
+
 		if jobConditionTable != "" {
 			err = fmt.Errorf("%w\n\nJob conditions:\n%s", err, jobConditionTable)
 		}

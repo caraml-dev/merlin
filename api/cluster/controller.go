@@ -338,6 +338,10 @@ func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceS
 	podLastTerminationMessage := ""
 
 	defer func() {
+		if err == nil {
+			return
+		}
+
 		if isvcConditionTable != "" {
 			err = fmt.Errorf("%w\n\nModel service conditions:\n%s", err, isvcConditionTable)
 		}
