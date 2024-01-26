@@ -41,5 +41,5 @@ func (n *modelServiceNameGenerator) generateBuilderJobName(project mlp.Project, 
 
 // generateDockerImageName generate docker image name of model service
 func (n *modelServiceNameGenerator) generateDockerImageName(project mlp.Project, model *models.Model) string {
-	return fmt.Sprintf("%s/%s-%s", n.dockerRegistry, project.Name, model.Name)
+	return fmt.Sprintf("%s/%s/pyfunc-models/%s", n.dockerRegistry, project.Name, model.Name)
 }
