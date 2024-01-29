@@ -23,3 +23,4 @@ class KafkaProducer(Producer):
         prediction_log = build_prediction_log(pyfunc_output=data, model_manifest=self.model_manifest)
         serialized_data = prediction_log.SerializeToString() 
         self.producer.produce(topic=self.topic, value=serialized_data)
+        self.producer.poll(0)
