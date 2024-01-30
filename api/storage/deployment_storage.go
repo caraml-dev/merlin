@@ -27,8 +27,10 @@ type DeploymentStorage interface {
 	ListInModel(model *models.Model) ([]*models.Deployment, error)
 	// ListInModelVersion return all deployment within a model
 	ListInModelVersion(modelID, versionID, endpointUUID string) ([]*models.Deployment, error)
-	// Save save the deployment to underlying storage
+	// Save saves the deployment to underlying storage
 	Save(deployment *models.Deployment) (*models.Deployment, error)
+	// GetLatestDeployment gets the latest deployment record
+	GetLatestDeployment(modelID models.ID, versionID models.ID) (*models.Deployment, error)
 	// OnDeploymentSuccess updates the new deployment status to successful on DB and update all previous deployment status for that version endpoint to terminated.
 	OnDeploymentSuccess(newDeployment *models.Deployment) error
 	// Undeploy updates all successful deployment status to terminated on DB
@@ -61,6 +63,15 @@ func (d *deploymentStorage) ListInModelVersion(modelID, versionID, endpointUUID 
 func (d *deploymentStorage) Save(deployment *models.Deployment) (*models.Deployment, error) {
 	err := d.db.Save(deployment).Error
 	return deployment, err
+}
+
+func (d *deploymentStorage) GetLatestDeployment(modelID models.ID, versionID models.ID) (*models.Deployment, error) {
+	deployment := &models.Deployment{}
+	if err := d.db.Where("version_id = ? AND version_model_id = ? ORDER BY updated_at DESC LIMIT 1;", versionID,
+		modelID).Find(deployment).Error; err != nil {
+		return nil, err
+	}
+	return deployment, nil
 }
 
 func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error) {
