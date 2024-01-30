@@ -85,7 +85,9 @@ const RevisionPanel = ({ deployments, deploymentsLoaded, endpoint }) => {
           <EuiText className="expandedRow-title" size="xs">
             Error message
           </EuiText>
-          <EuiCodeBlock isCopyable>{deployment.error}</EuiCodeBlock>
+          <EuiCodeBlock isCopyable language="markdown" whiteSpace="pre">
+            {deployment.error}
+          </EuiCodeBlock>
         </>
       );
     }

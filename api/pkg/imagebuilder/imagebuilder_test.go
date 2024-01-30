@@ -36,6 +36,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	fakebatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1/fake"
@@ -214,6 +215,42 @@ var (
 		},
 	}
 )
+
+type jobWatchReactor struct {
+	result chan watch.Event
+}
+
+func newJobWatchReactor(job *batchv1.Job) *jobWatchReactor {
+	w := &jobWatchReactor{result: make(chan watch.Event, 1)}
+	w.result <- watch.Event{Type: watch.Added, Object: job}
+	return w
+}
+
+func (w *jobWatchReactor) Handles(action ktesting.Action) bool {
+	return action.GetResource().Resource == "jobs"
+}
+
+func (w *jobWatchReactor) React(action ktesting.Action) (handled bool, ret watch.Interface, err error) {
+	return true, watch.NewProxyWatcher(w.result), nil
+}
+
+type podWatchReactor struct {
+	result chan watch.Event
+}
+
+func newPodWatchReactor(pod *v1.Pod) *podWatchReactor {
+	w := &podWatchReactor{result: make(chan watch.Event, 1)}
+	w.result <- watch.Event{Type: watch.Added, Object: pod}
+	return w
+}
+
+func (w *podWatchReactor) Handles(action ktesting.Action) bool {
+	return action.GetResource().Resource == "pods"
+}
+
+func (w *podWatchReactor) React(action ktesting.Action) (handled bool, ret watch.Interface, err error) {
+	return true, watch.NewProxyWatcher(w.result), nil
+}
 
 func TestBuildImage(t *testing.T) {
 	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
@@ -1405,6 +1442,7 @@ func TestBuildImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			kubeClient := fake.NewSimpleClientset()
+
 			client := kubeClient.BatchV1().Jobs(tt.config.BuildNamespace).(*fakebatchv1.FakeJobs)
 			client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				if tt.existingJob != nil {
@@ -1452,6 +1490,26 @@ func TestBuildImage(t *testing.T) {
 			client.Fake.PrependReactor("delete", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, nil
 			})
+
+			client.Fake.WatchReactionChain = nil
+			fakeJob := &batchv1.Job{}
+			if tt.existingJob != nil {
+				if tt.wantCreateJob != nil {
+					fakeJob = tt.wantCreateJob.DeepCopy()
+				} else {
+					fakeJob = tt.existingJob.DeepCopy()
+				}
+			} else {
+				if tt.wantCreateJob != nil {
+					fakeJob = tt.wantCreateJob.DeepCopy()
+				}
+			}
+			fakeJob.Status.Succeeded = 1
+			jobWatchReactor := newJobWatchReactor(fakeJob)
+			client.Fake.WatchReactionChain = append(client.Fake.WatchReactionChain, jobWatchReactor)
+
+			podWatchReactor := newPodWatchReactor(&v1.Pod{})
+			client.Fake.WatchReactionChain = append(client.Fake.WatchReactionChain, podWatchReactor)
 
 			imageBuilderCfg := tt.config
 

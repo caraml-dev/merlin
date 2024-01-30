@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sort"
 	"time"
 
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
@@ -32,6 +33,7 @@ import (
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	policyv1client "k8s.io/client-go/kubernetes/typed/policy/v1"
 	"k8s.io/client-go/rest"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	knservingclientset "knative.dev/serving/pkg/client/clientset/versioned"
 	knservingclient "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,6 +43,7 @@ import (
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/utils"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 )
 
@@ -254,7 +257,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			log.Errorf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
-		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToGetInferenceServiceStatus, isvcName))
+		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
 	}
 
 	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
@@ -335,28 +338,111 @@ func (c *controller) deleteInferenceService(serviceName string, namespace string
 	return nil
 }
 
-func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceService) (*kservev1beta1.InferenceService, error) {
+func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceService) (isvc *kservev1beta1.InferenceService, err error) {
+	ctx := context.Background()
+
 	timeout := time.After(c.deploymentConfig.DeploymentTimeout)
-	ticker := time.NewTicker(time.Second * tickDurationSecond)
+
+	isvcConditionTable := ""
+	podContainerTable := ""
+	podLastTerminationMessage := ""
+	podLastTerminationReason := ""
+
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		if isvcConditionTable != "" {
+			err = fmt.Errorf("%w\n\nModel service conditions:\n%s", err, isvcConditionTable)
+		}
+
+		if podContainerTable != "" {
+			err = fmt.Errorf("%w\n\nPod container status:\n%s", err, podContainerTable)
+		}
+
+		if podLastTerminationMessage != "" {
+			err = fmt.Errorf("%w\n\nPod last termination message:\n%s", err, podLastTerminationMessage)
+		}
+	}()
+
+	isvcWatcher, err := c.kserveClient.InferenceServices(service.Namespace).Watch(metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", service.Name),
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to initialize isvc watcher: %s", service.Name)
+	}
+
+	podWatcher, err := c.clusterClient.Pods(service.Namespace).Watch(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("serving.kserve.io/inferenceservice=%s", service.Name),
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to initialize isvc's pods watcher: %s", service.Name)
+	}
 
 	for {
 		select {
 		case <-timeout:
-			log.Errorf("timeout waiting for inference service to be ready %s", service.Name)
 			return nil, ErrTimeoutCreateInferenceService
-		case <-ticker.C:
-			s, err := c.kserveClient.InferenceServices(service.Namespace).Get(service.Name, metav1.GetOptions{})
-			if err != nil {
-				log.Errorf("unable to get inference service status %s %v", service.Name, err)
-				return nil, ErrUnableToGetInferenceServiceStatus
+
+		case isvcEvent := <-isvcWatcher.ResultChan():
+			isvc, ok := isvcEvent.Object.(*kservev1beta1.InferenceService)
+			if !ok {
+				return nil, errors.New("unable to cast isvc object")
+			}
+			log.Debugf("isvc event received [%s]", isvc.Name)
+
+			if isvc.Status.Status.Conditions != nil {
+				// Update isvc condition table with latest conditions
+				isvcConditionTable, err = parseInferenceServiceConditions(isvc.Status.Status.Conditions)
 			}
 
-			if s.Status.IsReady() {
-				// Inference service is completely ready
-				return s, nil
+			if isvc.Status.IsReady() {
+				return isvc, nil
+			}
+
+		case podEvent := <-podWatcher.ResultChan():
+			pod, ok := podEvent.Object.(*corev1.Pod)
+			if !ok {
+				return nil, errors.New("unable to cast pod object")
+			}
+			log.Debugf("pod event received [%s]", pod.Name)
+
+			if len(pod.Status.ContainerStatuses) > 0 {
+				// Update pod container table with latest container statuses
+				podContainerTable, podLastTerminationMessage, podLastTerminationReason = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
+				err = errors.New(podLastTerminationReason)
 			}
 		}
 	}
+}
+
+func parseInferenceServiceConditions(isvcConditions duckv1.Conditions) (string, error) {
+	var err error
+
+	isvcConditionHeaders := []string{"TYPE", "STATUS", "REASON", "MESSAGE"}
+	isvcConditionRows := [][]string{}
+
+	sort.Slice(isvcConditions, func(i, j int) bool {
+		return isvcConditions[i].LastTransitionTime.Inner.Before(&isvcConditions[j].LastTransitionTime.Inner)
+	})
+
+	for _, condition := range isvcConditions {
+		isvcConditionRows = append(isvcConditionRows, []string{
+			string(condition.Type),
+			string(condition.Status),
+			condition.Reason,
+			condition.Message,
+		})
+
+		err = errors.New(condition.Reason)
+		if condition.Message != "" {
+			err = fmt.Errorf("%w: %s", err, condition.Message)
+		}
+	}
+
+	isvcTable := utils.LogTable(isvcConditionHeaders, isvcConditionRows)
+	return isvcTable, err
 }
 
 func (c *controller) ListPods(ctx context.Context, namespace, labelSelector string) (*corev1.PodList, error) {
