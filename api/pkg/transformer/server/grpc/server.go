@@ -352,9 +352,9 @@ func getGRPCCode(err error) codes.Code {
 		return statusErr.Code()
 	}
 
-	if errors.Is(err, mErrors.InvalidInputError) {
+	if errors.Is(err, mErrors.ErrInvalidInput) {
 		return codes.InvalidArgument
-	} else if errors.Is(err, mErrors.DeadlineExceededError) {
+	} else if errors.Is(err, mErrors.ErrDeadlineExceeded) {
 		return codes.DeadlineExceeded
 	}
 	return codes.Internal

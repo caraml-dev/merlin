@@ -15,6 +15,7 @@
 import json
 import types
 from unittest.mock import patch
+import datetime
 
 import client
 import client as cl
@@ -30,11 +31,12 @@ from merlin.batch.source import BigQuerySource
 from merlin.endpoint import VersionEndpoint
 from merlin.model import ModelType
 from merlin.protocol import Protocol
+from merlin.model_schema import ModelSchema, InferenceSchema, ValueType, RankingOutput
 from urllib3_mock import Responses
 
 responses = Responses("requests.packages.urllib3")
 
-default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
+default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
 gpu = cl.GPUConfig(
     name="nvidia-tesla-p4",
     values=["1", "4", "8"],
@@ -47,51 +49,73 @@ gpu = cl.GPUConfig(
 )
 
 env_1 = cl.Environment(
-    1, "dev", "cluster-1", True, default_resource_request=default_resource_request
+    id=1,
+    name="dev",
+    cluster="cluster-1",
+    is_default=True,
+    default_resource_request=default_resource_request,
 )
 env_2 = cl.Environment(
-    2, "dev-2", "cluster-2", False, default_resource_request=default_resource_request
+    id=2,
+    name="dev-2",
+    cluster="cluster-2",
+    is_default=False,
+    default_resource_request=default_resource_request,
 )
 env_3 = cl.Environment(
-    3,
-    "dev-3",
-    "cluster-3",
-    False,
+    id=2,
+    name="dev-3",
+    cluster="cluster-3",
+    is_default=False,
     default_resource_request=default_resource_request,
-    gpus=[gpu],
+    gpus=[gpu]
 )
 
 ep1 = cl.VersionEndpoint(
-    "1234", 1, "running", "localhost/1", "svc-1", env_1.name, env_1, "grafana.com"
+    id="1234", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-1", 
+    environment_name=env_1.name, 
+    environment=env_1, 
+    monitoring_url="grafana.com"
 )
 ep2 = cl.VersionEndpoint(
-    "4567", 1, "running", "localhost/1", "svc-2", env_2.name, env_2, "grafana.com"
+    id="4567", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-2", 
+    environment_name=env_2.name, 
+    environment=env_2, 
+    monitoring_url="grafana.com"
 )
 ep3 = cl.VersionEndpoint(
-    "1234",
-    1,
-    "running",
-    "localhost/1",
-    "svc-1",
-    env_1.name,
-    env_1,
-    "grafana.com",
-    deployment_mode="raw_deployment",
+    id="1234", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-1", 
+    environment_name=env_1.name, 
+    environment=env_1, 
+    monitoring_url="grafana.com",
+    deployment_mode="raw_deployment"
 )
 ep4 = cl.VersionEndpoint(
-    "1234",
-    1,
-    "running",
-    "localhost/1",
-    "svc-1",
-    env_1.name,
-    env_1,
-    "grafana.com",
+    id="1234", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-1", 
+    environment_name=env_1.name, 
+    environment=env_1, 
+    monitoring_url="grafana.com",
     autoscaling_policy=client.AutoscalingPolicy(
-        metrics_type=cl.MetricsType.CPU_UTILIZATION, target_value=10
-    ),
+        metrics_type=cl.MetricsType.CPU_UTILIZATION,
+        target_value=10
+    )
 )
-
 resource_request_with_gpu = cl.ResourceRequest(
     min_replica=1,
     max_replica=1,
@@ -101,63 +125,76 @@ resource_request_with_gpu = cl.ResourceRequest(
     gpu_request="1",
 )
 ep5 = cl.VersionEndpoint(
-    "789",
-    1,
-    "running",
-    "localhost/1",
-    "svc-1",
-    env_3.name,
-    env_3,
-    "grafana.com",
-    resource_request=resource_request_with_gpu,
+    id="789", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-1", 
+    environment_name=env_3.name, 
+    environment=env_3, 
+    monitoring_url="grafana.com",
+    resource_request=resource_request_with_gpu
 )
-
 upi_ep = cl.VersionEndpoint(
-    "1234",
-    1,
-    "running",
-    "localhost/1",
-    "svc-1",
-    env_1.name,
-    env_1,
-    "grafana.com",
-    protocol=cl.Protocol.UPI_V1,
+    id="1234", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-1", 
+    environment_name=env_1.name, 
+    environment=env_1, 
+    monitoring_url="grafana.com",
+    protocol=cl.Protocol.UPI_V1
 )
-
 observability_enabled_ep = cl.VersionEndpoint(
-    "7899",
-    1,
-    "running",
-    "localhost/1",
-    "svc-1",
-    env_3.name,
-    env_3,
-    "grafana.com",
-    enable_model_observability=True,
+    id="7899", 
+    version_id=1, 
+    status="running", 
+    url="localhost/1", 
+    service_name="svc-1", 
+    environment_name=env_3.name, 
+    environment=env_3, 
+    monitoring_url="grafana.com",
+    enable_model_observability=True
 )
 
 rule_1 = cl.ModelEndpointRule(
-    destinations=[cl.ModelEndpointRuleDestination(ep1.id, weight=100)]
+    destinations=[cl.ModelEndpointRuleDestination(version_endpoint_id=ep1.id, weight=100)]
 )
 rule_2 = cl.ModelEndpointRule(
-    destinations=[cl.ModelEndpointRuleDestination(ep2.id, weight=100)]
+    destinations=[cl.ModelEndpointRuleDestination(version_endpoint_id=ep2.id, weight=100)]
 )
 mdl_endpoint_1 = cl.ModelEndpoint(
-    1, 1, None, "serving", "localhost/1", rule_1, env_1.name, env_1
+    id=1, 
+    model_id=1, 
+    model=None, 
+    status="serving", 
+    url="localhost/1", 
+    rule=rule_1, 
+    environment_name=env_1.name, 
+    environment=env_1
 )
 mdl_endpoint_2 = cl.ModelEndpoint(
-    2, 1, None, "serving", "localhost/2", rule_2, env_2.name, env_2
+    id=2, 
+    model_id=1, 
+    model=None, 
+    status="serving", 
+    url="localhost/2", 
+    rule=rule_2, 
+    environment_name=env_2.name, 
+    environment=env_2
 )
+
 mdl_endpoint_upi = cl.ModelEndpoint(
-    1,
-    1,
-    None,
-    "serving",
-    "localhost/1",
-    rule_1,
-    env_1.name,
-    env_1,
-    protocol=cl.Protocol.UPI_V1,
+    id=1, 
+    model_id=1, 
+    model=None, 
+    status="serving", 
+    url="localhost/1", 
+    rule=rule_1, 
+    environment_name=env_1.name, 
+    environment=env_1,
+    protocol=cl.Protocol.UPI_V1
 )
 
 config = {
@@ -184,7 +221,7 @@ config = {
             "table": "project.dataset.result_table",
             "staging_bucket": "gs://test",
             "result_column": "prediction",
-            "save_mode": "OVERWRITE",
+            "save_mode": 1,
             "options": {
                 "key": "val",
             },
@@ -223,6 +260,10 @@ job_2 = cl.PredictionJob(
     updated_at="2019-08-29T08:13:12.377Z",
 )
 
+def serialize_datetime(obj):
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    raise TypeError("Type is not serializable")
 
 class TestProject:
     secret_1 = cl.Secret(id=1, name="secret-1", data="secret-data-1")
@@ -239,7 +280,6 @@ class TestProject:
         )
 
         project.create_secret(self.secret_1.name, self.secret_1.data)
-
         actual_body = json.loads(responses.calls[0].request.body)
         assert actual_body["name"] == self.secret_1.name
         assert actual_body["data"] == self.secret_1.data
@@ -370,7 +410,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -420,7 +460,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(upi_ep.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -470,7 +510,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep3.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -520,7 +560,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep4.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -596,7 +636,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -696,7 +736,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep5.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -752,7 +792,7 @@ class TestModelVersion:
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(observability_enabled_ep.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         responses.add(
@@ -884,7 +924,7 @@ class TestModelVersion:
         responses.add(
             method="GET",
             url="/v1/models/1/versions/1/jobs",
-            body=json.dumps([job_1.to_dict(), job_2.to_dict()]),
+            body=json.dumps([job_1.to_dict(), job_2.to_dict()], default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -906,7 +946,7 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -963,7 +1003,7 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -972,7 +1012,7 @@ class TestModelVersion:
             responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict()),
+                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
                 status=500,
                 content_type="application/json",
             )
@@ -1013,7 +1053,7 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -1046,7 +1086,7 @@ class TestModelVersion:
             responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict()),
+                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
                 status=500,
                 content_type="application/json",
             )
@@ -1055,7 +1095,7 @@ class TestModelVersion:
         responses.add(
             "GET",
             "/v1/models/1/versions/1/jobs/1",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -1116,7 +1156,7 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -1149,7 +1189,7 @@ class TestModelVersion:
             responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict()),
+                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
                 status=500,
                 content_type="application/json",
             )
@@ -1157,7 +1197,7 @@ class TestModelVersion:
         responses.add(
             "GET",
             "/v1/models/1/versions/1/jobs/1",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -1167,7 +1207,7 @@ class TestModelVersion:
             responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict()),
+                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
                 status=500,
                 content_type="application/json",
             )
@@ -1209,7 +1249,7 @@ class TestModelVersion:
         responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -1225,7 +1265,7 @@ class TestModelVersion:
         responses.add(
             "GET",
             "/v1/models/1/versions/1/jobs/1",
-            body=json.dumps(job_1.to_dict()),
+            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
@@ -1276,6 +1316,49 @@ class TestModel:
     v1 = cl.Version(id=1, model_id=1)
     v2 = cl.Version(id=2, model_id=1)
     v3 = cl.Version(id=3, model_id=1, labels={"model": "T-800"}, python_version="3.7.*")
+
+    schema = client.ModelSchema(
+                id=3,
+                model_id=1,
+                spec=client.SchemaSpec(
+                    prediction_id_column="prediction_id",
+                    tag_columns=["tags", "extras"],
+                    feature_types={
+                        "featureA": client.ValueType.FLOAT64,
+                        "featureB": client.ValueType.INT64,
+                        "featureC": client.ValueType.BOOLEAN,
+                        "featureD": client.ValueType.STRING
+                    },
+                    model_prediction_output=client.ModelPredictionOutput(
+                        client.RankingOutput(
+                            rank_score_column="score",
+                            prediction_group_id_column="session_id",
+                            relevance_score_column="relevance_score",
+                            output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT
+                        )
+                    ) 
+                )
+            )
+    merlin_model_schema = ModelSchema(
+                id=3,
+                model_id=1,
+                spec=InferenceSchema(
+                    prediction_id_column="prediction_id",
+                    tag_columns=["tags", "extras"],
+                    feature_types={
+                        "featureA": ValueType.FLOAT64,
+                        "featureB": ValueType.INT64,
+                        "featureC": ValueType.BOOLEAN,
+                        "featureD": ValueType.STRING
+                    },
+                    model_prediction_output=RankingOutput(
+                        rank_score_column="score",
+                        prediction_group_id_column="session_id",
+                        relevance_score_column="relevance_score"
+                    )
+                ),
+            )
+    v4 = cl.Version(id=4, model_id=1, labels={"model": "T-800"}, python_version="3.7.*", model_schema=schema)
 
     @responses.activate
     def test_list_version(self, model):
@@ -1328,24 +1411,25 @@ class TestModel:
 
         endpoints = model.list_endpoint()
         assert len(endpoints) == 2
-        assert endpoints[0].id == str(mdl_endpoint_1.id)
-        assert endpoints[1].id == str(mdl_endpoint_2.id)
+        assert endpoints[0].id == mdl_endpoint_1.id
+        assert endpoints[1].id == mdl_endpoint_2.id
 
     @responses.activate
     def test_new_model_version(self, model):
         responses.add(
             "POST",
             "/v1/models/1/versions",
-            body=json.dumps(self.v3.to_dict()),
-            status=200,
+            body=json.dumps(self.v4.to_dict()),
+            status=201,
             content_type="application/json",
         )
 
-        mv = model.new_model_version(labels={"model": "T-800"})
+        mv = model.new_model_version(labels={"model": "T-800"}, model_schema=self.merlin_model_schema)
         assert mv._python_version == "3.7.*"
-        assert mv._id == 3
+        assert mv._id == 4
         assert mv._model._id == 1
         assert mv._labels == {"model": "T-800"}
+        assert mv._model_schema == self.merlin_model_schema
 
     @responses.activate
     def test_serve_traffic(self, model):
@@ -1376,11 +1460,11 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1411,7 +1495,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1445,11 +1529,11 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1517,11 +1601,11 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100})
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1558,7 +1642,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100})
-        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.id == mdl_endpoint_1.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1578,11 +1662,11 @@ class TestModel:
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_upi.to_dict()),
-            status=200,
+            status=201,
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_upi.id)
+        assert endpoint.id == mdl_endpoint_upi.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
@@ -1613,7 +1697,7 @@ class TestModel:
             content_type="application/json",
         )
         endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == str(mdl_endpoint_upi.id)
+        assert endpoint.id == mdl_endpoint_upi.id
         assert (
             endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
         )

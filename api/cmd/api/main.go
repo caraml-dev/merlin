@@ -328,6 +328,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	}
 
 	transformerService := service.NewTransformerService(cfg.StandardTransformerConfig)
+	modelSchemaService := service.NewModelSchemaService(storage.NewModelSchemaStorage(db))
 	apiContext := api.AppContext{
 		DB:       db,
 		Enforcer: authEnforcer,
@@ -345,6 +346,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		ModelEndpointAlertService: modelEndpointAlertService,
 		TransformerService:        transformerService,
 		MlflowDeleteService:       mlflowDeleteService,
+		ModelSchemaService:        modelSchemaService,
 
 		AuthorizationEnabled:      cfg.AuthorizationConfig.AuthorizationEnabled,
 		FeatureToggleConfig:       cfg.FeatureToggleConfig,

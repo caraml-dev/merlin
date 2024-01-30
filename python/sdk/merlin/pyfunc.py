@@ -10,7 +10,6 @@ import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
 from docker import APIClient
-from git import Repo
 from merlin.docker.docker import copy_pyfunc_dockerfile, wait_build_complete
 from merlin.protocol import Protocol
 from merlin.version import VERSION
@@ -516,6 +515,10 @@ def run_pyfunc_local_server(
 
 
 def _clone_merlin_repo(context_path: str):
+    # Can't be imported at module level because the initialization will fail when the git executable
+    # does not exists.
+    from git import Repo
+
     repo_url = "https://github.com/caraml-dev/merlin.git"
     repo_path = f"{context_path}/merlin"
     if not os.path.isdir(repo_path):

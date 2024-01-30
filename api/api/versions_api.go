@@ -69,7 +69,8 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 		return InternalServerError("Unable to parse request body")
 	}
 
-	if err := v.Patch(versionPatch); err != nil {
+	v.Patch(versionPatch)
+	if err := v.Validate(); err != nil {
 		return BadRequest(fmt.Sprintf("Error validating version: %v", err))
 	}
 
@@ -105,7 +106,6 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 
 func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
-
 	versionPost, ok := body.(*models.VersionPost)
 	if !ok {
 		return BadRequest("Unable to parse request body")
@@ -137,9 +137,17 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		ArtifactURI:   run.Info.ArtifactURI,
 		Labels:        versionPost.Labels,
 		PythonVersion: versionPost.PythonVersion,
+		ModelSchema:   versionPost.ModelSchema,
 	}
 
-	version, _ = c.VersionsService.Save(ctx, version, c.FeatureToggleConfig.MonitoringConfig)
+	if err := version.Validate(); err != nil {
+		return BadRequest(fmt.Sprintf("Error validating version: %v", err))
+	}
+
+	version, err = c.VersionsService.Save(ctx, version, c.FeatureToggleConfig.MonitoringConfig)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Failed to save version: %v", err))
+	}
 	return Created(version)
 }
 

@@ -42,6 +42,7 @@ REQUIRES = [
     "urllib3>=1.26",
     "numpy<=1.23.5",  # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
     "caraml-auth-google==0.0.0.post7",
+    "pydantic==2.5.3"
 ]
 
 TEST_REQUIRES = [

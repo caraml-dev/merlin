@@ -66,6 +66,7 @@ type AppContext struct {
 	ModelEndpointAlertService service.ModelEndpointAlertService
 	TransformerService        service.TransformerService
 	MlflowDeleteService       mlflowDelete.Service
+	ModelSchemaService        service.ModelSchemaService
 
 	AuthorizationEnabled      bool
 	FeatureToggleConfig       config.FeatureToggleConfig
@@ -167,6 +168,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	secretController := SecretsController{&appCtx}
 	alertsController := AlertsController{&appCtx}
 	transformerController := TransformerController{&appCtx}
+	modelSchemaController := ModelSchemaController{&appCtx}
 
 	routes := []Route{
 		// Environment API
@@ -226,6 +228,12 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 
 		// Standard Transformer Simulation API
 		{http.MethodPost, "/standard_transformer/simulate", models.TransformerSimulation{}, transformerController.SimulateTransformer, "SimulateTransformer"},
+
+		// Model Schema API
+		{http.MethodGet, "/models/{model_id:[0-9]+}/schemas", models.ModelSchema{}, modelSchemaController.GetAllSchemas, "GetAllSchemas"},
+		{http.MethodGet, "/models/{model_id:[0-9]+}/schemas/{schema_id:[0-9]+}", models.ModelSchema{}, modelSchemaController.GetSchema, "GetSchemaDetail"},
+		{http.MethodPut, "/models/{model_id:[0-9]+}/schemas", models.ModelSchema{}, modelSchemaController.CreateOrUpdateSchema, "CreateOrUpdateSchema"},
+		{http.MethodDelete, "/models/{model_id:[0-9]+}/schemas/{schema_id:[0-9]+}", models.ModelSchema{}, modelSchemaController.DeleteSchema, "DeleteSchema"},
 	}
 
 	if appCtx.FeatureToggleConfig.ModelDeletionConfig.Enabled {

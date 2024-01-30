@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from google.cloud import storage
 from os.path import dirname
 from os import makedirs
-
+from typing import Optional, Any
 
 def guess_mlp_ui_url(mlp_api_url: str) -> str:
     raw_url = mlp_api_url.replace("/api", "")
@@ -94,3 +94,8 @@ def download_files_from_gcs(gcs_uri: str, destination_path: str):
         dir = os.path.join(destination_path, dirname(artifact_path))
         makedirs(dir, exist_ok=True)
         blob.download_to_filename(os.path.join(destination_path, artifact_path))
+
+def extract_optional_value_with_default(opt: Optional[Any], default: Any) -> Any:
+    if opt is not None:
+        return opt
+    return default

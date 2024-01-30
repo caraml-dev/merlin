@@ -22,6 +22,8 @@ from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import StandardTransformer, Transformer
+from merlin.model_schema import ModelSchema
+from merlin.observability.inference import InferenceSchema, ValueType, BinaryClassificationOutput
 from recursive_diff import recursive_eq
 
 import merlin
@@ -138,6 +140,56 @@ def test_xgboost(
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
+@pytest.mark.integration
+@pytest.mark.dependency()
+@pytest.mark.parametrize(
+    "deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS]
+)
+def test_model_schema(
+    integration_test_url, project_name, deployment_mode, use_google_oauth, requests
+):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model(
+        f"model-schema-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST
+    )
+
+    model_dir = "test/xgboost-model"
+
+    undeploy_all_version()
+    model_schema = ModelSchema(spec=InferenceSchema(
+        feature_types={
+            "featureA": ValueType.FLOAT64,
+            "featureB": ValueType.INT64,
+            "featureC": ValueType.STRING,
+            "featureD": ValueType.BOOLEAN
+        },
+        prediction_id_column="prediction_id",
+        model_prediction_output=BinaryClassificationOutput(
+            prediction_score_column="score",
+            actual_label_column="actual",
+            positive_class_label="completed",
+            negative_class_label="non_complete",
+            score_threshold=0.7
+        )
+    ))
+
+    with merlin.new_model_version(model_schema=model_schema) as v:
+        # Upload the serialized model to MLP
+        merlin.log_model(model_dir=model_dir)
+
+    assert v.model_schema.spec == model_schema.spec
+    
+    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
+
+    merlin.undeploy(v)
+
 
 
 @pytest.mark.integration
@@ -1177,11 +1229,14 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     resp_wo_tracing = transformer.simulate(payload=payload, exclude_tracing=True)
     resp_w_tracing = transformer.simulate(payload=payload, exclude_tracing=False)
 
+    def remove_nulls(d):
+        return {k: v for k, v in d.items() if v is not None}
+
     with open("test/transformer/sim_exp_resp_valid_wo_tracing.json", "r") as f:
-        exp_resp_valid_wo_tracing = json.load(f)
+        exp_resp_valid_wo_tracing = json.load(f, object_hook=remove_nulls)
 
     with open("test/transformer/sim_exp_resp_valid_w_tracing.json", "r") as f:
-        exp_resp_valid_w_tracing = json.load(f)
+        exp_resp_valid_w_tracing = json.load(f, object_hook=remove_nulls)
 
     assert isinstance(resp_wo_tracing, dict)
     assert isinstance(resp_w_tracing, dict)

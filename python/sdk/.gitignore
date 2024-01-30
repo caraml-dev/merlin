@@ -75,3 +75,4 @@ docs/mlruns
 
 # swagger-codegen
 swagger-codegen-cli.jar
+.openapi-generator/

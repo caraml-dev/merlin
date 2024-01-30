@@ -1,0 +1,9 @@
+packageName: client
+enumClassPrefix: true
+useOneOfDiscriminatorLookup: true
+# Global Properties
+globalProperties:
+  apiTests: false
+  modelTests: false
+  apiDocs: false
+  modelDocs: false

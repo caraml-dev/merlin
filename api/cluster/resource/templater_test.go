@@ -15,6 +15,8 @@
 package resource
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -57,8 +59,11 @@ var (
 			corev1.ResourceMemory: defaultModelResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    getLimit(defaultModelResourceRequests.CPURequest),
-			corev1.ResourceMemory: getLimit(defaultModelResourceRequests.MemoryRequest),
+			corev1.ResourceCPU: resource.MustParse("8"),
+			corev1.ResourceMemory: ScaleQuantity(
+				defaultModelResourceRequests.MemoryRequest,
+				userContainerMemoryLimitRequestFactor,
+			),
 		},
 	}
 
@@ -75,8 +80,8 @@ var (
 			corev1.ResourceMemory: defaultTransformerResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    getLimit(defaultTransformerResourceRequests.CPURequest),
-			corev1.ResourceMemory: getLimit(defaultTransformerResourceRequests.MemoryRequest),
+			corev1.ResourceCPU:    resource.MustParse("8"),
+			corev1.ResourceMemory: ScaleQuantity(defaultTransformerResourceRequests.MemoryRequest, 2),
 		},
 	}
 
@@ -93,8 +98,8 @@ var (
 			corev1.ResourceMemory: userResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    getLimit(userResourceRequests.CPURequest),
-			corev1.ResourceMemory: getLimit(userResourceRequests.MemoryRequest),
+			corev1.ResourceCPU:    resource.MustParse("8"),
+			corev1.ResourceMemory: ScaleQuantity(userResourceRequests.MemoryRequest, 2),
 		},
 	}
 
@@ -163,6 +168,10 @@ var (
 		},
 		SamplingRatioRate: 0.01,
 	}
+
+	userContainerCPUDefaultLimit          = "8"
+	userContainerCPULimitRequestFactor    = float64(0)
+	userContainerMemoryLimitRequestFactor = float64(2)
 )
 
 func TestCreateInferenceServiceSpec(t *testing.T) {
@@ -196,6 +205,49 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 		},
 		Protocol:                  protocol.HttpJson,
 		EnabledModelObservability: true,
+	}
+
+	modelSvcWithSchema := &models.Service{
+		Name:         "my-model-1",
+		ModelName:    "my-model",
+		Namespace:    project.Name,
+		ModelVersion: "1",
+		ArtifactURI:  "gs://my-artifacet",
+		Metadata: models.Metadata{
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
+			Labels: mlp.Labels{
+				{
+					Key:   "sample",
+					Value: "true",
+				},
+			},
+		},
+		Protocol:                  protocol.HttpJson,
+		EnabledModelObservability: true,
+		ModelSchema: &models.ModelSchema{
+			ID:      models.ID(1),
+			ModelID: models.ID(1),
+			Spec: &models.SchemaSpec{
+				PredictionIDColumn: "prediction_id",
+				TagColumns:         []string{"tags"},
+				FeatureTypes: map[string]models.ValueType{
+					"featureA": models.Float64,
+					"featureB": models.Int64,
+					"featureC": models.String,
+					"featureD": models.Boolean,
+				},
+				ModelPredictionOutput: &models.ModelPredictionOutput{
+					RankingOutput: &models.RankingOutput{
+						PredictionGroudIDColumn: "session_id",
+						RankScoreColumn:         "score",
+						RelevanceScoreColumn:    "relevance_score",
+					},
+				},
+			},
+		},
 	}
 
 	queueResourcePercentage := "2"
@@ -802,6 +854,27 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:                  modelSvc.Metadata,
 				Protocol:                  protocol.HttpJson,
 				EnabledModelObservability: true,
+				ModelSchema: &models.ModelSchema{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Spec: &models.SchemaSpec{
+						PredictionIDColumn: "prediction_id",
+						TagColumns:         []string{"tags"},
+						FeatureTypes: map[string]models.ValueType{
+							"featureA": models.Float64,
+							"featureB": models.Int64,
+							"featureC": models.String,
+							"featureD": models.Boolean,
+						},
+						ModelPredictionOutput: &models.ModelPredictionOutput{
+							RankingOutput: &models.RankingOutput{
+								PredictionGroudIDColumn: "session_id",
+								RankScoreColumn:         "score",
+								RelevanceScoreColumn:    "relevance_score",
+							},
+						},
+					},
+				},
 			},
 			resourcePercentage: queueResourcePercentage,
 			deploymentScale:    defaultDeploymentScale,
@@ -833,8 +906,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								{
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
-									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
-										createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig)).ToKubernetesEnvVars(),
+									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson),
+										createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig)).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 								},
@@ -1799,12 +1872,15 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			deployConfig := &config.DeploymentConfig{
-				DefaultModelResourceRequests:       defaultModelResourceRequests,
-				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
-				QueueResourcePercentage:            tt.resourcePercentage,
-				PyfuncGRPCOptions:                  "{}",
-				StandardTransformer:                standardTransformerConfig,
-				PyFuncPublisher:                    pyfuncPublisherConfig,
+				DefaultModelResourceRequests:          defaultModelResourceRequests,
+				DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+				QueueResourcePercentage:               tt.resourcePercentage,
+				PyfuncGRPCOptions:                     "{}",
+				StandardTransformer:                   standardTransformerConfig,
+				PyFuncPublisher:                       pyfuncPublisherConfig,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -2493,11 +2569,14 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			deployConfig := &config.DeploymentConfig{
-				DefaultModelResourceRequests:       defaultModelResourceRequests,
-				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
-				QueueResourcePercentage:            queueResourcePercentage,
-				PyfuncGRPCOptions:                  "{}",
-				StandardTransformer:                standardTransformerConfig,
+				DefaultModelResourceRequests:          defaultModelResourceRequests,
+				DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+				QueueResourcePercentage:               queueResourcePercentage,
+				PyfuncGRPCOptions:                     "{}",
+				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -2985,10 +3064,13 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			deployConfig := &config.DeploymentConfig{
-				DefaultModelResourceRequests:       defaultModelResourceRequests,
-				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
-				QueueResourcePercentage:            queueResourcePercentage,
-				StandardTransformer:                standardTransformerConfig,
+				DefaultModelResourceRequests:          defaultModelResourceRequests,
+				DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+				QueueResourcePercentage:               queueResourcePercentage,
+				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -3934,7 +4016,10 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 						},
 					},
 				},
-				StandardTransformer: standardTransformerConfig,
+				StandardTransformer:                   standardTransformerConfig,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -3953,10 +4038,9 @@ func TestCreateTransformerSpec(t *testing.T) {
 	one := 1
 	cpuRequest := resource.MustParse("1")
 	memoryRequest := resource.MustParse("1Gi")
-	cpuLimit := cpuRequest.DeepCopy()
-	cpuLimit.Add(cpuRequest)
-	memoryLimit := memoryRequest.DeepCopy()
-	memoryLimit.Add(memoryRequest)
+
+	cpuLimit := resource.MustParse("8")
+	memoryLimit := ScaleQuantity(memoryRequest, 2)
 
 	// Liveness probe config for the transformers
 	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
@@ -4017,7 +4101,10 @@ func TestCreateTransformerSpec(t *testing.T) {
 					},
 				},
 				&config.DeploymentConfig{
-					StandardTransformer: standardTransformerConfig,
+					StandardTransformer:                   standardTransformerConfig,
+					UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 				},
 			},
 			&kservev1beta1.TransformerSpec{
@@ -4084,7 +4171,11 @@ func TestCreateTransformerSpec(t *testing.T) {
 						MemoryRequest: memoryRequest,
 					},
 				},
-				&config.DeploymentConfig{},
+				&config.DeploymentConfig{
+					UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+				},
 			},
 			&kservev1beta1.TransformerSpec{
 				PodSpec: kservev1beta1.PodSpec{
@@ -4119,16 +4210,11 @@ func TestCreateTransformerSpec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tpl := NewInferenceServiceTemplater(*tt.args.config)
-			got := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer)
+			got, err := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
-}
-
-func getLimit(quantity resource.Quantity) resource.Quantity {
-	limit := quantity.DeepCopy()
-	limit.Add(quantity)
-	return limit
 }
 
 func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue protocol.Protocol) models.EnvVars {
@@ -4165,6 +4251,17 @@ func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue p
 			Name:  envProject,
 			Value: svc.Namespace,
 		},
+	}
+
+	if svc.ModelSchema != nil {
+		compactedfJsonBuffer := new(bytes.Buffer)
+		marshalledSchema, _ := json.Marshal(svc.ModelSchema)
+		if err := json.Compact(compactedfJsonBuffer, []byte(marshalledSchema)); err == nil {
+			envVars = append(envVars, models.EnvVar{
+				Name:  envModelSchema,
+				Value: compactedfJsonBuffer.String(),
+			})
+		}
 	}
 	return envVars
 }

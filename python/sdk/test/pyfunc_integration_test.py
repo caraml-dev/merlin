@@ -17,14 +17,16 @@ import warnings
 from test.utils import undeploy_all_version
 
 import joblib
-import merlin
 import numpy as np
 import pytest
 import xgboost as xgb
 from merlin.model import ModelType, PyFuncModel, PyFuncV3Model
 from merlin.pyfunc import ModelInput, ModelOutput, Values
 from merlin.resource_request import ResourceRequest
+from sklearn import svm
 from sklearn.datasets import load_iris
+
+import merlin
 
 warnings.filterwarnings("ignore")
 
@@ -88,6 +90,35 @@ class ModelObservabilityModel(PyFuncV3Model):
         return {"predictions": model_output.predictions.data}
 
 
+def train_xgboost_model(X, y):
+    model_1_dir = "test/pyfunc/"
+    BST_FILE = "model_1.bst"
+    dtrain = xgb.DMatrix(X, label=y)
+    param = {
+        "max_depth": 6,
+        "eta": 0.1,
+        "silent": 1,
+        "nthread": 4,
+        "num_class": 3,
+        "objective": "multi:softprob",
+    }
+    xgb_model = xgb.train(params=param, dtrain=dtrain)
+    model_1_path = os.path.join(model_1_dir, BST_FILE)
+    xgb_model.save_model(model_1_path)
+    return model_1_path
+
+
+def train_sklearn_model(X, y):
+    model_2_dir = "test/pyfunc/"
+    MODEL_FILE = "model_2.joblib"
+    model_2_path = os.path.join(model_2_dir, MODEL_FILE)
+
+    clf = svm.SVC(gamma="scale", probability=True)
+    clf.fit(X, y)
+    joblib.dump(clf, model_2_path)
+    return model_2_path
+
+
 @pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -98,11 +129,16 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
+        iris = load_iris()
+        y = iris["target"]
+        X = iris["data"]
+        xgb_path = train_xgboost_model(X, y)
+        sklearn_path = train_sklearn_model(X, y)
         v.log_pyfunc_model(
             model_instance=EnsembleModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={"xgb_model": XGB_PATH, "sklearn_model": SKLEARN_PATH},
+            artifacts={"xgb_model": xgb_path, "sklearn_model": sklearn_path},
         )
 
     endpoint = merlin.deploy(v)
@@ -128,11 +164,16 @@ def test_pyfunc_image_builder_resource_request(
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
+        iris = load_iris()
+        y = iris["target"]
+        X = iris["data"]
+        xgb_path = train_xgboost_model(X, y)
+        sklearn_path = train_sklearn_model(X, y)
         v.log_pyfunc_model(
             model_instance=EnsembleModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={"xgb_model": XGB_PATH, "sklearn_model": SKLEARN_PATH},
+            artifacts={"xgb_model": xgb_path, "sklearn_model": sklearn_path},
         )
 
     image_builder_resource_request = ResourceRequest(
