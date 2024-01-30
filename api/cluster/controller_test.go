@@ -101,7 +101,7 @@ type vsReactor struct {
 var (
 	clusterMetadata = Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
 
-	userContainerCPULDefaultLimit         = "8"
+	userContainerCPUDefaultLimit          = "8"
 	userContainerCPULimitRequestFactor    = float64(0)
 	userContainerMemoryLimitRequestFactor = float64(2)
 )
@@ -313,7 +313,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				NamespaceTimeout:                      tt.nsTimeout,
 				DeploymentTimeout:                     2 * tickDurationSecond * time.Second,
 				DefaultModelResourceRequests:          &config.ResourceRequests{},
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -686,7 +686,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
 					FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 				},
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -824,7 +824,7 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
 					FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 				},
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}

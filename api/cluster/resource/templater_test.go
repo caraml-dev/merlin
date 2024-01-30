@@ -169,7 +169,7 @@ var (
 		SamplingRatioRate: 0.01,
 	}
 
-	userContainerCPULDefaultLimit         = "8"
+	userContainerCPUDefaultLimit          = "8"
 	userContainerCPULimitRequestFactor    = float64(0)
 	userContainerMemoryLimitRequestFactor = float64(2)
 )
@@ -1878,7 +1878,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				PyfuncGRPCOptions:                     "{}",
 				StandardTransformer:                   standardTransformerConfig,
 				PyFuncPublisher:                       pyfuncPublisherConfig,
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -2574,7 +2574,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				QueueResourcePercentage:               queueResourcePercentage,
 				PyfuncGRPCOptions:                     "{}",
 				StandardTransformer:                   standardTransformerConfig,
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -3068,7 +3068,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
 				QueueResourcePercentage:               queueResourcePercentage,
 				StandardTransformer:                   standardTransformerConfig,
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -4017,7 +4017,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					},
 				},
 				StandardTransformer:                   standardTransformerConfig,
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
@@ -4102,7 +4102,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 				},
 				&config.DeploymentConfig{
 					StandardTransformer:                   standardTransformerConfig,
-					UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+					UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 				},
@@ -4172,7 +4172,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 					},
 				},
 				&config.DeploymentConfig{
-					UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+					UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 				},

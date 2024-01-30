@@ -1574,7 +1574,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 				PyfuncGRPCOptions:                     "{}",
 				GPUs:                                  defaultGPUsConfig,
 				StandardTransformer:                   standardTransformerConfig,
-				UserContainerCPULDefaultLimit:         userContainerCPULDefaultLimit,
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}

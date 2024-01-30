@@ -201,7 +201,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	} else {
 		// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
 		var err error
-		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPULDefaultLimit)
+		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
 		if err != nil {
 			return kservev1beta1.PredictorSpec{}, err
 		}
@@ -385,7 +385,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	} else {
 		// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
 		var err error
-		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPULDefaultLimit)
+		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
 		if err != nil {
 			return nil, err
 		}
