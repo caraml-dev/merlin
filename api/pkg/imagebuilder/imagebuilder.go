@@ -408,6 +408,7 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) (
 	jobConditionTable := ""
 	podContainerTable := ""
 	podLastTerminationMessage := ""
+	podLastTerminationReason := ""
 
 	defer func() {
 		if err == nil {
@@ -483,7 +484,10 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) (
 			log.Debugf("pod event received [%s]", pod.Name)
 
 			if len(pod.Status.ContainerStatuses) > 0 {
-				podContainerTable, podLastTerminationMessage, err = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
+				podContainerTable, podLastTerminationMessage, podLastTerminationReason = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
+				err = ErrUnableToBuildImage{
+					Message: podLastTerminationReason,
+				}
 			}
 		}
 	}

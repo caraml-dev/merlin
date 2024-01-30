@@ -336,6 +336,7 @@ func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceS
 	isvcConditionTable := ""
 	podContainerTable := ""
 	podLastTerminationMessage := ""
+	podLastTerminationReason := ""
 
 	defer func() {
 		if err == nil {
@@ -382,6 +383,7 @@ func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceS
 			log.Debugf("isvc event received [%s]", isvc.Name)
 
 			if isvc.Status.Status.Conditions != nil {
+				// Update isvc condition table with latest conditions
 				isvcConditionTable, err = parseInferenceServiceConditions(isvc.Status.Status.Conditions)
 			}
 
@@ -397,7 +399,9 @@ func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceS
 			log.Debugf("pod event received [%s]", pod.Name)
 
 			if len(pod.Status.ContainerStatuses) > 0 {
-				podContainerTable, podLastTerminationMessage, err = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
+				// Update pod container table with latest container statuses
+				podContainerTable, podLastTerminationMessage, podLastTerminationReason = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
+				err = errors.New(podLastTerminationReason)
 			}
 		}
 	}
