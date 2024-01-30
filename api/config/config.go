@@ -66,6 +66,7 @@ type Config struct {
 	StandardTransformerConfig StandardTransformerConfig
 	MlflowConfig              MlflowConfig
 	PyFuncPublisherConfig     PyFuncPublisherConfig
+	InferenceServiceDefaults  InferenceServiceDefaults
 }
 
 // UIConfig stores the configuration for the UI.
@@ -349,6 +350,15 @@ type KafkaConfig struct {
 type PyFuncPublisherConfig struct {
 	Kafka             KafkaConfig
 	SamplingRatioRate float64 `validate:"required" default:"0.01"`
+}
+
+// InferenceServiceDefaults captures some of the configurable defaults specific to
+// KServe inference services
+type InferenceServiceDefaults struct {
+	// TODO: Remove UserContainerCPUDefaultLimit when KServe finally allows default CPU limits to be removed
+	UserContainerCPUDefaultLimit          string  `json:"userContainerCPUDefaultLimit" default:"8"`
+	UserContainerCPULimitRequestFactor    float64 `json:"userContainerLimitCPURequestFactor" default:"0"`
+	UserContainerMemoryLimitRequestFactor float64 `json:"userContainerLimitMemoryRequestFactor" default:"2"`
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer

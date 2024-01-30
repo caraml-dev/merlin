@@ -98,7 +98,13 @@ type vsReactor struct {
 	err error
 }
 
-var clusterMetadata = Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
+var (
+	clusterMetadata = Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
+
+	userContainerCPUDefaultLimit          = "8"
+	userContainerCPULimitRequestFactor    = float64(0)
+	userContainerMemoryLimitRequestFactor = float64(2)
+)
 
 // TestDeployInferenceServiceNamespaceCreation test namespaceResource creation when deploying inference service
 func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
@@ -304,9 +310,12 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			})
 
 			deployConfig := config.DeploymentConfig{
-				NamespaceTimeout:             tt.nsTimeout,
-				DeploymentTimeout:            2 * tickDurationSecond * time.Second,
-				DefaultModelResourceRequests: &config.ResourceRequests{},
+				NamespaceTimeout:                      tt.nsTimeout,
+				DeploymentTimeout:                     2 * tickDurationSecond * time.Second,
+				DefaultModelResourceRequests:          &config.ResourceRequests{},
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
@@ -677,6 +686,9 @@ func TestController_DeployInferenceService(t *testing.T) {
 					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
 					FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 				},
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
@@ -812,6 +824,9 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
 					FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 				},
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
 			}
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
