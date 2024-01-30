@@ -8,8 +8,7 @@ import (
 	"fmt"
 )
 
-type InferenceType string
-
+// ModelPredictionOutputClass is type for kinds of model type
 type ModelPredictionOutputClass string
 
 const (
@@ -18,6 +17,7 @@ const (
 	Ranking              ModelPredictionOutputClass = "RankingOutput"
 )
 
+// Value type is type that represent type of the value
 type ValueType string
 
 const (
@@ -27,12 +27,14 @@ const (
 	String  ValueType = "string"
 )
 
+// ModelSchema
 type ModelSchema struct {
 	ID      ID          `json:"id"`
 	Spec    *SchemaSpec `json:"spec,omitempty"`
 	ModelID ID          `json:"model_id"`
 }
 
+// SchemaSpec
 type SchemaSpec struct {
 	PredictionIDColumn    string                 `json:"prediction_id_column"`
 	ModelPredictionOutput *ModelPredictionOutput `json:"model_prediction_output"`
@@ -40,10 +42,14 @@ type SchemaSpec struct {
 	FeatureTypes          map[string]ValueType   `json:"feature_types"`
 }
 
+// Value returning a value for `SchemaSpec` instance
+// This is required to be implemented when this instance is treated as JSONB column
 func (s SchemaSpec) Value() (driver.Value, error) {
 	return json.Marshal(s)
 }
 
+// Scan returning error when assigning value from db driver is failing
+// This is required to be implemented when this instance is treated as JSONB column
 func (s *SchemaSpec) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
@@ -65,6 +71,7 @@ func newStrictDecoder(data []byte) *json.Decoder {
 	return dec
 }
 
+// UnmarshalJSON custom deserialization of bytes into `ModelPredictionOutput`
 func (m *ModelPredictionOutput) UnmarshalJSON(data []byte) error {
 	var err error
 	outputClassStruct := struct {
@@ -99,6 +106,7 @@ func (m *ModelPredictionOutput) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON custom serialization of `ModelPredictionOutput` into json byte
 func (m ModelPredictionOutput) MarshalJSON() ([]byte, error) {
 	if m.BinaryClassificationOutput != nil {
 		return json.Marshal(&m.BinaryClassificationOutput)
@@ -115,6 +123,7 @@ func (m ModelPredictionOutput) MarshalJSON() ([]byte, error) {
 	return nil, nil
 }
 
+// BinaryClassificationOutput is specification for prediction of binary classification model
 type BinaryClassificationOutput struct {
 	ActualLabelColumn     string                     `json:"actual_label_column"`
 	NegativeClassLabel    string                     `json:"negative_class_label"`
@@ -125,6 +134,7 @@ type BinaryClassificationOutput struct {
 	OutputClass           ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }
 
+// RankingOutput is specification for prediction of ranking model
 type RankingOutput struct {
 	PredictionGroudIDColumn string                     `json:"prediction_group_id_column"`
 	RankScoreColumn         string                     `json:"rank_score_column"`
@@ -132,6 +142,7 @@ type RankingOutput struct {
 	OutputClass             ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }
 
+// Regression is specification for prediction of regression model
 type RegressionOutput struct {
 	PredictionScoreColumn string                     `json:"prediction_score_column"`
 	ActualScoreColumn     string                     `json:"actual_score_column"`

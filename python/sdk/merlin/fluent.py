@@ -25,10 +25,10 @@ from merlin.endpoint import ModelEndpoint, VersionEndpoint
 from merlin.environment import Environment
 from merlin.logger import Logger
 from merlin.model import Model, ModelType, ModelVersion, Project
+from merlin.model_schema import ModelSchema
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.model_schema import ModelSchema
 
 _merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]
@@ -156,11 +156,14 @@ def active_model() -> Optional[Model]:
 
 
 @contextmanager
-def new_model_version(labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None):
+def new_model_version(
+    labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None
+):
     """
     Create new model version under currently active model
 
     :param labels: dictionary containing the label that will be stored in the new model version
+    :param model_schema: Detail schema specification of a model
     :return: ModelVersion
     """
     v = None

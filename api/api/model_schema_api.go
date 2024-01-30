@@ -9,10 +9,12 @@ import (
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
 )
 
+// ModelSchemaController
 type ModelSchemaController struct {
 	*AppContext
 }
 
+// GetAllSchemas list all model schemas given model ID
 func (m *ModelSchemaController) GetAllSchemas(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -26,6 +28,7 @@ func (m *ModelSchemaController) GetAllSchemas(r *http.Request, vars map[string]s
 	return Ok(modelSchemas)
 }
 
+// GetSchema get detail of a model schema given the schema id and model id
 func (m *ModelSchemaController) GetSchema(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -41,6 +44,10 @@ func (m *ModelSchemaController) GetSchema(r *http.Request, vars map[string]strin
 	return Ok(modelSchema)
 }
 
+// CreateOrUpdateSchema upsert schema
+// If ID is not defined it will create new model schema
+// If ID is defined but not exist, it will create new model schema
+// If ID is defined and exist, it will update the existing model schema associated with that ID
 func (m *ModelSchemaController) CreateOrUpdateSchema(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -62,6 +69,7 @@ func (m *ModelSchemaController) CreateOrUpdateSchema(r *http.Request, vars map[s
 	return Ok(schema)
 }
 
+// DeleteSchema delete model schema given schema id and model id
 func (m *ModelSchemaController) DeleteSchema(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 	modelID, _ := models.ParseID(vars["model_id"])
