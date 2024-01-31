@@ -1,18 +1,13 @@
 import dataclasses
 
 from hydra import compose, initialize
-from merlin.observability.inference import (
-    InferenceSchema,
-    ValueType,
-)
+from merlin.observability.inference import InferenceSchema, ValueType
 from omegaconf import OmegaConf
 
 from publisher.config import (
-    ArizeConfig,
     Environment,
-    KafkaConsumerConfig,
-    ObservabilityBackend,
-    ObservabilityBackendType,
+    ObservationSinkConfig,
+    ObservationSinkType,
     ObservationSource,
     ObservationSourceConfig,
     PublisherConfig,
@@ -40,20 +35,22 @@ def test_config_initialization():
                         score_threshold=0.5,
                     ),
                 ),
-                observability_backend=ObservabilityBackend(
-                    type=ObservabilityBackendType.ARIZE,
-                    arize_config=ArizeConfig(
-                        api_key="SECRET_API_KEY",
-                        space_key="SECRET_SPACE_KEY",
-                    ),
-                ),
+                observation_sinks=[
+                    ObservationSinkConfig(
+                        type=ObservationSinkType.ARIZE,
+                        config=dict(
+                            api_key="SECRET_API_KEY",
+                            space_key="SECRET_SPACE_KEY",
+                        ),
+                    )
+                ],
                 observation_source=ObservationSourceConfig(
                     type=ObservationSource.KAFKA,
-                    kafka_config=KafkaConsumerConfig(
+                    config=dict(
                         topic="test-topic",
                         bootstrap_servers="localhost:9092",
                         group_id="test-group",
-                        poll_timeout_seconds=1.0,
+                        batch_size=100,
                         additional_consumer_config={
                             "auto.offset.reset": "latest",
                         },
@@ -67,8 +64,8 @@ def test_config_initialization():
         assert parsed_schema == InferenceSchema.from_dict(
             expected_cfg.environment.inference_schema
         )
-        assert cfg.environment.observability_backend == dataclasses.asdict(
-            expected_cfg.environment.observability_backend
+        assert cfg.environment.observation_sinks[0] == dataclasses.asdict(
+            expected_cfg.environment.observation_sinks[0]
         )
         assert cfg.environment.observation_source == dataclasses.asdict(
             expected_cfg.environment.observation_source

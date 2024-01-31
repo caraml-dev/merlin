@@ -1,2 +1,7 @@
 pip-tools==7.3.0
 pytest==7.4.3
+types-requests==2.31.0.20231231
+types-PyYAML==6.0.12.12
+types-jmespath==1.0.2.7
+mypy==1.7.1
+mypy-extensions==1.0.0

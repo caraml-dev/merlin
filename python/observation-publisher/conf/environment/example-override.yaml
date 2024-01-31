@@ -16,20 +16,31 @@ inference_schema:
     distance: "int64"
     transaction: "float64"
   prediction_id_column: "prediction_id"
-observability_backend:
-  # Supported backend types:
+observation_sinks:
+  # Supported sink types:
   #  - ARIZE
-  type: "ARIZE"
-  # Required if observability_backend.type is ARIZE
-  arize_config:
-    api_key: "SECRET_API_KEY"
-    space_key: "SECRET_SPACE_KEY"
+  #  - BIGQUERY
+  - type: "ARIZE"
+    config:
+      api_key: "SECRET_API_KEY"
+      space_key: "SECRET_SPACE_KEY"
+  - type: "BIGQUERY"
+    config:
+      # GCP project for the dataset
+      project: "test-project"
+      # GCP dataset to store the observation data on
+      dataset: "test-dataset"
+      # Number of days before the created table will expire
+      ttl_days: 14
 observation_source:
   # Supported consumer types:
   #  - KAFKA
   type: "KAFKA"
-  # Required if consumer.type is KAFKA
-  kafka_config:
+  # (Optional) Number of messages to be kept in-memory before being sent to the sinks. Default: 10
+  buffer_capacity: 10
+  # (Optional) Maximum duration in seconds to keep messages in-memory before being sent to the sinks, if the capacity is not met. Default: 60
+  buffer_max_duration_seconds: 60
+  config:
     topic: "test-topic"
     bootstrap_servers: "localhost:9092"
     group_id: "test-group"

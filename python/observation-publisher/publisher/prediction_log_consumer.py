@@ -1,26 +1,31 @@
 import abc
-from typing import List, Tuple
+from dataclasses import dataclass
+from datetime import datetime
+from threading import Thread
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
+from dataclasses_json import DataClassJsonMixin, dataclass_json
 from merlin.observability.inference import InferenceSchema
 
-from publisher.config import (
-    KafkaConsumerConfig,
-    ObservationSource,
-    ObservationSourceConfig,
-)
-from publisher.observability_backend import ObservationSink
+from publisher.config import ObservationSource, ObservationSourceConfig
+from publisher.metric import MetricWriter
+from publisher.observation_sink import ObservationSink
 from publisher.prediction_log_parser import (
     PREDICTION_LOG_TIMESTAMP_COLUMN,
-    parse_struct_to_feature_table,
-    parse_struct_to_result_table,
+    PredictionLogFeatureTable,
+    PredictionLogResultsTable,
 )
 
 
 class PredictionLogConsumer(abc.ABC):
+    def __init__(self, buffer_capacity: int, buffer_max_duration_seconds: int):
+        self.buffer_capacity = buffer_capacity
+        self.buffer_max_duration_seconds = buffer_max_duration_seconds
+
     @abc.abstractmethod
     def poll_new_logs(self) -> List[PredictionLog]:
         raise NotImplementedError
@@ -34,22 +39,71 @@ class PredictionLogConsumer(abc.ABC):
         raise NotImplementedError
 
     def start_polling(
-        self, observation_sink: ObservationSink, inference_schema: InferenceSchema
+        self,
+        observation_sinks: List[ObservationSink],
+        inference_schema: InferenceSchema,
     ):
         try:
+            buffered_logs = []
+            buffered_max_duration_seconds = 60
+            buffer_start_time = datetime.now()
             while True:
                 logs = self.poll_new_logs()
                 if len(logs) == 0:
                     continue
-                df = log_batch_to_dataframe(logs, inference_schema)
-                observation_sink.write(df)
+                buffered_logs.extend(logs)
+                buffered_duration = (datetime.now() - buffer_start_time).seconds
+                if (
+                    len(buffered_logs) < self.buffer_capacity
+                    and buffered_duration < buffered_max_duration_seconds
+                ):
+                    continue
+                df = log_batch_to_dataframe(buffered_logs, inference_schema)
+                most_recent_prediction_timestamp = df[
+                    PREDICTION_LOG_TIMESTAMP_COLUMN
+                ].max()
+                MetricWriter().update_last_processed_timestamp(
+                    most_recent_prediction_timestamp
+                )
+                MetricWriter().increment_total_prediction_logs_processed(
+                    len(buffered_logs)
+                )
+                write_tasks = [
+                    Thread(target=sink.write, args=(df,)) for sink in observation_sinks
+                ]
+                for task in write_tasks:
+                    task.start()
+                for task in write_tasks:
+                    task.join()
                 self.commit()
+                buffered_logs = []
+                buffer_start_time = datetime.now()
         finally:
             self.close()
 
 
+@dataclass_json
+@dataclass
+class KafkaConsumerConfig:
+    topic: str
+    bootstrap_servers: str
+    group_id: str
+    batch_size: int = 100
+    poll_timeout_seconds: float = 1.0
+    additional_consumer_config: Optional[dict] = None
+
+
 class KafkaPredictionLogConsumer(PredictionLogConsumer):
-    def __init__(self, config: KafkaConsumerConfig):
+    def __init__(
+        self,
+        buffer_capacity: int,
+        buffer_max_duration_seconds: int,
+        config: KafkaConsumerConfig,
+    ):
+        super().__init__(
+            buffer_capacity=buffer_capacity,
+            buffer_max_duration_seconds=buffer_max_duration_seconds,
+        )
         consumer_config = {
             "bootstrap.servers": config.bootstrap_servers,
             "group.id": config.group_id,
@@ -86,7 +140,15 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
 
 def new_consumer(config: ObservationSourceConfig) -> PredictionLogConsumer:
     if config.type == ObservationSource.KAFKA:
-        return KafkaPredictionLogConsumer(config.kafka_config)
+        assert issubclass(KafkaConsumerConfig, DataClassJsonMixin)
+        kafka_consumer_config: KafkaConsumerConfig = KafkaConsumerConfig.from_dict(
+            config.config
+        )  # type: ignore[attr-defined]
+        return KafkaPredictionLogConsumer(
+            config.buffer_capacity,
+            config.buffer_max_duration_seconds,
+            kafka_consumer_config,
+        )
     else:
         raise ValueError(f"Unknown consumer type: {config.type}")
 
@@ -101,10 +163,10 @@ def log_to_records(
     log: PredictionLog, inference_schema: InferenceSchema
 ) -> Tuple[List[List[np.int64 | np.float64 | np.bool_ | np.str_]], List[str]]:
     request_timestamp = log.request_timestamp.ToDatetime()
-    feature_table = parse_struct_to_feature_table(
+    feature_table = PredictionLogFeatureTable.from_struct(
         log.input.features_table, inference_schema
     )
-    prediction_results_table = parse_struct_to_result_table(
+    prediction_results_table = PredictionLogResultsTable.from_struct(
         log.output.prediction_results_table, inference_schema
     )
 
@@ -130,7 +192,7 @@ def log_batch_to_dataframe(
     logs: List[PredictionLog], inference_schema: InferenceSchema
 ) -> pd.DataFrame:
     combined_records = []
-    column_names = []
+    column_names: List[str] = []
     for log in logs:
         rows, column_names = log_to_records(log, inference_schema)
         combined_records.extend(rows)
