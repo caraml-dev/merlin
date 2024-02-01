@@ -21,7 +21,7 @@ def validate_model_dir(model_type, model_dir):
     Validates user-provided model directory based on file structure.
     For tensorflow models, checking is only done on the subdirectory
     with the largest version number.
-    
+
     :param model_type: type of given model
     :param model_dir: directory containing serialised model file
     """
@@ -30,10 +30,12 @@ def validate_model_dir(model_type, model_dir):
     if not isdir(model_dir):
         raise ValueError(f"{model_dir} is not a directory")
 
-    if model_type == ModelType.PYFUNC or \
-            model_type == ModelType.PYFUNC_V2 or \
-            model_type == ModelType.PYFUNC_V3 or \
-            model_type == ModelType.CUSTOM:
+    if (
+        model_type == ModelType.PYFUNC
+        or model_type == ModelType.PYFUNC_V2
+        or model_type == ModelType.PYFUNC_V3
+        or model_type == ModelType.CUSTOM
+    ):
         return
 
     if model_type == ModelType.TENSORFLOW:
@@ -67,17 +69,16 @@ def validate_model_dir(model_type, model_dir):
             raise ValueError(f"{config_path} is not found")
 
         model_store_dir = join(model_dir, "model-store")
-        if not any(fname.endswith('.mar') for fname in listdir(model_store_dir)):
+        if not any(fname.endswith(".mar") for fname in listdir(model_store_dir)):
             raise ValueError(f".mar file is not found in {model_store_dir}")
 
         return
 
     model_file_map = {
-        ModelType.XGBOOST: ['model.bst'],
-        ModelType.SKLEARN: ['model.joblib'],
-        ModelType.ONNX: ['model.onnx']
+        ModelType.XGBOOST: ["model.bst"],
+        ModelType.SKLEARN: ["model.joblib"],
+        ModelType.ONNX: ["model.onnx"],
     }
     files = listdir(model_dir)
     if not all([file in files for file in model_file_map[model_type]]):
         raise ValueError(f"{model_file_map[model_type]} is not found in {model_dir}")
-

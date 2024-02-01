@@ -10,6 +10,7 @@ class MetricsType(Enum):
     MEMORY_UTILIZATION: percentage of Memory utilization.
     RPS: throughput in request per second.
     """
+
     CONCURRENCY = "concurrency"
     CPU_UTILIZATION = "cpu_utilization"
     MEMORY_UTILIZATION = "memory_utilization"
@@ -43,5 +44,7 @@ class AutoscalingPolicy:
         return self._target_value
 
 
-RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY = AutoscalingPolicy(MetricsType.CPU_UTILIZATION, 50)
+RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY = AutoscalingPolicy(
+    MetricsType.CPU_UTILIZATION, 50
+)
 SERVERLESS_DEFAULT_AUTOSCALING_POLICY = AutoscalingPolicy(MetricsType.CONCURRENCY, 1)
