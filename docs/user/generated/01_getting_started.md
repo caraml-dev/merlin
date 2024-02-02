@@ -17,7 +17,7 @@ import merlin
 from merlin.model import ModelType
 
 # Connect to an existing Merlin deployment
-merlin.set_url(merlin.example.com)
+merlin.set_url("merlin.example.com")
 
 # Set the active model to the name given by parameter, if the model with the given name is not found, a new model will 
 # be created.
