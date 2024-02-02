@@ -36,6 +36,7 @@ class DeploymentMode(str, Enum):
     """
     SERVERLESS = 'serverless'
     RAW_DEPLOYMENT = 'raw_deployment'
+    EMPTY = ''
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:

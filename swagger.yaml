@@ -1844,6 +1844,7 @@ components:
       enum:
       - serverless
       - raw_deployment
+      - ""
     Container:
       type: object
       properties:
@@ -2216,6 +2217,7 @@ components:
       enum:
       - HTTP_JSON
       - UPI_V1
+      - ""
   securitySchemes:
     Bearer:
       type: apiKey

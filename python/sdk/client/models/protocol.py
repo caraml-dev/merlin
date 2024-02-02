@@ -36,6 +36,7 @@ class Protocol(str, Enum):
     """
     HTTP_JSON = 'HTTP_JSON'
     UPI_V1 = 'UPI_V1'
+    EMPTY = ''
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
