@@ -1,6 +1,6 @@
 import abc
+import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import List, Tuple
 
 import pandas as pd
@@ -10,24 +10,19 @@ from arize.pandas.validation.errors import ValidationFailure
 from arize.utils.types import Environments
 from arize.utils.types import ModelTypes as ArizeModelType
 from dataclasses_json import dataclass_json
+from google.api_core.exceptions import NotFound
 from google.cloud.bigquery import Client as BigQueryClient
-from google.cloud.bigquery import (
-    SchemaField,
-    Table,
-    TimePartitioning,
-    TimePartitioningType,
-)
-from merlin.observability.inference import (
-    BinaryClassificationOutput,
-    InferenceSchema,
-    ObservationType,
-    RankingOutput,
-    RegressionOutput,
-    ValueType,
-)
+from google.cloud.bigquery import (SchemaField, Table, TimePartitioning,
+                                   TimePartitioningType)
+from merlin.observability.inference import (BinaryClassificationOutput,
+                                            InferenceSchema, ObservationType,
+                                            RankingOutput, RegressionOutput,
+                                            ValueType)
 
 from publisher.config import ObservationSinkConfig, ObservationSinkType
-from publisher.prediction_log_parser import PREDICTION_LOG_TIMESTAMP_COLUMN
+from publisher.prediction_log_parser import (MODEL_VERSION_COLUMN,
+                                             PREDICTION_LOG_TIMESTAMP_COLUMN,
+                                             ROW_ID_COLUMN, SESSION_ID_COLUMN)
 
 
 class ObservationSink(abc.ABC):
@@ -74,6 +69,12 @@ class ArizeSink(ObservationSink):
         model_version: str,
         arize_client: ArizeClient,
     ):
+        """
+        :param inference_schema: Inference schema for the ingested model
+        :param model_id: Merlin model id
+        :param model_version: Merlin model version
+        :param arize_client: Arize Pandas Logger client
+        """
         super().__init__(inference_schema, model_id, model_version)
         self._client = arize_client
 
@@ -101,7 +102,7 @@ class ArizeSink(ObservationSink):
         elif isinstance(prediction_output, RankingOutput):
             schema_attributes = self._common_arize_schema_attributes() | dict(
                 rank_column_name=prediction_output.rank_column,
-                prediction_group_id_column_name=prediction_output.prediction_group_id_column,
+                prediction_group_id_column_name=SESSION_ID_COLUMN,
             )
             model_type = ArizeModelType.RANKING
         else:
@@ -112,6 +113,14 @@ class ArizeSink(ObservationSink):
         return model_type, ArizeSchema(**schema_attributes)
 
     def write(self, df: pd.DataFrame):
+        df[self._inference_schema.prediction_id_column] = (
+            df[SESSION_ID_COLUMN] + df[ROW_ID_COLUMN]
+        )
+        if isinstance(self._inference_schema.model_prediction_output, RankingOutput):
+            df[
+                self._inference_schema.model_prediction_output.prediction_group_id_column
+            ] = df[SESSION_ID_COLUMN]
+
         processed_df = self._inference_schema.model_prediction_output.preprocess(
             df, [ObservationType.FEATURE, ObservationType.PREDICTION]
         )
@@ -136,15 +145,42 @@ class ArizeSink(ObservationSink):
 
 @dataclass_json
 @dataclass
+class BigQueryRetryConfig:
+    """
+    Configuration for retrying failed write attempts. Write could fail due to BigQuery
+    taking time to update the table schema / create new table.
+    Attributes:
+        enabled: Whether to retry failed write attempts
+        retry_attempts: Number of retry attempts
+        retry_interval_seconds: Interval between retry attempts
+    """
+
+    enabled: bool = False
+    retry_attempts: int = 4
+    retry_interval_seconds: int = 30
+
+
+@dataclass_json
+@dataclass
 class BigQueryConfig:
+    """
+    Configuration for writing to BigQuery
+    Attributes:
+        project: GCP project id
+        dataset: BigQuery dataset name
+        ttl_days: Time to live for the date partition
+        retry: Configuration for retrying failed write attempts
+    """
+
     project: str
     dataset: str
     ttl_days: int
+    retry: BigQueryRetryConfig = BigQueryRetryConfig()
 
 
 class BigQuerySink(ObservationSink):
     """
-    Writes prediction logs to BigQuery. If the destination table doesn't exist, it will be created based on the inference schema..
+    Writes prediction logs to BigQuery. If the destination table doesn't exist, it will be created based on the inference schema.
     """
 
     def __init__(
@@ -152,21 +188,54 @@ class BigQuerySink(ObservationSink):
         inference_schema: InferenceSchema,
         model_id: str,
         model_version: str,
-        project: str,
-        dataset: str,
-        ttl_days: int,
+        config: BigQueryConfig,
     ):
+        """
+        :param inference_schema: Inference schema for the ingested model
+        :param model_id: Merlin model id
+        :param model_version: Merlin model version
+        :param config: Configuration to write to bigquery sink
+        """
         super().__init__(inference_schema, model_id, model_version)
         self._client = BigQueryClient()
         self._inference_schema = inference_schema
         self._model_id = model_id
         self._model_version = model_version
-        self._project = project
-        self._dataset = dataset
-        table = Table(self.write_location, schema=self.schema_fields)
-        table.time_partitioning = TimePartitioning(type_=TimePartitioningType.DAY)
-        table.expires = datetime.now() + timedelta(days=ttl_days)
-        self._table: Table = self._client.create_table(exists_ok=True, table=table)
+        self._config = config
+        self._table = self.create_or_update_table()
+
+    @property
+    def project(self) -> str:
+        return self._config.project
+
+    @property
+    def dataset(self) -> str:
+        return self._config.dataset
+
+    @property
+    def retry(self) -> BigQueryRetryConfig:
+        return self._config.retry
+
+    def create_or_update_table(self) -> Table:
+        try:
+            original_table = self._client.get_table(self.write_location)
+            original_schema = original_table.schema
+            migrated_schema = original_schema[:]
+            for field in self.schema_fields:
+                if field not in original_schema:
+                    migrated_schema.append(field)
+            if migrated_schema == original_schema:
+                return original_table
+            original_table.schema = migrated_schema
+            return self._client.update_table(original_table, ["schema"])
+        except NotFound:
+            table = Table(self.write_location, schema=self.schema_fields)
+            table.time_partitioning = TimePartitioning(
+                type_=TimePartitioningType.DAY,
+                field=PREDICTION_LOG_TIMESTAMP_COLUMN,
+                expiration_ms=self._config.ttl_days * 24 * 60 * 60 * 1000,
+            )
+            return self._client.create_table(table=table)
 
     @property
     def schema_fields(self) -> List[SchemaField]:
@@ -179,12 +248,20 @@ class BigQuerySink(ObservationSink):
 
         schema_fields = [
             SchemaField(
-                name=self._inference_schema.prediction_id_column,
+                name=SESSION_ID_COLUMN,
+                field_type="STRING",
+            ),
+            SchemaField(
+                name=ROW_ID_COLUMN,
                 field_type="STRING",
             ),
             SchemaField(
                 name=PREDICTION_LOG_TIMESTAMP_COLUMN,
                 field_type="TIMESTAMP",
+            ),
+            SchemaField(
+                name=MODEL_VERSION_COLUMN,
+                field_type="STRING",
             ),
         ]
         for feature, feature_type in self._inference_schema.feature_types.items():
@@ -207,13 +284,35 @@ class BigQuerySink(ObservationSink):
 
     @property
     def write_location(self) -> str:
-        table_name = f"prediction_log_{self._model_id}_{self._model_version}".replace(
-            "-", "_"
-        ).replace(".", "_")
-        return f"{self._project}.{self._dataset}.{table_name}"
+        table_name = f"prediction_log_{self._model_id}".replace("-", "_").replace(
+            ".", "_"
+        )
+        return f"{self.project}.{self.dataset}.{table_name}"
 
     def write(self, dataframe: pd.DataFrame):
-        self._client.insert_rows_from_dataframe(dataframe=dataframe, table=self._table)
+        for i in range(0, self.retry.retry_attempts + 1):
+            try:
+                response = self._client.insert_rows_from_dataframe(
+                    dataframe=dataframe, table=self._table
+                )
+                errors = [error for error_chunk in response for error in error_chunk]
+                if len(errors) > 0:
+                    if not self.retry.enabled:
+                        print("Errors when inserting rows to BigQuery")
+                        return
+                    else:
+                        print(
+                            f"Errors when inserting rows to BigQuery, retrying attempt {i}/{self.retry.retry_attempts}"
+                        )
+                        time.sleep(self.retry.retry_interval_seconds)
+                else:
+                    return
+            except NotFound as e:
+                print(
+                    f"Table not found: {e}, retrying attempt {i}/{self.retry.retry_attempts}"
+                )
+                time.sleep(self.retry.retry_interval_seconds)
+        print(f"Failed to write to BigQuery after {self.retry.retry_attempts} attempts")
 
 
 def new_observation_sink(
@@ -230,9 +329,7 @@ def new_observation_sink(
                 inference_schema=inference_schema,
                 model_id=model_id,
                 model_version=model_version,
-                project=bq_config.project,
-                dataset=bq_config.dataset,
-                ttl_days=bq_config.ttl_days,
+                config=bq_config,
             )
         case ObservationSinkType.ARIZE:
             arize_config: ArizeConfig = ArizeConfig.from_dict(sink_config.config)  # type: ignore[attr-defined]

@@ -7,7 +7,10 @@ from google.protobuf.internal.well_known_types import ListValue, Struct
 from merlin.observability.inference import InferenceSchema, ValueType
 from typing_extensions import Self
 
+SESSION_ID_COLUMN = "session_id"
+ROW_ID_COLUMN = "row_id"
 PREDICTION_LOG_TIMESTAMP_COLUMN = "request_timestamp"
+MODEL_VERSION_COLUMN = "model_version"
 
 
 @dataclass

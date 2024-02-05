@@ -1,5 +1,5 @@
 from pandas import Timestamp
-from prometheus_client import Gauge, Counter
+from prometheus_client import Counter, Gauge
 
 
 class MetricWriter(object):
@@ -21,6 +21,7 @@ class MetricWriter(object):
             self.total_prediction_logs_processed_counter = Counter(
                 "total_prediction_logs_processed",
                 "The total number of prediction logs processed by the publisher",
+                ["model_id", "model_version"],
             )
             self._initialized = True
 

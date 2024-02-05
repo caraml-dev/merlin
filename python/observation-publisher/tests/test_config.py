@@ -4,14 +4,9 @@ from hydra import compose, initialize
 from merlin.observability.inference import InferenceSchema, ValueType
 from omegaconf import OmegaConf
 
-from publisher.config import (
-    Environment,
-    ObservationSinkConfig,
-    ObservationSinkType,
-    ObservationSource,
-    ObservationSourceConfig,
-    PublisherConfig,
-)
+from publisher.config import (Environment, ObservationSinkConfig,
+                              ObservationSinkType, ObservationSource,
+                              ObservationSourceConfig, PublisherConfig)
 
 
 def test_config_initialization():

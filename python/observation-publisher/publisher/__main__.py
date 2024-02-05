@@ -35,6 +35,7 @@ def start_consumer(cfg: PublisherConfig) -> None:
     prediction_log_consumer.start_polling(
         observation_sinks=observation_sinks,
         inference_schema=inference_schema,
+        model_version=cfg.environment.model_version,
     )
 
 
