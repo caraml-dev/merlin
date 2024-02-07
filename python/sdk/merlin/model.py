@@ -64,10 +64,10 @@ from merlin.util import (
     valid_name_check,
 )
 from merlin.validation import validate_model_dir
-from mlflow import MlflowClient
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
+from mlflow.tracking.client import MlflowClient
 from merlin.version import VERSION
 from merlin.model_schema import ModelSchema
 from merlin.util import extract_optional_value_with_default
