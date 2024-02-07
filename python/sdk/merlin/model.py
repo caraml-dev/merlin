@@ -795,6 +795,8 @@ class ModelVersion:
 
         :return:
         """
+        # set the experiment in case there was other experiment set prior
+        # this assume the mlflow run and experiment were created during init
         client = MlflowClient()
         r = client.get_run(self._mlflow_run_id)
         mlflow.set_experiment(experiment_id=r.info.experiment_id)
