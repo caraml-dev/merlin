@@ -64,6 +64,7 @@ from merlin.util import (
     valid_name_check,
 )
 from merlin.validation import validate_model_dir
+from mlflow import MlflowClient
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
@@ -794,6 +795,9 @@ class ModelVersion:
 
         :return:
         """
+        client = MlflowClient()
+        r = client.get_run(self._mlflow_run_id)
+        mlflow.set_experiment(experiment_id=r.info.experiment_id)
         mlflow.start_run(self._mlflow_run_id)
 
     def finish(self):
