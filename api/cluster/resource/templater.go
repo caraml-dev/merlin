@@ -222,20 +222,26 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 
 	nodeSelector := map[string]string{}
 	tolerations := []corev1.Toleration{}
-	if modelService.ResourceRequest.GPUName != "" && !modelService.ResourceRequest.GPURequest.IsZero() {
-		// Look up to the GPU resource type and quantity from DeploymentConfig
-		for _, gpuConfig := range t.deploymentConfig.GPUs {
-			if gpuConfig.Name == modelService.ResourceRequest.GPUName {
-				// Declare and initialize resourceType and resourceQuantity variables
-				resourceType := corev1.ResourceName(gpuConfig.ResourceType)
-				resourceQuantity := modelService.ResourceRequest.GPURequest
 
-				// Set the resourceType as the key in the maps, with resourceQuantity as the value
-				resources.Requests[resourceType] = resourceQuantity
-				resources.Limits[resourceType] = resourceQuantity
+	if modelService.ResourceRequest.GPUName != "" {
+		if modelService.ResourceRequest.GPURequest.IsZero() {
+			// This should never be set as zero if a GPU name is specified
+			return kservev1beta1.PredictorSpec{}, fmt.Errorf("GPU request cannot set as be 0")
+		} else {
+			// Look up to the GPU resource type and quantity from DeploymentConfig
+			for _, gpuConfig := range t.deploymentConfig.GPUs {
+				if gpuConfig.Name == modelService.ResourceRequest.GPUName {
+					// Declare and initialize resourceType and resourceQuantity variables
+					resourceType := corev1.ResourceName(gpuConfig.ResourceType)
+					resourceQuantity := modelService.ResourceRequest.GPURequest
 
-				nodeSelector = gpuConfig.NodeSelector
-				tolerations = gpuConfig.Tolerations
+					// Set the resourceType as the key in the maps, with resourceQuantity as the value
+					resources.Requests[resourceType] = resourceQuantity
+					resources.Limits[resourceType] = resourceQuantity
+
+					nodeSelector = gpuConfig.NodeSelector
+					tolerations = gpuConfig.Tolerations
+				}
 			}
 		}
 	}
