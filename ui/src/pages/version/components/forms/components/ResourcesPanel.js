@@ -82,7 +82,7 @@ export const ResourcesPanel = ({
       return;
     }
     onChange("gpu_name")(gpu_name);
-    onChange("gpu_request")(undefined);
+    onChange("gpu_request")(gpus[gpu_name].values[0]);
     onChange("min_monthly_cost_per_gpu")(
       gpus[gpu_name].min_monthly_cost_per_gpu
     );
