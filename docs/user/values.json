@@ -1,4 +1,5 @@
 {
     "merlin_url": "merlin.example.com",
-    "models_base_domain": "models.id.merlin.dev"
+    "models_base_domain": "models.id.merlin.dev",
+    "workflow_scope_explaination": ""
 }
