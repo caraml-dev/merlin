@@ -67,6 +67,7 @@ from merlin.validation import validate_model_dir
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
+from mlflow.tracking.client import MlflowClient
 from merlin.version import VERSION
 from merlin.model_schema import ModelSchema
 from merlin.util import extract_optional_value_with_default
@@ -794,6 +795,11 @@ class ModelVersion:
 
         :return:
         """
+        # set the experiment in case there was other experiment set prior
+        # this assume the mlflow run and experiment were created during init
+        client = MlflowClient()
+        r = client.get_run(self._mlflow_run_id)
+        mlflow.set_experiment(experiment_id=r.info.experiment_id)
         mlflow.start_run(self._mlflow_run_id)
 
     def finish(self):
