@@ -1206,6 +1206,7 @@ def test_deployment_mode_for_serving_model(
 
     print(f"Deleting model version created...")
     try:
+        v1.delete_model_version()
         v2.delete_model_version()
     except Exception as e:
         print(e)
@@ -1295,12 +1296,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     undeploy_all_version()
 
-    print(f"Deleting model version created...")
-    try:
-        v1.delete_model_version()
-    except Exception as e:
-        print(e)
-    print(f"Model version deleted.")
+    print(f"Deleting model versions created...")
+    for v in merlin.active_model().list_version():
+        try:
+            v.delete_model_version()
+        except Exception as e:
+            print(e)
+    print(f"Model versions deleted.")
 
 
 def deployment_mode_suffix(deployment_mode: DeploymentMode):
