@@ -472,6 +472,8 @@ jobs:
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
       - name: Prune docker image to make some space
         run: docker image prune --all --force
+      - name: Print space consumption
+        run: sudo df -h
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
@@ -482,6 +484,11 @@ jobs:
         continue-on-error: true
         working-directory: merlin/scripts/e2e
         run: ./debug-e2e.sh
+      - name: "Print post-e2e test space consumption"
+        if: always()
+        continue-on-error: true
+        working-directory: merlin/scripts/e2e
+        run: sudo df -h
 
   release:
     uses: ./.github/workflows/release.yml
