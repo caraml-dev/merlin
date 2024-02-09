@@ -78,6 +78,13 @@ def test_model_version_with_labels(
     )
     assert len(should_not_exist_versions) == 0
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -108,6 +115,13 @@ def test_sklearn(
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.integration
@@ -140,6 +154,14 @@ def test_xgboost(
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -190,6 +212,12 @@ def test_model_schema(
 
     merlin.undeploy(v)
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.integration
@@ -239,6 +267,13 @@ def test_mlflow_tracking(
         # artifact_dir = os.listdir('test/downloaded_artifact')
         # assert len(artifact_dir) > 0  # not empty directory
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -271,6 +306,13 @@ def test_tensorflow(
 
     merlin.undeploy(v)
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.pytorch
 @pytest.mark.integration
@@ -295,6 +337,13 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth, requests)
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.serving
@@ -337,6 +386,13 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth, reque
     # Undeploy other running model version endpoints
     undeploy_all_version()
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.serving
 @pytest.mark.integration
@@ -378,6 +434,13 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
     # Undeploy other running model version endpoints
     undeploy_all_version()
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.integration
 def test_multi_env(integration_test_url, project_name, use_google_oauth, requests):
@@ -407,6 +470,13 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth, request
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.integration
@@ -450,6 +520,13 @@ def test_resource_request(
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.gpu
@@ -548,6 +625,13 @@ def test_logger(
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.customtransformer
@@ -722,6 +806,13 @@ def test_standard_transformer_without_feast(
         transformed_req["instances"], exp_resp["instances"], abs_tol=1e-09
     )  # asserts lhs = rhs, with tolerance
     merlin.undeploy(v)
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.feast
@@ -976,6 +1067,13 @@ def test_custom_model_without_artifact(
     # Undeploy other running model version endpoints
     undeploy_all_version()
 
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
@@ -1012,6 +1110,13 @@ def test_custom_model_with_artifact(
     assert resp.json()["predictions"] is not None
     # Undeploy other running model version endpoints
     undeploy_all_version()
+
+    print(f"Deleting model version created...")
+    try:
+        v.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 @pytest.mark.raw_deployment
@@ -1099,6 +1204,13 @@ def test_deployment_mode_for_serving_model(
     merlin.stop_serving_traffic(model_endpoint.environment_name)
     undeploy_all_version()
 
+    print(f"Deleting model version created...")
+    try:
+        v2.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
+
 
 @pytest.mark.integration
 def test_redeploy_model(integration_test_url, project_name, use_google_oauth, requests):
@@ -1182,6 +1294,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert endpoint.transformer.id == new_endpoint.transformer.id
 
     undeploy_all_version()
+
+    print(f"Deleting model version created...")
+    try:
+        v1.delete_model_version()
+    except Exception as e:
+        print(e)
+    print(f"Model version deleted.")
 
 
 def deployment_mode_suffix(deployment_mode: DeploymentMode):
