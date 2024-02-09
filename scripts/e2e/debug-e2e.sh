@@ -4,6 +4,10 @@ echo "::group::Get nodes"
 kubectl get nodes
 echo "::endgroup::"
 
+echo "::group::Describe nodes"
+kubectl describe nodes
+echo "::endgroup::"
+
 echo "::group::Get all events"
 kubectl get events -A
 echo "::endgroup::"
