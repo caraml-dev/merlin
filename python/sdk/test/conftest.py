@@ -82,7 +82,7 @@ def model(project, mlflow_url, api_client):
 @pytest.fixture
 def version(project, model, mlflow_url, api_client):
     mlflow.set_tracking_uri(mlflow_url)
-    mlflow.set_experiment(1)
+    mlflow.set_experiment(experiment_id="1")
     r = mlflow.start_run(run_id=None)
     mlflow.end_run()
     v = cl.Version(
