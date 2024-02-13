@@ -41,6 +41,7 @@ require (
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
+	github.com/iancoleman/strcase v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.5.3
 	github.com/jinzhu/copier v0.3.5
 	github.com/kelseyhightower/envconfig v1.4.0

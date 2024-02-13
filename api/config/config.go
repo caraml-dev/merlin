@@ -68,6 +68,7 @@ type Config struct {
 	MlflowConfig              MlflowConfig
 	PyFuncPublisherConfig     PyFuncPublisherConfig
 	InferenceServiceDefaults  InferenceServiceDefaults
+	ObservabilityPublisher    ObservabilityPublisher
 }
 
 // UIConfig stores the configuration for the UI.

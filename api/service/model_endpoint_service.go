@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/caraml-dev/merlin/pkg/observability/event"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/pkg/errors"
@@ -65,23 +66,25 @@ type ModelEndpointsService interface {
 }
 
 // NewModelEndpointsService returns an initialized ModelEndpointsService.
-func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) ModelEndpointsService {
-	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment)
+func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string, observabilityEventProducer event.EventProducer) ModelEndpointsService {
+	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment, observabilityEventProducer)
 }
 
 type modelEndpointsService struct {
-	istioClients           map[string]istio.Client
-	modelEndpointStorage   storage.ModelEndpointStorage
-	versionEndpointStorage storage.VersionEndpointStorage
-	environment            string
+	istioClients               map[string]istio.Client
+	modelEndpointStorage       storage.ModelEndpointStorage
+	versionEndpointStorage     storage.VersionEndpointStorage
+	environment                string
+	observabilityEventProducer event.EventProducer
 }
 
-func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) *modelEndpointsService {
+func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string, observabilityEventProducer event.EventProducer) *modelEndpointsService {
 	return &modelEndpointsService{
-		istioClients:           istioClients,
-		modelEndpointStorage:   modelEndpointStorage,
-		versionEndpointStorage: versionEndpointStorage,
-		environment:            environment,
+		istioClients:               istioClients,
+		modelEndpointStorage:       modelEndpointStorage,
+		versionEndpointStorage:     versionEndpointStorage,
+		environment:                environment,
+		observabilityEventProducer: observabilityEventProducer,
 	}
 }
 
@@ -140,6 +143,13 @@ func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *model
 		return nil, err
 	}
 
+	// publish model endpoint change event to trigger consumer deployment
+	if model.ObservabilitySupported {
+		if err := s.observabilityEventProducer.ModelEndpointChangeEvent(endpoint, model); err != nil {
+			return nil, err
+		}
+	}
+
 	return endpoint, nil
 }
 
@@ -184,6 +194,13 @@ func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *model
 		return nil, err
 	}
 
+	// publish model endpoint change event to trigger consumer deployment
+	if model.ObservabilitySupported {
+		if err := s.observabilityEventProducer.ModelEndpointChangeEvent(newEndpoint, model); err != nil {
+			return nil, err
+		}
+	}
+
 	return newEndpoint, nil
 }
 
@@ -206,6 +223,13 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 	err = s.modelEndpointStorage.Save(ctx, nil, endpoint)
 	if err != nil {
 		return nil, err
+	}
+
+	// publish model endpoint change event to trigger consumer undeployment
+	if model.ObservabilitySupported {
+		if err := s.observabilityEventProducer.ModelEndpointChangeEvent(nil, model); err != nil {
+			return nil, err
+		}
 	}
 
 	return endpoint, nil

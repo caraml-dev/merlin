@@ -23,8 +23,9 @@ type ModelEndpointStorage interface {
 }
 
 type modelEndpointStorage struct {
-	db                     *gorm.DB
-	versionEndpointStorage VersionEndpointStorage
+	db                            *gorm.DB
+	versionEndpointStorage        VersionEndpointStorage
+	observabilityPublisherStorage ObservabilityPublisherStorage
 }
 
 func NewModelEndpointStorage(db *gorm.DB) ModelEndpointStorage {

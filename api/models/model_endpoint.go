@@ -37,6 +37,14 @@ type ModelEndpoint struct {
 	CreatedUpdated
 }
 
+func (me *ModelEndpoint) GetVersionEndpoint() *VersionEndpoint {
+	if me.Rule == nil || len(me.Rule.Destination) == 0 {
+		return nil
+	}
+	destination := me.Rule.Destination[0]
+	return destination.VersionEndpoint
+}
+
 // ModelEndpointRule describes model's endpoint traffic rule.
 type ModelEndpointRule struct {
 	Destination []*ModelEndpointRuleDestination `json:"destinations"`

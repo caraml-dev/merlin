@@ -21,6 +21,9 @@ import (
 	"github.com/caraml-dev/merlin/istio"
 	istioCliMock "github.com/caraml-dev/merlin/istio/mocks"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/observability/event"
+	eventMock "github.com/caraml-dev/merlin/pkg/observability/event/mocks"
+
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/storage"
 	storageMock "github.com/caraml-dev/merlin/storage/mocks"
@@ -43,6 +46,7 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 		modelEndpointStorage   storage.ModelEndpointStorage
 		versionEndpointStorage storage.VersionEndpointStorage
 		environment            string
+		eventProducer          event.EventProducer
 	}
 
 	type args struct {
@@ -66,6 +70,11 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
+				eventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequest1)
@@ -146,7 +155,7 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment)
+			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment, tt.fields.eventProducer)
 
 			tt.mockFunc(s)
 
@@ -240,10 +249,11 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 	}
 
 	type fields struct {
-		istioClients           map[string]istio.Client
-		modelEndpointStorage   storage.ModelEndpointStorage
-		versionEndpointStorage storage.VersionEndpointStorage
-		environment            string
+		istioClients               map[string]istio.Client
+		modelEndpointStorage       storage.ModelEndpointStorage
+		versionEndpointStorage     storage.VersionEndpointStorage
+		environment                string
+		observabilityEventProducer event.EventProducer
 	}
 	type args struct {
 		ctx         context.Context
@@ -349,7 +359,7 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment)
+			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment, tt.fields.observabilityEventProducer)
 
 			tt.mockFunc(s)
 
@@ -368,10 +378,11 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 	modelEndpointResponseTerminated.Status = models.EndpointTerminated
 
 	type fields struct {
-		istioClients           map[string]istio.Client
-		modelEndpointStorage   storage.ModelEndpointStorage
-		versionEndpointStorage storage.VersionEndpointStorage
-		environment            string
+		istioClients               map[string]istio.Client
+		modelEndpointStorage       storage.ModelEndpointStorage
+		versionEndpointStorage     storage.VersionEndpointStorage
+		environment                string
+		observabilityEventProducer event.EventProducer
 	}
 	type args struct {
 		ctx      context.Context
@@ -432,7 +443,7 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment)
+			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment, tt.fields.observabilityEventProducer)
 
 			tt.mockFunc(s)
 

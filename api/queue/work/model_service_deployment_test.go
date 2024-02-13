@@ -11,6 +11,7 @@ import (
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	imageBuilderMock "github.com/caraml-dev/merlin/pkg/imagebuilder/mocks"
+	eventMock "github.com/caraml-dev/merlin/pkg/observability/event/mocks"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage/mocks"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +56,7 @@ func TestExecuteDeployment(t *testing.T) {
 	}
 
 	project := mlp.Project{Name: "project", Labels: mlpLabels}
-	model := &models.Model{Name: "model", Project: project}
+	model := &models.Model{Name: "model", Project: project, ObservabilitySupported: false}
 	version := &models.Version{ID: 1, Labels: versionLabels}
 	iSvcName := fmt.Sprintf("%s-%d-1", model.Name, version.ID)
 	svcName := fmt.Sprintf("%s-%d-1.project.svc.cluster.local", model.Name, version.ID)
@@ -71,6 +72,7 @@ func TestExecuteDeployment(t *testing.T) {
 		storage           func() *mocks.VersionEndpointStorage
 		controller        func() *clusterMock.Controller
 		imageBuilder      func() *imageBuilderMock.ImageBuilder
+		eventProducer     *eventMock.EventProducer
 	}{
 		{
 			name:    "Success: Default",
@@ -115,6 +117,118 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
+		},
+		{
+			name:    "Success: Default - Model Observability Supported",
+			model:   &models.Model{Name: "model", Project: project, ObservabilitySupported: true},
+			version: version,
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName:          env.Name,
+				ResourceRequest:          env.DefaultResourceRequest,
+				VersionID:                version.ID,
+				Namespace:                project.Name,
+				EnableModelObservability: true,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := createDefaultMockDeploymentStorage()
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
+				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
+					Environment:     env,
+					EnvironmentName: env.Name,
+					ResourceRequest: env.DefaultResourceRequest,
+					VersionID:       version.ID,
+					Namespace:       project.Name,
+				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				return mockImgBuilder
+			},
+			eventProducer: func() *eventMock.EventProducer {
+				producer := &eventMock.EventProducer{}
+				producer.On("VersionEndpointChangeEvent", &models.VersionEndpoint{
+					EnvironmentName:          env.Name,
+					ResourceRequest:          env.DefaultResourceRequest,
+					VersionID:                version.ID,
+					Namespace:                project.Name,
+					EnableModelObservability: true,
+				}, &models.Model{Name: "model", Project: project, ObservabilitySupported: true}).Return(nil)
+				return producer
+			}(),
+		},
+		{
+			name:    "Success eventhough error when produce event",
+			model:   &models.Model{Name: "model", Project: project, ObservabilitySupported: true},
+			version: version,
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName:          env.Name,
+				ResourceRequest:          env.DefaultResourceRequest,
+				VersionID:                version.ID,
+				Namespace:                project.Name,
+				EnableModelObservability: true,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := createDefaultMockDeploymentStorage()
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
+				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
+					Environment:     env,
+					EnvironmentName: env.Name,
+					ResourceRequest: env.DefaultResourceRequest,
+					VersionID:       version.ID,
+					Namespace:       project.Name,
+				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				return mockImgBuilder
+			},
+			eventProducer: func() *eventMock.EventProducer {
+				producer := &eventMock.EventProducer{}
+				producer.On("VersionEndpointChangeEvent", &models.VersionEndpoint{
+					EnvironmentName:          env.Name,
+					ResourceRequest:          env.DefaultResourceRequest,
+					VersionID:                version.ID,
+					Namespace:                project.Name,
+					EnableModelObservability: true,
+				}, &models.Model{Name: "model", Project: project, ObservabilitySupported: true}).Return(fmt.Errorf("producer error"))
+				return producer
+			}(),
 		},
 		{
 			name:    "Success: Latest deployment entry in storage stuck in pending",

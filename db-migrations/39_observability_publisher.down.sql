@@ -1,0 +1,1 @@
+DROP TABLE observability_publishers;

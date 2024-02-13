@@ -42,7 +42,7 @@ func InitDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	db, err := gorm.Open(
 		pg.Open(connectionString(cfg)),
 		&gorm.Config{
-			Logger: logger.Default.LogMode(logger.Silent),
+			Logger: logger.Default.LogMode(logger.Info),
 		},
 	)
 	if err != nil {
