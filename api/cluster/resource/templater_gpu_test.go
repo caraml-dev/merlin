@@ -106,6 +106,14 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 		},
 	}
 
+	invalidResourceRequest := &models.ResourceRequest{
+		MinReplica:    1,
+		MaxReplica:    2,
+		CPURequest:    resource.MustParse("500m"),
+		MemoryRequest: resource.MustParse("500Mi"),
+		GPUName:       "NVIDIA P4",
+	}
+
 	queueResourcePercentage := "2"
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
@@ -1562,6 +1570,25 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "invalid resource request with 0 GPU requested",
+			modelSvc: &models.Service{
+				Name:            modelSvc.Name,
+				ModelName:       modelSvc.ModelName,
+				ModelVersion:    modelSvc.ModelVersion,
+				Namespace:       project.Name,
+				ArtifactURI:     modelSvc.ArtifactURI,
+				Type:            models.ModelTypeTensorflow,
+				Options:         &models.ModelOption{},
+				Metadata:        modelSvc.Metadata,
+				Protocol:        protocol.HttpJson,
+				ResourceRequest: invalidResourceRequest,
+			},
+			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
+			exp:                &kservev1beta1.InferenceService{},
+			wantErr:            true,
 		},
 	}
 
