@@ -441,10 +441,10 @@ jobs:
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
           k3d cluster create $K3D_CLUSTER --image rancher/k3s:${K3S_VERSION} --port 80:80@loadbalancer \
             --k3s-arg '--disable=traefik,metrics-server@server:*' \
-            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@server:0' \
-            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@server:0' \
-            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
-            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*'
+            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<0.5%,nodefs.available<0.5%@server:0' \
+            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=0.5%,nodefs.available=0.5%@server:0' \
+            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<0.5%,nodefs.available<0.5%@agent:*' \
+            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=0.5%,nodefs.available=0.5%@agent:*'
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster
@@ -470,8 +470,10 @@ jobs:
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
-      - name: Prune docker image to make some space
-        run: docker image prune --all --force
+      - name: Prune docker system to make some space
+        run: docker system prune --all --force
+      - name: Print space consumption
+        run: sudo df -h
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
@@ -482,6 +484,11 @@ jobs:
         continue-on-error: true
         working-directory: merlin/scripts/e2e
         run: ./debug-e2e.sh
+      - name: "Print post-e2e test space consumption"
+        if: always()
+        continue-on-error: true
+        working-directory: merlin/scripts/e2e
+        run: sudo df -h
 
   release:
     uses: ./.github/workflows/release.yml
