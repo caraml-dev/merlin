@@ -126,9 +126,9 @@ type BinaryClassificationOutput struct {
 }
 
 type RankingOutput struct {
-	PredictionGroudIDColumn string                     `json:"prediction_group_id_column"`
+	PredictionGroupIDColumn string                     `json:"prediction_group_id_column"`
 	RankScoreColumn         string                     `json:"rank_score_column"`
-	RelevanceScoreColumn    string                     `json:"relevance_score"`
+	RelevanceScoreColumn    string                     `json:"relevance_score_column"`
 	OutputClass             ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }
 
