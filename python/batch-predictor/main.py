@@ -26,6 +26,9 @@ from merlinpyspark.sink import create_sink
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 
+# Import the classes so that Pydantic can cache the schema. See https://github.com/caraml-dev/merlin/pull/535
+from merlin.model import PyFuncModel, PyFuncV2Model, PyFuncV3Model
+
 try:
     import pyspark
 except ImportError:

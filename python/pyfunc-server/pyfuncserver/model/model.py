@@ -17,6 +17,8 @@ from enum import Enum
 
 import grpc
 from caraml.upi.v1 import upi_pb2
+# Import the classes so that Pydantic can cache the schema. See https://github.com/caraml-dev/merlin/pull/535
+from merlin.model import PyFuncModel as MerlinPyFuncModel, PyFuncV2Model as MerlinPyFuncV2Model, PyFuncV3Model as MerlinPyfuncV3Model
 from merlin.protocol import Protocol
 from merlin.pyfunc import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_GRPC_CONTEXT, PYFUNC_MODEL_INPUT_KEY, PYFUNC_PROTOCOL_KEY, PyFuncOutput
 from mlflow import pyfunc
