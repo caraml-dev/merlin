@@ -10,10 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// ModelSchemaService interface
 type ModelSchemaService interface {
+	// List all the model schemas for a model
 	List(ctx context.Context, modelID models.ID) ([]*models.ModelSchema, error)
+	// Save model schema, it can be create or update existing schema
 	Save(ctx context.Context, modelSchema *models.ModelSchema) (*models.ModelSchema, error)
+	// Delete a model schema
 	Delete(ctx context.Context, modelSchema *models.ModelSchema) error
+	// FindByID get schema given it's schema id and model id
 	FindByID(ctx context.Context, modelSchemaID models.ID, modelID models.ID) (*models.ModelSchema, error)
 }
 
@@ -21,6 +26,7 @@ type modelSchemaService struct {
 	modelSchemaStorage storage.ModelSchemaStorage
 }
 
+// NewModelSchemaService create an instance of `ModelSchemaService`
 func NewModelSchemaService(storage storage.ModelSchemaStorage) ModelSchemaService {
 	return &modelSchemaService{
 		modelSchemaStorage: storage,

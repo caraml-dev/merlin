@@ -26,7 +26,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import client
 import docker
-import mlflow
 import pyprind
 import yaml
 from client import (
@@ -39,7 +38,6 @@ from client import (
 )
 from docker import APIClient
 from docker.models.containers import Container
-from merlin import pyfunc
 from merlin.autoscaling import (
     RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
     SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
@@ -53,6 +51,7 @@ from merlin.deployment_mode import DeploymentMode
 from merlin.docker.docker import copy_standard_dockerfile, wait_build_complete
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.logger import Logger
+from merlin.model_schema import ModelSchema
 from merlin.protocol import Protocol
 from merlin.pyfunc import run_pyfunc_local_server
 from merlin.resource_request import ResourceRequest
@@ -60,17 +59,19 @@ from merlin.transformer import Transformer
 from merlin.util import (
     autostr,
     download_files_from_gcs,
+    extract_optional_value_with_default,
     guess_mlp_ui_url,
     valid_name_check,
 )
 from merlin.validation import validate_model_dir
+from merlin.version import VERSION
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
 from mlflow.tracking.client import MlflowClient
-from merlin.version import VERSION
-from merlin.model_schema import ModelSchema
-from merlin.util import extract_optional_value_with_default
+
+import mlflow
+from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -124,7 +125,9 @@ class Project:
         self._url = mlp_url
         self._api_client = api_client
         self._readers = extract_optional_value_with_default(project.readers, [])
-        self._administrators = extract_optional_value_with_default(project.administrators, [])
+        self._administrators = extract_optional_value_with_default(
+            project.administrators, []
+        )
 
     @property
     def id(self) -> int:
@@ -337,6 +340,7 @@ class Model:
         if self._mlflow_experiment_id is not None:
             return int(self._mlflow_experiment_id)
         return None
+
     @property
     def created_at(self) -> Optional[datetime]:
         return self._created_at
@@ -441,14 +445,16 @@ class Model:
         )
         versions = version_api_response.data
         headers = extract_optional_value_with_default(version_api_response.headers, {})
-        
+
         next_cursor = headers.get("Next-Cursor") or ""
         result = []
         for v in versions:
             result.append(ModelVersion(v, self, self._api_client))
         return result, next_cursor
 
-    def new_model_version(self, labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None) -> "ModelVersion":
+    def new_model_version(
+        self, labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None
+    ) -> "ModelVersion":
         """
         Create a new version of this model
 
@@ -462,7 +468,12 @@ class Model:
             model_schema.model_id = self.id
             model_schema_payload = model_schema.to_client_model_schema()
         v = version_api.models_model_id_versions_post(
-            int(self.id), body=client.Version(labels=labels, python_version=python_version, model_schema=model_schema_payload)
+            int(self.id),
+            body=client.Version(
+                labels=labels,
+                python_version=python_version,
+                model_schema=model_schema_payload,
+            ),
         )
         return ModelVersion(v, self, self._api_client)
 
@@ -523,18 +534,20 @@ class Model:
             ep = client.ModelEndpoint(
                 model_id=self.id, environment_name=target_env, rule=rule
             )
-            ep = mdl_epi_api.models_model_id_endpoints_post(
-                model_id=self.id, body=ep
-            )
+            ep = mdl_epi_api.models_model_id_endpoints_post(model_id=self.id, body=ep)
         elif prev_endpoint.id is not None:
             # update: GET and PUT
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_get(
                 model_id=self.id, model_endpoint_id=prev_endpoint.id
             )
-            if ep.rule is not None and ep.rule.destinations is not None and len(ep.rule.destinations) > 0:
+            if (
+                ep.rule is not None
+                and ep.rule.destinations is not None
+                and len(ep.rule.destinations) > 0
+            ):
                 ep.rule.destinations[0].version_endpoint_id = version_endpoint.id
                 ep.rule.destinations[0].weight = 100
-            
+
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_put(
                 model_id=int(self.id),
                 model_endpoint_id=prev_endpoint.id,
@@ -582,9 +595,7 @@ class Model:
             f"in {target_env} environment"
         )
         if target_endpoint.id is None:
-            raise ValueError(
-                f"model endpoint doesn't have id information"
-            )
+            raise ValueError(f"model endpoint doesn't have id information")
         mdl_epi_api.models_model_id_endpoints_model_endpoint_id_delete(
             self.id, target_endpoint.id
         )
@@ -647,7 +658,7 @@ class Model:
                                 weight=100,
                             )
                         ]
-                    )
+                    ),
                 ),
                 model_id=int(self.id),
             )
@@ -658,10 +669,14 @@ class Model:
             ep = model_endpoint_api.models_model_id_endpoints_model_endpoint_id_get(
                 model_id=int(self.id), model_endpoint_id=def_model_endpoint.id
             )
-            if ep.rule is not None and ep.rule.destinations is not None and len(ep.rule.destinations) > 0:
+            if (
+                ep.rule is not None
+                and ep.rule.destinations is not None
+                and len(ep.rule.destinations) > 0
+            ):
                 ep.rule.destinations[0].version_endpoint_id = def_version_endpoint.id
                 ep.rule.destinations[0].weight = 100
-            
+
             ep = model_endpoint_api.models_model_id_endpoints_model_endpoint_id_put(
                 model_id=int(self.id),
                 model_endpoint_id=def_model_endpoint.id,
@@ -711,8 +726,10 @@ class ModelVersion:
         self._labels = version.labels
         self._custom_predictor = version.custom_predictor
         self._python_version = version.python_version
-        self._model_schema = ModelSchema.from_model_schema_response(version.model_schema)
-        mlflow.set_tracking_uri(model.project.mlflow_tracking_url) # type: ignore  # noqa
+        self._model_schema = ModelSchema.from_model_schema_response(
+            version.model_schema
+        )
+        mlflow.set_tracking_uri(model.project.mlflow_tracking_url)  # type: ignore  # noqa
 
         endpoints = None
         if version.endpoints is not None:
@@ -720,7 +737,6 @@ class ModelVersion:
             for ep in version.endpoints:
                 endpoints.append(VersionEndpoint(ep))
         self._version_endpoints = endpoints
-
 
     @property
     def id(self) -> int:
@@ -784,7 +800,7 @@ class ModelVersion:
         model_id = self.model.id
         base_url = guess_mlp_ui_url(self.model.project.url)
         return f"{base_url}/projects/{project_id}/models/{model_id}/versions"
-    
+
     @property
     def model_schema(self) -> Optional[ModelSchema]:
         return self._model_schema
@@ -1179,16 +1195,21 @@ class ModelVersion:
                 for env in env_list:
                     if env.gpus is None:
                         continue
-                
+
                     for gpu in env.gpus:
                         if resource_request.gpu_name == gpu.name:
-                            if gpu.values is not None and resource_request.gpu_request not in gpu.values:
+                            if (
+                                gpu.values is not None
+                                and resource_request.gpu_request not in gpu.values
+                            ):
                                 raise ValueError(
                                     f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
                                 )
 
                             if target_resource_request is not None:
-                                target_resource_request.gpu_name = resource_request.gpu_name
+                                target_resource_request.gpu_name = (
+                                    resource_request.gpu_name
+                                )
                                 target_resource_request.gpu_request = (
                                     resource_request.gpu_request
                                 )
@@ -1246,7 +1267,7 @@ class ModelVersion:
 
             if current_endpoint.id is None:
                 raise ValueError("current endpoint must have id")
-            
+
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_put(
                 int(model.id),
                 int(self.id),
@@ -1268,7 +1289,7 @@ class ModelVersion:
             # started acting after the deployment job has been submitted.
             if endpoint.id is None:
                 raise ValueError("endpoint id must be set")
-            
+
             endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_get(
                 model_id=model.id, version_id=self.id, endpoint_id=endpoint.id
             )
@@ -1278,7 +1299,11 @@ class ModelVersion:
             bar.update()
         bar.stop()
 
-        if endpoint.status != "running" and endpoint.status != "serving" and endpoint.message is not None:
+        if (
+            endpoint.status != "running"
+            and endpoint.status != "serving"
+            and endpoint.message is not None
+        ):
             raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
@@ -1356,7 +1381,7 @@ class ModelVersion:
                 result=client.PredictionJobConfigModelResult(
                     type=client.ResultType(job_config.result_type.value),
                     item_type=client.ResultType(job_config.item_type.value),
-                )
+                ),
             ),
         )
 
@@ -1418,7 +1443,7 @@ class ModelVersion:
             job_id = j.id
             if job_id is None:
                 raise ValueError("job id must be exist")
-            
+
             if not sync:
                 j = job_client.models_model_id_versions_version_id_jobs_job_id_get(
                     model_id=self.model.id, version_id=self.id, job_id=job_id
@@ -1652,10 +1677,11 @@ class ModelVersion:
 
         resource_request.validate()
         return client.ResourceRequest(
-            min_replica=resource_request.min_replica, 
+            min_replica=resource_request.min_replica,
             max_replica=resource_request.max_replica,
-            cpu_request=resource_request.cpu_request, 
-            memory_request=resource_request.memory_request)
+            cpu_request=resource_request.cpu_request,
+            memory_request=resource_request.memory_request,
+        )
 
     @staticmethod
     def _get_default_autoscaling_policy(
@@ -1666,8 +1692,9 @@ class ModelVersion:
         else:
             autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
         return client.AutoscalingPolicy(
-            metrics_type=client.MetricsType(autoscaling_policy.metrics_type.value), 
-            target_value=autoscaling_policy.target_value)
+            metrics_type=client.MetricsType(autoscaling_policy.metrics_type.value),
+            target_value=autoscaling_policy.target_value,
+        )
 
     @staticmethod
     def _add_env_vars(target_env_vars, new_env_vars):
@@ -1695,10 +1722,11 @@ class ModelVersion:
         else:
             resource_request.validate()
             target_resource_request = client.ResourceRequest(
-                min_replica=resource_request.min_replica, 
+                min_replica=resource_request.min_replica,
                 max_replica=resource_request.max_replica,
-                cpu_request=resource_request.cpu_request, 
-                memory_request=resource_request.memory_request)
+                cpu_request=resource_request.cpu_request,
+                memory_request=resource_request.memory_request,
+            )
 
         target_env_vars: List[client.EnvVar] = []
         if transformer.env_vars is not None:
@@ -1767,7 +1795,7 @@ def _process_conda_env(
 
     if python_version is None:
         raise ValueError("python version must be set")
-    
+
     new_conda_env = {}
 
     if isinstance(conda_env, str):
