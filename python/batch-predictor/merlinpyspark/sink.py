@@ -16,6 +16,8 @@ from abc import ABC, abstractmethod
 
 from pyspark.sql import DataFrame
 
+# Import the classes so that Pydantic can cache the schema. See https://github.com/caraml-dev/merlin/pull/535
+from merlin.model import PyFuncModel, PyFuncV2Model, PyFuncV3Model
 from merlinpyspark.config import SinkConfig, BigQuerySinkConfig
 
 

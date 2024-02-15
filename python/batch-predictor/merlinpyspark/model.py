@@ -14,6 +14,8 @@
 
 import numpy as np
 import pandas
+# Import the classes so that Pydantic can cache the schema. See https://github.com/caraml-dev/merlin/pull/535
+from merlin.model import PyFuncModel, PyFuncV2Model, PyFuncV3Model
 from mlflow.tracking.artifact_utils import _download_artifact_from_uri
 from mlflow.utils.file_utils import TempDir
 from pyspark.sql import SparkSession
