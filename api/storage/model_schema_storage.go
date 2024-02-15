@@ -7,10 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// ModelSchemaStorage interface, layer that responsibles to communicate directly with database
 type ModelSchemaStorage interface {
+	// Save create or update model schema to DB
 	Save(ctx context.Context, modelSchema *models.ModelSchema) (*models.ModelSchema, error)
+	// FindAll find all schemas givem model id from DB
 	FindAll(ctx context.Context, modelID models.ID) ([]*models.ModelSchema, error)
+	// FindByID find schema given it's id from DB
 	FindByID(ctx context.Context, modelSchemaID models.ID, modelID models.ID) (*models.ModelSchema, error)
+	// Delete delete schema give it's id from DB
 	Delete(ctx context.Context, modelSchema *models.ModelSchema) error
 }
 
@@ -18,6 +23,7 @@ type modelSchemaStorage struct {
 	db *gorm.DB
 }
 
+// NewModelSchemaStorage create new instance of ModelSchemaStorage
 func NewModelSchemaStorage(db *gorm.DB) ModelSchemaStorage {
 	return &modelSchemaStorage{db: db}
 }

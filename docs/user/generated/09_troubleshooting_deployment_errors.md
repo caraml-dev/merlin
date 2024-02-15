@@ -10,9 +10,9 @@ This page discusses scenarios you may encounter during model deployment that wil
 
 ## Troubleshooting views
 
-Merlin provides the following views on the UI to troubeshoot a deployment:
+Merlin provides the following views on the UI to troubleshoot a deployment:
 
-- **Logs** - the live console output when the iamge is building or the deployment is running
+- **Logs** - the live console output when the image is building or the deployment is running
 - **History** - the list of deployment history status and message
 
 You can navigate to these views from the Model Version page by clicking on the Logs tab or History tab.
@@ -25,7 +25,7 @@ You can navigate to these views from the Model Version page by clicking on the L
 
 The "OOMKilled" error occurs when a container is terminated due to out-of-memory conditions. This typically happens when a container exceeds its allocated memory limit and the system is unable to provide additional memory. When this occurs, the container will be killed with exit code 137 to free up resources.
 
-This error can effect both image building and deployment steps. To resolve the OOMKilled error, follow these steps:
+This error can affect both image building and deployment steps. To resolve the OOMKilled error, follow these steps:
 
 1. Check which components that got OOMKilled
 2. Check affected component memory limits
@@ -42,7 +42,7 @@ Liveness and readiness probes are essential for ensuring the health and availabi
 Troubleshooting steps:
 
 1. For standard model type, check pre-trained model size
-2. For pyfunc model type, check how model got initialized
+2. For pyfunc model type, check how model was initialized
 3. Inspect model logs
 4. Monitor resource utilization
 

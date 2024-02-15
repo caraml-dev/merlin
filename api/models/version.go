@@ -23,6 +23,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Version
 type Version struct {
 	ID              ID                 `json:"id" gorm:"primary_key"`
 	ModelID         ID                 `json:"model_id" gorm:"primary_key"`
@@ -40,18 +41,21 @@ type Version struct {
 	CreatedUpdated
 }
 
+// VersionPost contains all information that is used during version creation
 type VersionPost struct {
 	Labels        KV           `json:"labels" gorm:"labels"`
 	PythonVersion string       `json:"python_version" gorm:"python_version"`
 	ModelSchema   *ModelSchema `json:"model_schema"`
 }
 
+// VersionPatch contains all information that is used during version update or patch
 type VersionPatch struct {
 	Properties      *KV              `json:"properties,omitempty"`
 	CustomPredictor *CustomPredictor `json:"custom_predictor,omitempty"`
 	ModelSchema     *ModelSchema     `json:"model_schema"`
 }
 
+// CustomPredictor contains configuration for custom model
 type CustomPredictor struct {
 	Image   string `json:"image"`
 	Command string `json:"command"`
@@ -93,6 +97,7 @@ func (kv *KV) Scan(value interface{}) error {
 	return json.Unmarshal(b, &kv)
 }
 
+// Validate do validation on the value of version
 func (v *Version) Validate() error {
 	if v.CustomPredictor != nil && v.Model.Type == ModelTypeCustom {
 		if err := v.CustomPredictor.IsValid(); err != nil {
@@ -107,6 +112,7 @@ func (v *Version) Validate() error {
 	return nil
 }
 
+// Patch version value
 func (v *Version) Patch(patch *VersionPatch) {
 	if patch.Properties != nil {
 		v.Properties = *patch.Properties
@@ -119,6 +125,7 @@ func (v *Version) Patch(patch *VersionPatch) {
 	}
 }
 
+// BeforeCreate find the latest persisted ID from version DB and increament it and assign to the receiver
 func (v *Version) BeforeCreate(db *gorm.DB) error {
 	if v.ID == 0 {
 		var maxModelVersionID int

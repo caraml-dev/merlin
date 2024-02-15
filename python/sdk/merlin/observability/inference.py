@@ -236,9 +236,11 @@ class RankingOutput(PredictionOutput):
         self, df: pd.DataFrame, observation_types: List[ObservationType]
     ) -> pd.DataFrame:
         if ObservationType.PREDICTION in observation_types:
-            df[self.rank_column] = df.groupby(self.prediction_group_id_column)[
-                self.rank_score_column
-            ].rank(method="first", ascending=False).astype(np.int_)
+            df[self.rank_column] = (
+                df.groupby(self.prediction_group_id_column)[self.rank_score_column]
+                .rank(method="first", ascending=False)
+                .astype(np.int_)
+            )
         return df
 
     def prediction_types(self) -> Dict[str, ValueType]:

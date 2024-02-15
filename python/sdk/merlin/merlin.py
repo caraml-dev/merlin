@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
 import warnings
-import os
-import merlin
-from merlin.model import ModelType
+
+import click
 from cookiecutter.main import cookiecutter
+from merlin.model import ModelType
 from merlin.util import valid_name_check
+
+import merlin
 
 warnings.filterwarnings("ignore")
 
