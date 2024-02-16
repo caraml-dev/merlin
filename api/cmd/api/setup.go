@@ -396,7 +396,10 @@ func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIC
 			GcpProject:  env.GcpProject,
 		}
 
-		ctl := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager, envMetadata)
+		batchJobTemplator := batch.NewBatchJobTemplater(cfg.BatchConfig)
+
+		ctl := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager,
+			envMetadata, batchJobTemplator)
 		stopCh := make(chan struct{})
 		go ctl.Run(stopCh)
 

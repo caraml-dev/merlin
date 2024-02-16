@@ -120,6 +120,17 @@ var (
 			Value: envServiceAccountPath,
 		},
 	}
+
+	defaultToleration = v12.Toleration{
+		Key:      "batch-job",
+		Operator: v12.TolerationOpEqual,
+		Value:    "true",
+		Effect:   v12.TaintEffectNoSchedule,
+	}
+
+	defaultNodeSelector = map[string]string{
+		"node-workload-type": "batch",
+	}
 )
 
 func TestCreateSparkApplicationResource(t *testing.T) {
@@ -643,7 +654,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			sp, err := CreateSparkApplicationResource(test.arg)
+			sp, err := testBatchJobTemplater.CreateSparkApplicationResource(test.arg)
 			if test.wantErr {
 				assert.Equal(t, test.wantErrMessage, err.Error())
 				return

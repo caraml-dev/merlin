@@ -58,6 +58,7 @@ type Config struct {
 	DbConfig                  DatabaseConfig     `validate:"required"`
 	ClusterConfig             ClusterConfig      `validate:"required"`
 	ImageBuilderConfig        ImageBuilderConfig `validate:"required"`
+	BatchConfig               BatchConfig
 	AuthorizationConfig       AuthorizationConfig
 	MlpAPIConfig              MlpAPIConfig `validate:"required"`
 	FeatureToggleConfig       FeatureToggleConfig

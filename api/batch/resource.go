@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
+	"github.com/caraml-dev/merlin/config"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,25 +72,22 @@ var (
 		OnFailureRetryInterval:           &failureRetryInterval,
 	}
 
-	defaultToleration = corev1.Toleration{
-		Key:      "batch-job",
-		Operator: corev1.TolerationOpEqual,
-		Value:    "true",
-		Effect:   corev1.TaintEffectNoSchedule,
-	}
-
 	defaultHadoopConf = map[string]string{
 		hadoopConfEnableServiceAccountKey: hadoopConfEnableServiceAccount,
 		haddopConfServiceAccountPathKey:   haddopConfServiceAccountPath,
 	}
-
-	defaultNodeSelector = map[string]string{
-		"node-workload-type": "batch",
-	}
 )
 
-func CreateSparkApplicationResource(job *models.PredictionJob) (*v1beta2.SparkApplication, error) {
-	spec, err := createSpec(job)
+type BatchJobTemplater struct {
+	batchConfig config.BatchConfig
+}
+
+func NewBatchJobTemplater(batchConfig config.BatchConfig) *BatchJobTemplater {
+	return &BatchJobTemplater{batchConfig: batchConfig}
+}
+
+func (t *BatchJobTemplater) CreateSparkApplicationResource(job *models.PredictionJob) (*v1beta2.SparkApplication, error) {
+	spec, err := t.createSpec(job)
 	if err != nil {
 		return nil, err
 	}
@@ -103,13 +101,13 @@ func CreateSparkApplicationResource(job *models.PredictionJob) (*v1beta2.SparkAp
 	}, nil
 }
 
-func createSpec(job *models.PredictionJob) (v1beta2.SparkApplicationSpec, error) {
-	driverSpec, err := createDriverSpec(job)
+func (t *BatchJobTemplater) createSpec(job *models.PredictionJob) (v1beta2.SparkApplicationSpec, error) {
+	driverSpec, err := t.createDriverSpec(job)
 	if err != nil {
 		return v1beta2.SparkApplicationSpec{}, err
 	}
 
-	executorSpec, err := createExecutorSpec(job)
+	executorSpec, err := t.createExecutorSpec(job)
 	if err != nil {
 		return v1beta2.SparkApplicationSpec{}, err
 	}
@@ -131,14 +129,14 @@ func createSpec(job *models.PredictionJob) (v1beta2.SparkApplicationSpec, error)
 		HadoopConf:        defaultHadoopConf,
 		Driver:            driverSpec,
 		Executor:          executorSpec,
-		NodeSelector:      defaultNodeSelector,
+		NodeSelector:      t.batchConfig.NodeSelectors,
 		RestartPolicy:     defaultRetryPolicy,
 		PythonVersion:     &pythonVersion,
 		TimeToLiveSeconds: &ttlSecond,
 	}, nil
 }
 
-func createDriverSpec(job *models.PredictionJob) (v1beta2.DriverSpec, error) {
+func (t *BatchJobTemplater) createDriverSpec(job *models.PredictionJob) (v1beta2.DriverSpec, error) {
 	userCPURequest, err := resource.ParseQuantity(job.Config.ResourceRequest.DriverCPURequest)
 	if err != nil {
 		return v1beta2.DriverSpec{}, fmt.Errorf("invalid driver cpu request: %s", job.Config.ResourceRequest.DriverCPURequest)
@@ -175,17 +173,15 @@ func createDriverSpec(job *models.PredictionJob) (v1beta2.DriverSpec, error) {
 					Path: serviceAccountMount,
 				},
 			},
-			Env:    envVars,
-			Labels: createLabel(job),
-			Tolerations: []corev1.Toleration{
-				defaultToleration,
-			},
+			Env:            envVars,
+			Labels:         createLabel(job),
+			Tolerations:    t.batchConfig.Tolerations,
 			ServiceAccount: &job.Name,
 		},
 	}, nil
 }
 
-func createExecutorSpec(job *models.PredictionJob) (v1beta2.ExecutorSpec, error) {
+func (t *BatchJobTemplater) createExecutorSpec(job *models.PredictionJob) (v1beta2.ExecutorSpec, error) {
 	userCPURequest, err := resource.ParseQuantity(job.Config.ResourceRequest.ExecutorCPURequest)
 	if err != nil {
 		return v1beta2.ExecutorSpec{}, fmt.Errorf("invalid executor cpu request: %s", job.Config.ResourceRequest.ExecutorCPURequest)
@@ -223,11 +219,9 @@ func createExecutorSpec(job *models.PredictionJob) (v1beta2.ExecutorSpec, error)
 					Path: serviceAccountMount,
 				},
 			},
-			Env:    envVars,
-			Labels: createLabel(job),
-			Tolerations: []corev1.Toleration{
-				defaultToleration,
-			},
+			Env:         envVars,
+			Labels:      createLabel(job),
+			Tolerations: t.batchConfig.Tolerations,
 		},
 	}, nil
 }

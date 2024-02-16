@@ -23,9 +23,11 @@ import (
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
 	sparkOpFake "github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned/fake"
+	"github.com/caraml-dev/merlin/config"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -109,7 +111,14 @@ var (
 		},
 	}
 
-	sparkApp, _ = CreateSparkApplicationResource(predictionJob)
+	defaultBatchConfig = config.BatchConfig{
+		Tolerations:   []v1.Toleration{defaultToleration},
+		NodeSelectors: defaultNodeSelector,
+	}
+
+	testBatchJobTemplater = NewBatchJobTemplater(defaultBatchConfig)
+
+	sparkApp, _ = testBatchJobTemplater.CreateSparkApplicationResource(predictionJob)
 	namespace   = &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: defaultNamespace}}
 	errRaised   = errors.New("error")
 )
@@ -318,7 +327,9 @@ func TestSubmit(t *testing.T) {
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
+			batchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
+			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager,
+				clusterMetadata, batchJobTemplater)
 
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, action.(ktesting.GetAction).GetName())
@@ -356,7 +367,7 @@ func TestSubmit(t *testing.T) {
 			assert.NoError(t, err)
 
 			// validate spark application submitted to spark client
-			expectedSparkApp, _ := CreateSparkApplicationResource(predictionJob)
+			expectedSparkApp, _ := testBatchJobTemplater.CreateSparkApplicationResource(predictionJob)
 			expectedSparkApp.Spec.Driver.ServiceAccount = &test.driverAuthzCreationResult.serviceAccountName
 			actions := mockSparkClient.Fake.Actions()
 			createAction := actions[0].(ktesting.CreateAction)
@@ -384,7 +395,9 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	mockKubeClient := &fake2.Clientset{}
 	mockManifestManager := &batchMock.ManifestManager{}
 	clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
+	batchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
+	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager,
+		clusterMetadata, batchJobTemplater)
 
 	mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
 	mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
@@ -408,7 +421,9 @@ func TestOnUpdate(t *testing.T) {
 	mockKubeClient := &fake2.Clientset{}
 	mockManifestManager := &batchMock.ManifestManager{}
 	clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata).(*controller)
+	batchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
+	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager,
+		clusterMetadata, batchJobTemplater).(*controller)
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 	go ctl.Run(stopCh)
@@ -483,7 +498,9 @@ func TestUpdateStatus(t *testing.T) {
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata).(*controller)
+			batchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
+			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager,
+				clusterMetadata, batchJobTemplater).(*controller)
 			stopCh := make(chan struct{})
 			defer close(stopCh)
 			go ctl.Run(stopCh)
@@ -579,7 +596,9 @@ func TestStop(t *testing.T) {
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
+			batchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
+			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager,
+				clusterMetadata, batchJobTemplater)
 
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, action.(ktesting.GetAction).GetName())
