@@ -58,6 +58,15 @@ ImageBuilderConfig:
     - "--snapshot-mode=redo"
     - "--use-new-run"
 
+BatchConfig:
+  Tolerations:
+    - Effect: NoSchedule
+      Key: batch-job
+      Operator: Equal
+      Value: "true"
+  NodeSelectors:
+    node-workload-type: "batch"
+
 AuthorizationConfig:
   AuthorizationEnabled: false
 
