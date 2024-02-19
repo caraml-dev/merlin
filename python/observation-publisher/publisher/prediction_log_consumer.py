@@ -14,11 +14,11 @@ from merlin.observability.inference import InferenceSchema
 from publisher.config import ObservationSource, ObservationSourceConfig
 from publisher.metric import MetricWriter
 from publisher.observation_sink import ObservationSink
-from publisher.prediction_log_parser import (
-    PREDICTION_LOG_TIMESTAMP_COLUMN,
-    PredictionLogFeatureTable,
-    PredictionLogResultsTable,
-)
+from publisher.prediction_log_parser import (MODEL_VERSION_COLUMN,
+                                             PREDICTION_LOG_TIMESTAMP_COLUMN,
+                                             ROW_ID_COLUMN, SESSION_ID_COLUMN,
+                                             PredictionLogFeatureTable,
+                                             PredictionLogResultsTable)
 
 
 class PredictionLogConsumer(abc.ABC):
@@ -42,6 +42,7 @@ class PredictionLogConsumer(abc.ABC):
         self,
         observation_sinks: List[ObservationSink],
         inference_schema: InferenceSchema,
+        model_version: str,
     ):
         try:
             buffered_logs = []
@@ -58,7 +59,9 @@ class PredictionLogConsumer(abc.ABC):
                     and buffered_duration < buffered_max_duration_seconds
                 ):
                     continue
-                df = log_batch_to_dataframe(buffered_logs, inference_schema)
+                df = log_batch_to_dataframe(
+                    buffered_logs, inference_schema, model_version
+                )
                 most_recent_prediction_timestamp = df[
                     PREDICTION_LOG_TIMESTAMP_COLUMN
                 ].max()
@@ -69,7 +72,7 @@ class PredictionLogConsumer(abc.ABC):
                     len(buffered_logs)
                 )
                 write_tasks = [
-                    Thread(target=sink.write, args=(df,)) for sink in observation_sinks
+                    Thread(target=sink.write, args=(df.copy(),)) for sink in observation_sinks
                 ]
                 for task in write_tasks:
                     task.start()
@@ -160,7 +163,7 @@ def parse_message_to_prediction_log(msg: str) -> PredictionLog:
 
 
 def log_to_records(
-    log: PredictionLog, inference_schema: InferenceSchema
+    log: PredictionLog, inference_schema: InferenceSchema, model_version: str
 ) -> Tuple[List[List[np.int64 | np.float64 | np.bool_ | np.str_]], List[str]]:
     request_timestamp = log.request_timestamp.ToDatetime()
     feature_table = PredictionLogFeatureTable.from_struct(
@@ -171,7 +174,9 @@ def log_to_records(
     )
 
     rows = [
-        feature_row + prediction_row + [log.prediction_id + row_id, request_timestamp]
+        feature_row
+        + prediction_row
+        + [log.prediction_id, row_id, request_timestamp, model_version]
         for feature_row, prediction_row, row_id in zip(
             feature_table.rows,
             prediction_results_table.rows,
@@ -182,18 +187,23 @@ def log_to_records(
     column_names = (
         feature_table.columns
         + prediction_results_table.columns
-        + [inference_schema.prediction_id_column, PREDICTION_LOG_TIMESTAMP_COLUMN]
+        + [
+            SESSION_ID_COLUMN,
+            ROW_ID_COLUMN,
+            PREDICTION_LOG_TIMESTAMP_COLUMN,
+            MODEL_VERSION_COLUMN,
+        ]
     )
 
     return rows, column_names
 
 
 def log_batch_to_dataframe(
-    logs: List[PredictionLog], inference_schema: InferenceSchema
+    logs: List[PredictionLog], inference_schema: InferenceSchema, model_version: str
 ) -> pd.DataFrame:
     combined_records = []
     column_names: List[str] = []
     for log in logs:
-        rows, column_names = log_to_records(log, inference_schema)
+        rows, column_names = log_to_records(log, inference_schema, model_version)
         combined_records.extend(rows)
     return pd.DataFrame.from_records(combined_records, columns=column_names)
