@@ -4,11 +4,8 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
-from merlin.observability.inference import (
-    BinaryClassificationOutput,
-    InferenceSchema,
-    ValueType,
-)
+from merlin.observability.inference import (BinaryClassificationOutput,
+                                            InferenceSchema, ValueType)
 from pandas._testing import assert_frame_equal
 
 from publisher.prediction_log_consumer import log_batch_to_dataframe
@@ -77,6 +74,7 @@ def test_log_to_dataframe():
         "service_type",
     ]
     output_columns = ["prediction_score"]
+    request_timestamp = datetime(2021, 1, 1, 0, 0, 0)
     prediction_logs = [
         new_prediction_log(
             prediction_id="1234",
@@ -92,7 +90,7 @@ def test_log_to_dataframe():
                 [0.9],
                 [0.5],
             ],
-            request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
+            request_timestamp=request_timestamp,
             row_ids=["a", "b"],
         ),
         new_prediction_log(
@@ -109,25 +107,29 @@ def test_log_to_dataframe():
                 [0.4],
                 [0.2],
             ],
-            request_timestamp=datetime(2021, 1, 1, 0, 0, 0),
+            request_timestamp=request_timestamp,
             row_ids=["c", "d"],
         ),
     ]
-    prediction_logs_df = log_batch_to_dataframe(prediction_logs, inference_schema)
+    prediction_logs_df = log_batch_to_dataframe(
+        prediction_logs, inference_schema, model_version
+    )
     expected_df = pd.DataFrame.from_records(
         [
-            [0.8, 24, "FOOD", 0.9, "1234a", datetime(2021, 1, 1, 0, 0, 0)],
-            [0.5, 2, "RIDE", 0.5, "1234b", datetime(2021, 1, 1, 0, 0, 0)],
-            [1.0, 13, "CAR", 0.4, "5678c", datetime(2021, 1, 1, 0, 0, 0)],
-            [0.4, 60, "RIDE", 0.2, "5678d", datetime(2021, 1, 1, 0, 0, 0)],
+            [0.8, 24, "FOOD", 0.9, "1234", "a", request_timestamp, model_version],
+            [0.5, 2, "RIDE", 0.5, "1234", "b", request_timestamp, model_version],
+            [1.0, 13, "CAR", 0.4, "5678", "c", request_timestamp, model_version],
+            [0.4, 60, "RIDE", 0.2, "5678", "d", request_timestamp, model_version],
         ],
         columns=[
             "acceptance_rate",
             "minutes_since_last_order",
             "service_type",
             "prediction_score",
-            "prediction_id",
+            "session_id",
+            "row_id",
             "request_timestamp",
+            "model_version",
         ],
     )
     assert_frame_equal(prediction_logs_df, expected_df)
@@ -165,21 +167,27 @@ def test_empty_column_conversion_to_dataframe():
             row_ids=["a"],
         ),
     ]
-    prediction_logs_df = log_batch_to_dataframe(prediction_logs, inference_schema)
+    prediction_logs_df = log_batch_to_dataframe(
+        prediction_logs, inference_schema, model_version
+    )
     expected_df = pd.DataFrame.from_records(
         [
             [
                 np.NaN,
                 0.5,
-                "1234a",
+                "1234",
+                "a",
                 datetime(2021, 1, 1, 0, 0, 0),
+                "0.1.0",
             ],
         ],
         columns=[
             "acceptance_rate",
             "prediction_score",
-            "prediction_id",
+            "session_id",
+            "row_id",
             "request_timestamp",
+            "model_version",
         ],
     )
     assert_frame_equal(prediction_logs_df, expected_df)

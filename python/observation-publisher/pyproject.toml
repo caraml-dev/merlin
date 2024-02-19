@@ -2,6 +2,9 @@
 addopts = [
     "--import-mode=importlib",
 ]
+markers = [
+    "integration: mark a test as integration test"
+]
 
 [tool.mypy]
 exclude = "test.*"

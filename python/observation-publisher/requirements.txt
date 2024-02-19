@@ -8,6 +8,8 @@
     # via -r requirements.in
 alembic==1.13.0
     # via mlflow
+annotated-types==0.6.0
+    # via pydantic
 antlr4-python3-runtime==4.9.3
     # via
     #   hydra-core
@@ -74,7 +76,9 @@ flask==2.3.3
 gitdb==4.0.11
     # via gitpython
 gitpython==3.1.40
-    # via mlflow
+    # via
+    #   merlin-sdk
+    #   mlflow
 google-api-core==2.15.0
     # via
     #   google-cloud-bigquery
@@ -191,6 +195,10 @@ pyasn1==0.5.1
     #   rsa
 pyasn1-modules==0.3.0
     # via google-auth
+pydantic==2.5.3
+    # via merlin-sdk
+pydantic-core==2.14.6
+    # via pydantic
 pygments==2.17.2
     # via rich
 pyjwt==2.8.0
@@ -266,6 +274,8 @@ typing-extensions==4.9.0
     # via
     #   -r requirements.in
     #   alembic
+    #   pydantic
+    #   pydantic-core
     #   typing-inspect
 typing-inspect==0.9.0
     # via dataclasses-json
