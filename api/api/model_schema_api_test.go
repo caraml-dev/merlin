@@ -62,7 +62,7 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 								},
@@ -108,7 +108,7 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 								},
@@ -296,7 +296,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					"model_prediction_output": {
 						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
-						"relevance_score": "relevance_score",
+						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
 					}
 				}
@@ -315,7 +315,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -335,7 +335,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -360,7 +360,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -387,7 +387,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					"model_prediction_output": {
 						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
-						"relevance_score": "relevance_score",
+						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
 					}
 				},
@@ -407,7 +407,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -427,7 +427,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -452,7 +452,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -665,7 +665,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					"model_prediction_output": {
 						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
-						"relevance_score": "relevance_score",
+						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
 					}
 				}
@@ -684,7 +684,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -716,7 +716,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					"model_prediction_output": {
 						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
-						"relevance_score": "relevance_score",
+						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
 					}
 				},

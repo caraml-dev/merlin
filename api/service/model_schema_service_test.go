@@ -66,7 +66,7 @@ func Test_modelSchemaService_List(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 								},
@@ -114,7 +114,7 @@ func Test_modelSchemaService_List(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 							},
