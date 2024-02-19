@@ -19,7 +19,7 @@ From above architecture diagram, we can see that there are three places where th
 ## Onboarding
 As the architecture diagram illustrate, the end to end model onboarding to model observability needs to involving several components. The scope of this section is limited to merlin model modification. 
 
-### ### PyFunc modification
+### PyFunc modification
 Currently the only supported model for model observability is PyFunc model, the model should implements class `PyFuncV3Model` instead of `PyFuncModel`. This `PyFuncV3Model` has difference method signature that must be implemented. Following are the new methods:
 | Method Name | Description |
 |-------------|-------------|
@@ -45,8 +45,7 @@ Beside changes in signature, you can see some of those methods returning new typ
 Same like `ModelInput`, `ModelOutput` is also essential for model observability, it can be used to calculate prediction drift but more importantly it can calculate performance metrics.
 
 ### Configure Model Schema
-
-Model schema is essential for model observability because it is used by the kafka consumer to choose which columns that is relevant to model observability and do necessary preprocessing before publishing the data to model observability system. Users can see more detail of configuring model schema [here](../templates/09_model_schema.md)
+Model schema is essential for model observability because it is used by the kafka consumer to choose which columns that is relevant to model observability and do necessary preprocessing before publishing the data to model observability system. Users can see more detail of configuring model schema [here](../generated/10_model_schema.md)
 
 ### Deployment
 There is not much change on the deployment part, users just needs to set `enable_model_observability` parameter to `True` during model deploy. For clarity, we take one use case for model observability example, suppose a model has 4 features:
