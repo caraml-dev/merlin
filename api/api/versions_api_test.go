@@ -724,7 +724,7 @@ func TestPatchVersion(t *testing.T) {
 						PredictionIDColumn: "prediction_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -778,7 +778,7 @@ func TestPatchVersion(t *testing.T) {
 							PredictionIDColumn: "prediction_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 									OutputClass:             models.Ranking,
@@ -814,7 +814,7 @@ func TestPatchVersion(t *testing.T) {
 							PredictionIDColumn: "prediction_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 									OutputClass:             models.Ranking,
@@ -855,7 +855,7 @@ func TestPatchVersion(t *testing.T) {
 							PredictionIDColumn: "prediction_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 									OutputClass:             models.Ranking,
@@ -888,7 +888,7 @@ func TestPatchVersion(t *testing.T) {
 						PredictionIDColumn: "prediction_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -1448,7 +1448,7 @@ func TestCreateVersion(t *testing.T) {
 						PredictionIDColumn: "prediction_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,
@@ -1501,7 +1501,7 @@ func TestCreateVersion(t *testing.T) {
 							PredictionIDColumn: "prediction_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 									OutputClass:             models.Ranking,
@@ -1534,7 +1534,7 @@ func TestCreateVersion(t *testing.T) {
 							PredictionIDColumn: "prediction_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 									OutputClass:             models.Ranking,
@@ -1572,7 +1572,7 @@ func TestCreateVersion(t *testing.T) {
 							PredictionIDColumn: "prediction_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroudIDColumn: "session_id",
+									PredictionGroupIDColumn: "session_id",
 									RankScoreColumn:         "score",
 									RelevanceScoreColumn:    "relevance_score",
 									OutputClass:             models.Ranking,
@@ -1600,7 +1600,7 @@ func TestCreateVersion(t *testing.T) {
 						PredictionIDColumn: "prediction_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroudIDColumn: "session_id",
+								PredictionGroupIDColumn: "session_id",
 								RankScoreColumn:         "score",
 								RelevanceScoreColumn:    "relevance_score",
 								OutputClass:             models.Ranking,

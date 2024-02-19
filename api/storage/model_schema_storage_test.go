@@ -69,7 +69,7 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 
 		schema.Spec.ModelPredictionOutput = &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroudIDColumn: "session_id",
+				PredictionGroupIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
 				OutputClass:             models.Ranking,
@@ -81,7 +81,7 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, newSchema.Spec.ModelPredictionOutput, &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroudIDColumn: "session_id",
+				PredictionGroupIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
 				OutputClass:             models.Ranking,
@@ -239,7 +239,7 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 					},
 					ModelPredictionOutput: &models.ModelPredictionOutput{
 						RankingOutput: &models.RankingOutput{
-							PredictionGroudIDColumn: "session_id",
+							PredictionGroupIDColumn: "session_id",
 							RankScoreColumn:         "score",
 							RelevanceScoreColumn:    "relevance_score",
 							OutputClass:             models.Ranking,
@@ -344,7 +344,7 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 
 		schema.Spec.ModelPredictionOutput = &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroudIDColumn: "session_id",
+				PredictionGroupIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
 				OutputClass:             models.Ranking,
@@ -356,7 +356,7 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, newSchema.Spec.ModelPredictionOutput, &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroudIDColumn: "session_id",
+				PredictionGroupIDColumn: "session_id",
 				RankScoreColumn:         "score",
 				RelevanceScoreColumn:    "relevance_score",
 				OutputClass:             models.Ranking,
