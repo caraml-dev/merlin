@@ -21,6 +21,8 @@
 * [Deleting a Model](/user/generated/04_deleting_a_model.md)
 * [Configuring Alerts](/user/generated/05_configuring_alerts.md)
 * [Batch Prediction](/user/generated/06_batch_prediction.md)
+* [Model Schema](/user/generated/10_model_schema.md)
+* [Model Observability](/user/generated/11_model_observability.md)
 * [Model Sample Notebooks](/user/generated/07_examples.md)
   * [Deploy Standard Models](/user/generated/examples/01_standard_model.md)
   * [Deploy PyFunc Model](/user/generated/examples/02_pyfunc_model.md)
@@ -28,6 +30,7 @@
   * [Run Batch Prediction Job](/user/generated/examples/04_batch_prediction.md)
   * [Others examples on Models](/user/generated/examples/05_others.md)
 * [Limitations](/user/generated/08_limitations.md)
+* [Troubleshooting Deployment Errors](/user/generated/09_troubleshooting_deployment_errors.md)
 
 ## Developer Guides
 
