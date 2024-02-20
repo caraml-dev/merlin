@@ -1421,12 +1421,11 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gojek/project-model:1",
-									Resources: expDefaultModelResourceRequestsWithGPU,
-									Ports:     grpcRawContainerPorts,
-									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
-										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Image:         "gojek/project-model:1",
+									Resources:     expDefaultModelResourceRequestsWithGPU,
+									Ports:         grpcRawContainerPorts,
+									Env:           models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}, createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1)).ToKubernetesEnvVars(),
 									LivenessProbe: probeConfigUPI,
 								},
 							},

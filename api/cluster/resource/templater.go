@@ -323,21 +323,27 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		if err != nil {
 			return kservev1beta1.PredictorSpec{}, err
 		}
-		envVars := models.MergeEnvVars(modelService.EnvVars, pyfuncDefaultEnv)
-
+		// priority env vars
+		// 1. PyFunc default env
+		// 2. User environment variable
+		// 3. Default env variable that can be override by user environment
+		higherPriorityEnvVars := models.MergeEnvVars(modelService.EnvVars, pyfuncDefaultEnv)
+		lowerPriorityEnvVars := models.EnvVars{}
 		if modelService.Protocol == protocol.UpiV1 {
-			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
 		}
 		if modelService.EnabledModelObservability {
 			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
-			envVars = append(envVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherSamplingRatio, Value: fmt.Sprintf("%f", pyfuncPublisherCfg.SamplingRatioRate)})
-			envVars = append(envVars, models.EnvVar{Name: envPublisherKafkaConfig, Value: pyfuncPublisherCfg.Kafka.AdditionalConfig})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherSamplingRatio, Value: fmt.Sprintf("%f", pyfuncPublisherCfg.SamplingRatioRate)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaConfig, Value: pyfuncPublisherCfg.Kafka.AdditionalConfig})
 		}
+
+		envVars = models.MergeEnvVars(lowerPriorityEnvVars, higherPriorityEnvVars)
 		predictorSpec = kservev1beta1.PredictorSpec{
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
