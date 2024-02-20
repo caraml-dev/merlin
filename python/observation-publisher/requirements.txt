@@ -146,8 +146,10 @@ marshmallow==3.20.1
     # via dataclasses-json
 mdurl==0.1.2
     # via markdown-it-py
-mlflow==1.30.1
-    # via merlin-sdk
+mlflow==1.26.1
+    # via
+    #   -r requirements.in
+    #   merlin-sdk
 mypy-extensions==1.0.0
     # via typing-inspect
 numpy==1.23.5
