@@ -1380,11 +1380,14 @@ components:
     SchemaSpec:
       type: object
       required:
-        - prediction_id_column
         - model_prediction_output
         - feature_types
       properties:
         prediction_id_column:
+          type: string
+        session_id_column:
+          type: string
+        row_id_column:
           type: string
         model_prediction_output:
           $ref : '#/components/schemas/ModelPredictionOutput'
@@ -1427,7 +1430,7 @@ components:
       properties:
         prediction_score_column:
           type: string
-        actual_label_column:
+        actual_score_column:
           type: string
         positive_class_label:
           type: string
@@ -1442,12 +1445,9 @@ components:
       type: object
       required:
         - rank_score_column
-        - prediction_group_id_column
         - output_class
       properties:
         rank_score_column:
-          type: string
-        prediction_group_id_column:
           type: string
         relevance_score_column:
           type: string

@@ -20,7 +20,9 @@ var _ MappedNullable = &SchemaSpec{}
 
 // SchemaSpec struct for SchemaSpec
 type SchemaSpec struct {
-	PredictionIdColumn    string                `json:"prediction_id_column"`
+	PredictionIdColumn    *string               `json:"prediction_id_column,omitempty"`
+	SessionIdColumn       *string               `json:"session_id_column,omitempty"`
+	RowIdColumn           *string               `json:"row_id_column,omitempty"`
 	ModelPredictionOutput ModelPredictionOutput `json:"model_prediction_output"`
 	TagColumns            []string              `json:"tag_columns,omitempty"`
 	FeatureTypes          map[string]ValueType  `json:"feature_types"`
@@ -32,9 +34,8 @@ type _SchemaSpec SchemaSpec
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSchemaSpec(predictionIdColumn string, modelPredictionOutput ModelPredictionOutput, featureTypes map[string]ValueType) *SchemaSpec {
+func NewSchemaSpec(modelPredictionOutput ModelPredictionOutput, featureTypes map[string]ValueType) *SchemaSpec {
 	this := SchemaSpec{}
-	this.PredictionIdColumn = predictionIdColumn
 	this.ModelPredictionOutput = modelPredictionOutput
 	this.FeatureTypes = featureTypes
 	return &this
@@ -48,28 +49,100 @@ func NewSchemaSpecWithDefaults() *SchemaSpec {
 	return &this
 }
 
-// GetPredictionIdColumn returns the PredictionIdColumn field value
+// GetPredictionIdColumn returns the PredictionIdColumn field value if set, zero value otherwise.
 func (o *SchemaSpec) GetPredictionIdColumn() string {
-	if o == nil {
+	if o == nil || IsNil(o.PredictionIdColumn) {
 		var ret string
 		return ret
 	}
-
-	return o.PredictionIdColumn
+	return *o.PredictionIdColumn
 }
 
-// GetPredictionIdColumnOk returns a tuple with the PredictionIdColumn field value
+// GetPredictionIdColumnOk returns a tuple with the PredictionIdColumn field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *SchemaSpec) GetPredictionIdColumnOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.PredictionIdColumn) {
 		return nil, false
 	}
-	return &o.PredictionIdColumn, true
+	return o.PredictionIdColumn, true
 }
 
-// SetPredictionIdColumn sets field value
+// HasPredictionIdColumn returns a boolean if a field has been set.
+func (o *SchemaSpec) HasPredictionIdColumn() bool {
+	if o != nil && !IsNil(o.PredictionIdColumn) {
+		return true
+	}
+
+	return false
+}
+
+// SetPredictionIdColumn gets a reference to the given string and assigns it to the PredictionIdColumn field.
 func (o *SchemaSpec) SetPredictionIdColumn(v string) {
-	o.PredictionIdColumn = v
+	o.PredictionIdColumn = &v
+}
+
+// GetSessionIdColumn returns the SessionIdColumn field value if set, zero value otherwise.
+func (o *SchemaSpec) GetSessionIdColumn() string {
+	if o == nil || IsNil(o.SessionIdColumn) {
+		var ret string
+		return ret
+	}
+	return *o.SessionIdColumn
+}
+
+// GetSessionIdColumnOk returns a tuple with the SessionIdColumn field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SchemaSpec) GetSessionIdColumnOk() (*string, bool) {
+	if o == nil || IsNil(o.SessionIdColumn) {
+		return nil, false
+	}
+	return o.SessionIdColumn, true
+}
+
+// HasSessionIdColumn returns a boolean if a field has been set.
+func (o *SchemaSpec) HasSessionIdColumn() bool {
+	if o != nil && !IsNil(o.SessionIdColumn) {
+		return true
+	}
+
+	return false
+}
+
+// SetSessionIdColumn gets a reference to the given string and assigns it to the SessionIdColumn field.
+func (o *SchemaSpec) SetSessionIdColumn(v string) {
+	o.SessionIdColumn = &v
+}
+
+// GetRowIdColumn returns the RowIdColumn field value if set, zero value otherwise.
+func (o *SchemaSpec) GetRowIdColumn() string {
+	if o == nil || IsNil(o.RowIdColumn) {
+		var ret string
+		return ret
+	}
+	return *o.RowIdColumn
+}
+
+// GetRowIdColumnOk returns a tuple with the RowIdColumn field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SchemaSpec) GetRowIdColumnOk() (*string, bool) {
+	if o == nil || IsNil(o.RowIdColumn) {
+		return nil, false
+	}
+	return o.RowIdColumn, true
+}
+
+// HasRowIdColumn returns a boolean if a field has been set.
+func (o *SchemaSpec) HasRowIdColumn() bool {
+	if o != nil && !IsNil(o.RowIdColumn) {
+		return true
+	}
+
+	return false
+}
+
+// SetRowIdColumn gets a reference to the given string and assigns it to the RowIdColumn field.
+func (o *SchemaSpec) SetRowIdColumn(v string) {
+	o.RowIdColumn = &v
 }
 
 // GetModelPredictionOutput returns the ModelPredictionOutput field value
@@ -162,7 +235,15 @@ func (o SchemaSpec) MarshalJSON() ([]byte, error) {
 
 func (o SchemaSpec) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["prediction_id_column"] = o.PredictionIdColumn
+	if !IsNil(o.PredictionIdColumn) {
+		toSerialize["prediction_id_column"] = o.PredictionIdColumn
+	}
+	if !IsNil(o.SessionIdColumn) {
+		toSerialize["session_id_column"] = o.SessionIdColumn
+	}
+	if !IsNil(o.RowIdColumn) {
+		toSerialize["row_id_column"] = o.RowIdColumn
+	}
 	toSerialize["model_prediction_output"] = o.ModelPredictionOutput
 	if !IsNil(o.TagColumns) {
 		toSerialize["tag_columns"] = o.TagColumns
@@ -176,7 +257,6 @@ func (o *SchemaSpec) UnmarshalJSON(bytes []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"prediction_id_column",
 		"model_prediction_output",
 		"feature_types",
 	}

@@ -8,7 +8,7 @@ from merlin.observability.inference import BinaryClassificationOutput, Predictio
 def binary_classification_output() -> BinaryClassificationOutput:
     return BinaryClassificationOutput(
         prediction_score_column="prediction_score",
-        actual_label_column="target",
+        actual_score_column="actual_score",
         positive_class_label="ACCEPTED",
         negative_class_label="REJECTED",
         score_threshold=0.5,
@@ -21,7 +21,7 @@ def test_prediction_output_encoding(binary_classification_output: BinaryClassifi
     assert encoded_output == {
         "output_class": "BinaryClassificationOutput",
         "prediction_score_column": "prediction_score",
-        "actual_label_column": "target",
+        "actual_score_column": "actual_score",
         "positive_class_label": "ACCEPTED",
         "negative_class_label": "REJECTED",
         "score_threshold": 0.5,
@@ -35,31 +35,35 @@ def test_prediction_output_encoding(binary_classification_output: BinaryClassifi
 def test_binary_classification_preprocessing(binary_classification_output: BinaryClassificationOutput):
     input_df = pd.DataFrame.from_records(
         [
-            [0.8, "ACCEPTED"],
-            [0.5, "ACCEPTED"],
-            [1.0, "REJECTED"],
-            [0.4, "ACCEPTED"]
+            ["9001", "1001", 0.8, 1.0],
+            ["9002", "1001", 0.5, 1.0],
+            ["9002", "1002", 1.0, 0.0],
+            ["9003", "1003", 0.4, 1.0]
         ],
         columns=[
+            "order_id",
+            "driver_id",
             "prediction_score",
-            "target"
+            "actual_score"
         ],
     )
-    processed_df = binary_classification_output.preprocess(input_df, [ObservationType.PREDICTION, ObservationType.GROUND_TRUTH])
+    processed_df = binary_classification_output.preprocess(input_df, "order_id", "driver_id", [ObservationType.PREDICTION, ObservationType.GROUND_TRUTH])
     pd.testing.assert_frame_equal(
         processed_df,
         pd.DataFrame.from_records(
             [
-                [0.8, "ACCEPTED" , "ACCEPTED", 1.0],
-                [0.5, "ACCEPTED", "ACCEPTED", 1.0],
-                [1.0, "REJECTED", "ACCEPTED", 0.0],
-                [0.4, "ACCEPTED", "REJECTED", 1.0]
+                ["9001", "1001", 0.8, 1.0, "ACCEPTED" , "ACCEPTED"],
+                ["9002", "1001", 0.5, 1.0, "ACCEPTED", "ACCEPTED"],
+                ["9002", "1002", 1.0, 0.0, "ACCEPTED", "REJECTED"],
+                ["9003", "1003", 0.4, 1.0, "REJECTED", "ACCEPTED"]
             ],
             columns=[
+                "order_id",
+                "driver_id",
                 "prediction_score",
-                "target",
+                "actual_score",
                 "_prediction_label",
-                "_actual_score",
+                "_actual_label",
             ],
         ),
     )
@@ -69,7 +73,6 @@ def test_binary_classification_preprocessing(binary_classification_output: Binar
 def ranking_prediction_output() -> RankingOutput:
     return RankingOutput(
         rank_score_column="score",
-        prediction_group_id_column="order_id",
         relevance_score_column="relevance_score_column",
     )
 
@@ -78,33 +81,35 @@ def ranking_prediction_output() -> RankingOutput:
 def test_ranking_preprocessing(ranking_prediction_output: RankingOutput):
     input_df = pd.DataFrame.from_records(
         [
-            [1.0, "1001"],
-            [0.8, "1001"],
-            [0.1, "1001"],
-            [0.3, "1002"],
-            [0.2, "1002"],
-            [0.1, "1002"],
+            [1.0, "1001", "d1"],
+            [0.8, "1001", "d2"],
+            [0.1, "1001", "d3"],
+            [0.3, "1002", "d1"],
+            [0.2, "1002", "d2"],
+            [0.1, "1002", "d3"],
         ],
         columns=[
             "score",
             "order_id",
+            "driver_id"
         ],
     )
-    processed_df = ranking_prediction_output.preprocess(input_df, [ObservationType.PREDICTION])
+    processed_df = ranking_prediction_output.preprocess(input_df, "order_id", "driver_id", [ObservationType.PREDICTION])
     pd.testing.assert_frame_equal(
         processed_df,
         pd.DataFrame.from_records(
             [
-                [1.0, "1001", 1],
-                [0.8, "1001", 2],
-                [0.1, "1001", 3],
-                [0.3, "1002", 1],
-                [0.2, "1002", 2],
-                [0.1, "1002", 3],
+                [1.0, "1001", "d1", 1],
+                [0.8, "1001", "d2", 2],
+                [0.1, "1001", "d3", 3],
+                [0.3, "1002", "d1", 1],
+                [0.2, "1002", "d2", 2],
+                [0.1, "1002", "d3", 3],
             ],
             columns=[
                 "score",
                 "order_id",
+                "driver_id",
                 "_rank",
             ],
         ),

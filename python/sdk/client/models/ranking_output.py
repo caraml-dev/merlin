@@ -31,10 +31,9 @@ class RankingOutput(BaseModel):
     RankingOutput
     """ # noqa: E501
     rank_score_column: StrictStr
-    prediction_group_id_column: StrictStr
     relevance_score_column: Optional[StrictStr] = None
     output_class: ModelPredictionOutputClass
-    __properties: ClassVar[List[str]] = ["rank_score_column", "prediction_group_id_column", "relevance_score_column", "output_class"]
+    __properties: ClassVar[List[str]] = ["rank_score_column", "relevance_score_column", "output_class"]
 
     model_config = {
         "populate_by_name": True,
@@ -85,7 +84,6 @@ class RankingOutput(BaseModel):
 
         _obj = cls.model_validate({
             "rank_score_column": obj.get("rank_score_column"),
-            "prediction_group_id_column": obj.get("prediction_group_id_column"),
             "relevance_score_column": obj.get("relevance_score_column"),
             "output_class": obj.get("output_class")
         })

@@ -31,11 +31,13 @@ class SchemaSpec(BaseModel):
     """
     SchemaSpec
     """ # noqa: E501
-    prediction_id_column: StrictStr
+    prediction_id_column: Optional[StrictStr] = None
+    session_id_column: Optional[StrictStr] = None
+    row_id_column: Optional[StrictStr] = None
     model_prediction_output: ModelPredictionOutput
     tag_columns: Optional[List[StrictStr]] = None
     feature_types: Dict[str, ValueType]
-    __properties: ClassVar[List[str]] = ["prediction_id_column", "model_prediction_output", "tag_columns", "feature_types"]
+    __properties: ClassVar[List[str]] = ["prediction_id_column", "session_id_column", "row_id_column", "model_prediction_output", "tag_columns", "feature_types"]
 
     model_config = {
         "populate_by_name": True,
@@ -89,6 +91,8 @@ class SchemaSpec(BaseModel):
 
         _obj = cls.model_validate({
             "prediction_id_column": obj.get("prediction_id_column"),
+            "session_id_column": obj.get("session_id_column"),
+            "row_id_column": obj.get("row_id_column"),
             "model_prediction_output": ModelPredictionOutput.from_dict(obj.get("model_prediction_output")) if obj.get("model_prediction_output") is not None else None,
             "tag_columns": obj.get("tag_columns"),
             "feature_types": dict((_k, _v) for _k, _v in obj.get("feature_types").items())

@@ -21,7 +21,7 @@ var _ MappedNullable = &BinaryClassificationOutput{}
 // BinaryClassificationOutput struct for BinaryClassificationOutput
 type BinaryClassificationOutput struct {
 	PredictionScoreColumn string                     `json:"prediction_score_column"`
-	ActualLabelColumn     *string                    `json:"actual_label_column,omitempty"`
+	ActualScoreColumn     *string                    `json:"actual_score_column,omitempty"`
 	PositiveClassLabel    string                     `json:"positive_class_label"`
 	NegativeClassLabel    string                     `json:"negative_class_label"`
 	ScoreThreshold        *float32                   `json:"score_threshold,omitempty"`
@@ -75,36 +75,36 @@ func (o *BinaryClassificationOutput) SetPredictionScoreColumn(v string) {
 	o.PredictionScoreColumn = v
 }
 
-// GetActualLabelColumn returns the ActualLabelColumn field value if set, zero value otherwise.
-func (o *BinaryClassificationOutput) GetActualLabelColumn() string {
-	if o == nil || IsNil(o.ActualLabelColumn) {
+// GetActualScoreColumn returns the ActualScoreColumn field value if set, zero value otherwise.
+func (o *BinaryClassificationOutput) GetActualScoreColumn() string {
+	if o == nil || IsNil(o.ActualScoreColumn) {
 		var ret string
 		return ret
 	}
-	return *o.ActualLabelColumn
+	return *o.ActualScoreColumn
 }
 
-// GetActualLabelColumnOk returns a tuple with the ActualLabelColumn field value if set, nil otherwise
+// GetActualScoreColumnOk returns a tuple with the ActualScoreColumn field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *BinaryClassificationOutput) GetActualLabelColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.ActualLabelColumn) {
+func (o *BinaryClassificationOutput) GetActualScoreColumnOk() (*string, bool) {
+	if o == nil || IsNil(o.ActualScoreColumn) {
 		return nil, false
 	}
-	return o.ActualLabelColumn, true
+	return o.ActualScoreColumn, true
 }
 
-// HasActualLabelColumn returns a boolean if a field has been set.
-func (o *BinaryClassificationOutput) HasActualLabelColumn() bool {
-	if o != nil && !IsNil(o.ActualLabelColumn) {
+// HasActualScoreColumn returns a boolean if a field has been set.
+func (o *BinaryClassificationOutput) HasActualScoreColumn() bool {
+	if o != nil && !IsNil(o.ActualScoreColumn) {
 		return true
 	}
 
 	return false
 }
 
-// SetActualLabelColumn gets a reference to the given string and assigns it to the ActualLabelColumn field.
-func (o *BinaryClassificationOutput) SetActualLabelColumn(v string) {
-	o.ActualLabelColumn = &v
+// SetActualScoreColumn gets a reference to the given string and assigns it to the ActualScoreColumn field.
+func (o *BinaryClassificationOutput) SetActualScoreColumn(v string) {
+	o.ActualScoreColumn = &v
 }
 
 // GetPositiveClassLabel returns the PositiveClassLabel field value
@@ -222,8 +222,8 @@ func (o BinaryClassificationOutput) MarshalJSON() ([]byte, error) {
 func (o BinaryClassificationOutput) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["prediction_score_column"] = o.PredictionScoreColumn
-	if !IsNil(o.ActualLabelColumn) {
-		toSerialize["actual_label_column"] = o.ActualLabelColumn
+	if !IsNil(o.ActualScoreColumn) {
+		toSerialize["actual_score_column"] = o.ActualScoreColumn
 	}
 	toSerialize["positive_class_label"] = o.PositiveClassLabel
 	toSerialize["negative_class_label"] = o.NegativeClassLabel

@@ -46,58 +46,50 @@ func RegressionOutputAsModelPredictionOutput(v *RegressionOutput) ModelPredictio
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *ModelPredictionOutput) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into BinaryClassificationOutput
-	err = newStrictDecoder(data).Decode(&dst.BinaryClassificationOutput)
-	if err == nil {
-		jsonBinaryClassificationOutput, _ := json.Marshal(dst.BinaryClassificationOutput)
-		if string(jsonBinaryClassificationOutput) == "{}" { // empty struct
+	// use discriminator value to speed up the lookup
+	var jsonDict map[string]interface{}
+	err = newStrictDecoder(data).Decode(&jsonDict)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal JSON into map for the discriminator lookup")
+	}
+
+	// check if the discriminator value is 'BinaryClassificationOutput'
+	if jsonDict["output_class"] == "BinaryClassificationOutput" {
+		// try to unmarshal JSON data into BinaryClassificationOutput
+		err = json.Unmarshal(data, &dst.BinaryClassificationOutput)
+		if err == nil {
+			return nil // data stored in dst.BinaryClassificationOutput, return on the first match
+		} else {
 			dst.BinaryClassificationOutput = nil
-		} else {
-			match++
+			return fmt.Errorf("failed to unmarshal ModelPredictionOutput as BinaryClassificationOutput: %s", err.Error())
 		}
-	} else {
-		dst.BinaryClassificationOutput = nil
 	}
 
-	// try to unmarshal data into RankingOutput
-	err = newStrictDecoder(data).Decode(&dst.RankingOutput)
-	if err == nil {
-		jsonRankingOutput, _ := json.Marshal(dst.RankingOutput)
-		if string(jsonRankingOutput) == "{}" { // empty struct
+	// check if the discriminator value is 'RankingOutput'
+	if jsonDict["output_class"] == "RankingOutput" {
+		// try to unmarshal JSON data into RankingOutput
+		err = json.Unmarshal(data, &dst.RankingOutput)
+		if err == nil {
+			return nil // data stored in dst.RankingOutput, return on the first match
+		} else {
 			dst.RankingOutput = nil
-		} else {
-			match++
+			return fmt.Errorf("failed to unmarshal ModelPredictionOutput as RankingOutput: %s", err.Error())
 		}
-	} else {
-		dst.RankingOutput = nil
 	}
 
-	// try to unmarshal data into RegressionOutput
-	err = newStrictDecoder(data).Decode(&dst.RegressionOutput)
-	if err == nil {
-		jsonRegressionOutput, _ := json.Marshal(dst.RegressionOutput)
-		if string(jsonRegressionOutput) == "{}" { // empty struct
+	// check if the discriminator value is 'RegressionOutput'
+	if jsonDict["output_class"] == "RegressionOutput" {
+		// try to unmarshal JSON data into RegressionOutput
+		err = json.Unmarshal(data, &dst.RegressionOutput)
+		if err == nil {
+			return nil // data stored in dst.RegressionOutput, return on the first match
+		} else {
 			dst.RegressionOutput = nil
-		} else {
-			match++
+			return fmt.Errorf("failed to unmarshal ModelPredictionOutput as RegressionOutput: %s", err.Error())
 		}
-	} else {
-		dst.RegressionOutput = nil
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		dst.BinaryClassificationOutput = nil
-		dst.RankingOutput = nil
-		dst.RegressionOutput = nil
-
-		return fmt.Errorf("data matches more than one schema in oneOf(ModelPredictionOutput)")
-	} else if match == 1 {
-		return nil // exactly one match
-	} else { // no match
-		return fmt.Errorf("data failed to match schemas in oneOf(ModelPredictionOutput)")
-	}
+	return nil
 }
 
 // Marshal data from the first non-nil pointers in the struct to JSON

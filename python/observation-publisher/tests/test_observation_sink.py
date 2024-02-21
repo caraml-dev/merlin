@@ -62,16 +62,17 @@ def ranking_inference_logs() -> pd.DataFrame:
     request_timestamp = datetime(2024, 1, 1, 0, 0, 0).astimezone(tz.UTC)
     return pd.DataFrame.from_records(
         [
-            [5.0, 1.0, "1234", "1001", request_timestamp],
-            [4.0, 0.9, "1234", "1002", request_timestamp],
-            [3.0, 0.8, "1234", "1003", request_timestamp],
+            [5.0, 1.0, "1234", "1001", request_timestamp, 1],
+            [4.0, 0.9, "1234", "1002", request_timestamp, 1],
+            [3.0, 0.8, "1234", "1003", request_timestamp, 1],
         ],
         columns=[
             "rating",
             "rank_score",
-            "session_id",
-            "row_id",
+            "order_id",
+            "driver_id",
             "request_timestamp",
+            "_rank"
         ],
     )
 
@@ -112,7 +113,6 @@ def test_binary_classification_model_preprocessing_for_arize(
 
 
 def test_ranking_model_preprocessing_for_arize(
-    binary_classification_inference_logs: pd.DataFrame,
     ranking_inference_logs: pd.DataFrame,
 ):
     inference_schema = InferenceSchema(
@@ -121,9 +121,10 @@ def test_ranking_model_preprocessing_for_arize(
         },
         model_prediction_output=RankingOutput(
             rank_score_column="rank_score",
-            prediction_group_id_column="order_id",
             relevance_score_column="relevance_score_column",
         ),
+        session_id_column="order_id",
+        row_id_column="driver_id",
     )
     arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
