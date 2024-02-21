@@ -1,5 +1,4 @@
 import dataclasses
-import time
 from datetime import datetime
 from typing import Optional
 
@@ -12,7 +11,7 @@ from google.cloud.bigquery import Client as BigQueryClient
 from google.cloud.bigquery import SchemaField
 from merlin.observability.inference import (BinaryClassificationOutput,
                                             InferenceSchema, RankingOutput,
-                                            ValueType)
+                                            ValueType, ObservationType)
 from pandas._testing import assert_frame_equal
 from requests import Response
 
@@ -29,7 +28,7 @@ def binary_classification_inference_schema() -> InferenceSchema:
         },
         model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="prediction_score",
-            actual_label_column="actual_label",
+            actual_score_column="actual_score",
             positive_class_label="fraud",
             negative_class_label="non fraud",
             score_threshold=0.5,
@@ -42,8 +41,8 @@ def binary_classification_inference_logs() -> pd.DataFrame:
     request_timestamp = datetime(2024, 1, 1, 0, 0, 0).astimezone(tz.UTC)
     return pd.DataFrame.from_records(
         [
-            [0.8, 0.4, "1234", "a", request_timestamp, "0.1.0", "non fraud"],
-            [0.5, 0.9, "1234", "b", request_timestamp, "0.1.0", "fraud"],
+            [0.8, 0.4, "1234", "a", request_timestamp, "0.1.0"],
+            [0.5, 0.9, "1234", "b", request_timestamp, "0.1.0"],
         ],
         columns=[
             "rating",
@@ -52,8 +51,22 @@ def binary_classification_inference_logs() -> pd.DataFrame:
             "row_id",
             "request_timestamp",
             "model_version",
-            "_prediction_label",
         ],
+    )
+
+
+@pytest.fixture
+def ranking_inference_schema() -> InferenceSchema:
+    return InferenceSchema(
+        feature_types={
+            "rating": ValueType.FLOAT64,
+        },
+        model_prediction_output=RankingOutput(
+            rank_score_column="rank_score",
+            relevance_score_column="relevance_score_column",
+        ),
+        session_id_column="order_id",
+        row_id_column="driver_id",
     )
 
 
@@ -62,17 +75,16 @@ def ranking_inference_logs() -> pd.DataFrame:
     request_timestamp = datetime(2024, 1, 1, 0, 0, 0).astimezone(tz.UTC)
     return pd.DataFrame.from_records(
         [
-            [5.0, 1.0, "1234", "1001", request_timestamp, 1],
-            [4.0, 0.9, "1234", "1002", request_timestamp, 1],
-            [3.0, 0.8, "1234", "1003", request_timestamp, 1],
+            [5.0, 1.0, "1234", "1001", request_timestamp],
+            [4.0, 0.9, "1234", "1002", request_timestamp],
+            [3.0, 0.8, "1234", "1003", request_timestamp],
         ],
         columns=[
             "rating",
             "rank_score",
             "order_id",
             "driver_id",
-            "request_timestamp",
-            "_rank"
+            "request_timestamp"
         ],
     )
 
@@ -98,7 +110,7 @@ class MockArizeClient(Client):
         )
 
 
-def test_binary_classification_model_preprocessing_for_arize(
+def test_binary_classification_model_arize_schema(
     binary_classification_inference_schema: InferenceSchema,
     binary_classification_inference_logs: pd.DataFrame,
 ):
@@ -109,31 +121,26 @@ def test_binary_classification_model_preprocessing_for_arize(
         "0.1.0",
         arize_client,
     )
-    arize_sink.write(binary_classification_inference_logs)
+    df = binary_classification_inference_schema.preprocess(
+        binary_classification_inference_logs,
+        [ObservationType.PREDICTION]
+    )
+    arize_sink.write(df)
 
 
-def test_ranking_model_preprocessing_for_arize(
+def test_ranking_model_arize_schema(
+    ranking_inference_schema: InferenceSchema,
     ranking_inference_logs: pd.DataFrame,
 ):
-    inference_schema = InferenceSchema(
-        feature_types={
-            "rating": ValueType.FLOAT64,
-        },
-        model_prediction_output=RankingOutput(
-            rank_score_column="rank_score",
-            relevance_score_column="relevance_score_column",
-        ),
-        session_id_column="order_id",
-        row_id_column="driver_id",
-    )
     arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
-        inference_schema,
+        ranking_inference_schema,
         "test-model",
         "0.1.0",
         arize_client,
     )
-    arize_sink.write(ranking_inference_logs)
+    df = ranking_inference_schema.preprocess(ranking_inference_logs, [ObservationType.PREDICTION])
+    arize_sink.write(df)
 
 
 @pytest.mark.integration

@@ -1424,6 +1424,7 @@ components:
       type: object
       required:
         - prediction_score_column
+        - actual_score_column
         - positive_class_label
         - negative_class_label
         - output_class

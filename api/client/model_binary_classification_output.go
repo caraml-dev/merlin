@@ -21,7 +21,7 @@ var _ MappedNullable = &BinaryClassificationOutput{}
 // BinaryClassificationOutput struct for BinaryClassificationOutput
 type BinaryClassificationOutput struct {
 	PredictionScoreColumn string                     `json:"prediction_score_column"`
-	ActualScoreColumn     *string                    `json:"actual_score_column,omitempty"`
+	ActualScoreColumn     string                     `json:"actual_score_column"`
 	PositiveClassLabel    string                     `json:"positive_class_label"`
 	NegativeClassLabel    string                     `json:"negative_class_label"`
 	ScoreThreshold        *float32                   `json:"score_threshold,omitempty"`
@@ -34,9 +34,10 @@ type _BinaryClassificationOutput BinaryClassificationOutput
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewBinaryClassificationOutput(predictionScoreColumn string, positiveClassLabel string, negativeClassLabel string, outputClass ModelPredictionOutputClass) *BinaryClassificationOutput {
+func NewBinaryClassificationOutput(predictionScoreColumn string, actualScoreColumn string, positiveClassLabel string, negativeClassLabel string, outputClass ModelPredictionOutputClass) *BinaryClassificationOutput {
 	this := BinaryClassificationOutput{}
 	this.PredictionScoreColumn = predictionScoreColumn
+	this.ActualScoreColumn = actualScoreColumn
 	this.PositiveClassLabel = positiveClassLabel
 	this.NegativeClassLabel = negativeClassLabel
 	this.OutputClass = outputClass
@@ -75,36 +76,28 @@ func (o *BinaryClassificationOutput) SetPredictionScoreColumn(v string) {
 	o.PredictionScoreColumn = v
 }
 
-// GetActualScoreColumn returns the ActualScoreColumn field value if set, zero value otherwise.
+// GetActualScoreColumn returns the ActualScoreColumn field value
 func (o *BinaryClassificationOutput) GetActualScoreColumn() string {
-	if o == nil || IsNil(o.ActualScoreColumn) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.ActualScoreColumn
+
+	return o.ActualScoreColumn
 }
 
-// GetActualScoreColumnOk returns a tuple with the ActualScoreColumn field value if set, nil otherwise
+// GetActualScoreColumnOk returns a tuple with the ActualScoreColumn field value
 // and a boolean to check if the value has been set.
 func (o *BinaryClassificationOutput) GetActualScoreColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.ActualScoreColumn) {
+	if o == nil {
 		return nil, false
 	}
-	return o.ActualScoreColumn, true
+	return &o.ActualScoreColumn, true
 }
 
-// HasActualScoreColumn returns a boolean if a field has been set.
-func (o *BinaryClassificationOutput) HasActualScoreColumn() bool {
-	if o != nil && !IsNil(o.ActualScoreColumn) {
-		return true
-	}
-
-	return false
-}
-
-// SetActualScoreColumn gets a reference to the given string and assigns it to the ActualScoreColumn field.
+// SetActualScoreColumn sets field value
 func (o *BinaryClassificationOutput) SetActualScoreColumn(v string) {
-	o.ActualScoreColumn = &v
+	o.ActualScoreColumn = v
 }
 
 // GetPositiveClassLabel returns the PositiveClassLabel field value
@@ -222,9 +215,7 @@ func (o BinaryClassificationOutput) MarshalJSON() ([]byte, error) {
 func (o BinaryClassificationOutput) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["prediction_score_column"] = o.PredictionScoreColumn
-	if !IsNil(o.ActualScoreColumn) {
-		toSerialize["actual_score_column"] = o.ActualScoreColumn
-	}
+	toSerialize["actual_score_column"] = o.ActualScoreColumn
 	toSerialize["positive_class_label"] = o.PositiveClassLabel
 	toSerialize["negative_class_label"] = o.NegativeClassLabel
 	if !IsNil(o.ScoreThreshold) {
@@ -240,6 +231,7 @@ func (o *BinaryClassificationOutput) UnmarshalJSON(bytes []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"prediction_score_column",
+		"actual_score_column",
 		"positive_class_label",
 		"negative_class_label",
 		"output_class",

@@ -1332,7 +1332,6 @@ class TestModel:
                     model_prediction_output=client.ModelPredictionOutput(
                         client.RankingOutput(
                             rank_score_column="score",
-                            prediction_group_id_column="session_id",
                             relevance_score_column="relevance_score",
                             output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT
                         )
@@ -1353,7 +1352,6 @@ class TestModel:
                     },
                     model_prediction_output=RankingOutput(
                         rank_score_column="score",
-                        prediction_group_id_column="session_id",
                         relevance_score_column="relevance_score"
                     )
                 ),

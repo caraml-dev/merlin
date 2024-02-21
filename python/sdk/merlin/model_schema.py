@@ -11,10 +11,9 @@ from merlin.observability.inference import (
     PredictionOutput,
     RankingOutput,
     RegressionOutput,
-    ValueType,
+    ValueType, DEFAULT_PREDICTION_ID_COLUMN, DEFAULT_SESSION_ID_COLUMN, DEFAULT_ROW_ID_COLUMN,
 )
 from merlin.util import autostr, extract_optional_value_with_default
-
 
 @autostr
 @dataclass_json
@@ -57,7 +56,9 @@ class ModelSchema:
             model_id=response.model_id,
             spec=InferenceSchema(
                 feature_types=feature_types,
-                prediction_id_column=response_spec.prediction_id_column,
+                prediction_id_column=extract_optional_value_with_default(response_spec.prediction_id_column, DEFAULT_PREDICTION_ID_COLUMN),
+                session_id_column=extract_optional_value_with_default(response_spec.session_id_column, DEFAULT_SESSION_ID_COLUMN),
+                row_id_column=extract_optional_value_with_default(response_spec.row_id_column, DEFAULT_ROW_ID_COLUMN),
                 tag_columns=response_spec.tag_columns,
                 model_prediction_output=prediction_output,
             ),
@@ -77,9 +78,7 @@ class ModelSchema:
         if isinstance(actual_instance, client.BinaryClassificationOutput):
             return BinaryClassificationOutput(
                 prediction_score_column=actual_instance.prediction_score_column,
-                actual_label_column=extract_optional_value_with_default(
-                    actual_instance.actual_label_column, ""
-                ),
+                actual_score_column=actual_instance.actual_score_column,
                 positive_class_label=actual_instance.positive_class_label,
                 negative_class_label=actual_instance.negative_class_label,
                 score_threshold=extract_optional_value_with_default(
@@ -88,9 +87,7 @@ class ModelSchema:
             )
         elif isinstance(actual_instance, client.RegressionOutput):
             return RegressionOutput(
-                actual_score_column=extract_optional_value_with_default(
-                    actual_instance.actual_score_column, ""
-                ),
+                actual_score_column=actual_instance.actual_score_column,
                 prediction_score_column=actual_instance.prediction_score_column,
             )
         elif isinstance(actual_instance, client.RankingOutput):
@@ -98,7 +95,6 @@ class ModelSchema:
                 relevance_score_column=extract_optional_value_with_default(
                     actual_instance.relevance_score_column, ""
                 ),
-                prediction_group_id_column=actual_instance.prediction_group_id_column,
                 rank_score_column=actual_instance.rank_score_column,
             )
         raise ValueError(
@@ -111,7 +107,7 @@ class ModelSchema:
             return client.ModelPredictionOutput(
                 client.BinaryClassificationOutput(
                     prediction_score_column=prediction_output.prediction_score_column,
-                    actual_label_column=prediction_output.actual_label_column,
+                    actual_score_column=prediction_output.actual_score_column,
                     positive_class_label=prediction_output.positive_class_label,
                     negative_class_label=prediction_output.negative_class_label,
                     score_threshold=prediction_output.score_threshold,
@@ -134,7 +130,6 @@ class ModelSchema:
             return client.ModelPredictionOutput(
                 client.RankingOutput(
                     relevance_score_column=prediction_output.relevance_score_column,
-                    prediction_group_id_column=prediction_output.prediction_group_id_column,
                     rank_score_column=prediction_output.rank_score_column,
                     output_class=client.ModelPredictionOutputClass(
                         RankingOutput.__name__
@@ -157,6 +152,8 @@ class ModelSchema:
             model_id=self.model_id,
             spec=client.SchemaSpec(
                 prediction_id_column=self.spec.prediction_id_column,
+                session_id_column=self.spec.session_id_column,
+                row_id_column=self.spec.row_id_column,
                 tag_columns=self.spec.tag_columns,
                 feature_types=feature_types,
                 model_prediction_output=self._to_client_prediction_output_spec(),

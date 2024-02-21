@@ -31,7 +31,7 @@ class RegressionOutput(BaseModel):
     RegressionOutput
     """ # noqa: E501
     prediction_score_column: StrictStr
-    actual_score_column: Optional[StrictStr] = None
+    actual_score_column: StrictStr
     output_class: ModelPredictionOutputClass
     __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_score_column", "output_class"]
 

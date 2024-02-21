@@ -24,7 +24,7 @@ def test_config_initialization():
                     model_prediction_output=dict(
                         output_class="BinaryClassificationOutput",
                         prediction_score_column="score",
-                        actual_label_column="actual_label",
+                        actual_score_column="actual_score",
                         positive_class_label="positive",
                         negative_class_label="negative",
                         score_threshold=0.5,

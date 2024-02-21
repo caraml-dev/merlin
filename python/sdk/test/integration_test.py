@@ -190,7 +190,7 @@ def test_model_schema(
         prediction_id_column="prediction_id",
         model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="score",
-            actual_label_column="actual",
+            actual_score_column="actual",
             positive_class_label="completed",
             negative_class_label="non_complete",
             score_threshold=0.7

@@ -37,6 +37,8 @@ type ModelSchema struct {
 // SchemaSpec
 type SchemaSpec struct {
 	PredictionIDColumn    string                 `json:"prediction_id_column"`
+	SessionIDColumn       string                 `json:"session_id_column"`
+	RowIDColumn           string                 `json:"row_id_column"`
 	ModelPredictionOutput *ModelPredictionOutput `json:"model_prediction_output"`
 	TagColumns            []string               `json:"tag_columns"`
 	FeatureTypes          map[string]ValueType   `json:"feature_types"`
@@ -125,7 +127,7 @@ func (m ModelPredictionOutput) MarshalJSON() ([]byte, error) {
 
 // BinaryClassificationOutput is specification for prediction of binary classification model
 type BinaryClassificationOutput struct {
-	ActualLabelColumn     string                     `json:"actual_label_column"`
+	ActualScoreColumn     string                     `json:"actual_score_column"`
 	NegativeClassLabel    string                     `json:"negative_class_label"`
 	PredictionScoreColumn string                     `json:"prediction_score_column"`
 	PredictionLabelColumn string                     `json:"prediction_label_column"`
@@ -136,10 +138,9 @@ type BinaryClassificationOutput struct {
 
 // RankingOutput is specification for prediction of ranking model
 type RankingOutput struct {
-	PredictionGroupIDColumn string                     `json:"prediction_group_id_column"`
-	RankScoreColumn         string                     `json:"rank_score_column"`
-	RelevanceScoreColumn    string                     `json:"relevance_score_column"`
-	OutputClass             ModelPredictionOutputClass `json:"output_class" validate:"required"`
+	RankScoreColumn      string                     `json:"rank_score_column"`
+	RelevanceScoreColumn string                     `json:"relevance_score_column"`
+	OutputClass          ModelPredictionOutputClass `json:"output_class" validate:"required"`
 }
 
 // Regression is specification for prediction of regression model

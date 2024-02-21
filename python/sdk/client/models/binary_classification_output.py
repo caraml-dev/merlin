@@ -31,7 +31,7 @@ class BinaryClassificationOutput(BaseModel):
     BinaryClassificationOutput
     """ # noqa: E501
     prediction_score_column: StrictStr
-    actual_score_column: Optional[StrictStr] = None
+    actual_score_column: StrictStr
     positive_class_label: StrictStr
     negative_class_label: StrictStr
     score_threshold: Optional[Union[StrictFloat, StrictInt]] = None

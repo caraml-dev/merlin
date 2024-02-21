@@ -232,6 +232,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			ModelID: models.ID(1),
 			Spec: &models.SchemaSpec{
 				PredictionIDColumn: "prediction_id",
+				SessionIDColumn:    "session_id",
+				RowIDColumn:        "row_id",
 				TagColumns:         []string{"tags"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
@@ -241,9 +243,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					RankingOutput: &models.RankingOutput{
-						PredictionGroupIDColumn: "session_id",
-						RankScoreColumn:         "score",
-						RelevanceScoreColumn:    "relevance_score",
+						RankScoreColumn:      "score",
+						RelevanceScoreColumn: "relevance_score",
 					},
 				},
 			},
@@ -859,6 +860,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -868,9 +871,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
 							},
 						},
 					},
@@ -946,6 +948,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -955,9 +959,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
 							},
 						},
 					},

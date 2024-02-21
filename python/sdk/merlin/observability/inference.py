@@ -8,6 +8,11 @@ import pandas as pd
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
 
+DEFAULT_PREDICTION_ID_COLUMN = "prediction_id"
+DEFAULT_SESSION_ID_COLUMN = "session_id"
+DEFAULT_ROW_ID_COLUMN = "row_id"
+
+
 class ObservationType(Enum):
     """
     Supported observation types.
@@ -265,9 +270,9 @@ class InferenceSchema:
             decoder=PredictionOutput.decode,
         )
     )
-    session_id_column: str = "session_id"
-    row_id_column: str = "row_id"
-    prediction_id_column: str = "prediction_id"
+    session_id_column: str = DEFAULT_SESSION_ID_COLUMN
+    row_id_column: str = DEFAULT_ROW_ID_COLUMN
+    prediction_id_column: str = DEFAULT_PREDICTION_ID_COLUMN
     tag_columns: Optional[List[str]] = None
 
     @property

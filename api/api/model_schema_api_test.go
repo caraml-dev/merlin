@@ -34,6 +34,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ID:      models.ID(1),
 						Spec: &models.SchemaSpec{
 							PredictionIDColumn: "prediction_id",
+							SessionIDColumn:    "session_id",
+							RowIDColumn:        "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -41,7 +43,7 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								BinaryClassificationOutput: &models.BinaryClassificationOutput{
-									ActualLabelColumn:     "actual_label",
+									ActualScoreColumn:     "actual_score",
 									NegativeClassLabel:    "negative",
 									PositiveClassLabel:    "positive",
 									PredictionScoreColumn: "prediction_score",
@@ -55,6 +57,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ID:      models.ID(2),
 						Spec: &models.SchemaSpec{
 							PredictionIDColumn: "prediction_id",
+							SessionIDColumn:    "session_id",
+							RowIDColumn:        "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -62,9 +66,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroupIDColumn: "session_id",
-									RankScoreColumn:         "score",
-									RelevanceScoreColumn:    "relevance_score",
+									RankScoreColumn:      "score",
+									RelevanceScoreColumn: "relevance_score",
 								},
 							},
 						},
@@ -80,6 +83,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ID:      models.ID(1),
 						Spec: &models.SchemaSpec{
 							PredictionIDColumn: "prediction_id",
+							SessionIDColumn:    "session_id",
+							RowIDColumn:        "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -87,7 +92,7 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								BinaryClassificationOutput: &models.BinaryClassificationOutput{
-									ActualLabelColumn:     "actual_label",
+									ActualScoreColumn:     "actual_score",
 									NegativeClassLabel:    "negative",
 									PositiveClassLabel:    "positive",
 									PredictionScoreColumn: "prediction_score",
@@ -101,6 +106,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ID:      models.ID(2),
 						Spec: &models.SchemaSpec{
 							PredictionIDColumn: "prediction_id",
+							SessionIDColumn:    "session_id",
+							RowIDColumn:        "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -108,9 +115,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroupIDColumn: "session_id",
-									RankScoreColumn:         "score",
-									RelevanceScoreColumn:    "relevance_score",
+									RankScoreColumn:      "score",
+									RelevanceScoreColumn: "relevance_score",
 								},
 							},
 						},
@@ -189,7 +195,7 @@ func TestModelSchemaController_GetSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -214,7 +220,7 @@ func TestModelSchemaController_GetSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -287,6 +293,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			body: []byte(`{
 				"spec": {
 					"prediction_id_column":"prediction_id",
+					"session_id_column":"session_id",
+					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
 					"feature_types": {
 						"featureA": "float64",
@@ -294,7 +302,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"featureC": "boolean"
 					},
 					"model_prediction_output": {
-						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
 						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
@@ -307,6 +314,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -315,10 +324,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -327,6 +335,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -335,10 +345,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -352,6 +361,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -360,10 +371,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -378,6 +388,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			body: []byte(`{
 				"spec": {
 					"prediction_id_column":"prediction_id",
+					"session_id_column":"session_id",
+					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
 					"feature_types": {
 						"featureA": "float64",
@@ -385,7 +397,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"featureC": "boolean"
 					},
 					"model_prediction_output": {
-						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
 						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
@@ -399,6 +410,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -407,10 +420,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -419,6 +431,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -427,10 +441,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -444,6 +457,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -452,10 +467,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -470,6 +484,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			body: []byte(`{
 				"spec": {
 					"prediction_id_column":"prediction_id",
+					"session_id_column":"session_id",
+					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
 					"feature_types": {
 						"featureA": "float64",
@@ -477,7 +493,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"featureC": "boolean"
 					},
 					"model_prediction_output": {
-						"actual_label_column": "actual_label",
+						"actual_score_column": "actual_score",
 						"negative_class_label": "negative",
 						"prediction_score_column": "prediction_score",
 						"prediction_label_column": "prediction_label",
@@ -492,6 +508,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -500,7 +518,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PredictionScoreColumn: "prediction_score",
 								PredictionLabelColumn: "prediction_label",
@@ -514,6 +532,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -522,7 +542,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PredictionScoreColumn: "prediction_score",
 								PredictionLabelColumn: "prediction_label",
@@ -541,6 +561,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -549,7 +571,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PredictionScoreColumn: "prediction_score",
 								PredictionLabelColumn: "prediction_label",
@@ -569,6 +591,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			body: []byte(`{
 				"spec": {
 					"prediction_id_column":"prediction_id",
+					"session_id_column":"session_id",
+					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
 					"feature_types": {
 						"featureA": "float64",
@@ -588,6 +612,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -607,6 +633,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -631,6 +659,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -656,6 +686,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			body: []byte(`{
 				"spec": {
 					"prediction_id_column":"prediction_id",
+					"session_id_column":"session_id",
+					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
 					"feature_types": {
 						"featureA": "float64",
@@ -663,7 +695,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"featureC": "boolean"
 					},
 					"model_prediction_output": {
-						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
 						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
@@ -676,6 +707,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
 						PredictionIDColumn: "prediction_id",
+						SessionIDColumn:    "session_id",
+						RowIDColumn:        "row_id",
 						TagColumns:         []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
@@ -684,10 +717,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
-								OutputClass:             models.Ranking,
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
+								OutputClass:          models.Ranking,
 							},
 						},
 					},
@@ -707,6 +739,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			body: []byte(`{
 				"spec": {
 					"prediction_id_column":"prediction_id",
+					"session_id_column":"session_id",
+					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
 					"feature_types": {
 						"featureA": "float64",
@@ -714,7 +748,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"featureC": "boolean"
 					},
 					"model_prediction_output": {
-						"prediction_group_id_column": "session_id",
 						"rank_score_column": "score",
 						"relevance_score_column": "relevance_score",
 						"output_class": "RankingOutput"
@@ -756,6 +789,8 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 func Benchmark_Unmarshal(b *testing.B) {
 	data := []byte(` {
 			"prediction_id_column":"prediction_id",
+			"session_id_column":"session_id",
+			"row_id_column":"row_id",
 			"tag_columns": ["tags"],
 			"feature_types": {
 				"featureA": "float64",
@@ -763,7 +798,7 @@ func Benchmark_Unmarshal(b *testing.B) {
 				"featureC": "boolean"
 			},
 			"model_prediction_output": {
-				"actual_label_column": "actual_label",
+				"actual_score_column": "actual_score",
 				"negative_class_label": "negative",
 				"prediction_score_column": "prediction_score",
 				"prediction_label_column": "prediction_label",
