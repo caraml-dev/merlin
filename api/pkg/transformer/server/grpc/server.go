@@ -413,7 +413,7 @@ func (us *UPIServer) modelPredictHTTP(ctx context.Context, payload *upiv1.Predic
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() //nolint: errcheck
 
 	modelResponseBody, err := io.ReadAll(res.Body)
 	if err != nil {
