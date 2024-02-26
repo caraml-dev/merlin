@@ -50,4 +50,7 @@ type Options struct {
 	ModelGRPCKeepAliveTime time.Duration `envconfig:"MODEL_GRPC_KEEP_ALIVE_TIME" default:"60s"`
 	// Duration of PING that considered as TIMEOUT
 	ModelGRPCKeepAliveTimeout time.Duration `envconfig:"MODEL_GRPC_KEEP_ALIVE_TIMEOUT" default:"5s"`
+
+	// PyFunc UPI over HTTP flag
+	PredictorUPIHTTPEnabled bool `envconfig:"PREDICTOR_UPI_HTTP_ENABLED" default:"false"`
 }

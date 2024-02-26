@@ -16,6 +16,7 @@ package models
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	mlpclient "github.com/caraml-dev/mlp/api/client"
@@ -24,6 +25,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
 	"github.com/caraml-dev/merlin/pkg/protocol"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	"knative.dev/pkg/apis"
 )
 
@@ -51,9 +53,10 @@ type Service struct {
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy
 	Protocol          protocol.Protocol
 	// CurrentIsvcName is the name of the current running/serving InferenceService's revision
-	CurrentIsvcName           string
-	EnabledModelObservability bool
-	ModelSchema               *ModelSchema
+	CurrentIsvcName             string
+	EnabledModelObservability   bool
+	ModelSchema                 *ModelSchema
+	PredictorUPIOverHTTPEnabled bool
 }
 
 func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
@@ -75,15 +78,39 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 			Team:      model.Project.Team,
 			Labels:    MergeProjectVersionLabels(model.Project.Labels, version.Labels),
 		},
-		Transformer:               endpoint.Transformer,
-		Logger:                    endpoint.Logger,
-		DeploymentMode:            endpoint.DeploymentMode,
-		AutoscalingPolicy:         endpoint.AutoscalingPolicy,
-		Protocol:                  endpoint.Protocol,
-		CurrentIsvcName:           endpoint.InferenceServiceName,
-		EnabledModelObservability: endpoint.EnableModelObservability,
-		ModelSchema:               version.ModelSchema,
+		Transformer:                 endpoint.Transformer,
+		Logger:                      endpoint.Logger,
+		DeploymentMode:              endpoint.DeploymentMode,
+		AutoscalingPolicy:           endpoint.AutoscalingPolicy,
+		Protocol:                    endpoint.Protocol,
+		CurrentIsvcName:             endpoint.InferenceServiceName,
+		EnabledModelObservability:   endpoint.EnableModelObservability,
+		ModelSchema:                 version.ModelSchema,
+		PredictorUPIOverHTTPEnabled: predictorUPIOverHTTPEnabled(endpoint.Transformer),
 	}
+}
+
+func predictorUPIOverHTTPEnabled(transformer *Transformer) bool {
+	if transformer == nil {
+		return false
+	}
+	for _, val := range transformer.EnvVars {
+		if val.Name == transformerpkg.PredictorUPIHTTPEnabled {
+			value, err := strconv.ParseBool(val.Value)
+			if err != nil {
+				return false
+			}
+			return value
+		}
+	}
+	return false
+}
+
+func (svc *Service) PredictorProtocol() protocol.Protocol {
+	if svc.Protocol == protocol.UpiV1 && svc.PredictorUPIOverHTTPEnabled {
+		return protocol.HttpJson
+	}
+	return svc.Protocol
 }
 
 func (svc *Service) GetPredictionLogTopic() string {

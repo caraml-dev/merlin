@@ -251,10 +251,10 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, fmt.Sprintf("/v1/models/%s", modelService.Name))
+		livenessProbeConfig = createLivenessProbeSpec(modelService.PredictorProtocol(), fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
 
-	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
+	containerPorts := createContainerPorts(modelService.PredictorProtocol(), modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
 	var predictorSpec kservev1beta1.PredictorSpec
 	switch modelService.Type {
@@ -857,7 +857,7 @@ func createPyFuncDefaultEnvVars(svc *models.Service) (models.EnvVars, error) {
 		},
 		models.EnvVar{
 			Name:  envProtocol,
-			Value: fmt.Sprint(svc.Protocol),
+			Value: fmt.Sprint(svc.PredictorProtocol()),
 		},
 		models.EnvVar{
 			Name:  envProject,
