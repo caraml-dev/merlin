@@ -400,13 +400,6 @@ func (us *UPIServer) modelPredictHTTP(ctx context.Context, payload *upiv1.Predic
 		return nil, err
 	}
 
-	// reqHeaders := req.Header
-	// md, _ := metadata.FromIncomingContext(ctx)
-	// for k, vv := range md {
-	// 	for _, v := range vv {
-	// 		reqHeaders.Set(k, v)
-	// 	}
-	// }
 	req.Header.Set("Content-Length", fmt.Sprint(len(payloadBytes)))
 
 	res, err := us.httpClient.Do(req)

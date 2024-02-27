@@ -7,6 +7,7 @@ import (
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/pkg/protocol"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/stretchr/testify/assert"
 	"knative.dev/pkg/apis"
 )
@@ -227,6 +228,60 @@ func TestNewService(t *testing.T) {
 				DeploymentMode:    endpoint.DeploymentMode,
 				AutoscalingPolicy: endpoint.AutoscalingPolicy,
 				Protocol:          endpoint.Protocol,
+			},
+		},
+		{
+			name: "STD transformer UPI - Predictor using HTTP",
+			args: args{
+				model:    model,
+				version:  version,
+				modelOpt: &ModelOption{},
+				endpoint: &VersionEndpoint{
+					RevisionID: revisionID,
+					Protocol:   protocol.UpiV1,
+					Transformer: &Transformer{
+						TransformerType: StandardTransformerType,
+						EnvVars: EnvVars{
+							{
+								Name:  transformerpkg.PredictorUPIHTTPEnabled,
+								Value: "true",
+							},
+						},
+					},
+				},
+			},
+			want: &Service{
+				Name:            fmt.Sprintf("%s-%s-r%s", model.Name, version.ID.String(), revisionID),
+				ModelName:       model.Name,
+				ModelVersion:    version.ID.String(),
+				RevisionID:      revisionID,
+				Namespace:       model.Project.Name,
+				ArtifactURI:     version.ArtifactURI,
+				Type:            model.Type,
+				Options:         &ModelOption{},
+				ResourceRequest: endpoint.ResourceRequest,
+				EnvVars:         endpoint.EnvVars,
+				Metadata: Metadata{
+					App:       model.Name,
+					Component: ComponentModelVersion,
+					Labels:    serviceLabels,
+					Stream:    model.Project.Stream,
+					Team:      model.Project.Team,
+				},
+				Transformer: &Transformer{
+					TransformerType: StandardTransformerType,
+					EnvVars: EnvVars{
+						{
+							Name:  transformerpkg.PredictorUPIHTTPEnabled,
+							Value: "true",
+						},
+					},
+				},
+				Logger:                      endpoint.Logger,
+				DeploymentMode:              endpoint.DeploymentMode,
+				AutoscalingPolicy:           endpoint.AutoscalingPolicy,
+				Protocol:                    protocol.UpiV1,
+				PredictorUPIOverHTTPEnabled: true,
 			},
 		},
 	}
