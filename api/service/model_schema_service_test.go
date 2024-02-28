@@ -37,9 +37,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(1),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -60,9 +59,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(2),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -88,9 +86,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -111,9 +108,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(2),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -182,9 +178,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				storageMock.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -204,9 +199,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -230,9 +224,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -254,9 +247,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				ID:      models.ID(1),
 				ModelID: models.ID(1),
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					SessionIDColumn:    "session_id",
-					RowIDColumn:        "row_id",
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Boolean,
@@ -281,9 +273,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				storageMock.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -307,9 +298,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -364,9 +354,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				storageMock.On("Delete", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -390,9 +379,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -418,9 +406,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				storageMock.On("Delete", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -444,9 +431,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -499,9 +485,8 @@ func Test_modelSchemaService_FindByID(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -529,9 +514,8 @@ func Test_modelSchemaService_FindByID(t *testing.T) {
 				ModelID: models.ID(1),
 				ID:      models.ID(1),
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					SessionIDColumn:    "session_id",
-					RowIDColumn:        "row_id",
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Boolean,

@@ -1321,7 +1321,6 @@ class TestModel:
                 id=3,
                 model_id=1,
                 spec=client.SchemaSpec(
-                    prediction_id_column="prediction_id",
                     tag_columns=["tags", "extras"],
                     feature_types={
                         "featureA": client.ValueType.FLOAT64,
@@ -1342,7 +1341,6 @@ class TestModel:
                 id=3,
                 model_id=1,
                 spec=InferenceSchema(
-                    prediction_id_column="prediction_id",
                     tag_columns=["tags", "extras"],
                     feature_types={
                         "featureA": ValueType.FLOAT64,

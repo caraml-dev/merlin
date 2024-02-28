@@ -721,9 +721,8 @@ func TestPatchVersion(t *testing.T) {
 				},
 				ModelSchema: &models.ModelSchema{
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",
@@ -776,9 +775,8 @@ func TestPatchVersion(t *testing.T) {
 					},
 					ModelSchema: &models.ModelSchema{
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
 									RankScoreColumn:      "score",
@@ -813,9 +811,8 @@ func TestPatchVersion(t *testing.T) {
 					},
 					ModelSchema: &models.ModelSchema{
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
 									RankScoreColumn:      "score",
@@ -855,9 +852,8 @@ func TestPatchVersion(t *testing.T) {
 					},
 					ModelSchema: &models.ModelSchema{
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
 									RankScoreColumn:      "score",
@@ -889,9 +885,8 @@ func TestPatchVersion(t *testing.T) {
 				},
 				ModelSchema: &models.ModelSchema{
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",
@@ -1450,9 +1445,8 @@ func TestCreateVersion(t *testing.T) {
 			body: models.VersionPost{
 				ModelSchema: &models.ModelSchema{
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",
@@ -1504,9 +1498,8 @@ func TestCreateVersion(t *testing.T) {
 					PythonVersion: DEFAULT_PYTHON_VERSION,
 					ModelSchema: &models.ModelSchema{
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
 									RankScoreColumn:      "score",
@@ -1538,9 +1531,8 @@ func TestCreateVersion(t *testing.T) {
 					PythonVersion: DEFAULT_PYTHON_VERSION,
 					ModelSchema: &models.ModelSchema{
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
 									RankScoreColumn:      "score",
@@ -1577,9 +1569,8 @@ func TestCreateVersion(t *testing.T) {
 					PythonVersion: DEFAULT_PYTHON_VERSION,
 					ModelSchema: &models.ModelSchema{
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
 									RankScoreColumn:      "score",
@@ -1606,9 +1597,8 @@ func TestCreateVersion(t *testing.T) {
 			body: models.VersionPost{
 				ModelSchema: &models.ModelSchema{
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",

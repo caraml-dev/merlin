@@ -33,9 +33,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(1),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -56,9 +55,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(2),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -82,9 +80,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(1),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -105,9 +102,8 @@ func TestModelSchemaController_GetAllSchemas(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(2),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
-							SessionIDColumn:    "session_id",
-							RowIDColumn:        "row_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -187,7 +183,6 @@ func TestModelSchemaController_GetSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(2),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -212,7 +207,6 @@ func TestModelSchemaController_GetSchema(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(2),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -292,7 +286,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 			body: []byte(`{
 				"spec": {
-					"prediction_id_column":"prediction_id",
 					"session_id_column":"session_id",
 					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
@@ -313,10 +306,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 				mockSvc.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -334,10 +326,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -360,10 +351,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -387,7 +377,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 			body: []byte(`{
 				"spec": {
-					"prediction_id_column":"prediction_id",
 					"session_id_column":"session_id",
 					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
@@ -409,10 +398,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 				mockSvc.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -430,10 +418,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -456,10 +443,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -483,7 +469,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 			body: []byte(`{
 				"spec": {
-					"prediction_id_column":"prediction_id",
 					"session_id_column":"session_id",
 					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
@@ -507,10 +492,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 				mockSvc.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -531,10 +515,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -560,10 +543,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -590,7 +572,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 			body: []byte(`{
 				"spec": {
-					"prediction_id_column":"prediction_id",
 					"session_id_column":"session_id",
 					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
@@ -611,10 +592,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 				mockSvc.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -632,10 +612,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -658,10 +637,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -685,7 +663,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 			body: []byte(`{
 				"spec": {
-					"prediction_id_column":"prediction_id",
 					"session_id_column":"session_id",
 					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
@@ -706,10 +683,9 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 				mockSvc.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -738,7 +714,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 			},
 			body: []byte(`{
 				"spec": {
-					"prediction_id_column":"prediction_id",
 					"session_id_column":"session_id",
 					"row_id_column":"row_id",
 					"tag_columns": ["tags"],
@@ -788,7 +763,6 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 
 func Benchmark_Unmarshal(b *testing.B) {
 	data := []byte(` {
-			"prediction_id_column":"prediction_id",
 			"session_id_column":"session_id",
 			"row_id_column":"row_id",
 			"tag_columns": ["tags"],

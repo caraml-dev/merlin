@@ -20,7 +20,6 @@ var _ MappedNullable = &SchemaSpec{}
 
 // SchemaSpec struct for SchemaSpec
 type SchemaSpec struct {
-	PredictionIdColumn    *string               `json:"prediction_id_column,omitempty"`
 	SessionIdColumn       *string               `json:"session_id_column,omitempty"`
 	RowIdColumn           *string               `json:"row_id_column,omitempty"`
 	ModelPredictionOutput ModelPredictionOutput `json:"model_prediction_output"`
@@ -47,38 +46,6 @@ func NewSchemaSpec(modelPredictionOutput ModelPredictionOutput, featureTypes map
 func NewSchemaSpecWithDefaults() *SchemaSpec {
 	this := SchemaSpec{}
 	return &this
-}
-
-// GetPredictionIdColumn returns the PredictionIdColumn field value if set, zero value otherwise.
-func (o *SchemaSpec) GetPredictionIdColumn() string {
-	if o == nil || IsNil(o.PredictionIdColumn) {
-		var ret string
-		return ret
-	}
-	return *o.PredictionIdColumn
-}
-
-// GetPredictionIdColumnOk returns a tuple with the PredictionIdColumn field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SchemaSpec) GetPredictionIdColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.PredictionIdColumn) {
-		return nil, false
-	}
-	return o.PredictionIdColumn, true
-}
-
-// HasPredictionIdColumn returns a boolean if a field has been set.
-func (o *SchemaSpec) HasPredictionIdColumn() bool {
-	if o != nil && !IsNil(o.PredictionIdColumn) {
-		return true
-	}
-
-	return false
-}
-
-// SetPredictionIdColumn gets a reference to the given string and assigns it to the PredictionIdColumn field.
-func (o *SchemaSpec) SetPredictionIdColumn(v string) {
-	o.PredictionIdColumn = &v
 }
 
 // GetSessionIdColumn returns the SessionIdColumn field value if set, zero value otherwise.
@@ -235,9 +202,6 @@ func (o SchemaSpec) MarshalJSON() ([]byte, error) {
 
 func (o SchemaSpec) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.PredictionIdColumn) {
-		toSerialize["prediction_id_column"] = o.PredictionIdColumn
-	}
 	if !IsNil(o.SessionIdColumn) {
 		toSerialize["session_id_column"] = o.SessionIdColumn
 	}

@@ -8,7 +8,6 @@ import pandas as pd
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
 
-DEFAULT_PREDICTION_ID_COLUMN = "prediction_id"
 DEFAULT_SESSION_ID_COLUMN = "session_id"
 DEFAULT_ROW_ID_COLUMN = "row_id"
 
@@ -272,7 +271,6 @@ class InferenceSchema:
     )
     session_id_column: str = DEFAULT_SESSION_ID_COLUMN
     row_id_column: str = DEFAULT_ROW_ID_COLUMN
-    prediction_id_column: str = DEFAULT_PREDICTION_ID_COLUMN
     tag_columns: Optional[List[str]] = None
 
     @property
@@ -290,8 +288,18 @@ class InferenceSchema:
     def preprocess(
         self, df: pd.DataFrame, observation_types: List[ObservationType]
     ) -> pd.DataFrame:
-        if observation_types != ObservationType.FEATURE:
-            df[self.prediction_id_column] = df[self.session_id_column] + "_" + df[self.row_id_column]
         return self.model_prediction_output.preprocess(
             df, self.session_id_column, self.row_id_column, observation_types
         )
+
+def add_prediction_id_column(df: pd.DataFrame, session_id_column: str, row_id_column: str, prediction_id_column: str) -> pd.DataFrame:
+    """
+    Add prediction id column to the dataframe.
+    :param df: Input dataframe.
+    :param session_id_column: Name of the column containing the session id.
+    :param row_id_column: Name of the column containing the row id.
+    :param prediction_id_column: Name of the prediction id column.
+    :return: Dataframe with prediction id column.
+    """
+    df[prediction_id_column] = df[session_id_column] + "_" + df[row_id_column]
+    return df

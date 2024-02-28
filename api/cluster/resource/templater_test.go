@@ -231,10 +231,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			ID:      models.ID(1),
 			ModelID: models.ID(1),
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				SessionIDColumn:    "session_id",
-				RowIDColumn:        "row_id",
-				TagColumns:         []string{"tags"},
+				SessionIDColumn: "session_id",
+				RowIDColumn:     "row_id",
+				TagColumns:      []string{"tags"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Int64,
@@ -859,10 +858,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
@@ -947,10 +945,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						SessionIDColumn:    "session_id",
-						RowIDColumn:        "row_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,

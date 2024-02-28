@@ -12,7 +12,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=1,
                 model_id=1,
                 spec=client.SchemaSpec(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags"],
@@ -38,7 +37,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=1,
                 model_id=1,
                 spec=InferenceSchema(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags"],
@@ -64,7 +62,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=2,
                 model_id=1,
                 spec=client.SchemaSpec(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags", "extras"],
@@ -87,7 +84,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=2,
                 model_id=1,
                 spec=InferenceSchema(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags", "extras"],
@@ -110,7 +106,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=3,
                 model_id=1,
                 spec=client.SchemaSpec(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags", "extras"],
@@ -133,7 +128,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=3,
                 model_id=1,
                 spec=InferenceSchema(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags", "extras"],
@@ -156,7 +150,6 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                 id=3,
                 model_id=1,
                 spec=client.SchemaSpec(
-                    prediction_id_column="prediction_id",
                     session_id_column="session_id",
                     row_id_column="row_id",
                     tag_columns=["tags", "extras"],

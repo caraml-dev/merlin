@@ -36,7 +36,6 @@ type ModelSchema struct {
 
 // SchemaSpec
 type SchemaSpec struct {
-	PredictionIDColumn    string                 `json:"prediction_id_column"`
 	SessionIDColumn       string                 `json:"session_id_column"`
 	RowIDColumn           string                 `json:"row_id_column"`
 	ModelPredictionOutput *ModelPredictionOutput `json:"model_prediction_output"`

@@ -43,10 +43,9 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 		modelSchema := &models.ModelSchema{
 			ModelID: m.ID,
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				SessionIDColumn:    "session_id",
-				RowIDColumn:        "row_id",
-				TagColumns:         []string{"tag"},
+				SessionIDColumn: "session_id",
+				RowIDColumn:     "row_id",
+				TagColumns:      []string{"tag"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Float64,
@@ -122,10 +121,9 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 			ModelSchema: &models.ModelSchema{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					SessionIDColumn:    "session_id",
-					RowIDColumn:        "row_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -208,10 +206,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 			{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					SessionIDColumn:    "session_id",
-					RowIDColumn:        "row_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -233,10 +230,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 			{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					SessionIDColumn:    "session_id",
-					RowIDColumn:        "row_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -255,10 +251,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 			{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					SessionIDColumn:    "session_id",
-					RowIDColumn:        "row_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -325,10 +320,9 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 		modelSchema := &models.ModelSchema{
 			ModelID: m.ID,
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				SessionIDColumn:    "session_id",
-				RowIDColumn:        "row_id",
-				TagColumns:         []string{"tag"},
+				SessionIDColumn: "session_id",
+				RowIDColumn:     "row_id",
+				TagColumns:      []string{"tag"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Float64,

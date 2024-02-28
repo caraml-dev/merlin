@@ -187,7 +187,6 @@ def test_model_schema(
             "featureC": ValueType.STRING,
             "featureD": ValueType.BOOLEAN
         },
-        prediction_id_column="prediction_id",
         model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="score",
             actual_score_column="actual",

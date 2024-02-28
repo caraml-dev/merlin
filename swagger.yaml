@@ -1383,8 +1383,6 @@ components:
         - model_prediction_output
         - feature_types
       properties:
-        prediction_id_column:
-          type: string
         session_id_column:
           type: string
         row_id_column:
