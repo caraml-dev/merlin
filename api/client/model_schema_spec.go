@@ -25,6 +25,7 @@ type SchemaSpec struct {
 	ModelPredictionOutput ModelPredictionOutput `json:"model_prediction_output"`
 	TagColumns            []string              `json:"tag_columns,omitempty"`
 	FeatureTypes          map[string]ValueType  `json:"feature_types"`
+	FeatureOrders         []string              `json:"feature_orders,omitempty"`
 }
 
 type _SchemaSpec SchemaSpec
@@ -192,6 +193,38 @@ func (o *SchemaSpec) SetFeatureTypes(v map[string]ValueType) {
 	o.FeatureTypes = v
 }
 
+// GetFeatureOrders returns the FeatureOrders field value if set, zero value otherwise.
+func (o *SchemaSpec) GetFeatureOrders() []string {
+	if o == nil || IsNil(o.FeatureOrders) {
+		var ret []string
+		return ret
+	}
+	return o.FeatureOrders
+}
+
+// GetFeatureOrdersOk returns a tuple with the FeatureOrders field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SchemaSpec) GetFeatureOrdersOk() ([]string, bool) {
+	if o == nil || IsNil(o.FeatureOrders) {
+		return nil, false
+	}
+	return o.FeatureOrders, true
+}
+
+// HasFeatureOrders returns a boolean if a field has been set.
+func (o *SchemaSpec) HasFeatureOrders() bool {
+	if o != nil && !IsNil(o.FeatureOrders) {
+		return true
+	}
+
+	return false
+}
+
+// SetFeatureOrders gets a reference to the given []string and assigns it to the FeatureOrders field.
+func (o *SchemaSpec) SetFeatureOrders(v []string) {
+	o.FeatureOrders = v
+}
+
 func (o SchemaSpec) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -213,6 +246,9 @@ func (o SchemaSpec) ToMap() (map[string]interface{}, error) {
 		toSerialize["tag_columns"] = o.TagColumns
 	}
 	toSerialize["feature_types"] = o.FeatureTypes
+	if !IsNil(o.FeatureOrders) {
+		toSerialize["feature_orders"] = o.FeatureOrders
+	}
 	return toSerialize, nil
 }
 

@@ -294,6 +294,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 						"featureB": "int64",
 						"featureC": "boolean"
 					},
+					"feature_orders": ["featureA", "featureB", "featureC"],
 					"model_prediction_output": {
 						"rank_score_column": "score",
 						"relevance_score_column": "relevance_score",
@@ -314,6 +315,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 							"featureB": models.Int64,
 							"featureC": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",
@@ -334,6 +336,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 							"featureB": models.Int64,
 							"featureC": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",
@@ -359,6 +362,7 @@ func TestModelSchemaController_CreateOrUpdateSchema(t *testing.T) {
 							"featureB": models.Int64,
 							"featureC": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",

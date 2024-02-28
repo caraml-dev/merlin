@@ -52,6 +52,7 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 					"featureC": models.Int64,
 					"featureD": models.Boolean,
 				},
+				FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					BinaryClassificationOutput: &models.BinaryClassificationOutput{
 						ActualScoreColumn:     "actual_score",

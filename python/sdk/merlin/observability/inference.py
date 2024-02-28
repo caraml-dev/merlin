@@ -271,6 +271,7 @@ class InferenceSchema:
     )
     session_id_column: str = DEFAULT_SESSION_ID_COLUMN
     row_id_column: str = DEFAULT_ROW_ID_COLUMN
+    feature_orders: Optional[List[str]] = None
     tag_columns: Optional[List[str]] = None
 
     @property

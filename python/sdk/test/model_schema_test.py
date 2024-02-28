@@ -21,6 +21,7 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                         "featureC": client.ValueType.BOOLEAN,
                         "featureD": client.ValueType.STRING
                     },
+                    feature_orders=["featureA", "featureB", "featureC", "featureD"],
                     model_prediction_output=client.ModelPredictionOutput(
                         client.BinaryClassificationOutput(
                             prediction_score_column="prediction_score",
@@ -46,6 +47,7 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
                         "featureC": ValueType.BOOLEAN,
                         "featureD": ValueType.STRING
                     },
+                    feature_orders=["featureA", "featureB", "featureC", "featureD"],
                     model_prediction_output=BinaryClassificationOutput(
                         prediction_score_column="prediction_score",
                         actual_score_column="actual_score",

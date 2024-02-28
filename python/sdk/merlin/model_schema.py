@@ -56,6 +56,7 @@ class ModelSchema:
             model_id=response.model_id,
             spec=InferenceSchema(
                 feature_types=feature_types,
+                feature_orders=response_spec.feature_orders,
                 session_id_column=extract_optional_value_with_default(response_spec.session_id_column, DEFAULT_SESSION_ID_COLUMN),
                 row_id_column=extract_optional_value_with_default(response_spec.row_id_column, DEFAULT_ROW_ID_COLUMN),
                 tag_columns=response_spec.tag_columns,
@@ -154,6 +155,7 @@ class ModelSchema:
                 row_id_column=self.spec.row_id_column,
                 tag_columns=self.spec.tag_columns,
                 feature_types=feature_types,
+                feature_orders=self.spec.feature_orders,
                 model_prediction_output=self._to_client_prediction_output_spec(),
             ),
         )

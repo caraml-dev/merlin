@@ -41,6 +41,7 @@ type SchemaSpec struct {
 	ModelPredictionOutput *ModelPredictionOutput `json:"model_prediction_output"`
 	TagColumns            []string               `json:"tag_columns"`
 	FeatureTypes          map[string]ValueType   `json:"feature_types"`
+	FeatureOrders         []string               `json:"feature_orders"`
 }
 
 // Value returning a value for `SchemaSpec` instance

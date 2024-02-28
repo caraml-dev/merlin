@@ -240,6 +240,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					"featureC": models.String,
 					"featureD": models.Boolean,
 				},
+				FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					RankingOutput: &models.RankingOutput{
 						RankScoreColumn:      "score",
@@ -867,6 +868,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 							"featureC": models.String,
 							"featureD": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",
@@ -954,6 +956,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 							"featureC": models.String,
 							"featureD": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
 								RankScoreColumn:      "score",

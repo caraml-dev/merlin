@@ -1397,6 +1397,10 @@ components:
           type: object
           additionalProperties:
             $ref : '#/components/schemas/ValueType'
+        feature_orders:
+          type: array
+          items:
+            type: string
     ValueType:
       type: string
       enum:

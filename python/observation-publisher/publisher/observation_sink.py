@@ -246,10 +246,6 @@ class BigQuerySink(ObservationSink):
                 field_type="STRING",
             ),
             SchemaField(
-                name=self._inference_schema.prediction_id_column,
-                field_type="STRING",
-            ),
-            SchemaField(
                 name=PREDICTION_LOG_TIMESTAMP_COLUMN,
                 field_type="TIMESTAMP",
             ),
