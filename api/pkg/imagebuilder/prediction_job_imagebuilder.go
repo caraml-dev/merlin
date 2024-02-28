@@ -41,5 +41,5 @@ func (n *predictionJobNameGenerator) generateBuilderJobName(project mlp.Project,
 
 // generateDockerImageName generate the name of docker image of prediction job that will be created from given model
 func (n *predictionJobNameGenerator) generateDockerImageName(project mlp.Project, model *models.Model) string {
-	return fmt.Sprintf("%s/%s/batch-jobs/%s", n.dockerRegistry, project.Name, model.Name)
+	return fmt.Sprintf("%s/%s-%s-job", n.dockerRegistry, project.Name, model.Name)
 }
