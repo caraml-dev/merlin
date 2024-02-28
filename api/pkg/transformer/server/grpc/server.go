@@ -13,13 +13,11 @@ import (
 
 	"github.com/afex/hystrix-go/hystrix"
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
-	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/config"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/grpc/interceptors"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/instrumentation"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
-	"github.com/go-coldbrew/grpcpool"
 	"github.com/gorilla/mux"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/copier"
@@ -34,9 +32,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -93,36 +89,6 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentati
 	}
 
 	return svr, nil
-}
-
-func createModelUPIGrpcClient(opts *config.Options) (upiv1.UniversalPredictionServiceClient, grpcpool.ConnPool, error) {
-	dialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	if opts.ModelGRPCKeepAliveEnabled {
-		dialOpts = append(dialOpts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Timeout:             opts.ModelGRPCKeepAliveTime,
-			Time:                opts.ModelGRPCKeepAliveTimeout,
-			PermitWithoutStream: true,
-		}))
-	}
-
-	connPool, err := grpcpool.DialContext(context.Background(), opts.ModelPredictURL, uint(opts.ModelServerConnCount), dialOpts...)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	hystrix.ConfigureCommand(opts.ModelGRPCHystrixCommandName, hystrix.CommandConfig{
-		Timeout:                hystrixpkg.DurationToInt(opts.ModelTimeout, time.Millisecond),
-		MaxConcurrentRequests:  opts.ModelHystrixMaxConcurrentRequests,
-		RequestVolumeThreshold: opts.ModelHystrixRequestVolumeThreshold,
-		SleepWindow:            opts.ModelHystrixSleepWindowMs,
-		ErrorPercentThreshold:  opts.ModelHystrixErrorPercentageThreshold,
-	})
-
-	modelClient := upiv1.NewUniversalPredictionServiceClient(connPool)
-	return modelClient, connPool, nil
 }
 
 // Run running GRPC Server
