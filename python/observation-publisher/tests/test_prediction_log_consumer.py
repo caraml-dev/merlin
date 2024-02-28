@@ -118,10 +118,10 @@ def test_log_to_dataframe():
     )
     expected_df = pd.DataFrame.from_records(
         [
-            [0.8, 24, "FOOD", 0.9, "fraud", "1234", "a", "1234_a", request_timestamp, model_version],
-            [0.5, 2, "RIDE", 0.5, "fraud", "1234", "b", "1234_b", request_timestamp, model_version],
-            [1.0, 13, "CAR", 0.4, "non fraud", "5678", "c", "5678_c", request_timestamp, model_version],
-            [0.4, 60, "RIDE", 0.2, "non fraud", "5678", "d", "5678_d", request_timestamp, model_version],
+            [0.8, 24, "FOOD", 0.9, "fraud", "1234", "a", request_timestamp, model_version],
+            [0.5, 2, "RIDE", 0.5, "fraud", "1234", "b", request_timestamp, model_version],
+            [1.0, 13, "CAR", 0.4, "non fraud", "5678", "c", request_timestamp, model_version],
+            [0.4, 60, "RIDE", 0.2, "non fraud", "5678", "d", request_timestamp, model_version],
         ],
         columns=[
             "acceptance_rate",
@@ -131,7 +131,6 @@ def test_log_to_dataframe():
             "_prediction_label",
             "order_id",
             "driver_id",
-            "prediction_id",
             "request_timestamp",
             "model_version",
         ],
@@ -182,7 +181,6 @@ def test_empty_column_conversion_to_dataframe():
                 "fraud",
                 "1234",
                 "a",
-                "1234_a",
                 datetime(2021, 1, 1, 0, 0, 0),
                 "0.1.0",
             ],
@@ -193,7 +191,6 @@ def test_empty_column_conversion_to_dataframe():
             "_prediction_label",
             "session_id",
             "row_id",
-            "prediction_id",
             "request_timestamp",
             "model_version",
         ],

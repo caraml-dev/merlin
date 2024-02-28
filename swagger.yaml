@@ -1456,6 +1456,7 @@ components:
       type: object
       required:
         - prediction_score_column
+        - actual_score_column
         - output_class
       properties:
         prediction_score_column:
