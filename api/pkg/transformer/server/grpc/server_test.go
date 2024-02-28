@@ -600,7 +600,7 @@ func TestUPIServer_PredictValues_WithMockPreprocessAndPostprocessHandler(t *test
 			clientMock.On("PredictValues", mock.Anything, incomingReq, mock.Anything).Return(tt.expectedModelOutput, tt.modelErr)
 			noOpTracer := trace.NewNoopTracerProvider()
 			us := &UPIServer{
-				modelClient: clientMock,
+				predictorClient: &grpcClient{upiClient: clientMock, opts: &config.Options{ModelGRPCHystrixCommandName: "gRPCCommand"}},
 				opts: &config.Options{
 					ModelGRPCHystrixCommandName: "grpcHandler",
 				},
@@ -5860,10 +5860,10 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	}
 
 	transformerServer := &UPIServer{
-		opts:        options,
-		modelClient: modelClient,
-		logger:      logger,
-		tracer:      noOpTracer.Tracer(""),
+		opts:            options,
+		predictorClient: &grpcClient{upiClient: modelClient, opts: options},
+		logger:          logger,
+		tracer:          noOpTracer.Tracer(""),
 	}
 
 	transformerServer.ContextModifier = handler.EmbedEnvironment

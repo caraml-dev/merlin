@@ -1,10 +1,8 @@
 package grpc
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -14,7 +12,6 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
-	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
 	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
@@ -43,7 +40,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var (
@@ -55,9 +51,7 @@ type UPIServer struct {
 	upiv1.UnimplementedUniversalPredictionServiceServer
 
 	opts                  *config.Options
-	modelClient           upiv1.UniversalPredictionServiceClient
-	conn                  grpcpool.ConnPool
-	httpClient            hystrixHttpClient
+	predictorClient       upiPredictorClient
 	instrumentationRouter *mux.Router
 	logger                *zap.Logger
 	tracer                trace.Tracer
@@ -76,44 +70,19 @@ type UPIServer struct {
 	PredictionLogHandler func(ctx context.Context, predictionResult *types.PredictionResult)
 }
 
-type hystrixHttpClient interface {
-	Do(request *http.Request) (*http.Response, error)
-}
-
-func newHTTPHystrixClient(commandName string, o *config.Options) *hystrixpkg.Client {
-	hystrixConfig := hystrixGo.CommandConfig{
-		Timeout:                int(o.ModelTimeout / time.Millisecond),
-		MaxConcurrentRequests:  o.ModelHystrixMaxConcurrentRequests,
-		RequestVolumeThreshold: o.ModelHystrixRequestVolumeThreshold,
-		SleepWindow:            o.ModelHystrixSleepWindowMs,
-		ErrorPercentThreshold:  o.ModelHystrixErrorPercentageThreshold,
-	}
-	cl := &http.Client{
-		Timeout: o.ModelTimeout,
-	}
-	return hystrixpkg.NewClient(cl, &hystrixConfig, commandName)
-}
-
 // NewUPIServer creates GRPC server that implement UPI Service
 func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentationRouter *mux.Router, logger *zap.Logger) (*UPIServer, error) {
 
+	upiPredictorClient, err := newUPIPredictorClient(opts)
+	if err != nil {
+		return nil, err
+	}
 	svr := &UPIServer{
 		opts:                  opts,
 		instrumentationRouter: instrumentationRouter,
+		predictorClient:       upiPredictorClient,
 		logger:                logger,
 		tracer:                otel.Tracer("pkg/transformer/server/grpc"),
-	}
-
-	if opts.PredictorUPIHTTPEnabled {
-		modelHttpClient := newHTTPHystrixClient(opts.ModelHTTPHystrixCommandName, opts)
-		svr.httpClient = modelHttpClient
-	} else {
-		modelClient, connPool, err := createModelUPIGrpcClient(opts)
-		if err != nil {
-			return nil, err
-		}
-		svr.modelClient = modelClient
-		svr.conn = connPool
 	}
 
 	if handler != nil {
@@ -216,7 +185,7 @@ func (us *UPIServer) Run() {
 	}
 
 	us.logger.Info("shutting down standard transformer")
-	if err := us.conn.Close(); err != nil {
+	if err := us.predictorClient.close(); err != nil {
 		us.logger.Error(fmt.Sprintf("failed to close connection %v", err))
 	}
 	us.logger.Info("closed connection to model prediction server")
@@ -350,11 +319,7 @@ func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRe
 	defer span.End()
 
 	predictStartTime := time.Now()
-	modelCallFunc := us.modelPredictGRPC
-	if us.opts.PredictorUPIHTTPEnabled {
-		modelCallFunc = us.modelPredictHTTP
-	}
-	modelResponse, err := modelCallFunc(ctx, payload)
+	modelResponse, err := us.predictorClient.predict(ctx, payload)
 	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
 		instrumentation.RecordPredictionLatency(false, float64(predictionDurationMs))
@@ -365,58 +330,6 @@ func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRe
 	}
 	instrumentation.RecordPredictionLatency(true, float64(predictionDurationMs))
 	return modelResponse, nil
-}
-
-func (us *UPIServer) modelPredictGRPC(ctx context.Context, payload *upiv1.PredictValuesRequest) (*upiv1.PredictValuesResponse, error) {
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		ctx = metadata.NewOutgoingContext(ctx, md)
-	}
-
-	var modelResponse *upiv1.PredictValuesResponse
-	err := hystrix.Do(us.opts.ModelGRPCHystrixCommandName, func() error {
-		response, err := us.modelClient.PredictValues(ctx, (*upiv1.PredictValuesRequest)(payload), grpc.WaitForReady(true))
-		if err != nil {
-			return err
-		}
-		modelResponse = response
-		return nil
-	}, nil)
-
-	if err != nil {
-		return nil, err
-	}
-	return modelResponse, nil
-}
-
-func (us *UPIServer) modelPredictHTTP(ctx context.Context, payload *upiv1.PredictValuesRequest) (*upiv1.PredictValuesResponse, error) {
-	payloadBytes, err := protojson.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	predictURL := getUrl(fmt.Sprintf("%s/v1/models/%s:predict", us.opts.ModelPredictURL, us.opts.ModelFullName))
-	req, err := http.NewRequestWithContext(ctx, "POST", predictURL, bytes.NewBuffer(payloadBytes))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Length", fmt.Sprint(len(payloadBytes)))
-
-	res, err := us.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close() //nolint: errcheck
-
-	modelResponseBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	var upiResponse upiv1.PredictValuesResponse
-	if err := protojson.Unmarshal(modelResponseBody, &upiResponse); err != nil {
-		return nil, err
-	}
-	return &upiResponse, nil
 }
 
 func getMetadata(ctx context.Context) map[string]string {
