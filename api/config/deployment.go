@@ -31,10 +31,12 @@ type DeploymentConfig struct {
 	DefaultModelResourceRequests *ResourceRequests
 	// Default resource request for transformer deployment
 	DefaultTransformerResourceRequests *ResourceRequests
-	// Max CPU of machine
+	// Max allowed CPU of each pod
 	MaxCPU resource.Quantity
-	// Max Memory of machine
+	// Max allowed Memory of each pod
 	MaxMemory resource.Quantity
+	// Max allowed MaxReplica value of each deployment
+	MaxAllowedReplica int
 	// TopologySpreadConstraints to be applied on the pods of each model deployment
 	TopologySpreadConstraints []corev1.TopologySpreadConstraint
 	// Percentage of knative's queue proxy resource request from the inference service resource request

@@ -655,6 +655,35 @@ func TestController_DeployInferenceService(t *testing.T) {
 			createVsResult:  &vsReactor{vs, nil},
 			wantError:       true,
 		},
+		{
+			name: "error: deploying service due to max replica requests greater than max value allowed",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: project.Name,
+				Options:   modelOpt,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    5,
+					CPURequest:    resource.MustParse("1000m"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+			},
+			createResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
+				nil,
+			},
+			checkResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     statusReady,
+				},
+				nil,
+			},
+			deployTimeout:   deployTimeout,
+			createPdbResult: &pdbReactor{pdb, nil},
+			createVsResult:  &vsReactor{vs, nil},
+			wantError:       true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -696,6 +725,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 				NamespaceTimeout:                   2 * tickDurationSecond * time.Second,
 				MaxCPU:                             resource.MustParse("8"),
 				MaxMemory:                          resource.MustParse("8Gi"),
+				MaxAllowedReplica:                  4,
 				DefaultModelResourceRequests:       &config.ResourceRequests{},
 				DefaultTransformerResourceRequests: &config.ResourceRequests{},
 				PodDisruptionBudget: config.PodDisruptionBudgetConfig{
