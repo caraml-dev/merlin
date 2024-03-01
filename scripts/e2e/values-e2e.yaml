@@ -15,6 +15,14 @@ config:
     EncryptionKey: password
   StandardTransformerConfig:
     ImageName: ghcr.io/caraml-dev/merlin-transformer:0.31.3
+  BatchConfig:
+    Tolerations:
+      - Effect: NoSchedule
+        Key: batch-job
+        Operator: Equal
+        Value: "true"
+    NodeSelectors:
+      node-workload-type: "batch"
   AuthorizationConfig:
     AuthorizationEnabled: false
 imageBuilder:

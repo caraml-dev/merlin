@@ -472,6 +472,13 @@ jobs:
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
       - name: Prune docker system to make some space
         run: docker system prune --all --force
+        # This step is needed to free up around 24GiB of storage on the GitHub runner to allow the e2e tests to pass
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this will remove tools that are actually needed (like Python, which is needed),
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
       - name: Print space consumption
         run: sudo df -h
       - name: Run E2E Test

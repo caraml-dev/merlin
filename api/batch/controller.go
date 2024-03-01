@@ -80,42 +80,52 @@ func init() {
 // Every time that Spark application has a new status, it will be added to the queue to be processed by processNextItem().
 // processNextItem() will do necessary jobs for updated Spark application (saving, cleaning)
 type Controller interface {
-	// Submit submit a prediction job to kubernetes in the given namespace
+	// Submit submits a prediction job to kubernetes in the given namespace
 	Submit(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error
-	// Stop stop an existing prediction job in the given namespace
+	// Stop stops an existing prediction job in the given namespace
 	Stop(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error
-	// Run run batch prediction controller loop
+	// Run runs batch prediction controller loop
 	Run(stopCh <-chan struct{})
 	cluster.ContainerFetcher
 }
 
 type controller struct {
-	store            storage.PredictionJobStorage
-	mlpAPIClient     mlp.APIClient
-	sparkClient      versioned.Interface
-	kubeClient       kubernetes.Interface
-	namespaceCreator cluster.NamespaceCreator
-	manifestManager  ManifestManager
-	informer         cache.SharedIndexInformer
-	queue            workqueue.RateLimitingInterface
+	batchJobTemplater *BatchJobTemplater
+	store             storage.PredictionJobStorage
+	mlpAPIClient      mlp.APIClient
+	sparkClient       versioned.Interface
+	kubeClient        kubernetes.Interface
+	namespaceCreator  cluster.NamespaceCreator
+	manifestManager   ManifestManager
+	informer          cache.SharedIndexInformer
+	queue             workqueue.RateLimitingInterface
 
 	cluster.ContainerFetcher
 }
 
-func NewController(store storage.PredictionJobStorage, mlpAPIClient mlp.APIClient, sparkClient versioned.Interface, kubeClient kubernetes.Interface, manifestManager ManifestManager, envMetaData cluster.Metadata) Controller {
+func NewController(
+	store storage.PredictionJobStorage,
+	mlpAPIClient mlp.APIClient,
+	sparkClient versioned.Interface,
+	kubeClient kubernetes.Interface,
+	manifestManager ManifestManager,
+	envMetaData cluster.Metadata,
+	batchJobTemplater *BatchJobTemplater,
+) Controller {
 	informerFactory := externalversions.NewSharedInformerFactory(sparkClient, resyncPeriod)
 	informer := informerFactory.Sparkoperator().V1beta2().SparkApplications().Informer()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
 	controller := &controller{
-		store:            store,
-		mlpAPIClient:     mlpAPIClient,
-		sparkClient:      sparkClient,
-		kubeClient:       kubeClient,
-		manifestManager:  manifestManager,
-		namespaceCreator: cluster.NewNamespaceCreator(kubeClient.CoreV1(), time.Second*5),
-		informer:         informer,
-		queue:            queue,
+		batchJobTemplater: batchJobTemplater,
+		store:             store,
+		mlpAPIClient:      mlpAPIClient,
+		sparkClient:       sparkClient,
+		kubeClient:        kubeClient,
+		manifestManager:   manifestManager,
+		namespaceCreator:  cluster.NewNamespaceCreator(kubeClient.CoreV1(), time.Second*5),
+		informer:          informer,
+		queue:             queue,
 
 		ContainerFetcher: cluster.NewContainerFetcher(kubeClient.CoreV1(), envMetaData),
 	}
@@ -160,7 +170,7 @@ func (c *controller) Submit(ctx context.Context, predictionJob *models.Predictio
 		return fmt.Errorf("failed creating job specification configmap for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
 
-	sparkResource, err := CreateSparkApplicationResource(predictionJob)
+	sparkResource, err := c.batchJobTemplater.CreateSparkApplicationResource(predictionJob)
 	if err != nil {
 		return fmt.Errorf("failed creating spark application resource for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
