@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/caraml-dev/merlin/mlp"
@@ -193,9 +192,10 @@ func TestNewService(t *testing.T) {
 		endpoint *VersionEndpoint
 	}
 	tests := []struct {
-		name string
-		args args
-		want *Service
+		name                      string
+		args                      args
+		want                      *Service
+		expectedPredictorProtocol protocol.Protocol
 	}{
 		{
 			name: "No model option",
@@ -229,6 +229,54 @@ func TestNewService(t *testing.T) {
 				AutoscalingPolicy: endpoint.AutoscalingPolicy,
 				Protocol:          endpoint.Protocol,
 			},
+			expectedPredictorProtocol: endpoint.Protocol,
+		},
+		{
+			name: "STD transformer UPI - Predictor using UPI",
+			args: args{
+				model:    model,
+				version:  version,
+				modelOpt: &ModelOption{},
+				endpoint: &VersionEndpoint{
+					RevisionID: revisionID,
+					Protocol:   protocol.UpiV1,
+					Transformer: &Transformer{
+						TransformerType: StandardTransformerType,
+						Enabled:         true,
+						EnvVars:         EnvVars{},
+					},
+				},
+			},
+			want: &Service{
+				Name:            fmt.Sprintf("%s-%s-r%s", model.Name, version.ID.String(), revisionID),
+				ModelName:       model.Name,
+				ModelVersion:    version.ID.String(),
+				RevisionID:      revisionID,
+				Namespace:       model.Project.Name,
+				ArtifactURI:     version.ArtifactURI,
+				Type:            model.Type,
+				Options:         &ModelOption{},
+				ResourceRequest: endpoint.ResourceRequest,
+				EnvVars:         endpoint.EnvVars,
+				Metadata: Metadata{
+					App:       model.Name,
+					Component: ComponentModelVersion,
+					Labels:    serviceLabels,
+					Stream:    model.Project.Stream,
+					Team:      model.Project.Team,
+				},
+				Transformer: &Transformer{
+					TransformerType: StandardTransformerType,
+					Enabled:         true,
+					EnvVars:         EnvVars{},
+				},
+				Logger:                      endpoint.Logger,
+				DeploymentMode:              endpoint.DeploymentMode,
+				AutoscalingPolicy:           endpoint.AutoscalingPolicy,
+				Protocol:                    protocol.UpiV1,
+				PredictorUPIOverHTTPEnabled: false,
+			},
+			expectedPredictorProtocol: protocol.UpiV1,
 		},
 		{
 			name: "STD transformer UPI - Predictor using HTTP",
@@ -241,6 +289,7 @@ func TestNewService(t *testing.T) {
 					Protocol:   protocol.UpiV1,
 					Transformer: &Transformer{
 						TransformerType: StandardTransformerType,
+						Enabled:         true,
 						EnvVars: EnvVars{
 							{
 								Name:  transformerpkg.PredictorUPIHTTPEnabled,
@@ -270,6 +319,7 @@ func TestNewService(t *testing.T) {
 				},
 				Transformer: &Transformer{
 					TransformerType: StandardTransformerType,
+					Enabled:         true,
 					EnvVars: EnvVars{
 						{
 							Name:  transformerpkg.PredictorUPIHTTPEnabled,
@@ -283,13 +333,71 @@ func TestNewService(t *testing.T) {
 				Protocol:                    protocol.UpiV1,
 				PredictorUPIOverHTTPEnabled: true,
 			},
+			expectedPredictorProtocol: protocol.HttpJson,
+		},
+		{
+			name: "PyFunc UPI",
+			args: args{
+				model:    model,
+				version:  version,
+				modelOpt: &ModelOption{},
+				endpoint: &VersionEndpoint{
+					RevisionID: revisionID,
+					Protocol:   protocol.UpiV1,
+					Transformer: &Transformer{
+						TransformerType: StandardTransformerType,
+						EnvVars: EnvVars{
+							{
+								Name:  transformerpkg.PredictorUPIHTTPEnabled,
+								Value: "true",
+							},
+						},
+						Enabled: false,
+					},
+				},
+			},
+			expectedPredictorProtocol: protocol.UpiV1,
+			want: &Service{
+				Name:            fmt.Sprintf("%s-%s-r%s", model.Name, version.ID.String(), revisionID),
+				ModelName:       model.Name,
+				ModelVersion:    version.ID.String(),
+				RevisionID:      revisionID,
+				Namespace:       model.Project.Name,
+				ArtifactURI:     version.ArtifactURI,
+				Type:            model.Type,
+				Options:         &ModelOption{},
+				ResourceRequest: endpoint.ResourceRequest,
+				EnvVars:         endpoint.EnvVars,
+				Metadata: Metadata{
+					App:       model.Name,
+					Component: ComponentModelVersion,
+					Labels:    serviceLabels,
+					Stream:    model.Project.Stream,
+					Team:      model.Project.Team,
+				},
+				Transformer: &Transformer{
+					TransformerType: StandardTransformerType,
+					Enabled:         false,
+					EnvVars: EnvVars{
+						{
+							Name:  transformerpkg.PredictorUPIHTTPEnabled,
+							Value: "true",
+						},
+					},
+				},
+				Logger:                      endpoint.Logger,
+				DeploymentMode:              endpoint.DeploymentMode,
+				AutoscalingPolicy:           endpoint.AutoscalingPolicy,
+				Protocol:                    protocol.UpiV1,
+				PredictorUPIOverHTTPEnabled: false,
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewService(tt.args.model, tt.args.version, tt.args.modelOpt, tt.args.endpoint); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewService() =\n\t%+v\n, want\n\t%+v", got, tt.want)
-			}
+			got := NewService(tt.args.model, tt.args.version, tt.args.modelOpt, tt.args.endpoint)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.expectedPredictorProtocol, got.PredictorProtocol())
 		})
 	}
 }

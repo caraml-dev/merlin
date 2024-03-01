@@ -86,12 +86,12 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		CurrentIsvcName:             endpoint.InferenceServiceName,
 		EnabledModelObservability:   endpoint.EnableModelObservability,
 		ModelSchema:                 version.ModelSchema,
-		PredictorUPIOverHTTPEnabled: predictorUPIOverHTTPEnabled(endpoint.Transformer),
+		PredictorUPIOverHTTPEnabled: predictorUPIOverHTTPEnabled(endpoint.Transformer, endpoint.Protocol),
 	}
 }
 
-func predictorUPIOverHTTPEnabled(transformer *Transformer) bool {
-	if transformer == nil {
+func predictorUPIOverHTTPEnabled(transformer *Transformer, modelProtocol protocol.Protocol) bool {
+	if transformer == nil || !transformer.Enabled || modelProtocol != protocol.UpiV1 {
 		return false
 	}
 	for _, val := range transformer.EnvVars {
@@ -107,7 +107,7 @@ func predictorUPIOverHTTPEnabled(transformer *Transformer) bool {
 }
 
 func (svc *Service) PredictorProtocol() protocol.Protocol {
-	if svc.Protocol == protocol.UpiV1 && svc.PredictorUPIOverHTTPEnabled {
+	if svc.PredictorUPIOverHTTPEnabled {
 		return protocol.HttpJson
 	}
 	return svc.Protocol
