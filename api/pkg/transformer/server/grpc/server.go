@@ -13,13 +13,11 @@ import (
 
 	"github.com/afex/hystrix-go/hystrix"
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
-	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/config"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/grpc/interceptors"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/instrumentation"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
-	"github.com/go-coldbrew/grpcpool"
 	"github.com/gorilla/mux"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/copier"
@@ -34,9 +32,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -51,8 +47,7 @@ type UPIServer struct {
 	upiv1.UnimplementedUniversalPredictionServiceServer
 
 	opts                  *config.Options
-	modelClient           upiv1.UniversalPredictionServiceClient
-	conn                  grpcpool.ConnPool
+	predictorClient       upiPredictorClient
 	instrumentationRouter *mux.Router
 	logger                *zap.Logger
 	tracer                trace.Tracer
@@ -73,37 +68,15 @@ type UPIServer struct {
 
 // NewUPIServer creates GRPC server that implement UPI Service
 func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentationRouter *mux.Router, logger *zap.Logger) (*UPIServer, error) {
-	dialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
 
-	if opts.ModelGRPCKeepAliveEnabled {
-		dialOpts = append(dialOpts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Timeout:             opts.ModelGRPCKeepAliveTime,
-			Time:                opts.ModelGRPCKeepAliveTimeout,
-			PermitWithoutStream: true,
-		}))
-	}
-
-	connPool, err := grpcpool.DialContext(context.Background(), opts.ModelPredictURL, uint(opts.ModelServerConnCount), dialOpts...)
+	upiPredictorClient, err := newUPIPredictorClient(opts)
 	if err != nil {
 		return nil, err
 	}
-
-	hystrix.ConfigureCommand(opts.ModelGRPCHystrixCommandName, hystrix.CommandConfig{
-		Timeout:                hystrixpkg.DurationToInt(opts.ModelTimeout, time.Millisecond),
-		MaxConcurrentRequests:  opts.ModelHystrixMaxConcurrentRequests,
-		RequestVolumeThreshold: opts.ModelHystrixRequestVolumeThreshold,
-		SleepWindow:            opts.ModelHystrixSleepWindowMs,
-		ErrorPercentThreshold:  opts.ModelHystrixErrorPercentageThreshold,
-	})
-
-	modelClient := upiv1.NewUniversalPredictionServiceClient(connPool)
 	svr := &UPIServer{
 		opts:                  opts,
-		modelClient:           modelClient,
-		conn:                  connPool,
 		instrumentationRouter: instrumentationRouter,
+		predictorClient:       upiPredictorClient,
 		logger:                logger,
 		tracer:                otel.Tracer("pkg/transformer/server/grpc"),
 	}
@@ -178,7 +151,7 @@ func (us *UPIServer) Run() {
 	}
 
 	us.logger.Info("shutting down standard transformer")
-	if err := us.conn.Close(); err != nil {
+	if err := us.predictorClient.close(); err != nil {
 		us.logger.Error(fmt.Sprintf("failed to close connection %v", err))
 	}
 	us.logger.Info("closed connection to model prediction server")
@@ -311,21 +284,8 @@ func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRe
 	ctx, span := us.tracer.Start(ctx, string("predict"))
 	defer span.End()
 
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		ctx = metadata.NewOutgoingContext(ctx, md)
-	}
-
 	predictStartTime := time.Now()
-	var modelResponse *upiv1.PredictValuesResponse
-	err := hystrix.Do(us.opts.ModelGRPCHystrixCommandName, func() error {
-		response, err := us.modelClient.PredictValues(ctx, (*upiv1.PredictValuesRequest)(payload), grpc.WaitForReady(true))
-		if err != nil {
-			return err
-		}
-		modelResponse = response
-		return nil
-	}, nil)
-
+	modelResponse, err := us.predictorClient.predict(ctx, payload)
 	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
 		instrumentation.RecordPredictionLatency(false, float64(predictionDurationMs))
@@ -358,4 +318,13 @@ func getGRPCCode(err error) codes.Code {
 		return codes.DeadlineExceeded
 	}
 	return codes.Internal
+}
+
+func getUrl(rawUrl string) string {
+	urlStr := rawUrl
+	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
+		urlStr = "http://" + urlStr
+	}
+
+	return urlStr
 }

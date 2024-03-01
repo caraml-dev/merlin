@@ -151,7 +151,6 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer resp.Body.Close() //nolint: errcheck
-
 	modelResponseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		s.logger.Error("error reading model response", zap.Error(err))

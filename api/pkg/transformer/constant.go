@@ -28,5 +28,7 @@ const (
 	KafkaConnectTimeoutMS    = "KAFKA_CONNECT_TIMEOUT_MS"
 	KafkaSerialization       = "KAFKA_SERIALIZATION_FORMAT"
 
+	PredictorUPIHTTPEnabled = "PREDICTOR_UPI_HTTP_ENABLED"
+
 	PromNamespace = "merlin_transformer"
 )
