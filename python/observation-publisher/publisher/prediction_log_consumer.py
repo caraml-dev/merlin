@@ -9,14 +9,13 @@ import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
 from dataclasses_json import DataClassJsonMixin, dataclass_json
-from merlin.observability.inference import InferenceSchema
+from merlin.observability.inference import InferenceSchema, ObservationType
 
 from publisher.config import ObservationSource, ObservationSourceConfig
 from publisher.metric import MetricWriter
 from publisher.observation_sink import ObservationSink
-from publisher.prediction_log_parser import (MODEL_VERSION_COLUMN,
+from publisher.prediction_log_parser import (PREDICTION_LOG_MODEL_VERSION_COLUMN,
                                              PREDICTION_LOG_TIMESTAMP_COLUMN,
-                                             ROW_ID_COLUMN, SESSION_ID_COLUMN,
                                              PredictionLogFeatureTable,
                                              PredictionLogResultsTable)
 
@@ -46,7 +45,6 @@ class PredictionLogConsumer(abc.ABC):
     ):
         try:
             buffered_logs = []
-            buffered_max_duration_seconds = 60
             buffer_start_time = datetime.now()
             while True:
                 logs = self.poll_new_logs()
@@ -56,7 +54,7 @@ class PredictionLogConsumer(abc.ABC):
                 buffered_duration = (datetime.now() - buffer_start_time).seconds
                 if (
                     len(buffered_logs) < self.buffer_capacity
-                    and buffered_duration < buffered_max_duration_seconds
+                    and buffered_duration < self.buffer_max_duration_seconds
                 ):
                     continue
                 df = log_batch_to_dataframe(
@@ -188,10 +186,10 @@ def log_to_records(
         feature_table.columns
         + prediction_results_table.columns
         + [
-            SESSION_ID_COLUMN,
-            ROW_ID_COLUMN,
+            inference_schema.session_id_column,
+            inference_schema.row_id_column,
             PREDICTION_LOG_TIMESTAMP_COLUMN,
-            MODEL_VERSION_COLUMN,
+            PREDICTION_LOG_MODEL_VERSION_COLUMN,
         ]
     )
 
@@ -206,4 +204,5 @@ def log_batch_to_dataframe(
     for log in logs:
         rows, column_names = log_to_records(log, inference_schema, model_version)
         combined_records.extend(rows)
-    return pd.DataFrame.from_records(combined_records, columns=column_names)
+    df = pd.DataFrame.from_records(combined_records, columns=column_names)
+    return inference_schema.preprocess(df, [ObservationType.PREDICTION])

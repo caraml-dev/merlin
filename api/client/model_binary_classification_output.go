@@ -21,7 +21,7 @@ var _ MappedNullable = &BinaryClassificationOutput{}
 // BinaryClassificationOutput struct for BinaryClassificationOutput
 type BinaryClassificationOutput struct {
 	PredictionScoreColumn string                     `json:"prediction_score_column"`
-	ActualLabelColumn     *string                    `json:"actual_label_column,omitempty"`
+	ActualScoreColumn     string                     `json:"actual_score_column"`
 	PositiveClassLabel    string                     `json:"positive_class_label"`
 	NegativeClassLabel    string                     `json:"negative_class_label"`
 	ScoreThreshold        *float32                   `json:"score_threshold,omitempty"`
@@ -34,9 +34,10 @@ type _BinaryClassificationOutput BinaryClassificationOutput
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewBinaryClassificationOutput(predictionScoreColumn string, positiveClassLabel string, negativeClassLabel string, outputClass ModelPredictionOutputClass) *BinaryClassificationOutput {
+func NewBinaryClassificationOutput(predictionScoreColumn string, actualScoreColumn string, positiveClassLabel string, negativeClassLabel string, outputClass ModelPredictionOutputClass) *BinaryClassificationOutput {
 	this := BinaryClassificationOutput{}
 	this.PredictionScoreColumn = predictionScoreColumn
+	this.ActualScoreColumn = actualScoreColumn
 	this.PositiveClassLabel = positiveClassLabel
 	this.NegativeClassLabel = negativeClassLabel
 	this.OutputClass = outputClass
@@ -75,36 +76,28 @@ func (o *BinaryClassificationOutput) SetPredictionScoreColumn(v string) {
 	o.PredictionScoreColumn = v
 }
 
-// GetActualLabelColumn returns the ActualLabelColumn field value if set, zero value otherwise.
-func (o *BinaryClassificationOutput) GetActualLabelColumn() string {
-	if o == nil || IsNil(o.ActualLabelColumn) {
+// GetActualScoreColumn returns the ActualScoreColumn field value
+func (o *BinaryClassificationOutput) GetActualScoreColumn() string {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.ActualLabelColumn
+
+	return o.ActualScoreColumn
 }
 
-// GetActualLabelColumnOk returns a tuple with the ActualLabelColumn field value if set, nil otherwise
+// GetActualScoreColumnOk returns a tuple with the ActualScoreColumn field value
 // and a boolean to check if the value has been set.
-func (o *BinaryClassificationOutput) GetActualLabelColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.ActualLabelColumn) {
+func (o *BinaryClassificationOutput) GetActualScoreColumnOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return o.ActualLabelColumn, true
+	return &o.ActualScoreColumn, true
 }
 
-// HasActualLabelColumn returns a boolean if a field has been set.
-func (o *BinaryClassificationOutput) HasActualLabelColumn() bool {
-	if o != nil && !IsNil(o.ActualLabelColumn) {
-		return true
-	}
-
-	return false
-}
-
-// SetActualLabelColumn gets a reference to the given string and assigns it to the ActualLabelColumn field.
-func (o *BinaryClassificationOutput) SetActualLabelColumn(v string) {
-	o.ActualLabelColumn = &v
+// SetActualScoreColumn sets field value
+func (o *BinaryClassificationOutput) SetActualScoreColumn(v string) {
+	o.ActualScoreColumn = v
 }
 
 // GetPositiveClassLabel returns the PositiveClassLabel field value
@@ -222,9 +215,7 @@ func (o BinaryClassificationOutput) MarshalJSON() ([]byte, error) {
 func (o BinaryClassificationOutput) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["prediction_score_column"] = o.PredictionScoreColumn
-	if !IsNil(o.ActualLabelColumn) {
-		toSerialize["actual_label_column"] = o.ActualLabelColumn
-	}
+	toSerialize["actual_score_column"] = o.ActualScoreColumn
 	toSerialize["positive_class_label"] = o.PositiveClassLabel
 	toSerialize["negative_class_label"] = o.NegativeClassLabel
 	if !IsNil(o.ScoreThreshold) {
@@ -240,6 +231,7 @@ func (o *BinaryClassificationOutput) UnmarshalJSON(bytes []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"prediction_score_column",
+		"actual_score_column",
 		"positive_class_label",
 		"negative_class_label",
 		"output_class",

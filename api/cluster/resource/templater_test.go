@@ -231,19 +231,20 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			ID:      models.ID(1),
 			ModelID: models.ID(1),
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				TagColumns:         []string{"tags"},
+				SessionIDColumn: "session_id",
+				RowIDColumn:     "row_id",
+				TagColumns:      []string{"tags"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Int64,
 					"featureC": models.String,
 					"featureD": models.Boolean,
 				},
+				FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					RankingOutput: &models.RankingOutput{
-						PredictionGroupIDColumn: "session_id",
-						RankScoreColumn:         "score",
-						RelevanceScoreColumn:    "relevance_score",
+						RankScoreColumn:      "score",
+						RelevanceScoreColumn: "relevance_score",
 					},
 				},
 			},
@@ -858,19 +859,20 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
 							"featureC": models.String,
 							"featureD": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
 							},
 						},
 					},
@@ -945,19 +947,20 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
-						TagColumns:         []string{"tags"},
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
+						TagColumns:      []string{"tags"},
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Int64,
 							"featureC": models.String,
 							"featureD": models.Boolean,
 						},
+						FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
 							},
 						},
 					},

@@ -8,6 +8,10 @@ import pandas as pd
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
 
+DEFAULT_SESSION_ID_COLUMN = "session_id"
+DEFAULT_ROW_ID_COLUMN = "row_id"
+
+
 class ObservationType(Enum):
     """
     Supported observation types.
@@ -80,13 +84,15 @@ class PredictionOutput(abc.ABC):
     be made to the input dataframe.
     
     :param df: Input dataframe.
+    :param session_id_column: Name of the column containing the session id.
+    :param row_id_column: Name of the column containing the row id.
     :param observation_types: Types of observations to be included in the output dataframe.
     :return: output dataframe
     """
 
     @abc.abstractmethod
     def preprocess(
-        self, df: pd.DataFrame, observation_types: List[ObservationType]
+        self, df: pd.DataFrame, session_id_column: str, row_id_column: str, observation_types: List[ObservationType]
     ) -> pd.DataFrame:
         raise NotImplementedError
 
@@ -120,7 +126,7 @@ class RegressionOutput(PredictionOutput):
     actual_score_column: str
 
     def preprocess(
-        self, df: pd.DataFrame, observation_types: List[ObservationType]
+        self, df: pd.DataFrame, session_id_column: str, row_id_column: str, observation_types: List[ObservationType]
     ) -> pd.DataFrame:
         return df
 
@@ -144,14 +150,14 @@ class BinaryClassificationOutput(PredictionOutput):
     Attributes:
         prediction_score_column: Name of the column containing the prediction score.
             Prediction score must be between 0.0 and 1.0.
-        actual_label_column: Name of the column containing the actual class.
+        actual_score_column: Name of the column containing the actual score.
         positive_class_label: Label for positive class.
         negative_class_label: Label for negative class.
         score_threshold: Score threshold for prediction to be considered as positive class.
     """
 
     prediction_score_column: str
-    actual_label_column: str
+    actual_score_column: str
     positive_class_label: str
     negative_class_label: str
     score_threshold: float = 0.5
@@ -161,8 +167,8 @@ class BinaryClassificationOutput(PredictionOutput):
         return "_prediction_label"
 
     @property
-    def actual_score_column(self) -> str:
-        return "_actual_score"
+    def actual_label_column(self) -> str:
+        return "_actual_label"
 
     def prediction_label(self, prediction_score: float) -> str:
         """
@@ -176,28 +182,28 @@ class BinaryClassificationOutput(PredictionOutput):
             else self.negative_class_label
         )
 
-    def actual_score(self, actual_label: str) -> float:
+    def actual_label(self, actual_score: int) -> str:
         """
-        Derive actual score from actual label.
-        :param actual_label: Actual label.
-        :return: actual score. Either 0.0 for negative class or 1.0 for positive class.
+        Derive actual label from actual score.
+        :param actual_score: Actual score.
+        :return: actual label
         """
-        if actual_label not in [self.positive_class_label, self.negative_class_label]:
-            raise ValueError(
-                f"Actual label must be one of the classes, got {actual_label}"
-            )
-        return 1.0 if actual_label == self.positive_class_label else 0.0
+        return (
+            self.positive_class_label
+            if actual_score >= self.score_threshold
+            else self.negative_class_label
+        )
 
     def preprocess(
-        self, df: pd.DataFrame, observation_types: List[ObservationType]
+        self, df: pd.DataFrame, session_id_column: str, row_id_column: str, observation_types: List[ObservationType]
     ) -> pd.DataFrame:
         if ObservationType.PREDICTION in observation_types:
             df[self.prediction_label_column] = df[self.prediction_score_column].apply(
                 self.prediction_label
             )
         if ObservationType.GROUND_TRUTH in observation_types:
-            df[self.actual_score_column] = df[self.actual_label_column].apply(
-                self.actual_score
+            df[self.actual_label_column] = df[self.actual_score_column].apply(
+                self.actual_label
             )
         return df
 
@@ -218,13 +224,11 @@ class BinaryClassificationOutput(PredictionOutput):
 @dataclass
 class RankingOutput(PredictionOutput):
     rank_score_column: str
-    prediction_group_id_column: str
     relevance_score_column: str
     """
     Ranking model prediction output schema.
     Attributes:
         rank_score_column: Name of the column containing the ranking score of the prediction.
-        prediction_group_id_column: Name of the column containing the prediction group id.
         relevance_score_column: Name of the column containing the relevance score of the prediction.
     """
 
@@ -233,11 +237,11 @@ class RankingOutput(PredictionOutput):
         return "_rank"
 
     def preprocess(
-        self, df: pd.DataFrame, observation_types: List[ObservationType]
+        self, df: pd.DataFrame, session_id_column: str, row_id_column: str, observation_types: List[ObservationType]
     ) -> pd.DataFrame:
         if ObservationType.PREDICTION in observation_types:
             df[self.rank_column] = (
-                df.groupby(self.prediction_group_id_column)[self.rank_score_column]
+                df.groupby(session_id_column)[self.rank_score_column]
                 .rank(method="first", ascending=False)
                 .astype(np.int_)
             )
@@ -245,8 +249,8 @@ class RankingOutput(PredictionOutput):
 
     def prediction_types(self) -> Dict[str, ValueType]:
         return {
+            self.rank_score_column: ValueType.FLOAT64,
             self.rank_column: ValueType.INT64,
-            self.prediction_group_id_column: ValueType.STRING,
         }
 
     def ground_truth_types(self) -> Dict[str, ValueType]:
@@ -265,7 +269,9 @@ class InferenceSchema:
             decoder=PredictionOutput.decode,
         )
     )
-    prediction_id_column: str = "prediction_id"
+    session_id_column: str = DEFAULT_SESSION_ID_COLUMN
+    row_id_column: str = DEFAULT_ROW_ID_COLUMN
+    feature_orders: Optional[List[str]] = None
     tag_columns: Optional[List[str]] = None
 
     @property
@@ -279,3 +285,22 @@ class InferenceSchema:
     @property
     def ground_truth_columns(self) -> List[str]:
         return list(self.model_prediction_output.ground_truth_types().keys())
+
+    def preprocess(
+        self, df: pd.DataFrame, observation_types: List[ObservationType]
+    ) -> pd.DataFrame:
+        return self.model_prediction_output.preprocess(
+            df, self.session_id_column, self.row_id_column, observation_types
+        )
+
+def add_prediction_id_column(df: pd.DataFrame, session_id_column: str, row_id_column: str, prediction_id_column: str) -> pd.DataFrame:
+    """
+    Add prediction id column to the dataframe.
+    :param df: Input dataframe.
+    :param session_id_column: Name of the column containing the session id.
+    :param row_id_column: Name of the column containing the row id.
+    :param prediction_id_column: Name of the prediction id column.
+    :return: Dataframe with prediction id column.
+    """
+    df[prediction_id_column] = df[session_id_column] + "_" + df[row_id_column]
+    return df

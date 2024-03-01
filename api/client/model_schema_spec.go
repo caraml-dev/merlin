@@ -20,10 +20,12 @@ var _ MappedNullable = &SchemaSpec{}
 
 // SchemaSpec struct for SchemaSpec
 type SchemaSpec struct {
-	PredictionIdColumn    string                `json:"prediction_id_column"`
+	SessionIdColumn       *string               `json:"session_id_column,omitempty"`
+	RowIdColumn           *string               `json:"row_id_column,omitempty"`
 	ModelPredictionOutput ModelPredictionOutput `json:"model_prediction_output"`
 	TagColumns            []string              `json:"tag_columns,omitempty"`
 	FeatureTypes          map[string]ValueType  `json:"feature_types"`
+	FeatureOrders         []string              `json:"feature_orders,omitempty"`
 }
 
 type _SchemaSpec SchemaSpec
@@ -32,9 +34,8 @@ type _SchemaSpec SchemaSpec
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSchemaSpec(predictionIdColumn string, modelPredictionOutput ModelPredictionOutput, featureTypes map[string]ValueType) *SchemaSpec {
+func NewSchemaSpec(modelPredictionOutput ModelPredictionOutput, featureTypes map[string]ValueType) *SchemaSpec {
 	this := SchemaSpec{}
-	this.PredictionIdColumn = predictionIdColumn
 	this.ModelPredictionOutput = modelPredictionOutput
 	this.FeatureTypes = featureTypes
 	return &this
@@ -48,28 +49,68 @@ func NewSchemaSpecWithDefaults() *SchemaSpec {
 	return &this
 }
 
-// GetPredictionIdColumn returns the PredictionIdColumn field value
-func (o *SchemaSpec) GetPredictionIdColumn() string {
-	if o == nil {
+// GetSessionIdColumn returns the SessionIdColumn field value if set, zero value otherwise.
+func (o *SchemaSpec) GetSessionIdColumn() string {
+	if o == nil || IsNil(o.SessionIdColumn) {
 		var ret string
 		return ret
 	}
-
-	return o.PredictionIdColumn
+	return *o.SessionIdColumn
 }
 
-// GetPredictionIdColumnOk returns a tuple with the PredictionIdColumn field value
+// GetSessionIdColumnOk returns a tuple with the SessionIdColumn field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SchemaSpec) GetPredictionIdColumnOk() (*string, bool) {
-	if o == nil {
+func (o *SchemaSpec) GetSessionIdColumnOk() (*string, bool) {
+	if o == nil || IsNil(o.SessionIdColumn) {
 		return nil, false
 	}
-	return &o.PredictionIdColumn, true
+	return o.SessionIdColumn, true
 }
 
-// SetPredictionIdColumn sets field value
-func (o *SchemaSpec) SetPredictionIdColumn(v string) {
-	o.PredictionIdColumn = v
+// HasSessionIdColumn returns a boolean if a field has been set.
+func (o *SchemaSpec) HasSessionIdColumn() bool {
+	if o != nil && !IsNil(o.SessionIdColumn) {
+		return true
+	}
+
+	return false
+}
+
+// SetSessionIdColumn gets a reference to the given string and assigns it to the SessionIdColumn field.
+func (o *SchemaSpec) SetSessionIdColumn(v string) {
+	o.SessionIdColumn = &v
+}
+
+// GetRowIdColumn returns the RowIdColumn field value if set, zero value otherwise.
+func (o *SchemaSpec) GetRowIdColumn() string {
+	if o == nil || IsNil(o.RowIdColumn) {
+		var ret string
+		return ret
+	}
+	return *o.RowIdColumn
+}
+
+// GetRowIdColumnOk returns a tuple with the RowIdColumn field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SchemaSpec) GetRowIdColumnOk() (*string, bool) {
+	if o == nil || IsNil(o.RowIdColumn) {
+		return nil, false
+	}
+	return o.RowIdColumn, true
+}
+
+// HasRowIdColumn returns a boolean if a field has been set.
+func (o *SchemaSpec) HasRowIdColumn() bool {
+	if o != nil && !IsNil(o.RowIdColumn) {
+		return true
+	}
+
+	return false
+}
+
+// SetRowIdColumn gets a reference to the given string and assigns it to the RowIdColumn field.
+func (o *SchemaSpec) SetRowIdColumn(v string) {
+	o.RowIdColumn = &v
 }
 
 // GetModelPredictionOutput returns the ModelPredictionOutput field value
@@ -152,6 +193,38 @@ func (o *SchemaSpec) SetFeatureTypes(v map[string]ValueType) {
 	o.FeatureTypes = v
 }
 
+// GetFeatureOrders returns the FeatureOrders field value if set, zero value otherwise.
+func (o *SchemaSpec) GetFeatureOrders() []string {
+	if o == nil || IsNil(o.FeatureOrders) {
+		var ret []string
+		return ret
+	}
+	return o.FeatureOrders
+}
+
+// GetFeatureOrdersOk returns a tuple with the FeatureOrders field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SchemaSpec) GetFeatureOrdersOk() ([]string, bool) {
+	if o == nil || IsNil(o.FeatureOrders) {
+		return nil, false
+	}
+	return o.FeatureOrders, true
+}
+
+// HasFeatureOrders returns a boolean if a field has been set.
+func (o *SchemaSpec) HasFeatureOrders() bool {
+	if o != nil && !IsNil(o.FeatureOrders) {
+		return true
+	}
+
+	return false
+}
+
+// SetFeatureOrders gets a reference to the given []string and assigns it to the FeatureOrders field.
+func (o *SchemaSpec) SetFeatureOrders(v []string) {
+	o.FeatureOrders = v
+}
+
 func (o SchemaSpec) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -162,12 +235,20 @@ func (o SchemaSpec) MarshalJSON() ([]byte, error) {
 
 func (o SchemaSpec) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["prediction_id_column"] = o.PredictionIdColumn
+	if !IsNil(o.SessionIdColumn) {
+		toSerialize["session_id_column"] = o.SessionIdColumn
+	}
+	if !IsNil(o.RowIdColumn) {
+		toSerialize["row_id_column"] = o.RowIdColumn
+	}
 	toSerialize["model_prediction_output"] = o.ModelPredictionOutput
 	if !IsNil(o.TagColumns) {
 		toSerialize["tag_columns"] = o.TagColumns
 	}
 	toSerialize["feature_types"] = o.FeatureTypes
+	if !IsNil(o.FeatureOrders) {
+		toSerialize["feature_orders"] = o.FeatureOrders
+	}
 	return toSerialize, nil
 }
 
@@ -176,7 +257,6 @@ func (o *SchemaSpec) UnmarshalJSON(bytes []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"prediction_id_column",
 		"model_prediction_output",
 		"feature_types",
 	}

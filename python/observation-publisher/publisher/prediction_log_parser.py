@@ -3,14 +3,12 @@ from types import NoneType
 from typing import Dict, List, Optional, Union
 
 import numpy as np
-from google.protobuf.internal.well_known_types import ListValue, Struct
+from google.protobuf.struct_pb2 import ListValue, Struct
 from merlin.observability.inference import InferenceSchema, ValueType
 from typing_extensions import Self
 
-SESSION_ID_COLUMN = "session_id"
-ROW_ID_COLUMN = "row_id"
 PREDICTION_LOG_TIMESTAMP_COLUMN = "request_timestamp"
-MODEL_VERSION_COLUMN = "model_version"
+PREDICTION_LOG_MODEL_VERSION_COLUMN = "model_version"
 
 
 @dataclass
@@ -58,8 +56,16 @@ class PredictionLogResultsTable:
 
 
 def convert_to_numpy_value(
-    col_value: Optional[int | str | float | bool], value_type: ValueType
+    col_value: Optional[int | str | float | bool], value_type: Optional[ValueType]
 ) -> np.int64 | np.float64 | np.bool_ | np.str_:
+    if value_type is None:
+        if isinstance(col_value, (int, float)):
+            return np.float64(col_value)
+        if isinstance(col_value, str):
+            return np.str_(col_value)
+        else:
+            raise ValueError(f"Unable to infer numpy type for type: {type(col_value)}")
+
     match value_type:
         case ValueType.INT64:
             assert isinstance(col_value, (int, float))
@@ -79,7 +85,7 @@ def convert_to_numpy_value(
 
 def list_value_as_string_list(list_value: ListValue) -> List[str]:
     string_list: List[str] = []
-    for v in list_value:
+    for v in list_value.items():
         assert isinstance(v, str)
         string_list.append(v)
     return string_list
@@ -87,9 +93,10 @@ def list_value_as_string_list(list_value: ListValue) -> List[str]:
 
 def list_value_as_rows(list_value: ListValue) -> List[ListValue]:
     rows: List[ListValue] = []
-    for d in list_value:
+    for d in list_value.items():
         assert isinstance(d, ListValue)
         rows.append(d)
+
     return rows
 
 
@@ -97,11 +104,11 @@ def list_value_as_numpy_list(
     list_value: ListValue, column_names: List[str], column_types: Dict[str, ValueType]
 ) -> List[np.int64 | np.float64 | np.bool_ | np.str_]:
     column_values: List[int | str | float | bool | None] = []
-    for v in list_value:
+    for v in list_value.items():
         assert isinstance(v, (int, str, float, bool, NoneType))
         column_values.append(v)
 
     return [
-        convert_to_numpy_value(col_value, column_types[col_name])
+        convert_to_numpy_value(col_value, column_types.get(col_name))
         for col_value, col_name in zip(column_values, column_names)
     ]

@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List
 from pydantic import BaseModel, StrictStr
 from client.models.model_prediction_output_class import ModelPredictionOutputClass
 try:
@@ -31,7 +31,7 @@ class RegressionOutput(BaseModel):
     RegressionOutput
     """ # noqa: E501
     prediction_score_column: StrictStr
-    actual_score_column: Optional[StrictStr] = None
+    actual_score_column: StrictStr
     output_class: ModelPredictionOutputClass
     __properties: ClassVar[List[str]] = ["prediction_score_column", "actual_score_column", "output_class"]
 

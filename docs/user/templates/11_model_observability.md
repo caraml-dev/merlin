@@ -31,7 +31,7 @@ Currently the only supported model for model observability is PyFunc model, the 
 Beside changes in signature, you can see some of those methods returning new type, `ModelInput` and `ModelOutput`. `ModelInput` is a class that represents input information of the models, this class contains following fields:
 | Field | Type | Description|
 |-------|------|------------|
-| `prediction_ids` | List[str] | Unique identifier for each prediction |
+| `prediction_ids` | List[str] | Unique identifier for each row in prediction |
 | `features` | Union[Values, pandas.DataFrame] | Features value that is used by the model to generate prediction. Length of features should be the same with `prediction_ids` | 
 | `entities` | Optional[Union[Values, pandas.DataFrame]] | Additional data that are not used for prediction, but this data is used to retrieved another features, e.g `driver_id`, we can retrieve features associated with certain `driver_id`|
 | `session_id` | str | Identifier for the request. This value will be used together with `prediction_ids` as prediction identifier in model observability system  |
@@ -40,7 +40,7 @@ Beside changes in signature, you can see some of those methods returning new typ
 | Field | Type | Description |
 |-------|------|-------------|
 | `prediction` | Values | `predictions` contains prediction output from ml_predict, it may contains multiple columns e.g for multiclass classification or for binary classification that contains prediction score and label |
-| `prediction_ids` | List[str] | Unique identifier for each prediction output |
+| `prediction_ids` | List[str] | Unique identifier for each row in prediction output |
 
 Same like `ModelInput`, `ModelOutput` is also essential for model observability, it can be used to calculate prediction drift but more importantly it can calculate performance metrics.
 
@@ -83,7 +83,8 @@ model_schema = ModelSchema(spec=InferenceSchema(
             "featureC": ValueType.STRING,
             "featureD": ValueType.BOOLEAN
         },
-        prediction_id_column="prediction_id",
+        session_id_column="session_id",
+        row_id_column="prediction_id",
         model_prediction_output=RankingOutput(
             rank_score_column="score",
             prediction_group_id_column="session_id",

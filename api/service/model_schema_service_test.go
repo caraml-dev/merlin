@@ -37,7 +37,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(1),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -45,7 +46,7 @@ func Test_modelSchemaService_List(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								BinaryClassificationOutput: &models.BinaryClassificationOutput{
-									ActualLabelColumn:     "actual_label",
+									ActualScoreColumn:     "actual_score",
 									NegativeClassLabel:    "negative",
 									PositiveClassLabel:    "positive",
 									PredictionScoreColumn: "prediction_score",
@@ -58,7 +59,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 						ModelID: models.ID(1),
 						ID:      models.ID(2),
 						Spec: &models.SchemaSpec{
-							PredictionIDColumn: "prediction_id",
+							SessionIDColumn: "session_id",
+							RowIDColumn:     "row_id",
 							FeatureTypes: map[string]models.ValueType{
 								"featureA": models.Float64,
 								"featureB": models.Boolean,
@@ -66,9 +68,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 							},
 							ModelPredictionOutput: &models.ModelPredictionOutput{
 								RankingOutput: &models.RankingOutput{
-									PredictionGroupIDColumn: "session_id",
-									RankScoreColumn:         "score",
-									RelevanceScoreColumn:    "relevance_score",
+									RankScoreColumn:      "score",
+									RelevanceScoreColumn: "relevance_score",
 								},
 							},
 						},
@@ -85,7 +86,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -93,7 +95,7 @@ func Test_modelSchemaService_List(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -106,7 +108,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(2),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -114,9 +117,8 @@ func Test_modelSchemaService_List(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							RankingOutput: &models.RankingOutput{
-								PredictionGroupIDColumn: "session_id",
-								RankScoreColumn:         "score",
-								RelevanceScoreColumn:    "relevance_score",
+								RankScoreColumn:      "score",
+								RelevanceScoreColumn: "relevance_score",
 							},
 						},
 					},
@@ -176,7 +178,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				storageMock.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -184,7 +187,7 @@ func Test_modelSchemaService_Save(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -196,7 +199,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -204,7 +208,7 @@ func Test_modelSchemaService_Save(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -220,7 +224,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -228,7 +233,7 @@ func Test_modelSchemaService_Save(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -242,7 +247,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				ID:      models.ID(1),
 				ModelID: models.ID(1),
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Boolean,
@@ -250,7 +256,7 @@ func Test_modelSchemaService_Save(t *testing.T) {
 					},
 					ModelPredictionOutput: &models.ModelPredictionOutput{
 						BinaryClassificationOutput: &models.BinaryClassificationOutput{
-							ActualLabelColumn:     "actual_label",
+							ActualScoreColumn:     "actual_score",
 							NegativeClassLabel:    "negative",
 							PositiveClassLabel:    "positive",
 							PredictionScoreColumn: "prediction_score",
@@ -267,7 +273,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				storageMock.On("Save", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -275,7 +282,7 @@ func Test_modelSchemaService_Save(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -291,7 +298,8 @@ func Test_modelSchemaService_Save(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -299,7 +307,7 @@ func Test_modelSchemaService_Save(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -346,7 +354,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				storageMock.On("Delete", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -354,7 +363,7 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -370,7 +379,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -378,7 +388,7 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -396,7 +406,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				storageMock.On("Delete", mock.Anything, &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -404,7 +415,7 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -420,7 +431,8 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 				modelSchema: &models.ModelSchema{
 					ModelID: models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -428,7 +440,7 @@ func Test_modelSchemaService_Delete(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -473,7 +485,8 @@ func Test_modelSchemaService_FindByID(t *testing.T) {
 					ModelID: models.ID(1),
 					ID:      models.ID(1),
 					Spec: &models.SchemaSpec{
-						PredictionIDColumn: "prediction_id",
+						SessionIDColumn: "session_id",
+						RowIDColumn:     "row_id",
 						FeatureTypes: map[string]models.ValueType{
 							"featureA": models.Float64,
 							"featureB": models.Boolean,
@@ -481,7 +494,7 @@ func Test_modelSchemaService_FindByID(t *testing.T) {
 						},
 						ModelPredictionOutput: &models.ModelPredictionOutput{
 							BinaryClassificationOutput: &models.BinaryClassificationOutput{
-								ActualLabelColumn:     "actual_label",
+								ActualScoreColumn:     "actual_score",
 								NegativeClassLabel:    "negative",
 								PositiveClassLabel:    "positive",
 								PredictionScoreColumn: "prediction_score",
@@ -501,7 +514,8 @@ func Test_modelSchemaService_FindByID(t *testing.T) {
 				ModelID: models.ID(1),
 				ID:      models.ID(1),
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Boolean,
@@ -509,7 +523,7 @@ func Test_modelSchemaService_FindByID(t *testing.T) {
 					},
 					ModelPredictionOutput: &models.ModelPredictionOutput{
 						BinaryClassificationOutput: &models.BinaryClassificationOutput{
-							ActualLabelColumn:     "actual_label",
+							ActualScoreColumn:     "actual_score",
 							NegativeClassLabel:    "negative",
 							PositiveClassLabel:    "positive",
 							PredictionScoreColumn: "prediction_score",

@@ -43,17 +43,19 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 		modelSchema := &models.ModelSchema{
 			ModelID: m.ID,
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				TagColumns:         []string{"tag"},
+				SessionIDColumn: "session_id",
+				RowIDColumn:     "row_id",
+				TagColumns:      []string{"tag"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Float64,
 					"featureC": models.Int64,
 					"featureD": models.Boolean,
 				},
+				FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					BinaryClassificationOutput: &models.BinaryClassificationOutput{
-						ActualLabelColumn:     "actual_label",
+						ActualScoreColumn:     "actual_score",
 						NegativeClassLabel:    "negative",
 						PositiveClassLabel:    "positive",
 						PredictionLabelColumn: "prediction_label",
@@ -69,10 +71,9 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 
 		schema.Spec.ModelPredictionOutput = &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroupIDColumn: "session_id",
-				RankScoreColumn:         "score",
-				RelevanceScoreColumn:    "relevance_score",
-				OutputClass:             models.Ranking,
+				RankScoreColumn:      "score",
+				RelevanceScoreColumn: "relevance_score",
+				OutputClass:          models.Ranking,
 			},
 		}
 		_, err = modelSchemaStorage.Save(context.Background(), schema)
@@ -81,10 +82,9 @@ func Test_modelSchemaStorage_Save(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, newSchema.Spec.ModelPredictionOutput, &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroupIDColumn: "session_id",
-				RankScoreColumn:         "score",
-				RelevanceScoreColumn:    "relevance_score",
-				OutputClass:             models.Ranking,
+				RankScoreColumn:      "score",
+				RelevanceScoreColumn: "relevance_score",
+				OutputClass:          models.Ranking,
 			},
 		})
 	})
@@ -122,8 +122,9 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 			ModelSchema: &models.ModelSchema{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -132,7 +133,7 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 					},
 					ModelPredictionOutput: &models.ModelPredictionOutput{
 						BinaryClassificationOutput: &models.BinaryClassificationOutput{
-							ActualLabelColumn:     "actual_label",
+							ActualScoreColumn:     "actual_score",
 							NegativeClassLabel:    "negative",
 							PositiveClassLabel:    "positive",
 							PredictionLabelColumn: "prediction_label",
@@ -152,7 +153,7 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 
 		assert.Equal(t, &models.ModelPredictionOutput{
 			BinaryClassificationOutput: &models.BinaryClassificationOutput{
-				ActualLabelColumn:     "actual_label",
+				ActualScoreColumn:     "actual_score",
 				NegativeClassLabel:    "negative",
 				PositiveClassLabel:    "positive",
 				PredictionLabelColumn: "prediction_label",
@@ -166,7 +167,7 @@ func Test_modelSchemaStorage_SaveThroughVersion(t *testing.T) {
 		assert.Equal(t, models.ID(1), newSchema.ID)
 		assert.Equal(t, &models.ModelPredictionOutput{
 			BinaryClassificationOutput: &models.BinaryClassificationOutput{
-				ActualLabelColumn:     "actual_label",
+				ActualScoreColumn:     "actual_score",
 				NegativeClassLabel:    "negative",
 				PositiveClassLabel:    "positive",
 				PredictionLabelColumn: "prediction_label",
@@ -206,8 +207,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 			{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -216,7 +218,7 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 					},
 					ModelPredictionOutput: &models.ModelPredictionOutput{
 						BinaryClassificationOutput: &models.BinaryClassificationOutput{
-							ActualLabelColumn:     "actual_label",
+							ActualScoreColumn:     "actual_score",
 							NegativeClassLabel:    "negative",
 							PositiveClassLabel:    "positive",
 							PredictionLabelColumn: "prediction_label",
@@ -229,8 +231,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 			{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -239,10 +242,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 					},
 					ModelPredictionOutput: &models.ModelPredictionOutput{
 						RankingOutput: &models.RankingOutput{
-							PredictionGroupIDColumn: "session_id",
-							RankScoreColumn:         "score",
-							RelevanceScoreColumn:    "relevance_score",
-							OutputClass:             models.Ranking,
+							RankScoreColumn:      "score",
+							RelevanceScoreColumn: "relevance_score",
+							OutputClass:          models.Ranking,
 						},
 					},
 				},
@@ -250,8 +252,9 @@ func Test_modelSchemaStorage_FindAll_Delete(t *testing.T) {
 			{
 				ModelID: m.ID,
 				Spec: &models.SchemaSpec{
-					PredictionIDColumn: "prediction_id",
-					TagColumns:         []string{"tag"},
+					SessionIDColumn: "session_id",
+					RowIDColumn:     "row_id",
+					TagColumns:      []string{"tag"},
 					FeatureTypes: map[string]models.ValueType{
 						"featureA": models.Float64,
 						"featureB": models.Float64,
@@ -318,8 +321,9 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 		modelSchema := &models.ModelSchema{
 			ModelID: m.ID,
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				TagColumns:         []string{"tag"},
+				SessionIDColumn: "session_id",
+				RowIDColumn:     "row_id",
+				TagColumns:      []string{"tag"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Float64,
@@ -328,7 +332,7 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 				},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					BinaryClassificationOutput: &models.BinaryClassificationOutput{
-						ActualLabelColumn:     "actual_label",
+						ActualScoreColumn:     "actual_score",
 						NegativeClassLabel:    "negative",
 						PositiveClassLabel:    "positive",
 						PredictionLabelColumn: "prediction_label",
@@ -344,10 +348,9 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 
 		schema.Spec.ModelPredictionOutput = &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroupIDColumn: "session_id",
-				RankScoreColumn:         "score",
-				RelevanceScoreColumn:    "relevance_score",
-				OutputClass:             models.Ranking,
+				RankScoreColumn:      "score",
+				RelevanceScoreColumn: "relevance_score",
+				OutputClass:          models.Ranking,
 			},
 		}
 		_, err = modelSchemaStorage.Save(context.Background(), schema)
@@ -356,10 +359,9 @@ func Test_modelSchemaStorage_FindByID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, newSchema.Spec.ModelPredictionOutput, &models.ModelPredictionOutput{
 			RankingOutput: &models.RankingOutput{
-				PredictionGroupIDColumn: "session_id",
-				RankScoreColumn:         "score",
-				RelevanceScoreColumn:    "relevance_score",
-				OutputClass:             models.Ranking,
+				RankScoreColumn:      "score",
+				RelevanceScoreColumn: "relevance_score",
+				OutputClass:          models.Ranking,
 			},
 		})
 

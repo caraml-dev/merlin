@@ -1321,7 +1321,6 @@ class TestModel:
                 id=3,
                 model_id=1,
                 spec=client.SchemaSpec(
-                    prediction_id_column="prediction_id",
                     tag_columns=["tags", "extras"],
                     feature_types={
                         "featureA": client.ValueType.FLOAT64,
@@ -1332,7 +1331,6 @@ class TestModel:
                     model_prediction_output=client.ModelPredictionOutput(
                         client.RankingOutput(
                             rank_score_column="score",
-                            prediction_group_id_column="session_id",
                             relevance_score_column="relevance_score",
                             output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT
                         )
@@ -1343,7 +1341,6 @@ class TestModel:
                 id=3,
                 model_id=1,
                 spec=InferenceSchema(
-                    prediction_id_column="prediction_id",
                     tag_columns=["tags", "extras"],
                     feature_types={
                         "featureA": ValueType.FLOAT64,
@@ -1353,7 +1350,6 @@ class TestModel:
                     },
                     model_prediction_output=RankingOutput(
                         rank_score_column="score",
-                        prediction_group_id_column="session_id",
                         relevance_score_column="relevance_score"
                     )
                 ),

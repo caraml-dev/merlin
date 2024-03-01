@@ -21,7 +21,7 @@ var _ MappedNullable = &RegressionOutput{}
 // RegressionOutput struct for RegressionOutput
 type RegressionOutput struct {
 	PredictionScoreColumn string                     `json:"prediction_score_column"`
-	ActualScoreColumn     *string                    `json:"actual_score_column,omitempty"`
+	ActualScoreColumn     string                     `json:"actual_score_column"`
 	OutputClass           ModelPredictionOutputClass `json:"output_class"`
 }
 
@@ -31,9 +31,10 @@ type _RegressionOutput RegressionOutput
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegressionOutput(predictionScoreColumn string, outputClass ModelPredictionOutputClass) *RegressionOutput {
+func NewRegressionOutput(predictionScoreColumn string, actualScoreColumn string, outputClass ModelPredictionOutputClass) *RegressionOutput {
 	this := RegressionOutput{}
 	this.PredictionScoreColumn = predictionScoreColumn
+	this.ActualScoreColumn = actualScoreColumn
 	this.OutputClass = outputClass
 	return &this
 }
@@ -70,36 +71,28 @@ func (o *RegressionOutput) SetPredictionScoreColumn(v string) {
 	o.PredictionScoreColumn = v
 }
 
-// GetActualScoreColumn returns the ActualScoreColumn field value if set, zero value otherwise.
+// GetActualScoreColumn returns the ActualScoreColumn field value
 func (o *RegressionOutput) GetActualScoreColumn() string {
-	if o == nil || IsNil(o.ActualScoreColumn) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.ActualScoreColumn
+
+	return o.ActualScoreColumn
 }
 
-// GetActualScoreColumnOk returns a tuple with the ActualScoreColumn field value if set, nil otherwise
+// GetActualScoreColumnOk returns a tuple with the ActualScoreColumn field value
 // and a boolean to check if the value has been set.
 func (o *RegressionOutput) GetActualScoreColumnOk() (*string, bool) {
-	if o == nil || IsNil(o.ActualScoreColumn) {
+	if o == nil {
 		return nil, false
 	}
-	return o.ActualScoreColumn, true
+	return &o.ActualScoreColumn, true
 }
 
-// HasActualScoreColumn returns a boolean if a field has been set.
-func (o *RegressionOutput) HasActualScoreColumn() bool {
-	if o != nil && !IsNil(o.ActualScoreColumn) {
-		return true
-	}
-
-	return false
-}
-
-// SetActualScoreColumn gets a reference to the given string and assigns it to the ActualScoreColumn field.
+// SetActualScoreColumn sets field value
 func (o *RegressionOutput) SetActualScoreColumn(v string) {
-	o.ActualScoreColumn = &v
+	o.ActualScoreColumn = v
 }
 
 // GetOutputClass returns the OutputClass field value
@@ -137,9 +130,7 @@ func (o RegressionOutput) MarshalJSON() ([]byte, error) {
 func (o RegressionOutput) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["prediction_score_column"] = o.PredictionScoreColumn
-	if !IsNil(o.ActualScoreColumn) {
-		toSerialize["actual_score_column"] = o.ActualScoreColumn
-	}
+	toSerialize["actual_score_column"] = o.ActualScoreColumn
 	toSerialize["output_class"] = o.OutputClass
 	return toSerialize, nil
 }
@@ -150,6 +141,7 @@ func (o *RegressionOutput) UnmarshalJSON(bytes []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"prediction_score_column",
+		"actual_score_column",
 		"output_class",
 	}
 

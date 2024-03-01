@@ -15,14 +15,13 @@ from google.cloud.bigquery import Client as BigQueryClient
 from google.cloud.bigquery import (SchemaField, Table, TimePartitioning,
                                    TimePartitioningType)
 from merlin.observability.inference import (BinaryClassificationOutput,
-                                            InferenceSchema, ObservationType,
+                                            InferenceSchema,
                                             RankingOutput, RegressionOutput,
-                                            ValueType)
+                                            ValueType, add_prediction_id_column)
 
 from publisher.config import ObservationSinkConfig, ObservationSinkType
-from publisher.prediction_log_parser import (MODEL_VERSION_COLUMN,
-                                             PREDICTION_LOG_TIMESTAMP_COLUMN,
-                                             ROW_ID_COLUMN, SESSION_ID_COLUMN)
+from publisher.prediction_log_parser import (PREDICTION_LOG_MODEL_VERSION_COLUMN,
+                                             PREDICTION_LOG_TIMESTAMP_COLUMN)
 
 
 class ObservationSink(abc.ABC):
@@ -62,6 +61,8 @@ class ArizeSink(ObservationSink):
     Writes prediction logs to Arize AI.
     """
 
+    ARIZE_PREDICTION_ID_COLUMN = "_prediction_id"
+
     def __init__(
         self,
         inference_schema: InferenceSchema,
@@ -81,9 +82,8 @@ class ArizeSink(ObservationSink):
     def _common_arize_schema_attributes(self) -> dict:
         return dict(
             feature_column_names=self._inference_schema.feature_columns,
-            prediction_id_column_name=self._inference_schema.prediction_id_column,
+            prediction_id_column_name=ArizeSink.ARIZE_PREDICTION_ID_COLUMN,
             timestamp_column_name=PREDICTION_LOG_TIMESTAMP_COLUMN,
-            tag_column_names=self._inference_schema.tag_columns,
         )
 
     def _to_arize_schema(self) -> Tuple[ArizeModelType, ArizeSchema]:
@@ -102,7 +102,7 @@ class ArizeSink(ObservationSink):
         elif isinstance(prediction_output, RankingOutput):
             schema_attributes = self._common_arize_schema_attributes() | dict(
                 rank_column_name=prediction_output.rank_column,
-                prediction_group_id_column_name=SESSION_ID_COLUMN,
+                prediction_group_id_column_name=self._inference_schema.session_id_column,
             )
             model_type = ArizeModelType.RANKING
         else:
@@ -113,21 +113,11 @@ class ArizeSink(ObservationSink):
         return model_type, ArizeSchema(**schema_attributes)
 
     def write(self, df: pd.DataFrame):
-        df[self._inference_schema.prediction_id_column] = (
-            df[SESSION_ID_COLUMN] + df[ROW_ID_COLUMN]
-        )
-        if isinstance(self._inference_schema.model_prediction_output, RankingOutput):
-            df[
-                self._inference_schema.model_prediction_output.prediction_group_id_column
-            ] = df[SESSION_ID_COLUMN]
-
-        processed_df = self._inference_schema.model_prediction_output.preprocess(
-            df, [ObservationType.FEATURE, ObservationType.PREDICTION]
-        )
         model_type, arize_schema = self._to_arize_schema()
+        df = add_prediction_id_column(df, self._inference_schema.session_id_column, self._inference_schema.row_id_column, ArizeSink.ARIZE_PREDICTION_ID_COLUMN)
         try:
             self._client.log(
-                dataframe=processed_df,
+                dataframe=df,
                 environment=Environments.PRODUCTION,
                 schema=arize_schema,
                 model_id=self._model_id,
@@ -248,11 +238,11 @@ class BigQuerySink(ObservationSink):
 
         schema_fields = [
             SchemaField(
-                name=SESSION_ID_COLUMN,
+                name=self._inference_schema.session_id_column,
                 field_type="STRING",
             ),
             SchemaField(
-                name=ROW_ID_COLUMN,
+                name=self._inference_schema.row_id_column,
                 field_type="STRING",
             ),
             SchemaField(
@@ -260,7 +250,7 @@ class BigQuerySink(ObservationSink):
                 field_type="TIMESTAMP",
             ),
             SchemaField(
-                name=MODEL_VERSION_COLUMN,
+                name=PREDICTION_LOG_MODEL_VERSION_COLUMN,
                 field_type="STRING",
             ),
         ]
