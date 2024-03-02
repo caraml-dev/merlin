@@ -21,7 +21,6 @@ import EnvironmentsContext from "../../../../../providers/environments/context";
 import { calculateCost } from "../../../../../utils/costEstimation";
 import { Panel } from "./Panel";
 
-const maxTicks = 20;
 
 export const ResourcesPanel = ({
   environment: initEnvironment,
@@ -69,7 +68,16 @@ export const ResourcesPanel = ({
     } else {
       setGpuValueOptions([{ value: "None", inputDisplay: "None" }]);
     }
-  }, [resourcesConfig, resourcesConfig.gpu_name, gpus]);
+
+    if (resourcesConfig.min_replica > maxAllowedReplica) {
+      onChange("min_replica")(maxAllowedReplica - 1)
+    }
+
+    if (resourcesConfig.max_replica > maxAllowedReplica) {
+      onChange("max_replica")(maxAllowedReplica)
+    }
+
+  }, [resourcesConfig, resourcesConfig.gpu_name, gpus, maxAllowedReplica, onChange]);
 
   const replicasError = useMemo(
     () => [...(errors.min_replica || []), ...(errors.max_replica || [])],
@@ -235,10 +243,8 @@ export const ResourcesPanel = ({
             fullWidth
             min={0}
             max={maxAllowedReplica}
-            // This component only allows up to 20 ticks to be displayed at the slider
-            tickInterval={Math.ceil((maxAllowedReplica + 1) / maxTicks)}
             showInput
-            showTicks
+            showLabels
             value={[
               resourcesConfig.min_replica || 0,
               resourcesConfig.max_replica || 0,

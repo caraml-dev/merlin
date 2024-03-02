@@ -45,6 +45,7 @@ const DEFAULT_AUTOSCALING_POLICY = {
  * @param {*} onChange. Callback to be made when configuration is changed
  * @param {*} errors. Why pass errors?
  * @param {*} isEnvironmentDisabled. Disable deployment to the environment if the flag is true.
+ * @param {*} setMaxAllowedReplica State setter to update MaxAllowedReplica constraint
  */
 export const DeploymentConfigPanel = ({
   environment,
@@ -53,6 +54,7 @@ export const DeploymentConfigPanel = ({
   onChange,
   errors = {},
   isEnvironmentDisabled = false,
+  setMaxAllowedReplica,
 }) => {
   const environments = useContext(EnvironmentsContext);
 
@@ -85,6 +87,12 @@ export const DeploymentConfigPanel = ({
         onChange(key)(versionEndpoint[key]);
       });
     }
+
+    environments.forEach((env) => {
+      if (env.name === value) {
+        setMaxAllowedReplica(env.max_allowed_replica);
+      }
+    });
   };
 
   const onDeploymentModeChange = (deploymentMode) => {
