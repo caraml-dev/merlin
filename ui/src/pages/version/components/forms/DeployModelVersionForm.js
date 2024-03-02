@@ -73,7 +73,7 @@ export const DeployModelVersionForm = ({
     });
   }
 
-  const { data, _ } = useContext(FormContext);
+  const { data } = useContext(FormContext);
   const environments = useContext(EnvironmentsContext);
 
   const [maxAllowedReplica, setMaxAllowedReplica] = useState(() => {
