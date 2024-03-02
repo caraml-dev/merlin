@@ -77,19 +77,18 @@ type UIConfig struct {
 }
 
 type ReactAppConfig struct {
-	DocURL            Documentations `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
-	DockerRegistries  string         `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
-	Environment       string         `json:"REACT_APP_ENVIRONMENT,omitempty"`
-	FeastCoreURL      string         `json:"REACT_APP_FEAST_CORE_API,omitempty"`
-	HomePage          string         `json:"REACT_APP_HOMEPAGE,omitempty"`
-	MaxAllowedReplica int            `default:"20" json:"REACT_APP_MAX_ALLOWED_REPLICA,omitempty"`
-	MerlinURL         string         `json:"REACT_APP_MERLIN_API,omitempty"`
-	MlpURL            string         `json:"REACT_APP_MLP_API,omitempty"`
-	OauthClientID     string         `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
-	SentryDSN         string         `json:"REACT_APP_SENTRY_DSN,omitempty"`
-	UPIDocumentation  string         `json:"REACT_APP_UPI_DOC_URL,omitempty"`
-	CPUCost           string         `json:"REACT_APP_CPU_COST,omitempty"`
-	MemoryCost        string         `json:"REACT_APP_MEMORY_COST,omitempty"`
+	DocURL           Documentations `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
+	DockerRegistries string         `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
+	Environment      string         `json:"REACT_APP_ENVIRONMENT,omitempty"`
+	FeastCoreURL     string         `json:"REACT_APP_FEAST_CORE_API,omitempty"`
+	HomePage         string         `json:"REACT_APP_HOMEPAGE,omitempty"`
+	MerlinURL        string         `json:"REACT_APP_MERLIN_API,omitempty"`
+	MlpURL           string         `json:"REACT_APP_MLP_API,omitempty"`
+	OauthClientID    string         `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
+	SentryDSN        string         `json:"REACT_APP_SENTRY_DSN,omitempty"`
+	UPIDocumentation string         `json:"REACT_APP_UPI_DOC_URL,omitempty"`
+	CPUCost          string         `json:"REACT_APP_CPU_COST,omitempty"`
+	MemoryCost       string         `json:"REACT_APP_MEMORY_COST,omitempty"`
 }
 
 type BaseImageConfigs map[string]BaseImageConfig
