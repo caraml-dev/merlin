@@ -78,14 +78,9 @@ export const DeployModelVersionForm = ({
 
   const [maxAllowedReplica, setMaxAllowedReplica] = useState(() => {
     if (data.environment_name !== "") {
-      environments.forEach((env) => {
-        if (env.name === data.environment_name) {
-          return env.max_allowed_replica;
-        }
-      });
-    } else {
-      return 0
+      return environments.find((env) => env.name === data.environment_name).max_allowed_replica;
     }
+    return 0;
   });
 
   const mainSteps = [
