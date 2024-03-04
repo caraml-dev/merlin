@@ -1,5 +1,4 @@
 import * as yup from "yup";
-import { appConfig } from "../../../../../config";
 
 const cpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)$|^(\d{2,5}m)$/,
   memRequestRegex = /^\d+(Ei?|Pi?|Ti?|Gi?|Mi?|Ki?)?$/,
@@ -7,7 +6,7 @@ const cpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)$|^(\d{2,5}m)$/,
   dockerImageRegex =
     /^([a-z0-9]+(?:[._-][a-z0-9]+)*(?::\d{2,5})?\/)?([a-z0-9]+(?:[._-][a-z0-9]+)*\/)*([a-z0-9]+(?:[._-][a-z0-9]+)*)(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)?$/i;
 
-const resourceRequestSchema = yup.object().shape({
+const resourceRequestSchema = (maxAllowedReplica) => yup.object().shape({
   cpu_request: yup
     .string()
     .matches(cpuRequestRegex, 'Valid CPU value is required, e.g "2" or "500m"'),
@@ -33,7 +32,7 @@ const resourceRequestSchema = yup.object().shape({
       "Max Replicas cannot be less than Min Replicas"
     )
     .max(
-      appConfig.scaling.maxAllowedReplica,
+      maxAllowedReplica,
       // eslint-disable-next-line no-template-curly-in-string
       "Max Replicas value has exceeded allowed number of replicas: ${max}"
     )
@@ -64,16 +63,16 @@ const environmentVariableSchema = yup.object().shape({
   value: yup.string(),
 });
 
-export const versionEndpointSchema = yup.object().shape({
+export const versionEndpointSchema = (maxAllowedReplica) => yup.object().shape({
   environment_name: yup.string().required("Environment is required"),
-  resource_request: resourceRequestSchema,
+  resource_request: resourceRequestSchema(maxAllowedReplica),
   image_builder_resource_request: imagebuilderRequestSchema,
   env_vars: yup.array(environmentVariableSchema),
 });
 
-export const transformerConfigSchema = yup.object().shape({
+export const transformerConfigSchema = (maxAllowedReplica) => yup.object().shape({
   transformer: yup.object().shape({
-    resource_request: resourceRequestSchema,
+    resource_request: resourceRequestSchema(maxAllowedReplica),
     env_vars: yup.array(environmentVariableSchema),
   }),
 });

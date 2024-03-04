@@ -74,6 +74,7 @@ environmentConfigs:
     namespace_timeout: 2m
     max_cpu: 250m
     max_memory: 512Mi
+    max_allowed_replica: 30
     queue_resource_percentage: 20
     is_prediction_job_enabled: true
     is_default_prediction_job: true

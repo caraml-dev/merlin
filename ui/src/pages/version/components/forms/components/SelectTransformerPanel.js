@@ -25,6 +25,12 @@ export const SelectTransformerPanel = ({
       onChange("enabled")(false);
       onChange("transformer_type")(undefined);
       onChange("type_on_ui")("");
+      onChange("resource_request")({
+        min_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 2 : 0,
+        max_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 4 : 2,
+        cpu_request: "500m",
+        memory_request: "512Mi"
+      })
     } else {
       onChange("enabled")(true);
       onChange("transformer_type")(value !== "feast" ? value : "standard");

@@ -55,11 +55,6 @@ export const appConfig = {
       source_type: "BIGTABLE",
     },
   ],
-  scaling: {
-    maxAllowedReplica: getEnv("REACT_APP_MAX_ALLOWED_REPLICA")
-      ? parseInt(getEnv("REACT_APP_MAX_ALLOWED_REPLICA"))
-      : 20,
-  },
   imagebuilder:{
     cluster:  getEnv("REACT_APP_IMAGE_BUILDER_CLUSTER"),
     gcp_project: getEnv("REACT_APP_IMAGE_BUILDER_GCP_PROJECT"),

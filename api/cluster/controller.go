@@ -195,6 +195,13 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			log.Errorf("insufficient available memory resource to fulfil user request of %d", memRequest)
 			return nil, ErrInsufficientMem
 		}
+		if modelService.ResourceRequest.MaxReplica > c.deploymentConfig.MaxAllowedReplica {
+			log.Errorf("Requested Max Replica (%d) is more than max permissible (%d)",
+				modelService.ResourceRequest.MaxReplica,
+				c.deploymentConfig.MaxAllowedReplica,
+			)
+			return nil, ErrRequestedMaxReplicasNotAllowed
+		}
 	}
 
 	_, err := c.namespaceCreator.CreateNamespace(ctx, modelService.Namespace)

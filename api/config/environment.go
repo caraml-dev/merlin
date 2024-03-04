@@ -44,6 +44,7 @@ type EnvironmentConfig struct {
 
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
+	MaxAllowedReplica         int                       `yaml:"max_allowed_replica"`
 	TopologySpreadConstraints TopologySpreadConstraints `yaml:"topology_spread_constraints"`
 	PodDisruptionBudget       PodDisruptionBudgetConfig `yaml:"pod_disruption_budget"`
 
@@ -177,6 +178,7 @@ func ParseDeploymentConfig(envCfg *EnvironmentConfig, cfg *Config) DeploymentCon
 		},
 		MaxCPU:                                resource.MustParse(envCfg.MaxCPU),
 		MaxMemory:                             resource.MustParse(envCfg.MaxMemory),
+		MaxAllowedReplica:                     envCfg.MaxAllowedReplica,
 		TopologySpreadConstraints:             envCfg.TopologySpreadConstraints,
 		QueueResourcePercentage:               envCfg.QueueResourcePercentage,
 		PyfuncGRPCOptions:                     cfg.PyfuncGRPCOptions,

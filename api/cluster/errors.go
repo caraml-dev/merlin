@@ -19,6 +19,7 @@ import "errors"
 var (
 	ErrInsufficientCPU                        = errors.New("CPU request is too large")
 	ErrInsufficientMem                        = errors.New("memory request too large")
+	ErrRequestedMaxReplicasNotAllowed         = errors.New("requested max replicas is more than max permissible")
 	ErrTimeoutNamespace                       = errors.New("timeout creating namespace")
 	ErrUnableToCreateNamespace                = errors.New("error creating namespace")
 	ErrUnableToGetNamespaceStatus             = errors.New("error retrieving namespace status")

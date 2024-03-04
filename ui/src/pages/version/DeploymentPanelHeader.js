@@ -130,7 +130,5 @@ export const DeploymentPanelHeader = ({
 
 DeploymentPanelHeader.propTypes = {
   model: PropTypes.object.isRequired,
-  version: PropTypes.object.isRequired,
-  endpoint: PropTypes.object.isRequired,
   environments: PropTypes.array.isRequired,
 };

@@ -20,6 +20,7 @@ import {
   versionEndpointSchema,
 } from "./validation/schema";
 import { PROTOCOL } from "../../../../services/version_endpoint/VersionEndpoint";
+import EnvironmentsContext from "../../../../providers/environments/context";
 
 const _ = require('lodash');
 const targetRequestStatus = (currentStatus) => {
@@ -72,6 +73,16 @@ export const DeployModelVersionForm = ({
     });
   }
 
+  const { data } = useContext(FormContext);
+  const environments = useContext(EnvironmentsContext);
+
+  const [maxAllowedReplica, setMaxAllowedReplica] = useState(() => {
+    if (data.environment_name !== "") {
+      return environments.find((env) => env.name === data.environment_name).max_allowed_replica;
+    }
+    return 0;
+  });
+
   const mainSteps = [
     {
       title: "Model",
@@ -79,14 +90,18 @@ export const DeployModelVersionForm = ({
         <ModelStep
           version={version}
           isEnvironmentDisabled={isEnvironmentDisabled}
+          maxAllowedReplica={maxAllowedReplica}
+          setMaxAllowedReplica={setMaxAllowedReplica}
         />
       ),
-      validationSchema: versionEndpointSchema,
+      validationSchema: versionEndpointSchema(maxAllowedReplica),
     },
     {
       title: "Transformer",
-      children: <TransformerStep />,
-      validationSchema: transformerConfigSchema,
+      children: <TransformerStep
+        maxAllowedReplica={maxAllowedReplica}
+      />,
+      validationSchema: transformerConfigSchema(maxAllowedReplica),
     },
   ];
 
@@ -100,7 +115,7 @@ export const DeployModelVersionForm = ({
   const predictionLoggerStep = {
     title: "Logging",
     children: <PredictionLoggerStep />,
-    validationSchema: versionEndpointSchema,
+    validationSchema: versionEndpointSchema(maxAllowedReplica),
   };
 
   const customTransformerStep = {

@@ -6,7 +6,6 @@ import {
 } from "@caraml-dev/ui-lib";
 import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
 import React, { useContext } from "react";
-import { appConfig } from "../../../../../config";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
@@ -14,7 +13,7 @@ import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
 
-export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
+export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
@@ -29,6 +28,7 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
           onChange={onChange}
           errors={errors}
           isEnvironmentDisabled={isEnvironmentDisabled}
+          setMaxAllowedReplica={setMaxAllowedReplica}
         />
       </EuiFlexItem>
 
@@ -38,7 +38,7 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
           isGPUEnabled={true}
           resourcesConfig={data.resource_request}
           onChangeHandler={onChange("resource_request")}
-          maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
+          maxAllowedReplica={maxAllowedReplica}
           errors={get(errors, "resource_request")}
           child={
           <EuiAccordion 

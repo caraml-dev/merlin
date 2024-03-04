@@ -6,14 +6,13 @@ import {
 } from "@caraml-dev/ui-lib";
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import React, { useContext } from "react";
-import { appConfig } from "../../../../../config";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
 
-export const TransformerStep = () => {
+export const TransformerStep = ({ maxAllowedReplica }) => {
   const {
     data: { transformer, logger, protocol },
     onChangeHandler,
@@ -22,7 +21,7 @@ export const TransformerStep = () => {
   const { errors } = useContext(FormValidationContext);
 
   return (
-    <EuiFlexGroup direction="column" gutterSize="m">
+    <EuiFlexGroup direction="column" gutterSize="m">f
       <EuiFlexItem grow={false}>
         <SelectTransformerPanel
           transformer={transformer}
@@ -38,7 +37,7 @@ export const TransformerStep = () => {
               isGPUEnabled={false}
               resourcesConfig={transformer.resource_request}
               onChangeHandler={onChange("transformer.resource_request")}
-              maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
+              maxAllowedReplica={maxAllowedReplica}
               errors={get(errors, "transformer.resource_request")}
             />
           </EuiFlexItem>

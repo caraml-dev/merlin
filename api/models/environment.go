@@ -23,6 +23,7 @@ type Environment struct {
 	GcpProject                        string           `json:"gcp_project"`
 	MaxCPU                            string           `json:"max_cpu"`
 	MaxMemory                         string           `json:"max_memory"`
+	MaxAllowedReplica                 int              `json:"max_allowed_replica"`
 	GPUs                              GPUs             `json:"gpus" gorm:"column:gpus"`
 	DefaultResourceRequest            *ResourceRequest `json:"default_resource_request"`
 	DefaultTransformerResourceRequest *ResourceRequest `json:"default_transformer_resource_request"`
