@@ -41,16 +41,19 @@ logging.getLogger("tornado.access").disabled = True
 
 
 def main():
+    config = Config(args.model_dir)
+    logging.basicConfig(level=config.log_level)
+
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-    config = Config(args.model_dir)
-    logging.basicConfig(level=config.log_level)
     # load model
     model = PyFuncModel(config.model_manifest)
 
     try:
+        logging.info("Initializing model...")
         model.load()
+        logging.info("Model initialized successfully.")
     except Exception as e:
         logging.error(f"Unable to initalize model")
         logging.error(traceback.format_exc())
@@ -61,6 +64,7 @@ def main():
         logging.info("dry run success")
         exit(0)
 
+    logging.info("Starting server...")
     PyFuncServer(config).start(model)
 
 
