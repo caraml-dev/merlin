@@ -39,7 +39,8 @@ args, _ = parser.parse_known_args()
 
 logging.getLogger("tornado.access").disabled = True
 
-if __name__ == "__main__":
+
+def main():
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -61,3 +62,7 @@ if __name__ == "__main__":
         exit(0)
 
     PyFuncServer(config).start(model)
+
+
+if __name__ == "__main__":
+    main()
