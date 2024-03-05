@@ -12,9 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import imp
 import os
 
 from setuptools import find_packages, setup
+
+version = imp.load_source(
+    "pyfuncserver.version", os.path.join("pyfuncserver", "version.py")
+).VERSION
 
 tests_require = [
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
@@ -40,13 +45,13 @@ merlin_path = os.path.join(os.getcwd(), "../sdk")
 merlin_sdk_package = "merlin-sdk"
 for index, item in enumerate(REQUIRE):
     if merlin_sdk_package in item:
-        REQUIRE[
-            index
-        ] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
+        REQUIRE[index] = (
+            f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
+        )
 
 setup(
     name="pyfuncserver",
-    version="0.6.0",
+    version=version,
     author_email="merlin-dev@gojek.com",
     description="Model Server implementation for mlflow pyfunc model",
     long_description=open("README.md").read(),
@@ -56,4 +61,8 @@ setup(
     install_requires=REQUIRE,
     tests_require=tests_require,
     extras_require={"test": tests_require},
+    entry_points="""
+        [console_scripts]
+        pyfuncserver=pyfuncserver.__main__:main
+    """,
 )

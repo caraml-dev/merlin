@@ -18,21 +18,26 @@ import logging
 import traceback
 
 import uvloop
-
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.server import PyFuncServer
 from pyfuncserver.utils.contants import ERR_DRY_RUN
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_dir', required=True,
-                    help='A URI pointer to the model binary')
-parser.add_argument('--dry_run', default=False, action='store_true', required=False,
-                    help="Dry run pyfunc server by loading the specified model "
-                         "in --model_dir without starting webserver")
+parser.add_argument(
+    "--model_dir", required=True, help="A URI pointer to the model binary"
+)
+parser.add_argument(
+    "--dry_run",
+    default=False,
+    action="store_true",
+    required=False,
+    help="Dry run pyfunc server by loading the specified model "
+    "in --model_dir without starting webserver",
+)
 args, _ = parser.parse_known_args()
 
-logging.getLogger('tornado.access').disabled = True
+logging.getLogger("tornado.access").disabled = True
 
 if __name__ == "__main__":
     # use uvloop as the event loop
