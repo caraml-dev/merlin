@@ -69,12 +69,14 @@ export const ResourcesPanel = ({
       setGpuValueOptions([{ value: "None", inputDisplay: "None" }]);
     }
 
-    if (resourcesConfig.min_replica > maxAllowedReplica) {
-      onChange("min_replica")(maxAllowedReplica - 1)
-    }
+    if (!!maxAllowedReplica) {
+      if (resourcesConfig.min_replica > maxAllowedReplica) {
+        onChange("min_replica")(maxAllowedReplica - 1)
+      }
 
-    if (resourcesConfig.max_replica > maxAllowedReplica) {
-      onChange("max_replica")(maxAllowedReplica)
+      if (resourcesConfig.max_replica > maxAllowedReplica) {
+        onChange("max_replica")(maxAllowedReplica)
+      }
     }
 
   }, [resourcesConfig, resourcesConfig.gpu_name, gpus, maxAllowedReplica, onChange]);
@@ -242,16 +244,18 @@ export const ResourcesPanel = ({
           <EuiDualRange
             fullWidth
             min={0}
-            max={maxAllowedReplica}
+            max={maxAllowedReplica || 0}
             showInput
             showLabels
             value={[
-              resourcesConfig.min_replica || 0,
-              resourcesConfig.max_replica || 0,
+              !!environment ? (resourcesConfig.min_replica || 0) : 0,
+              !!environment ? (resourcesConfig.max_replica || 0) : 0,
             ]}
             onChange={([min_replica, max_replica]) => {
-              onChange("min_replica")(parseInt(min_replica));
-              onChange("max_replica")(parseInt(max_replica));
+              if (!!environment) {
+                onChange("min_replica")(parseInt(min_replica));
+                onChange("max_replica")(parseInt(max_replica));
+              }
             }}
             isInvalid={!!replicasError.length}
             aria-label="autoscaling"

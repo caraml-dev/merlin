@@ -80,7 +80,7 @@ export const DeployModelVersionForm = ({
     if (data.environment_name !== "") {
       return environments.find((env) => env.name === data.environment_name).max_allowed_replica;
     }
-    return 0;
+    return undefined;
   });
 
   const mainSteps = [
