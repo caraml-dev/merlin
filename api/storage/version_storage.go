@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 
 	"github.com/caraml-dev/merlin/models"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ func NewVersionStorage(db *gorm.DB) VersionStorage {
 func (v *versionStorage) FindByID(ctx context.Context, versionID models.ID, modelID models.ID) (*models.Version, error) {
 	var version models.Version
 	if err := v.db.Preload("ModelSchema").Where("versions.id = ? AND versions.model_id = ?", versionID, modelID).First(&version).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err

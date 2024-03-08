@@ -43,8 +43,9 @@ func Test_versionStorage_FindByID(t *testing.T) {
 			ID:      models.ID(1),
 			ModelID: m.ID,
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				TagColumns:         []string{"tag"},
+				SessionIDColumn: "prediction_id",
+				RowIDColumn:     "row",
+				TagColumns:      []string{"tag"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Float64,
@@ -53,7 +54,7 @@ func Test_versionStorage_FindByID(t *testing.T) {
 				},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					BinaryClassificationOutput: &models.BinaryClassificationOutput{
-						ActualLabelColumn:     "actual_label",
+						ActualScoreColumn:     "actual_score",
 						NegativeClassLabel:    "negative",
 						PositiveClassLabel:    "positive",
 						PredictionLabelColumn: "prediction_label",

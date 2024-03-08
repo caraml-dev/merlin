@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/iancoleman/strcase"
 	"github.com/mitchellh/mapstructure"
@@ -101,11 +100,4 @@ func decodeMap[V *ArizeSink | *BigQuerySink](raw any, result V) (V, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-func fromPublisherConfig(cfg config.ObservabilityPublisher, modelService *models.Service) *ConsumerConfig {
-	return &ConsumerConfig{
-		ModelID:      modelService.ModelName,
-		ModelVersion: modelService.ModelVersion,
-	}
 }

@@ -42,8 +42,9 @@ func Test_obsPublisherStorage(t *testing.T) {
 		modelSchema := &models.ModelSchema{
 			ModelID: m.ID,
 			Spec: &models.SchemaSpec{
-				PredictionIDColumn: "prediction_id",
-				TagColumns:         []string{"tag"},
+				SessionIDColumn: "session",
+				RowIDColumn:     "row",
+				TagColumns:      []string{"tag"},
 				FeatureTypes: map[string]models.ValueType{
 					"featureA": models.Float64,
 					"featureB": models.Float64,
@@ -52,7 +53,7 @@ func Test_obsPublisherStorage(t *testing.T) {
 				},
 				ModelPredictionOutput: &models.ModelPredictionOutput{
 					BinaryClassificationOutput: &models.BinaryClassificationOutput{
-						ActualLabelColumn:     "actual_label",
+						ActualScoreColumn:     "actual_score",
 						NegativeClassLabel:    "negative",
 						PositiveClassLabel:    "positive",
 						PredictionLabelColumn: "prediction_label",
