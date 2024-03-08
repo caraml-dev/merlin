@@ -248,8 +248,8 @@ export const ResourcesPanel = ({
             showInput
             showLabels
             value={[
-              !!environment ? (resourcesConfig.min_replica || 0) : 0,
-              !!environment ? (resourcesConfig.max_replica || 0) : 0,
+              !!environment ? resourcesConfig.min_replica : 0,
+              !!environment ? resourcesConfig.max_replica : 0,
             ]}
             onChange={([min_replica, max_replica]) => {
               if (!!environment) {
