@@ -173,7 +173,12 @@ func Test_deployer_Deploy(t *testing.T) {
 		BatchSize: 10,
 		KafkaConsumer: config.KafkaConsumer{
 			Brokers:   "broker-1",
+			GroupID:   "group-id",
 			BatchSize: 100,
+			AdditionalConsumerConfig: map[string]string{
+				"auto.offset.reset": "latest",
+				"fetch.min.bytes":   "1024000",
+			},
 		},
 		ImageName: "observability-publisher:v0.0",
 		DefaultResources: config.ResourceRequestsLimits{
@@ -238,6 +243,7 @@ func Test_deployer_Deploy(t *testing.T) {
 					Stream:    "stream",
 					Team:      "team",
 				},
+				TopicSource: "caraml-project-1-model-1-1-prediction-log",
 			},
 			consumerConfig: consumerConfig,
 
@@ -268,7 +274,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, false)
 				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
@@ -309,6 +315,7 @@ func Test_deployer_Deploy(t *testing.T) {
 					Stream:    "stream",
 					Team:      "team",
 				},
+				TopicSource: "caraml-project-1-model-1-1-prediction-log",
 			},
 			consumerConfig: consumerConfig,
 
@@ -339,7 +346,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, fmt.Errorf("deployment control plane is down"), false)
 				return clientSet
@@ -360,6 +367,7 @@ func Test_deployer_Deploy(t *testing.T) {
 					Stream:    "stream",
 					Team:      "team",
 				},
+				TopicSource: "caraml-project-1-model-1-1-prediction-log",
 			},
 			consumerConfig: consumerConfig,
 
@@ -390,7 +398,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, false)
 				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
@@ -429,6 +437,7 @@ func Test_deployer_Deploy(t *testing.T) {
 					Stream:    "stream",
 					Team:      "team",
 				},
+				TopicSource: "caraml-project-1-model-1-2-prediction-log",
 			},
 			consumerConfig: consumerConfig,
 
@@ -457,7 +466,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						},
 					},
 					StringData: map[string]string{
-						"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+						"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 					},
 				}, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
@@ -475,7 +484,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, true)
 				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
@@ -516,6 +525,7 @@ func Test_deployer_Deploy(t *testing.T) {
 					Stream:    "stream",
 					Team:      "team",
 				},
+				TopicSource: "caraml-project-1-model-1-2-prediction-log",
 			},
 			consumerConfig: consumerConfig,
 
@@ -544,7 +554,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						},
 					},
 					StringData: map[string]string{
-						"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+						"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 					},
 				}, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
@@ -562,7 +572,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}, {
 						ObjectMeta: metav1.ObjectMeta{
@@ -578,7 +588,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					},
 				}, nil, true)
@@ -753,7 +763,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			},
 		},
 		StringData: map[string]string{
-			"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  sessionidcolumn: session_id\n  rowidcolumn: row_id\n  modelpredictionoutput:\n    binaryclassificationoutput:\n      actualscorecolumn: \"\"\n      negativeclasslabel: negative\n      predictionscorecolumn: prediction_score\n      predictionlabelcolumn: prediction_label\n      positiveclasslabel: positive\n      scorethreshold: null\n      outputclass: BinaryClassificationOutput\n    rankingoutput: null\n    regressionoutput: null\n  tagcolumns:\n  - tag\n  featuretypes:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  featureorders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n",
+			"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 		},
 	}
 	workerData := &models.WorkerData{
@@ -768,6 +778,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			Stream:    "stream",
 			Team:      "team",
 		},
+		TopicSource: "caraml-project-1-model-1-1-prediction-log",
 	}
 	depl := createDeploymentSpec(workerData, requestResource, limitResource)
 	testCases := []struct {

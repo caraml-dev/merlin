@@ -36,12 +36,12 @@ type ModelSchema struct {
 
 // SchemaSpec
 type SchemaSpec struct {
-	SessionIDColumn       string                 `json:"session_id_column"`
-	RowIDColumn           string                 `json:"row_id_column"`
-	ModelPredictionOutput *ModelPredictionOutput `json:"model_prediction_output"`
-	TagColumns            []string               `json:"tag_columns"`
-	FeatureTypes          map[string]ValueType   `json:"feature_types"`
-	FeatureOrders         []string               `json:"feature_orders"`
+	SessionIDColumn       string                 `json:"session_id_column" yaml:"session_id_column"`
+	RowIDColumn           string                 `json:"row_id_column" yaml:"row_id_column"`
+	ModelPredictionOutput *ModelPredictionOutput `json:"model_prediction_output" yaml:"model_prediction_output"`
+	TagColumns            []string               `json:"tag_columns" yaml:"tag_columns"`
+	FeatureTypes          map[string]ValueType   `json:"feature_types" yaml:"feature_types"`
+	FeatureOrders         []string               `json:"feature_orders" yaml:"feature_orders"`
 }
 
 // Value returning a value for `SchemaSpec` instance
@@ -125,27 +125,41 @@ func (m ModelPredictionOutput) MarshalJSON() ([]byte, error) {
 	return nil, nil
 }
 
+func (m ModelPredictionOutput) MarshalYAML() (interface{}, error) {
+	var in interface{}
+	if m.BinaryClassificationOutput != nil {
+		in = m.BinaryClassificationOutput
+	} else if m.RankingOutput != nil {
+		in = m.RankingOutput
+	} else if m.RegressionOutput != nil {
+		in = m.RegressionOutput
+	} else {
+		return nil, fmt.Errorf("not valid model prediction output")
+	}
+	return in, nil
+}
+
 // BinaryClassificationOutput is specification for prediction of binary classification model
 type BinaryClassificationOutput struct {
-	ActualScoreColumn     string                     `json:"actual_score_column"`
-	NegativeClassLabel    string                     `json:"negative_class_label"`
-	PredictionScoreColumn string                     `json:"prediction_score_column"`
-	PredictionLabelColumn string                     `json:"prediction_label_column"`
-	PositiveClassLabel    string                     `json:"positive_class_label"`
-	ScoreThreshold        *float64                   `json:"score_threshold,omitempty"`
-	OutputClass           ModelPredictionOutputClass `json:"output_class" validate:"required"`
+	ActualScoreColumn     string                     `json:"actual_score_column" yaml:"actual_score_column"`
+	NegativeClassLabel    string                     `json:"negative_class_label" yaml:"negative_class_label"`
+	PredictionScoreColumn string                     `json:"prediction_score_column" yaml:"prediction_score_column"`
+	PredictionLabelColumn string                     `json:"prediction_label_column" yaml:"prediction_label_column"`
+	PositiveClassLabel    string                     `json:"positive_class_label" yaml:"positive_class_label"`
+	ScoreThreshold        *float64                   `json:"score_threshold,omitempty" yaml:"score_threshold"`
+	OutputClass           ModelPredictionOutputClass `json:"output_class" yaml:"output_class" validate:"required"`
 }
 
 // RankingOutput is specification for prediction of ranking model
 type RankingOutput struct {
-	RankScoreColumn      string                     `json:"rank_score_column"`
-	RelevanceScoreColumn string                     `json:"relevance_score_column"`
-	OutputClass          ModelPredictionOutputClass `json:"output_class" validate:"required"`
+	RankScoreColumn      string                     `json:"rank_score_column" yaml:"rank_score_column"`
+	RelevanceScoreColumn string                     `json:"relevance_score_column" yaml:"relevance_score_column"`
+	OutputClass          ModelPredictionOutputClass `json:"output_class" yaml:"output_class" validate:"required"`
 }
 
 // Regression is specification for prediction of regression model
 type RegressionOutput struct {
-	PredictionScoreColumn string                     `json:"prediction_score_column"`
-	ActualScoreColumn     string                     `json:"actual_score_column"`
-	OutputClass           ModelPredictionOutputClass `json:"output_class" validate:"required"`
+	PredictionScoreColumn string                     `json:"prediction_score_column" yaml:"prediction_score_column"`
+	ActualScoreColumn     string                     `json:"actual_score_column" yaml:"actual_score_column"`
+	OutputClass           ModelPredictionOutputClass `json:"output_class" yaml:"output_class" validate:"required"`
 }

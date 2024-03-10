@@ -118,7 +118,11 @@ func (svc *Service) GetPredictionLogTopic() string {
 }
 
 func (svc *Service) GetPredictionLogTopicForVersion() string {
-	return fmt.Sprintf("caraml-%s-%s-%s-prediction-log", svc.Namespace, svc.ModelName, svc.ModelVersion)
+	return getPredictionLogTopicForVersion(svc.Namespace, svc.ModelName, svc.ModelVersion)
+}
+
+func getPredictionLogTopicForVersion(project string, modelName string, modelVersion string) string {
+	return fmt.Sprintf("caraml-%s-%s-%s-prediction-log", project, modelName, modelVersion)
 }
 
 func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {

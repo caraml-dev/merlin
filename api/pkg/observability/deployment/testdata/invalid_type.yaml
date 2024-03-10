@@ -1,4 +1,0 @@
-type: GCS
-config:
-  project: sample
-  bucket: observability

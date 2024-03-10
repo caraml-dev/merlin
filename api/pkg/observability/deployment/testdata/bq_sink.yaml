@@ -1,5 +1,0 @@
-type: BIGQUERY
-config:
-  project: sample
-  dataset: observability
-  ttl_days: 10

@@ -265,6 +265,16 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 				},
 			},
 		},
+		ObservationSource: &ObserVationSource{
+			Type: Kafka,
+			Config: &KafkaSource{
+				Topic:                    data.TopicSource,
+				BootstrapServers:         c.consumerConfig.KafkaConsumer.Brokers,
+				GroupID:                  c.consumerConfig.KafkaConsumer.GroupID,
+				BatchSize:                c.consumerConfig.KafkaConsumer.BatchSize,
+				AdditionalConsumerConfig: c.consumerConfig.KafkaConsumer.AdditionalConsumerConfig,
+			},
+		},
 	}
 	consumerCfgStr, err := yaml.Marshal(consumerCfg)
 	if err != nil {

@@ -39,6 +39,7 @@ type WorkerData struct {
 	ModelName       string
 	ModelVersion    string
 	Revision        int
+	TopicSource     string
 }
 
 func NewWorkerData(modelVersion *Version, observabilityPublisher *ObservabilityPublisher) *WorkerData {
@@ -56,6 +57,7 @@ func NewWorkerData(modelVersion *Version, observabilityPublisher *ObservabilityP
 		},
 		ModelVersion: modelVersion.ID.String(),
 		Revision:     observabilityPublisher.Revision,
+		TopicSource:  getPredictionLogTopicForVersion(model.Project.Name, model.Name, modelVersion.ID.String()),
 	}
 }
 

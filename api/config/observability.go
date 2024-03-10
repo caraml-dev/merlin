@@ -16,6 +16,7 @@ type ObservabilityPublisher struct {
 type KafkaConsumer struct {
 	Brokers                  string `validate:"required"`
 	BatchSize                int
+	GroupID                  string
 	AdditionalConsumerConfig map[string]string
 }
 

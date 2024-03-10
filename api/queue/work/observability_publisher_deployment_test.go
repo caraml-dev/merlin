@@ -56,6 +56,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
 					Namespace:       "project-1",
@@ -63,6 +64,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(nil)
 				return mockDeployer
 			}(),
@@ -112,6 +114,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        1,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -127,6 +130,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
 					Namespace:       "project-1",
@@ -134,6 +138,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(fmt.Errorf("control plane is down"))
 				return mockDeployer
 			}(),
@@ -183,6 +188,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        1,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -216,6 +222,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        1,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -232,6 +239,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Undeploy", mock.Anything, &models.WorkerData{
 					Namespace:       "project-1",
@@ -239,6 +247,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(nil)
 				return mockDeployer
 			}(),
@@ -288,6 +297,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        1,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -303,6 +313,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Undeploy", mock.Anything, &models.WorkerData{
 					Namespace:       "project-1",
@@ -310,6 +321,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        1,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(fmt.Errorf("control plane is down"))
 				return mockDeployer
 			}(),
@@ -359,6 +371,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        1,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -375,6 +388,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        2,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{
 					Deployment: &v1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{
@@ -402,6 +416,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        2,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(nil)
 				return mockDeployer
 			}(),
@@ -451,6 +466,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        2,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -466,6 +482,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        2,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{
 					Deployment: &v1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{
@@ -493,6 +510,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        2,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(nil)
 				return mockDeployer
 			}(),
@@ -535,6 +553,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        2,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -578,6 +597,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        2,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -621,6 +641,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        1,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -636,6 +657,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        2,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{
 					Deployment: &v1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{
@@ -690,6 +712,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        2,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
@@ -706,6 +729,7 @@ func TestDeploy(t *testing.T) {
 					ModelName:       "model-1",
 					ModelVersion:    "1",
 					Revision:        2,
+					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{
 					Deployment: &v1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{
@@ -760,6 +784,7 @@ func TestDeploy(t *testing.T) {
 							ModelName:       "model-1",
 							ModelVersion:    "1",
 							Revision:        2,
+							TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 						},
 					},
 				},
