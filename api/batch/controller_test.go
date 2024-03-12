@@ -331,7 +331,7 @@ func TestSubmit(t *testing.T) {
 			ctl, err := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient,
 				mockManifestManager,
 				clusterMetadata, batchJobTemplater)
-			assert.Error(t, err)
+			assert.NoError(t, err)
 
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, action.(ktesting.GetAction).GetName())
@@ -400,7 +400,7 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	batchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
 	ctl, err := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager,
 		clusterMetadata, batchJobTemplater)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 
 	mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
 	mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
@@ -428,7 +428,7 @@ func TestOnUpdate(t *testing.T) {
 	newController, err := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient,
 		mockManifestManager,
 		clusterMetadata, batchJobTemplater)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 
 	ctl := newController.(*controller)
 	stopCh := make(chan struct{})
@@ -509,7 +509,7 @@ func TestUpdateStatus(t *testing.T) {
 			newController, err := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient,
 				mockManifestManager,
 				clusterMetadata, batchJobTemplater)
-			assert.Error(t, err)
+			assert.NoError(t, err)
 
 			ctl := newController.(*controller)
 			stopCh := make(chan struct{})
@@ -611,7 +611,7 @@ func TestStop(t *testing.T) {
 			newController, err := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient,
 				mockManifestManager,
 				clusterMetadata, batchJobTemplater)
-			assert.Error(t, err)
+			assert.NoError(t, err)
 
 			ctl := newController.(*controller)
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
