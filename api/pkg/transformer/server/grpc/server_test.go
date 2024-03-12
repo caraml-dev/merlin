@@ -32,7 +32,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -598,7 +598,7 @@ func TestUPIServer_PredictValues_WithMockPreprocessAndPostprocessHandler(t *test
 				incomingReq = (*upiv1.PredictValuesRequest)(req)
 			}
 			clientMock.On("PredictValues", mock.Anything, incomingReq, mock.Anything).Return(tt.expectedModelOutput, tt.modelErr)
-			noOpTracer := trace.NewNoopTracerProvider()
+			noOpTracer := noop.NewTracerProvider()
 			us := &UPIServer{
 				predictorClient: &grpcClient{upiClient: clientMock, opts: &config.Options{ModelGRPCHystrixCommandName: "gRPCCommand"}},
 				opts: &config.Options{
@@ -5852,7 +5852,7 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	}
 
 	handler := pipeline.NewHandler(compiledPipeline, logger)
-	noOpTracer := trace.NewNoopTracerProvider()
+	noOpTracer := noop.NewTracerProvider()
 	otel.SetTracerProvider(noOpTracer)
 
 	if options.PredictorUPIHTTPEnabled {

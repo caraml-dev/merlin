@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	network "knative.dev/networking/pkg"
+	"knative.dev/networking/pkg/http/header"
+	"knative.dev/pkg/network"
 )
 
 type Probe struct {
@@ -31,6 +32,6 @@ func (p *Probe) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Probe) isLivenessCheck(r *http.Request) bool {
-	return strings.HasPrefix(r.Header.Get("User-Agent"), network.KubeProbeUAPrefix) &&
+	return strings.HasPrefix(r.Header.Get("User-Agent"), header.KubeProbeUAPrefix) &&
 		r.Header.Get(network.KubeletProbeHeaderName) != ""
 }
