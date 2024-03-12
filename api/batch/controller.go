@@ -111,7 +111,7 @@ func NewController(
 	manifestManager ManifestManager,
 	envMetaData cluster.Metadata,
 	batchJobTemplater *BatchJobTemplater,
-) Controller {
+) (Controller, error) {
 	informerFactory := externalversions.NewSharedInformerFactory(sparkClient, resyncPeriod)
 	informer := informerFactory.Sparkoperator().V1beta2().SparkApplications().Informer()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -130,10 +130,13 @@ func NewController(
 		ContainerFetcher: cluster.NewContainerFetcher(kubeClient.CoreV1(), envMetaData),
 	}
 
-	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, err := informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: controller.onUpdate,
 	})
-	return controller
+	if err != nil {
+		return nil, err
+	}
+	return controller, nil
 }
 
 func (c *controller) Submit(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error {
