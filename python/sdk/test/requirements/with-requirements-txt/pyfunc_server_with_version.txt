@@ -1,0 +1,1 @@
+merlin-pyfunc-server==0.50.0
