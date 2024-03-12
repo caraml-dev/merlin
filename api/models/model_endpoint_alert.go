@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/caraml-dev/merlin/pkg/protocol"
-	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	yamlv3 "gopkg.in/yaml.v3"
@@ -152,7 +152,8 @@ func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) (PromAl
 	// Lint alert to comply PromQL
 	for i, group := range spec.Groups {
 		for j, rule := range group.Rules {
-			exp, err := promql.ParseExpr(rule.Expr.Value)
+			parser := parser.NewParser(rule.Expr.Value)
+			exp, err := parser.ParseExpr()
 			if err != nil {
 				return PromAlert{}, err
 			}
