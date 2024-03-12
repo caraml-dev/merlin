@@ -373,8 +373,8 @@ func getGCPSubDomains() []string {
 // https://github.com/google/go-containerregistry/blob/master/cmd/crane/README.md
 // https://github.com/google/go-containerregistry/blob/master/pkg/v1/google/README.md
 func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) {
-	keychain := authn.DefaultKeychain
-
+	var keychain authn.Keychain
+	keychain = authn.DefaultKeychain
 	for _, domain := range getGCPSubDomains() {
 		if strings.Contains(c.config.DockerRegistry, domain) {
 			keychain = google.Keychain
