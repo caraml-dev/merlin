@@ -331,14 +331,18 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{},
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": data.Metadata.App,
+				},
+			},
 			Replicas: &c.consumerConfig.Replicas,
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:  "worker",
-							Image: "",
+							Image: c.consumerConfig.ImageName,
 							Command: []string{
 								"python",
 								"-m",

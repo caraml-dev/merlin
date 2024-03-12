@@ -47,7 +47,7 @@ const (
 	timeoutError deploymentStatus = "timeout_error"
 )
 
-func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList) *appsv1.Deployment {
+func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList, imageName string) *appsv1.Deployment {
 	labels := data.Metadata.ToLabel()
 	numReplicas := int32(2)
 	cfgVolName := "config-volume"
@@ -61,13 +61,17 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{},
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": data.Metadata.App,
+				},
+			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:  "worker",
-							Image: "",
+							Image: imageName,
 							Command: []string{
 								"python",
 								"-m",
@@ -291,7 +295,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource)
+				}, requestResource, limitResource, consumerConfig.ImageName)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, nil, false)
 
 				updatedDepl := changeDeploymentStatus(depl, ready, 1)
@@ -415,7 +419,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource)
+				}, requestResource, limitResource, consumerConfig.ImageName)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, fmt.Errorf("control plane is down"), false)
 				prependDeleteSecretReactor(t, secretAPI, "model-1-config", nil)
 				prependDeleteDeploymentReactor(t, deploymentAPI, "model-1", nil)
@@ -500,7 +504,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource)
+				}, requestResource, limitResource, consumerConfig.ImageName)
 				preprendGetDeploymentReactor(t, deploymentAPI, depl, nil)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, nil, true)
 
@@ -605,7 +609,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource)
+				}, requestResource, limitResource, consumerConfig.ImageName)
 				preprendGetDeploymentReactor(t, deploymentAPI, depl, nil)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, nil, true)
 
@@ -780,7 +784,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 		},
 		TopicSource: "caraml-project-1-model-1-1-prediction-log",
 	}
-	depl := createDeploymentSpec(workerData, requestResource, limitResource)
+	depl := createDeploymentSpec(workerData, requestResource, limitResource, "image:v0.1")
 	testCases := []struct {
 		name             string
 		data             *models.WorkerData
@@ -979,7 +983,7 @@ func prependUpsertDeploymentReactor(t *testing.T, deploymentAPI *fakeappsv1.Fake
 		}
 
 		if !reflect.DeepEqual(requestedDepl.ObjectMeta, actualReqDepl.ObjectMeta) || !reflect.DeepEqual(requestedDepl.Spec, actualReqDepl.Spec) {
-			t.Fatalf("actual and expected requested secret is different")
+			t.Fatalf("actual and expected requested deployment is different")
 		}
 
 		return true, requestedDepl, expectedErr
