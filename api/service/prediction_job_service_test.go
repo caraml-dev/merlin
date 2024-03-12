@@ -24,7 +24,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"k8s.io/apimachinery/pkg/util/clock"
+	"k8s.io/utils/clock"
 
 	"github.com/caraml-dev/merlin/batch"
 	"github.com/caraml-dev/merlin/batch/mocks"
