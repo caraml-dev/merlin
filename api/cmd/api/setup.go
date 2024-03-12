@@ -403,8 +403,11 @@ func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIC
 
 		batchJobTemplator := batch.NewBatchJobTemplater(cfg.BatchConfig)
 
-		ctl := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager,
+		ctl, err := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager,
 			envMetadata, batchJobTemplator)
+		if err != nil {
+			log.Panicf("unable to create batch controller: %v", err)
+		}
 		stopCh := make(chan struct{})
 		go ctl.Run(stopCh)
 
