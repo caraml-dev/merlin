@@ -45,6 +45,9 @@ const (
 	onProgress   deploymentStatus = "on_progress"
 	ready        deploymentStatus = "ready"
 	timeoutError deploymentStatus = "timeout_error"
+
+	namespace          = "caraml-observability"
+	serviceAccountName = "caraml-observability-sa"
 )
 
 func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList, imageName string) *appsv1.Deployment {
@@ -53,8 +56,8 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 	cfgVolName := "config-volume"
 	depl := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      data.ModelName,
-			Namespace: data.Namespace,
+			Name:      fmt.Sprintf("%s-%s-mlobs", data.Project, data.ModelName),
+			Namespace: namespace,
 			Labels:    labels,
 			Annotations: map[string]string{
 				PublisherRevisionAnnotationKey: strconv.Itoa(data.Revision),
@@ -68,6 +71,7 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
+					ServiceAccountName: serviceAccountName,
 					Containers: []corev1.Container{
 						{
 							Name:  "worker",
@@ -98,7 +102,7 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 							Name: cfgVolName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: fmt.Sprintf("%s-config", data.ModelName),
+									SecretName: fmt.Sprintf("%s-%s-config", data.Project, data.ModelName),
 								},
 							},
 						},
@@ -194,8 +198,10 @@ func Test_deployer_Deploy(t *testing.T) {
 				Memory: "1Gi",
 			},
 		},
-		EnvironmentName: "dev",
-		Replicas:        2,
+		EnvironmentName:    "dev",
+		Replicas:           2,
+		TargetNamespace:    namespace,
+		ServiceAccountName: serviceAccountName,
 	}
 	requestResource := corev1.ResourceList{
 		corev1.ResourceCPU:    resource.MustParse("1"),
@@ -236,7 +242,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		{
 			name: "fresh deployment",
 			data: &models.WorkerData{
-				Namespace:       "project-1",
+				Project:         "project-1",
 				ModelSchemaSpec: schemaSpec,
 				ModelName:       "model-1",
 				ModelVersion:    "1",
@@ -261,13 +267,13 @@ func Test_deployer_Deploy(t *testing.T) {
 
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, nil, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "model-1-config",
-							Namespace: "project-1",
+							Name:      "project-1-model-1-config",
+							Namespace: namespace,
 							Labels: map[string]string{
 								"app":          "model-1-observability-publisher",
 								"component":    "worker",
@@ -281,10 +287,10 @@ func Test_deployer_Deploy(t *testing.T) {
 							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, false)
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				preprendGetDeploymentReactor(t, deploymentAPI, nil, nil)
 				depl := createDeploymentSpec(&models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -308,7 +314,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		{
 			name: "fresh deployment failed; failed create secret",
 			data: &models.WorkerData{
-				Namespace:       "project-1",
+				Project:         "project-1",
 				ModelSchemaSpec: schemaSpec,
 				ModelName:       "model-1",
 				ModelVersion:    "1",
@@ -333,13 +339,13 @@ func Test_deployer_Deploy(t *testing.T) {
 
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, nil, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "model-1-config",
-							Namespace: "project-1",
+							Name:      "project-1-model-1-config",
+							Namespace: namespace,
 							Labels: map[string]string{
 								"app":          "model-1-observability-publisher",
 								"component":    "worker",
@@ -360,7 +366,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		{
 			name: "fresh deployment failed; failed during deployment",
 			data: &models.WorkerData{
-				Namespace:       "project-1",
+				Project:         "project-1",
 				ModelSchemaSpec: schemaSpec,
 				ModelName:       "model-1",
 				ModelVersion:    "1",
@@ -385,13 +391,13 @@ func Test_deployer_Deploy(t *testing.T) {
 
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, nil, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "model-1-config",
-							Namespace: "project-1",
+							Name:      "project-1-model-1-config",
+							Namespace: namespace,
 							Labels: map[string]string{
 								"app":          "model-1-observability-publisher",
 								"component":    "worker",
@@ -405,10 +411,10 @@ func Test_deployer_Deploy(t *testing.T) {
 							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, false)
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				preprendGetDeploymentReactor(t, deploymentAPI, nil, nil)
 				depl := createDeploymentSpec(&models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -421,8 +427,8 @@ func Test_deployer_Deploy(t *testing.T) {
 					},
 				}, requestResource, limitResource, consumerConfig.ImageName)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, fmt.Errorf("control plane is down"), false)
-				prependDeleteSecretReactor(t, secretAPI, "model-1-config", nil)
-				prependDeleteDeploymentReactor(t, deploymentAPI, "model-1", nil)
+				prependDeleteSecretReactor(t, secretAPI, "project-1-model-1-config", nil)
+				prependDeleteDeploymentReactor(t, deploymentAPI, "project-1-model-1-mlobs", nil)
 				return clientSet
 			}(),
 			expectedErr: fmt.Errorf("control plane is down"),
@@ -430,7 +436,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		{
 			name: "redeployment",
 			data: &models.WorkerData{
-				Namespace:       "project-1",
+				Project:         "project-1",
 				ModelSchemaSpec: schemaSpec,
 				ModelName:       "model-1",
 				ModelVersion:    "2",
@@ -455,11 +461,11 @@ func Test_deployer_Deploy(t *testing.T) {
 
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "model-1-config",
-						Namespace: "project-1",
+						Name:      "project-1-model-1-config",
+						Namespace: namespace,
 						Labels: map[string]string{
 							"app":          "model-1-observability-publisher",
 							"component":    "worker",
@@ -476,8 +482,8 @@ func Test_deployer_Deploy(t *testing.T) {
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "model-1-config",
-							Namespace: "project-1",
+							Name:      "project-1-model-1-config",
+							Namespace: namespace,
 							Labels: map[string]string{
 								"app":          "model-1-observability-publisher",
 								"component":    "worker",
@@ -491,9 +497,9 @@ func Test_deployer_Deploy(t *testing.T) {
 							"config.yaml": "model_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, true)
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				depl := createDeploymentSpec(&models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "2",
@@ -518,7 +524,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		{
 			name: "redeployment failed; timeout waiting for deployment",
 			data: &models.WorkerData{
-				Namespace:       "project-1",
+				Project:         "project-1",
 				ModelSchemaSpec: schemaSpec,
 				ModelName:       "model-1",
 				ModelVersion:    "2",
@@ -543,11 +549,11 @@ func Test_deployer_Deploy(t *testing.T) {
 
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "model-1-config",
-						Namespace: "project-1",
+						Name:      "project-1-model-1-config",
+						Namespace: namespace,
 						Labels: map[string]string{
 							"app":          "model-1-observability-publisher",
 							"component":    "worker",
@@ -564,8 +570,8 @@ func Test_deployer_Deploy(t *testing.T) {
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "model-1-config",
-							Namespace: "project-1",
+							Name:      "project-1-model-1-config",
+							Namespace: namespace,
 							Labels: map[string]string{
 								"app":          "model-1-observability-publisher",
 								"component":    "worker",
@@ -580,8 +586,8 @@ func Test_deployer_Deploy(t *testing.T) {
 						},
 					}, {
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "model-1-config",
-							Namespace: "project-1",
+							Name:      "project-1-model-1-config",
+							Namespace: namespace,
 							Labels: map[string]string{
 								"app":          "model-1-observability-publisher",
 								"component":    "worker",
@@ -596,9 +602,9 @@ func Test_deployer_Deploy(t *testing.T) {
 						},
 					},
 				}, nil, true)
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				depl := createDeploymentSpec(&models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "2",
@@ -619,7 +625,7 @@ func Test_deployer_Deploy(t *testing.T) {
 
 				return clientSet
 			}(),
-			expectedErr: fmt.Errorf(`deployment "model-1" exceeded its progress deadline`),
+			expectedErr: fmt.Errorf(`deployment "project-1-model-1-mlobs" exceeded its progress deadline`),
 		},
 	}
 	for _, tt := range tests {
@@ -645,7 +651,7 @@ func Test_deployer_Undeploy(t *testing.T) {
 		{
 			name: "success undeploy",
 			data: &models.WorkerData{
-				Namespace:    "project-1",
+				Project:      "project-1",
 				ModelName:    "model-1",
 				ModelVersion: "1",
 				Revision:     1,
@@ -658,18 +664,18 @@ func Test_deployer_Undeploy(t *testing.T) {
 			},
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
-				prependDeleteDeploymentReactor(t, deploymentAPI, "model-1", nil)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
+				prependDeleteDeploymentReactor(t, deploymentAPI, "project-1-model-1-mlobs", nil)
 
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
-				prependDeleteSecretReactor(t, secretAPI, "model-1-config", nil)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
+				prependDeleteSecretReactor(t, secretAPI, "project-1-model-1-config", nil)
 				return clientSet
 			}(),
 		},
 		{
 			name: "failed undeploy; error when delete deployment",
 			data: &models.WorkerData{
-				Namespace:    "project-1",
+				Project:      "project-1",
 				ModelName:    "model-1",
 				ModelVersion: "1",
 				Revision:     1,
@@ -682,8 +688,8 @@ func Test_deployer_Undeploy(t *testing.T) {
 			},
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
-				prependDeleteDeploymentReactor(t, deploymentAPI, "model-1", fmt.Errorf("control plane is down"))
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
+				prependDeleteDeploymentReactor(t, deploymentAPI, "project-1-model-1-mlobs", fmt.Errorf("control plane is down"))
 				return clientSet
 			}(),
 			expectedErr: fmt.Errorf("control plane is down"),
@@ -691,7 +697,7 @@ func Test_deployer_Undeploy(t *testing.T) {
 		{
 			name: "faile undeploy; error when delete secret",
 			data: &models.WorkerData{
-				Namespace:    "project-1",
+				Project:      "project-1",
 				ModelName:    "model-1",
 				ModelVersion: "1",
 				Revision:     1,
@@ -704,11 +710,11 @@ func Test_deployer_Undeploy(t *testing.T) {
 			},
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
-				prependDeleteDeploymentReactor(t, deploymentAPI, "model-1", nil)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
+				prependDeleteDeploymentReactor(t, deploymentAPI, "project-1-model-1-mlobs", nil)
 
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
-				prependDeleteSecretReactor(t, secretAPI, "model-1-config", fmt.Errorf("control plane is down"))
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
+				prependDeleteSecretReactor(t, secretAPI, "project-1-model-1-config", fmt.Errorf("control plane is down"))
 				return clientSet
 			}(),
 			expectedErr: fmt.Errorf("control plane is down"),
@@ -716,8 +722,12 @@ func Test_deployer_Undeploy(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.name, func(t *testing.T) {
+			consumerConfig := config.ObservabilityPublisher{
+				TargetNamespace: namespace,
+			}
 			depl := &deployer{
-				kubeClient: tC.kubeClient,
+				kubeClient:     tC.kubeClient,
+				consumerConfig: consumerConfig,
 			}
 			err := depl.Undeploy(context.Background(), tC.data)
 			assert.Equal(t, tC.expectedErr, err)
@@ -755,8 +765,8 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 	}
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "model-1-config",
-			Namespace: "project-1",
+			Name:      "project-1-model-1-config",
+			Namespace: namespace,
 			Labels: map[string]string{
 				"app":          "model-1-observability-publisher",
 				"component":    "worker",
@@ -771,7 +781,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 		},
 	}
 	workerData := &models.WorkerData{
-		Namespace:       "project-1",
+		Project:         "project-1",
 		ModelSchemaSpec: schemaSpec,
 		ModelName:       "model-1",
 		ModelVersion:    "1",
@@ -797,10 +807,10 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			data: workerData,
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, secret, nil)
 
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				preprendGetDeploymentReactor(t, deploymentAPI, depl, nil)
 				return clientSet
 			}(),
@@ -815,11 +825,11 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			data: workerData,
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, secret, nil)
 
 				updatedDeployment := changeDeploymentStatus(depl, ready, workerData.Revision)
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				preprendGetDeploymentReactor(t, deploymentAPI, updatedDeployment, nil)
 				return clientSet
 			}(),
@@ -838,7 +848,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			data: workerData,
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				secretAPI := clientSet.CoreV1().Secrets("project-1").(*fakecorev1.FakeSecrets)
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
 				prependGetSecretReactor(t, secretAPI, secret, fmt.Errorf("control plane is down"))
 
 				return clientSet
@@ -850,7 +860,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			data: workerData,
 			kubeClient: func() kubernetes.Interface {
 				clientSet := fake.NewSimpleClientset()
-				deploymentAPI := clientSet.AppsV1().Deployments("project-1").(*fakeappsv1.FakeDeployments)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
 				preprendGetDeploymentReactor(t, deploymentAPI, depl, fmt.Errorf("control plane is down"))
 
 				return clientSet
@@ -860,8 +870,12 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.name, func(t *testing.T) {
+			consumerConfig := config.ObservabilityPublisher{
+				TargetNamespace: namespace,
+			}
 			depl := &deployer{
-				kubeClient: tC.kubeClient,
+				kubeClient:     tC.kubeClient,
+				consumerConfig: consumerConfig,
 			}
 			manifest, err := depl.GetDeployedManifest(context.Background(), tC.data)
 			assert.Equal(t, tC.expectedErr, err)
@@ -982,6 +996,8 @@ func prependUpsertDeploymentReactor(t *testing.T, deploymentAPI *fakeappsv1.Fake
 			t.Fatalf("different namespace")
 		}
 
+		assert.Equal(t, requestedDepl.ObjectMeta, actualReqDepl.ObjectMeta)
+		assert.Equal(t, requestedDepl.Spec, actualReqDepl.Spec)
 		if !reflect.DeepEqual(requestedDepl.ObjectMeta, actualReqDepl.ObjectMeta) || !reflect.DeepEqual(requestedDepl.Spec, actualReqDepl.Spec) {
 			t.Fatalf("actual and expected requested deployment is different")
 		}

@@ -83,14 +83,18 @@ func parseResourceList(resourceCfg config.Resource) (corev1.ResourceList, error)
 	return resourceList, nil
 }
 
+func (c *deployer) targetNamespace() string {
+	return c.consumerConfig.TargetNamespace
+}
+
 func (c *deployer) GetDeployedManifest(ctx context.Context, data *models.WorkerData) (*Manifest, error) {
 	secretName := c.getSecretName(data)
-	secret, err := c.getSecret(ctx, secretName, data.Namespace)
+	secret, err := c.getSecret(ctx, secretName, c.targetNamespace())
 	if err != nil {
 		return nil, err
 	}
 	deploymentName := c.getDeploymentName(data)
-	depl, err := c.getDeployment(ctx, deploymentName, data.Namespace)
+	depl, err := c.getDeployment(ctx, deploymentName, c.targetNamespace())
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +158,7 @@ func (c *deployer) Deploy(ctx context.Context, data *models.WorkerData) (err err
 					log.Warnf("failed delete secret with err: %v", err)
 				}
 				// delete current deployment
-				if err := c.deleteDeployment(ctx, c.getDeploymentName(data), data.Namespace); err != nil {
+				if err := c.deleteDeployment(ctx, c.getDeploymentName(data), c.targetNamespace()); err != nil {
 					log.Warnf("failed delete deployment with err: %v", err)
 				}
 			}
@@ -219,7 +223,7 @@ func (c *deployer) deleteDeployment(ctx context.Context, deploymentName string, 
 func (c *deployer) applySecret(ctx context.Context, data *models.WorkerData) (secret *corev1.Secret, previousSecret *corev1.Secret, err error) {
 	// Create secret
 	coreV1 := c.kubeClient.CoreV1()
-	secretV1 := coreV1.Secrets(data.Namespace)
+	secretV1 := coreV1.Secrets(c.targetNamespace())
 	secretName := c.getSecretName(data)
 	applySecretFunc := func(data *models.WorkerData, isExistingSecret bool) (*corev1.Secret, error) {
 		secretSpec, err := c.createSecretSpec(data)
@@ -283,7 +287,7 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.getSecretName(data),
-			Namespace: data.Namespace,
+			Namespace: c.targetNamespace(),
 			Labels:    data.Metadata.ToLabel(),
 		},
 		StringData: map[string]string{
@@ -295,7 +299,7 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 func (c *deployer) applyDeployment(ctx context.Context, data *models.WorkerData, secretName string) (*appsv1.Deployment, error) {
 	appV1 := c.kubeClient.AppsV1()
 	deploymentName := c.getDeploymentName(data)
-	deploymentV1 := appV1.Deployments(data.Namespace)
+	deploymentV1 := appV1.Deployments(c.targetNamespace())
 
 	applyDeploymentFunc := func(data *models.WorkerData, secretName string, isExistingDeployment bool) (*appsv1.Deployment, error) {
 		deployment, err := c.createDeploymentSpec(ctx, data, secretName)
@@ -324,7 +328,7 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.getDeploymentName(data),
-			Namespace: data.Namespace,
+			Namespace: c.targetNamespace(),
 			Labels:    labels,
 			Annotations: map[string]string{
 				PublisherRevisionAnnotationKey: strconv.Itoa(data.Revision),
@@ -374,6 +378,7 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 							},
 						},
 					},
+					ServiceAccountName: c.consumerConfig.ServiceAccountName,
 				},
 			},
 		},
@@ -410,21 +415,21 @@ func (c *deployer) waitUntilDeploymentReady(ctx context.Context, deployment *app
 }
 
 func (c *deployer) getDeploymentName(data *models.WorkerData) string {
-	return data.ModelName
+	return fmt.Sprintf("%s-%s-mlobs", data.Project, data.ModelName)
 }
 
 func (c *deployer) getSecretName(data *models.WorkerData) string {
-	return fmt.Sprintf("%s-config", data.ModelName)
+	return fmt.Sprintf("%s-%s-config", data.Project, data.ModelName)
 }
 
 func (c *deployer) Undeploy(ctx context.Context, data *models.WorkerData) error {
 	deploymentName := c.getDeploymentName(data)
-	if err := c.deleteDeployment(ctx, deploymentName, data.Namespace); err != nil {
+	if err := c.deleteDeployment(ctx, deploymentName, c.targetNamespace()); err != nil {
 		return err
 	}
 
 	secretName := c.getSecretName(data)
-	if err := c.deleteSecret(ctx, secretName, data.Namespace); err != nil {
+	if err := c.deleteSecret(ctx, secretName, c.targetNamespace()); err != nil {
 		return err
 	}
 

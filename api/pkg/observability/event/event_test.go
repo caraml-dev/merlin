@@ -165,7 +165,7 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: schemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",
@@ -292,7 +292,7 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: regresionSchemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",
@@ -430,7 +430,7 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: schemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",
@@ -506,7 +506,7 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: schemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",
@@ -788,7 +788,7 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: schemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",
@@ -893,7 +893,7 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: regresionSchemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",
@@ -977,7 +977,7 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 								Status:          models.Pending,
 							},
 							WorkerData: &models.WorkerData{
-								Namespace:       "project-1",
+								Project:         "project-1",
 								ModelSchemaSpec: schemaSpec,
 								Metadata: models.Metadata{
 									App:       "model-1-observability-publisher",

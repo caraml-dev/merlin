@@ -33,7 +33,7 @@ const (
 )
 
 type WorkerData struct {
-	Namespace       string
+	Project         string
 	ModelSchemaSpec *SchemaSpec
 	Metadata        Metadata
 	ModelName       string
@@ -46,7 +46,7 @@ func NewWorkerData(modelVersion *Version, observabilityPublisher *ObservabilityP
 	model := modelVersion.Model
 	return &WorkerData{
 		ModelName:       model.Name,
-		Namespace:       model.Project.Name,
+		Project:         model.Project.Name,
 		ModelSchemaSpec: observabilityPublisher.ModelSchemaSpec,
 		Metadata: Metadata{
 			App:       fmt.Sprintf("%s-observability-publisher", model.Name),

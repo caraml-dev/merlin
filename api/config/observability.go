@@ -2,14 +2,16 @@ package config
 
 // ObservabilityPublisher
 type ObservabilityPublisher struct {
-	ArizeSink        ArizeSink
-	BigQuerySink     BigQuerySink
-	BatchSize        int
-	KafkaConsumer    KafkaConsumer
-	ImageName        string
-	DefaultResources ResourceRequestsLimits
-	EnvironmentName  string
-	Replicas         int32
+	ArizeSink          ArizeSink
+	BigQuerySink       BigQuerySink
+	BatchSize          int
+	KafkaConsumer      KafkaConsumer
+	ImageName          string
+	DefaultResources   ResourceRequestsLimits
+	EnvironmentName    string
+	Replicas           int32
+	TargetNamespace    string
+	ServiceAccountName string
 }
 
 // KafkaConsumer

@@ -51,7 +51,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -59,7 +59,7 @@ func TestDeploy(t *testing.T) {
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -109,7 +109,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -125,7 +125,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -133,7 +133,7 @@ func TestDeploy(t *testing.T) {
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -183,7 +183,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -217,7 +217,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -234,7 +234,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -242,7 +242,7 @@ func TestDeploy(t *testing.T) {
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Undeploy", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -292,7 +292,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -308,7 +308,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -316,7 +316,7 @@ func TestDeploy(t *testing.T) {
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
 				}).Return(&deployment.Manifest{}, nil)
 				mockDeployer.On("Undeploy", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -366,7 +366,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -383,7 +383,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -411,7 +411,7 @@ func TestDeploy(t *testing.T) {
 					OnProgress: false,
 				}, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -461,7 +461,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -477,7 +477,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -505,7 +505,7 @@ func TestDeploy(t *testing.T) {
 					OnProgress: false,
 				}, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -548,7 +548,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -592,7 +592,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -636,7 +636,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -652,7 +652,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -707,7 +707,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
@@ -724,7 +724,7 @@ func TestDeploy(t *testing.T) {
 			deployer: func() *deploymentMock.Deployer {
 				mockDeployer := &deploymentMock.Deployer{}
 				mockDeployer.On("GetDeployedManifest", mock.Anything, &models.WorkerData{
-					Namespace:       "project-1",
+					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
 					ModelName:       "model-1",
 					ModelVersion:    "1",
@@ -779,7 +779,7 @@ func TestDeploy(t *testing.T) {
 							ModelSchemaSpec: schemaSpec,
 						},
 						WorkerData: &models.WorkerData{
-							Namespace:       "project-1",
+							Project:         "project-1",
 							ModelSchemaSpec: schemaSpec,
 							ModelName:       "model-1",
 							ModelVersion:    "1",
