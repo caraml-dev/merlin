@@ -61,7 +61,7 @@ jobs:
         working-directory: ./python/pyfunc-server
         run: |
           tag=$(python -m setuptools_scm -r ../..)
-          sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag//v}"`\"|g" ./pyfuncserver/version.py
+          sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag}"`\"|g" ./pyfuncserver/version.py
           python setup.py sdist bdist_wheel
           twine upload dist/*
 
