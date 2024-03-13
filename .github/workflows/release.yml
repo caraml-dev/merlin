@@ -53,7 +53,7 @@ jobs:
         working-directory: ./python/pyfunc-server
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools setuptools_scm wheel twine
+          pip install setuptools>=64 setuptools_scm>=8 wheel twine
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.pypi_username }}
@@ -61,6 +61,7 @@ jobs:
         working-directory: ./python/pyfunc-server
         run: |
           tag=$(python -m setuptools_scm -r ../..)
+          echo $tag
           sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag}"`\"|g" ./pyfuncserver/version.py
           python setup.py sdist bdist_wheel
           twine upload dist/*
