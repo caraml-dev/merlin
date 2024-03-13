@@ -996,7 +996,7 @@ class ModelVersion:
                 "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
             )
 
-        merlin_requirements = ["merlin-pyfunc-server==0.41.0"]
+        merlin_requirements = ["merlin-pyfunc-server==0.1.dev1"]
         if self._model.type == ModelType.PYFUNC_V2:
             merlin_requirements = ["merlin-batch-job==0.41.0"]
 

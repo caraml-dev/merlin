@@ -2,19 +2,12 @@ import os
 from collections import namedtuple
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional
 
 import yaml
 from packaging.requirements import Requirement
 
 _CONSTRAINTS_FILE_NAME = "constraints.txt"
-
-
-def get_default_merlin_requirements():
-    return [
-        "merlin-batch-job==0.41.0",
-        "merlin-pyfunc-server==0.41.0",
-    ]
 
 
 def process_conda_env(
