@@ -41,6 +41,30 @@ jobs:
           python setup.py sdist bdist_wheel
           twine upload dist/*
 
+  publish-merlin-pyfunc-server:
+    # if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        working-directory: ./python/pyfunc-server
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.pypi_username }}
+          TWINE_PASSWORD: ${{ secrets.pypi_password }}
+        working-directory: ./python/pyfunc-server
+        run: |
+          tag=$(git describe --tags --always --first-parent)
+          sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag//v}"`\"|g" ./pyfuncserver/version.py
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
+
   publish-python-sdk-docker:
     runs-on: ubuntu-latest
     strategy:

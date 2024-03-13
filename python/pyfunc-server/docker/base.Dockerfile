@@ -22,5 +22,12 @@ ENV GRPC_HEALTH_PROBE_VERSION=v0.4.4
 RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
     chmod +x /bin/grpc_health_probe
 
+ENV YQ_VERSION=v4.42.1
+RUN wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq && \
+    chmod +x /usr/bin/yq
+
 RUN mkdir /prom_dir
 ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir prometheus_multiproc_dir=/prom_dir
+
+COPY process_conda_env.sh /bin/process_conda_env.sh
+COPY run.sh /bin/run.sh

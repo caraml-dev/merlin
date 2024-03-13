@@ -24,6 +24,7 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
+RUN process_conda_env.sh conda.yaml
 RUN conda env create --name merlin-model --file conda.yaml
 
 # Download and dry-run user model artifacts and code
@@ -31,4 +32,4 @@ ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
 RUN /bin/bash -c ". activate merlin-model && pyfuncserver --model_dir model --dry_run"
 
-CMD ["/bin/bash", "-c", ". activate merlin-model && pyfuncserver --model_dir model"]
+CMD ["run.sh"]

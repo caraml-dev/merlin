@@ -50,10 +50,10 @@ for index, item in enumerate(REQUIRE):
         )
 
 setup(
-    name="pyfuncserver",
+    name="merlin-pyfunc-server",
     version=version,
     author_email="merlin-dev@gojek.com",
-    description="Model Server implementation for mlflow pyfunc model",
+    description="Model Server implementation for Merlin PyFunc model",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     python_requires=">=3.8,<3.11",
