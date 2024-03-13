@@ -19,7 +19,7 @@ jobs:
     outputs:
       version: ${{ steps.create_version.outputs.version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - id: create_version
@@ -47,7 +47,7 @@ jobs:
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -82,7 +82,7 @@ jobs:
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -114,7 +114,7 @@ jobs:
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -165,7 +165,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
@@ -192,7 +192,7 @@ jobs:
   test-observation-publisher:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         id: setup-python
         with:
@@ -215,7 +215,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout to the target branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - uses: actions/setup-node@v2
         with:
           node-version: 16
@@ -268,7 +268,7 @@ jobs:
       - build-ui
       - test-api
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download UI Dist
         uses: actions/download-artifact@v2
         with:
@@ -293,7 +293,7 @@ jobs:
     env:
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyspark-base:${{ needs.create-version.outputs.version }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build Batch Predictor Base Docker
         run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/batch-predictor/docker/base.Dockerfile python
       - name: Save Batch Predictor Base Docker
@@ -314,7 +314,7 @@ jobs:
       DOCKER_REGISTRY: ghcr.io
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build Pyfunc Server Base Docker
         run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/pyfunc-server/docker/base.Dockerfile python
       - name: Save Pyfunc Server Base Docker
@@ -331,7 +331,7 @@ jobs:
     needs:
       - create-version
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
@@ -389,7 +389,7 @@ jobs:
       DOCKER_REGISTRY: ghcr.io
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-observation-publisher:${{ needs.create-version.outputs.version }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build Observation Publisher Docker
         env:
           OBSERVATION_PUBLISHER_IMAGE_TAG: ${{ env.DOCKER_IMAGE_TAG }}
@@ -419,7 +419,7 @@ jobs:
       E2E_PYTHON_VERSION: "3.10.6"
       K3S_VERSION: v1.26.7-k3s1
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           path: merlin
       - uses: actions/setup-python@v5
