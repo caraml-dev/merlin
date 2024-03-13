@@ -147,7 +147,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           # Ensure the same version as the one defined in Makefile
-          version: v1.51.2
+          version: v1.56.2
           working-directory: api
 
   test-api:
