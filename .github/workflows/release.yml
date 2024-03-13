@@ -142,7 +142,7 @@ jobs:
           docker tag merlin-logger:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
 
-  publish-batch-predictor:
+  publish-batch-predictor-base-image:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyspark-base:${{ inputs.version }}"
@@ -162,7 +162,7 @@ jobs:
           docker image load --input merlin-pyspark-base.${{ inputs.version }}.tar
           docker push ${{ env.DOCKER_IMAGE_TAG }}
 
-  publish-pyfunc:
+  publish-pyfunc-server-base-image:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyfunc-base:${{ inputs.version }}"
