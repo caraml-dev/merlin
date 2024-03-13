@@ -29,5 +29,5 @@ RUN wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linu
 RUN mkdir /prom_dir
 ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir prometheus_multiproc_dir=/prom_dir
 
-COPY process_conda_env.sh /bin/process_conda_env.sh
-COPY run.sh /bin/run.sh
+COPY pyfunc-server/docker/process_conda_env.sh /bin/process_conda_env.sh
+COPY pyfunc-server/docker/run.sh /bin/run.sh
