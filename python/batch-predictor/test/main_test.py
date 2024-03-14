@@ -13,14 +13,13 @@
 # limitations under the License.
 
 import os
+from test.model_test import IrisModel
 
 import mlflow
 import pytest
-from mlflow.pyfunc import log_model
-
+from main import start
 from merlinpyspark.config import load
-from main import main
-from test.model_test import IrisModel
+from mlflow.pyfunc import log_model
 
 test_config = """
 kind: PredictionJob
@@ -50,8 +49,11 @@ bigquerySink:
 
 @pytest.mark.ci
 def test_integration(spark_session, bq):
-    log_model("model", python_model=IrisModel(), artifacts={
-        "model_path": "test-model/model.joblib"})
+    log_model(
+        "model",
+        python_model=IrisModel(),
+        artifacts={"model_path": "test-model/model.joblib"},
+    )
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
 
     config_path = "test-config/integration_test.yaml"
@@ -62,7 +64,7 @@ def test_integration(spark_session, bq):
 
     bq.delete_table(table=cfg.sink().table(), not_found_ok=True)
 
-    main(config_path, spark_session)
+    start(config_path, spark_session)
 
     result_table = bq.get_table(cfg.sink().table())
     assert len(result_table.schema) == 5
