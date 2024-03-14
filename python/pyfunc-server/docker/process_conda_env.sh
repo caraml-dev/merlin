@@ -10,7 +10,7 @@ cat "${CONDA_ENV_PATH}"
 yq --inplace 'del(.dependencies[].pip[] | select(. == "*merlin-sdk*"))' "${CONDA_ENV_PATH}"
 
 # Add `merlin-pyfunc-server` to conda's pip dependencies
-yq --inplace 'with(.dependencies[].pip; select(all_c(. != "*merlin-pyfunc-server*")) | . += ["merlin-pyfunc-server==0.40.2.dev26"] )' "${CONDA_ENV_PATH}"
+yq --inplace 'with(.dependencies[].pip; select(all_c(. != "*merlin-pyfunc-server*")) | . += ["merlin-pyfunc-server==0.40.2.dev27"] )' "${CONDA_ENV_PATH}"
 
 echo "Processed conda environment file content:"
 cat "${CONDA_ENV_PATH}"
