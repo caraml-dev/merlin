@@ -65,7 +65,7 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 			return err
 		}
 
-		return e.enqueueJob(version, publisher, models.UndeployPublisher)
+		return e.enqueueJob(version, model, publisher, models.UndeployPublisher)
 	}
 
 	versionEndpoint := modelEndpoint.GetVersionEndpoint()
@@ -84,7 +84,7 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 	publisher.VersionID = versionEndpoint.VersionID
 	publisher.ModelSchemaSpec = version.ModelSchema.Spec
 
-	return e.enqueueJob(version, publisher, models.DeployPublisher)
+	return e.enqueueJob(version, model, publisher, models.DeployPublisher)
 }
 
 func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.VersionEndpoint, model *models.Model) error {
@@ -113,7 +113,7 @@ func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.Versi
 		if err != nil {
 			return err
 		}
-		return e.enqueueJob(version, publisher, models.UndeployPublisher)
+		return e.enqueueJob(version, model, publisher, models.UndeployPublisher)
 	}
 
 	version, err := e.findVersionWithModelSchema(ctx, versionEndpoint.VersionID, model.ID)
@@ -130,7 +130,7 @@ func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.Versi
 
 	publisher.VersionID = versionEndpoint.VersionID
 	publisher.ModelSchemaSpec = version.ModelSchema.Spec
-	return e.enqueueJob(version, publisher, models.DeployPublisher)
+	return e.enqueueJob(version, model, publisher, models.DeployPublisher)
 }
 
 func isUndeployAction(modelEndpoint *models.ModelEndpoint) bool {
@@ -155,7 +155,7 @@ func (e *eventProducer) findVersionWithModelSchema(ctx context.Context, versionI
 	return version, nil
 }
 
-func (e *eventProducer) enqueueJob(version *models.Version, publisher *models.ObservabilityPublisher, actionType models.ActionType) error {
+func (e *eventProducer) enqueueJob(version *models.Version, model *models.Model, publisher *models.ObservabilityPublisher, actionType models.ActionType) error {
 	publisher.Status = models.Pending
 	if version.ModelSchema != nil {
 		publisher.ModelSchemaSpec = version.ModelSchema.Spec
@@ -182,7 +182,7 @@ func (e *eventProducer) enqueueJob(version *models.Version, publisher *models.Ob
 			dataArgKey: models.ObservabilityPublisherJob{
 				ActionType: actionType,
 				Publisher:  publisher,
-				WorkerData: models.NewWorkerData(version, publisher),
+				WorkerData: models.NewWorkerData(version, model, publisher),
 			},
 		},
 	})

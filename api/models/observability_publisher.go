@@ -42,8 +42,7 @@ type WorkerData struct {
 	TopicSource     string
 }
 
-func NewWorkerData(modelVersion *Version, observabilityPublisher *ObservabilityPublisher) *WorkerData {
-	model := modelVersion.Model
+func NewWorkerData(modelVersion *Version, model *Model, observabilityPublisher *ObservabilityPublisher) *WorkerData {
 	return &WorkerData{
 		ModelName:       model.Name,
 		Project:         model.Project.Name,
