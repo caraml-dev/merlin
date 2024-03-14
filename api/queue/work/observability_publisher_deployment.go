@@ -2,6 +2,7 @@ package work
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -21,8 +22,10 @@ func (op *ObservabilityPublisherDeployment) Deploy(job *queue.Job) (err error) {
 	ctx := context.Background()
 
 	data := job.Arguments[dataArgKey]
-	obsPublisherJobData, ok := data.(models.ObservabilityPublisherJob)
-	if !ok {
+	byte, _ := json.Marshal(data)
+
+	var obsPublisherJobData models.ObservabilityPublisherJob
+	if err := json.Unmarshal(byte, &obsPublisherJobData); err != nil {
 		return fmt.Errorf("job data for ID: %d is not in ObservabilityPublisherJob type", job.ID)
 	}
 
