@@ -178,7 +178,6 @@ func Test_deployer_Deploy(t *testing.T) {
 			Dataset: "dataset",
 			TTLDays: 10,
 		},
-		BatchSize: 10,
 		KafkaConsumer: config.KafkaConsumer{
 			Brokers:   "broker-1",
 			GroupID:   "group-id",

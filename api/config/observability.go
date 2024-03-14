@@ -4,7 +4,6 @@ package config
 type ObservabilityPublisher struct {
 	ArizeSink          ArizeSink
 	BigQuerySink       BigQuerySink
-	BatchSize          int
 	KafkaConsumer      KafkaConsumer
 	ImageName          string
 	DefaultResources   ResourceRequestsLimits

@@ -432,7 +432,7 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 func initObservabilityPublisherDeployment(cfg *config.Config, observabilityPublisherStorage storage.ObservabilityPublisherStorage) *work.ObservabilityPublisherDeployment {
 	var envCfg *config.EnvironmentConfig
 	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
-		if env.Name == cfg.Environment {
+		if env.Name == cfg.ObservabilityPublisher.EnvironmentName {
 			envCfg = env
 			break
 		}
