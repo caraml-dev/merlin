@@ -153,6 +153,11 @@ def start(spec_path, spark):
 
 
 def main():
+    if args.dry_run_path is not None:
+        pyfunc.load_model(args.dry_run_path)
+        print("Dry run success")
+        exit(0)
+
     if args.local:
         spark = local_spark_session()
     else:
@@ -160,11 +165,6 @@ def main():
         spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
 
     print(f"Spark configuration: {spark.sparkContext.getConf().getAll()}")
-
-    if args.dry_run_path is not None:
-        pyfunc.load_model(args.dry_run_path)
-        print("Dry run success")
-        exit(0)
 
     start(args.spec_path, spark)
 

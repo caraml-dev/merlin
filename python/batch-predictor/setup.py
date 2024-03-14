@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import imp
+import os
 
 from setuptools import find_packages, setup
 
-version = imp.load_source("version", "version.py").VERSION
+version = imp.load_source(
+    "merlinpyspark.version", os.path.join("merlinpyspark", "version.py")
+).VERSION
 
 with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
@@ -38,6 +41,6 @@ setup(
     extras_require={"test": TEST_REQUIRE},
     entry_points="""
         [console_scripts]
-        merlin-batch-predictor=main:main
+        merlin-batch-predictor=merlinpyspark.__main__:main
     """,
 )

@@ -17,7 +17,7 @@ from test.model_test import IrisModel
 
 import mlflow
 import pytest
-from main import start
+from merlinpyspark.__main__ import start
 from merlinpyspark.config import load
 from mlflow.pyfunc import log_model
 
