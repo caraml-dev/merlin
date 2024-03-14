@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import imp
-import os
 
 from setuptools import find_packages, setup
 
@@ -31,6 +30,7 @@ setup(
     author_email="merlin-dev@gojek.com",
     description="Base PySpark application for running Merlin prediction batch job",
     long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     python_requires=">=3.8,<3.11",
     packages=find_packages("merlinpyspark"),
     install_requires=REQUIRE,

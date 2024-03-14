@@ -1,6 +1,6 @@
-# Merlin PySpark App
+# Merlin Batch Predictor
 
-Pyspark application for running batch prediction job in merlin.
+Merlin Batch Predictor is a PySpark application for running batch prediction job in Merlin system.
 
 ## Usage
 

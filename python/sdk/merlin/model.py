@@ -996,9 +996,9 @@ class ModelVersion:
                 "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
             )
 
-        merlin_requirements = ["merlin-pyfunc-server==0.40.2.dev24"]
+        merlin_requirements = ["merlin-pyfunc-server==0.40.2.dev25"]
         if self._model.type == ModelType.PYFUNC_V2:
-            merlin_requirements = ["merlin-batch-predictor==0.40.2.dev24"]
+            merlin_requirements = ["merlin-batch-predictor==0.40.2.dev25"]
 
         # add/replace python version in conda to match that used to create model version
         conda_env = process_conda_env(
