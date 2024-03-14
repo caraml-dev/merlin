@@ -26,7 +26,7 @@ with open("requirements_test.txt") as f:
     TEST_REQUIRE = f.read().splitlines()
 
 setup(
-    name="merlin-pyspark-app",
+    name="merlin-batch-predictor",
     version=version,
     author_email="merlin-dev@gojek.com",
     description="Base PySpark application for running Merlin prediction batch job",
@@ -38,6 +38,6 @@ setup(
     extras_require={"test": TEST_REQUIRE},
     entry_points="""
         [console_scripts]
-        merlin-pyspark-app=main:main
+        merlin-batch-predictor=main:main
     """,
 )

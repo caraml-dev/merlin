@@ -29,7 +29,7 @@ RUN conda env create --name merlin-model --file conda.yaml
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
-RUN /bin/bash -c ". activate merlin-model && merlin-pyspark-app --dry-run-model ${HOME}/model"
+RUN /bin/bash -c ". activate merlin-model && merlin-batch-predictor --dry-run-model ${HOME}/model"
 
 
 ENTRYPOINT ["/opt/merlin_entrypoint.sh"]

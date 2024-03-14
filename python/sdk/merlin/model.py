@@ -27,14 +27,22 @@ import client
 import docker
 import mlflow
 import pyprind
-from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
-                    SecretApi, VersionApi)
+from client import (
+    EndpointApi,
+    EnvironmentApi,
+    ModelEndpointsApi,
+    ModelsApi,
+    SecretApi,
+    VersionApi,
+)
 from docker import APIClient
 from docker.models.containers import Container
 from merlin import pyfunc
-from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-                                AutoscalingPolicy)
+from merlin.autoscaling import (
+    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+    AutoscalingPolicy,
+)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
@@ -49,9 +57,13 @@ from merlin.pyfunc import run_pyfunc_local_server
 from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (autostr, download_files_from_gcs,
-                         extract_optional_value_with_default, guess_mlp_ui_url,
-                         valid_name_check)
+from merlin.util import (
+    autostr,
+    download_files_from_gcs,
+    extract_optional_value_with_default,
+    guess_mlp_ui_url,
+    valid_name_check,
+)
 from merlin.validation import validate_model_dir
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
@@ -984,9 +996,9 @@ class ModelVersion:
                 "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
             )
 
-        merlin_requirements = ["merlin-pyfunc-server==0.40.2.dev21"]
+        merlin_requirements = ["merlin-pyfunc-server==0.40.2.dev24"]
         if self._model.type == ModelType.PYFUNC_V2:
-            merlin_requirements = ["merlin-pyspark-app==0.40.2.dev21"]
+            merlin_requirements = ["merlin-batch-predictor==0.40.2.dev24"]
 
         # add/replace python version in conda to match that used to create model version
         conda_env = process_conda_env(
