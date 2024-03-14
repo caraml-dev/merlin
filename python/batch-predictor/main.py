@@ -67,7 +67,7 @@ parser.add_argument(
     default=False,
 )
 
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 print(f"Called with arguments: {args}")
 
 
