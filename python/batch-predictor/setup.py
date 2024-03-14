@@ -25,7 +25,7 @@ with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
 
 with open("requirements_test.txt") as f:
-    TEST_REQUIRE = f.read().splitlines()
+    TESTS_REQUIRE = f.read().splitlines()
 
 setup(
     name="merlin-batch-predictor",
@@ -35,10 +35,10 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     python_requires=">=3.8,<3.11",
-    packages=find_packages("merlinpyspark"),
+    packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
-    tests_require=TEST_REQUIRE,
-    extras_require={"test": TEST_REQUIRE},
+    tests_require=TESTS_REQUIRE,
+    extras_require={"test": TESTS_REQUIRE},
     entry_points="""
         [console_scripts]
         merlin-batch-predictor=merlinpyspark.__main__:main
