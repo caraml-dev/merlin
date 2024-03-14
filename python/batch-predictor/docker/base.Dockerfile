@@ -68,10 +68,13 @@ WORKDIR ${HOME}
 # Install miniconda
 ENV CONDA_DIR ${HOME}/miniconda3
 ENV PATH ${CONDA_DIR}/bin:$PATH
-ENV MINIFORGE_VERSION=23.3.1-1
+ENV MINIFORGE_VERSION=23.11.0-0
 
 RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh -O miniconda.sh && \
     /bin/bash miniconda.sh -b -p ${CONDA_DIR} && \
     rm ~/miniconda.sh && \
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
+
+COPY batch-predictor/docker/merlin_entrypoint.sh /opt/merlin_entrypoint.sh
+COPY batch-predictor/docker/process_conda_env.sh /opt/process_conda_env.sh

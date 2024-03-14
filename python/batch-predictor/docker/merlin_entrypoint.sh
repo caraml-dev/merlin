@@ -14,12 +14,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 # echo commands to the terminal output
 set -ex
+
 # Check whether there is a passwd entry for the container UID
 myuid=$(id -u)
 mygid=$(id -g)
+
 # turn off -e for getent because it will return error code in anonymous uid case
 set +e
 uidentry=$(getent passwd $myuid)
@@ -36,6 +38,7 @@ if [ -z "$uidentry" ] ; then
         echo "Container ENTRYPOINT failed to add passwd entry for anonymous UID"
     fi
 fi
+
 SPARK_K8S_CMD="$1"
 case "$SPARK_K8S_CMD" in
     driver | driver-py | driver-r | executor)
@@ -48,23 +51,29 @@ case "$SPARK_K8S_CMD" in
       exec /usr/bin/tini -s -- "$@"
       ;;
 esac
+
 SPARK_CLASSPATH="$SPARK_CLASSPATH:${SPARK_HOME}/jars/*"
 env | grep SPARK_JAVA_OPT_ | sort -t_ -k4 -n | sed 's/[^=]*=\(.*\)/\1/g' > /tmp/java_opts.txt
 readarray -t SPARK_EXECUTOR_JAVA_OPTS < /tmp/java_opts.txt
+
 if [ -n "$SPARK_EXTRA_CLASSPATH" ]; then
   SPARK_CLASSPATH="$SPARK_CLASSPATH:$SPARK_EXTRA_CLASSPATH"
 fi
+
 if [ -n "$PYSPARK_FILES" ]; then
     PYTHONPATH="$PYTHONPATH:$PYSPARK_FILES"
 fi
+
 PYSPARK_ARGS=""
 if [ -n "$PYSPARK_APP_ARGS" ]; then
     PYSPARK_ARGS="$PYSPARK_APP_ARGS"
 fi
+
 R_ARGS=""
 if [ -n "$R_APP_ARGS" ]; then
     R_ARGS="$R_APP_ARGS"
 fi
+
 if [ "$PYSPARK_MAJOR_PYTHON_VERSION" == "2" ]; then
     pyv="$(python -V 2>&1)"
     export PYTHON_VERSION="${pyv:7}"
@@ -76,6 +85,7 @@ elif [ "$PYSPARK_MAJOR_PYTHON_VERSION" == "3" ]; then
     export PYSPARK_PYTHON="python3"
     export PYSPARK_DRIVER_PYTHON="python3"
 fi
+
 case "$SPARK_K8S_CMD" in
   driver)
     CMD=(
@@ -120,5 +130,6 @@ case "$SPARK_K8S_CMD" in
     echo "Unknown command: $SPARK_K8S_CMD" 1>&2
     exit 1
 esac
+
 # Execute the container CMD under tini for better hygiene
 exec /usr/bin/tini -s -- "${CMD[@]}"

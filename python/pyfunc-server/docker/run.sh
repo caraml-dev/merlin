@@ -29,7 +29,7 @@ trap sigterm_handler SIGTERM
 trap sigint_handler SIGINT
 
 source activate merlin-model
-pyfuncserver --model_dir ./model &
+merlin-pyfunc-server --model_dir ./model &
 
 server_pid=$!
 wait "$server_pid"

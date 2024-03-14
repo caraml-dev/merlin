@@ -51,6 +51,6 @@ setup(
     extras_require={"test": TESTS_REQUIRE},
     entry_points="""
         [console_scripts]
-        pyfuncserver=pyfuncserver.__main__:main
+        merlin-pyfunc-server=pyfuncserver.__main__:main
     """,
 )

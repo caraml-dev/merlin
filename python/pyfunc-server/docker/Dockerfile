@@ -30,6 +30,6 @@ RUN conda env create --name merlin-model --file conda.yaml
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
-RUN /bin/bash -c ". activate merlin-model && pyfuncserver --model_dir model --dry_run"
+RUN /bin/bash -c ". activate merlin-model && merlin-pyfunc-server --model_dir model --dry_run"
 
 CMD ["run.sh"]
