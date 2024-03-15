@@ -49,10 +49,18 @@ RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -
     libglib2.0-0 libxext6 libsm6 libxrender1 \
     git mercurial subversion
 
+# Install yq
+ENV YQ_VERSION=v4.42.1
+RUN wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq && \
+    chmod +x /usr/bin/yq
+
 # Install gcloud SDK
 ENV PATH=$PATH:/google-cloud-sdk/bin
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf - -C /
+
+COPY batch-predictor/docker/merlin_entrypoint.sh /usr/bin/merlin_entrypoint.sh
+COPY batch-predictor/docker/process_conda_env.sh /usr/bin/process_conda_env.sh
 
 # Configure non-root user
 ENV USER spark
@@ -75,6 +83,3 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MI
     rm ~/miniconda.sh && \
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
-
-COPY batch-predictor/docker/merlin_entrypoint.sh /opt/merlin_entrypoint.sh
-COPY batch-predictor/docker/process_conda_env.sh /opt/process_conda_env.sh
