@@ -43,6 +43,7 @@ import (
 	mlflow "github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/gitlab"
+	"github.com/caraml-dev/merlin/pkg/observability/event"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/queue/work"
 	"github.com/caraml-dev/merlin/service"
@@ -138,7 +139,7 @@ func main() {
 
 	dependencies := buildDependencies(ctx, cfg, db, dispatcher)
 
-	registerQueueJob(dispatcher, dependencies.modelDeployment, dependencies.batchDeployment)
+	registerQueueJob(dispatcher, dependencies.modelDeployment, dependencies.batchDeployment, dependencies.observabilityDeployment)
 	dispatcher.Start()
 
 	if err := initCronJob(dependencies, db); err != nil {
@@ -253,9 +254,10 @@ func newPprofRouter() *mux.Router {
 	return r
 }
 
-func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServiceDeployment, batchDepl *work.BatchDeployment) {
+func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServiceDeployment, batchDepl *work.BatchDeployment, obsDepl *work.ObservabilityPublisherDeployment) {
 	consumer.RegisterJob(service.ModelServiceDeployment, modelServiceDepl.Deploy)
 	consumer.RegisterJob(service.BatchDeployment, batchDepl.Deploy)
+	consumer.RegisterJob(event.ObservabilityPublisherDeployment, obsDepl.Deploy)
 }
 
 func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) deps {
@@ -268,10 +270,14 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 
+	observabilityPublisherStorage := storage.NewObservabilityPublisherStorage(db)
+	observabilityPublisherDeployment := initObservabilityPublisherDeployment(cfg, observabilityPublisherStorage)
+	versionStorage := storage.NewVersionStorage(db)
+	observabilityEvent := event.NewEventProducer(dispatcher, observabilityPublisherStorage, versionStorage)
 	clusterControllers := initClusterControllers(cfg)
-	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db)
+	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db, observabilityEvent)
 	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher)
-	modelEndpointService := initModelEndpointService(cfg, db)
+	modelEndpointService := initModelEndpointService(cfg, db, observabilityEvent)
 
 	batchControllers := initBatchControllers(cfg, db, mlpAPIClient)
 	batchDeployment := initBatchDeployment(cfg, db, batchControllers, predJobBuilder)
@@ -356,9 +362,10 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		MlflowClient:    mlflowClient,
 	}
 	return deps{
-		apiContext:          apiContext,
-		modelDeployment:     modelServiceDeployment,
-		batchDeployment:     batchDeployment,
-		imageBuilderJanitor: imageBuilderJanitor,
+		apiContext:              apiContext,
+		modelDeployment:         modelServiceDeployment,
+		batchDeployment:         batchDeployment,
+		observabilityDeployment: observabilityPublisherDeployment,
+		imageBuilderJanitor:     imageBuilderJanitor,
 	}
 }

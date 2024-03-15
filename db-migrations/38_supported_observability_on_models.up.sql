@@ -1,0 +1,1 @@
+ALTER TABLE models ADD COLUMN observability_supported BOOLEAN NOT NULL DEFAULT false;

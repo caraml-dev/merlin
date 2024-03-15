@@ -53,13 +53,14 @@ type CreatedUpdated struct {
 }
 
 type Model struct {
-	ID           ID          `json:"id"`
-	Name         string      `json:"name" validate:"required,min=3,max=25,subdomain_rfc1123"`
-	ProjectID    ID          `json:"project_id"`
-	Project      mlp.Project `json:"-" gorm:"-"`
-	ExperimentID ID          `json:"mlflow_experiment_id" gorm:"column:mlflow_experiment_id"`
-	Type         string      `json:"type" gorm:"type"`
-	MlflowURL    string      `json:"mlflow_url" gorm:"-"`
+	ID                     ID          `json:"id"`
+	Name                   string      `json:"name" validate:"required,min=3,max=25,subdomain_rfc1123"`
+	ProjectID              ID          `json:"project_id"`
+	Project                mlp.Project `json:"-" gorm:"-"`
+	ExperimentID           ID          `json:"mlflow_experiment_id" gorm:"column:mlflow_experiment_id"`
+	Type                   string      `json:"type" gorm:"type"`
+	MlflowURL              string      `json:"mlflow_url" gorm:"-"`
+	ObservabilitySupported bool        `json:"observability_supported" gorm:"column:observability_supported"`
 
 	Endpoints []*ModelEndpoint `json:"endpoints" gorm:"foreignkey:ModelID;"`
 

@@ -118,29 +118,35 @@ func (svc *Service) GetPredictionLogTopic() string {
 }
 
 func (svc *Service) GetPredictionLogTopicForVersion() string {
-	return fmt.Sprintf("caraml-%s-%s-%s-prediction-log", svc.Namespace, svc.ModelName, svc.ModelVersion)
+	return getPredictionLogTopicForVersion(svc.Namespace, svc.ModelName, svc.ModelVersion)
+}
+
+func getPredictionLogTopicForVersion(project string, modelName string, modelVersion string) string {
+	return fmt.Sprintf("caraml-%s-%s-%s-prediction-log", project, modelName, modelVersion)
 }
 
 func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
 	projectLabelsMap := map[string]int{}
+	updatedLabels := make(mlp.Labels, 0)
 	for index, projectLabel := range projectLabels {
 		projectLabelsMap[projectLabel.Key] = index
+		updatedLabels = append(updatedLabels, projectLabel)
 	}
 
 	for versionLabelKey, versionLabelValue := range versionLabels {
 		if _, labelExists := projectLabelsMap[versionLabelKey]; labelExists {
 			index := projectLabelsMap[versionLabelKey]
-			projectLabels[index].Value = fmt.Sprint(versionLabelValue)
+			updatedLabels[index].Value = fmt.Sprint(versionLabelValue)
 			continue
 		}
 
-		projectLabels = append(projectLabels, mlpclient.Label{
+		updatedLabels = append(updatedLabels, mlpclient.Label{
 			Key:   versionLabelKey,
 			Value: fmt.Sprint(versionLabelValue),
 		})
 	}
 
-	return projectLabels
+	return updatedLabels
 }
 
 func CreateInferenceServiceName(modelName, versionID, revisionID string) string {

@@ -12,6 +12,7 @@ import (
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/imagebuilder"
+	"github.com/caraml-dev/merlin/pkg/observability/event"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/prometheus/client_golang/prometheus"
@@ -34,11 +35,12 @@ func init() {
 }
 
 type ModelServiceDeployment struct {
-	ClusterControllers   map[string]cluster.Controller
-	ImageBuilder         imagebuilder.ImageBuilder
-	Storage              storage.VersionEndpointStorage
-	DeploymentStorage    storage.DeploymentStorage
-	LoggerDestinationURL string
+	ClusterControllers         map[string]cluster.Controller
+	ImageBuilder               imagebuilder.ImageBuilder
+	Storage                    storage.VersionEndpointStorage
+	DeploymentStorage          storage.DeploymentStorage
+	LoggerDestinationURL       string
+	ObservabilityEventProducer event.EventProducer
 }
 
 type EndpointJob struct {
@@ -193,6 +195,12 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	// record the new endpoint result if deployment is successful
 	if err := depl.Storage.Save(endpoint); err != nil {
 		log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+	}
+
+	if model.ObservabilitySupported {
+		if err := depl.ObservabilityEventProducer.VersionEndpointChangeEvent(endpoint, model); err != nil {
+			log.Errorf("error publishing event for observability deployment for model: %s, version: %s with error: %w", model.Name, version.ID, err)
+		}
 	}
 
 	return nil

@@ -14,6 +14,7 @@
 
 import os
 import warnings
+from functools import reduce
 from test.utils import undeploy_all_version
 
 import joblib
@@ -21,6 +22,8 @@ import numpy as np
 import pytest
 import xgboost as xgb
 from merlin.model import ModelType, PyFuncModel, PyFuncV3Model
+from merlin.model_schema import ModelSchema
+from merlin.observability.inference import InferenceSchema, RegressionOutput, ValueType
 from merlin.pyfunc import ModelInput, ModelOutput, Values
 from merlin.resource_request import ResourceRequest
 from sklearn import svm
@@ -63,12 +66,12 @@ class EnvVarModel(PyFuncModel):
 class ModelObservabilityModel(PyFuncV3Model):
     def initialize(self, artifacts):
         self._feature_names = [
-            "sepal length (cm)",
-            "sepal width (cm)",
-            "petal length (cm)",
-            "petal width (cm)",
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width",
         ]
-        self._target_names = ["setosa", "versicolor", "virginica"]
+        self._target_names = ["prediction_score"]
         self._model = xgb.Booster(model_file=artifacts["xgb_model"])
 
     def preprocess(self, request: dict, **kwargs) -> ModelInput:
@@ -81,9 +84,17 @@ class ModelObservabilityModel(PyFuncV3Model):
     def infer(self, model_input: ModelInput) -> ModelOutput:
         dmatrix = xgb.DMatrix(model_input.features.data)
         outputs = self._model.predict(dmatrix).tolist()
+
+        def max(first, second):
+            if first > second:
+                return first
+            return second
+
+        prediction_outputs = [[reduce(max, row)] for row in outputs]
+
         return ModelOutput(
             prediction_ids=model_input.prediction_ids,
-            predictions=Values(columns=self._target_names, data=outputs),
+            predictions=Values(columns=self._target_names, data=prediction_outputs),
         )
 
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
@@ -234,13 +245,26 @@ def test_pyfunc_model_observability(
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-mlobs", ModelType.PYFUNC_V3)
 
+    model_schema = ModelSchema(
+        spec=InferenceSchema(
+            feature_types={
+                "sepal_length": ValueType.FLOAT64,
+                "sepal_width": ValueType.FLOAT64,
+                "petal_length": ValueType.FLOAT64,
+                "petal_width": ValueType.FLOAT64,
+            },
+            model_prediction_output=RegressionOutput(
+                prediction_score_column="prediction_score", actual_score_column="actual"
+            ),
+        )
+    )
     undeploy_all_version()
-    with merlin.new_model_version() as v:
+    with merlin.new_model_version(model_schema=model_schema) as v:
         iris = load_iris()
         y = iris["target"]
         X = iris["data"]
-        xgb_path = train_xgboost_model(X, y)
 
+        xgb_path = train_xgboost_model(X, y)
         v.log_pyfunc_model(
             model_instance=ModelObservabilityModel(),
             conda_env="test/pyfunc/env.yaml",

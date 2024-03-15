@@ -28,6 +28,8 @@ import (
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/imagebuilder"
+	"github.com/caraml-dev/merlin/pkg/observability/deployment"
+	"github.com/caraml-dev/merlin/pkg/observability/event"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/queue/work"
 	"github.com/caraml-dev/merlin/service"
@@ -36,10 +38,11 @@ import (
 )
 
 type deps struct {
-	apiContext          api.AppContext
-	modelDeployment     *work.ModelServiceDeployment
-	batchDeployment     *work.BatchDeployment
-	imageBuilderJanitor *imagebuilder.Janitor
+	apiContext              api.AppContext
+	modelDeployment         *work.ModelServiceDeployment
+	batchDeployment         *work.BatchDeployment
+	observabilityDeployment *work.ObservabilityPublisherDeployment
+	imageBuilderJanitor     *imagebuilder.Janitor
 }
 
 func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClient {
@@ -332,7 +335,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 	return svc
 }
 
-func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndpointsService {
+func initModelEndpointService(cfg *config.Config, db *gorm.DB, observabilityEvent event.EventProducer) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
 	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
@@ -348,7 +351,7 @@ func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndp
 		istioClients[env.Name] = istioClient
 	}
 
-	return service.NewModelEndpointsService(istioClients, storage.NewModelEndpointStorage(db), storage.NewVersionEndpointStorage(db), cfg.Environment)
+	return service.NewModelEndpointsService(istioClients, storage.NewModelEndpointStorage(db), storage.NewVersionEndpointStorage(db), cfg.Environment, observabilityEvent)
 }
 
 func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string]batch.Controller, builder imagebuilder.ImageBuilder) *work.BatchDeployment {
@@ -415,13 +418,56 @@ func initPredictionJobService(cfg *config.Config, controllers map[string]batch.C
 	return service.NewPredictionJobService(controllers, builder, predictionJobStorage, clock.RealClock{}, cfg.Environment, producer)
 }
 
-func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB) *work.ModelServiceDeployment {
+func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, observabilityEvent event.EventProducer) *work.ModelServiceDeployment {
 	return &work.ModelServiceDeployment{
-		ClusterControllers:   controllers,
-		ImageBuilder:         builder,
-		Storage:              storage.NewVersionEndpointStorage(db),
-		DeploymentStorage:    storage.NewDeploymentStorage(db),
-		LoggerDestinationURL: cfg.LoggerDestinationURL,
+		ClusterControllers:         controllers,
+		ImageBuilder:               builder,
+		Storage:                    storage.NewVersionEndpointStorage(db),
+		DeploymentStorage:          storage.NewDeploymentStorage(db),
+		LoggerDestinationURL:       cfg.LoggerDestinationURL,
+		ObservabilityEventProducer: observabilityEvent,
+	}
+}
+
+func initObservabilityPublisherDeployment(cfg *config.Config, observabilityPublisherStorage storage.ObservabilityPublisherStorage) *work.ObservabilityPublisherDeployment {
+	var envCfg *config.EnvironmentConfig
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
+		if env.Name == cfg.ObservabilityPublisher.EnvironmentName {
+			envCfg = env
+			break
+		}
+	}
+	if envCfg == nil {
+		log.Panicf("could not find destination environment for observability publisher")
+	}
+
+	clusterCfg := cluster.Config{
+		ClusterName: envCfg.Cluster,
+		GcpProject:  envCfg.GcpProject,
+	}
+
+	var restConfig *rest.Config
+	var err error
+	if cfg.ClusterConfig.InClusterConfig {
+		restConfig, err = rest.InClusterConfig()
+		if err != nil {
+			log.Panicf("unable to get in cluster configs: %v", err)
+		}
+	} else {
+		creds := mlpcluster.NewK8sClusterCreds(envCfg.K8sConfig)
+		restConfig, err = creds.ToRestConfig()
+		if err != nil {
+			log.Panicf("unable to get cluster config of cluster: %s %v", clusterCfg.ClusterName, err)
+		}
+	}
+	deployer, err := deployment.New(restConfig, cfg.ObservabilityPublisher)
+	if err != nil {
+		log.Panicf("unable to initialize observability deployer with err: %w", err)
+	}
+
+	return &work.ObservabilityPublisherDeployment{
+		Deployer:                      deployer,
+		ObservabilityPublisherStorage: observabilityPublisherStorage,
 	}
 }
 

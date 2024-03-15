@@ -124,7 +124,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 	}
 
 	// override existing endpoint configuration with the user request
-	err = k.override(endpoint, newEndpoint, environment)
+	err = k.override(endpoint, newEndpoint, environment, model)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 }
 
 // override left version endpoint with values on the right version endpoint
-func (k *endpointService) override(left *models.VersionEndpoint, right *models.VersionEndpoint, environment *models.Environment) error {
+func (k *endpointService) override(left *models.VersionEndpoint, right *models.VersionEndpoint, environment *models.Environment, model *models.Model) error {
 	// override deployment mode
 	if right.DeploymentMode != deployment.EmptyDeploymentMode {
 		left.DeploymentMode = right.DeploymentMode
@@ -242,7 +242,7 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.Protocol = protocol.HttpJson
 	}
 
-	left.EnableModelObservability = right.EnableModelObservability
+	left.EnableModelObservability = right.EnableModelObservability && model.ObservabilitySupported
 
 	return nil
 }

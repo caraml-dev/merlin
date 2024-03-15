@@ -25,6 +25,18 @@ config:
       node-workload-type: "batch"
   AuthorizationConfig:
     AuthorizationEnabled: false
+  ObservabilityPublisher:
+    TargetNamespace: caraml-mlobs
+    EnvironmentName: dev
+    KafkaConsumer:
+      Brokers: broker-sample:6666
+    DefaultResources:
+      Requests:
+        CPU: "1"
+        Memory: 512Mi
+      Limits:
+        CPU: "1"
+        Memory: 1Gi
 imageBuilder:
   serviceAccount:
     create: true
