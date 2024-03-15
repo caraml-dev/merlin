@@ -77,7 +77,7 @@ func (op *ObservabilityPublisherDeployment) deploymentIsOngoing(ctx context.Cont
 	if err != nil {
 		return queue.RetryableError{Message: err.Error()}
 	}
-	if deployedManifest.Deployment == nil {
+	if deployedManifest == nil {
 		return nil
 	}
 

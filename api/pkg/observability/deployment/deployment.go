@@ -19,6 +19,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	appLabelKey = "app"
+)
+
 type Manifest struct {
 	Deployment *appsv1.Deployment
 	Secret     *corev1.Secret
@@ -288,7 +292,7 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.getSecretName(data),
 			Namespace: c.targetNamespace(),
-			Labels:    data.Metadata.ToLabel(),
+			Labels:    c.getLabels(data),
 		},
 		StringData: map[string]string{
 			"config.yaml": string(consumerCfgStr),
@@ -322,8 +326,15 @@ func (c *deployer) applyDeployment(ctx context.Context, data *models.WorkerData,
 	return applyDeploymentFunc(data, secretName, true)
 }
 
-func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.WorkerData, secretName string) (*appsv1.Deployment, error) {
+func (c *deployer) getLabels(data *models.WorkerData) map[string]string {
 	labels := data.Metadata.ToLabel()
+	labels[appLabelKey] = data.Metadata.App
+	return labels
+}
+
+func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.WorkerData, secretName string) (*appsv1.Deployment, error) {
+	labels := c.getLabels(data)
+
 	cfgVolName := "config-volume"
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -337,11 +348,18 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": data.Metadata.App,
+					appLabelKey: data.Metadata.App,
 				},
 			},
 			Replicas: &c.consumerConfig.Replicas,
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+					Annotations: map[string]string{
+						PublisherRevisionAnnotationKey: strconv.Itoa(data.Revision),
+					},
+				},
+
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
@@ -386,9 +404,11 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 }
 
 func (c *deployer) waitUntilDeploymentReady(ctx context.Context, deployment *appsv1.Deployment, revision int) error {
-	deploymentv1 := c.kubeClient.AppsV1().Deployments(deployment.Name)
-	timeout := time.After(1 * time.Minute)
-	watcher, err := deploymentv1.Watch(ctx, metav1.ListOptions{})
+	deploymentv1 := c.kubeClient.AppsV1().Deployments(deployment.Namespace)
+	timeout := time.After(c.consumerConfig.DeploymentTimeout)
+	watcher, err := deploymentv1.Watch(ctx, metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", deployment.Name),
+	})
 	if err != nil {
 		return err
 	}

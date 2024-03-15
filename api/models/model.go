@@ -60,7 +60,7 @@ type Model struct {
 	ExperimentID           ID          `json:"mlflow_experiment_id" gorm:"column:mlflow_experiment_id"`
 	Type                   string      `json:"type" gorm:"type"`
 	MlflowURL              string      `json:"mlflow_url" gorm:"-"`
-	ObservabilitySupported bool        `json:"-" gorm:"column:observability_supported"`
+	ObservabilitySupported bool        `json:"observability_supported" gorm:"column:observability_supported"`
 
 	Endpoints []*ModelEndpoint `json:"endpoints" gorm:"foreignkey:ModelID;"`
 

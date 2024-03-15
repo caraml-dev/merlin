@@ -57,7 +57,7 @@ func TestDeploy(t *testing.T) {
 					ModelVersion:    "1",
 					Revision:        1,
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
-				}).Return(&deployment.Manifest{}, nil)
+				}).Return(nil, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
 					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
@@ -131,7 +131,7 @@ func TestDeploy(t *testing.T) {
 					ModelVersion:    "1",
 					Revision:        1,
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
-				}).Return(&deployment.Manifest{}, nil)
+				}).Return(nil, nil)
 				mockDeployer.On("Deploy", mock.Anything, &models.WorkerData{
 					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
@@ -240,7 +240,7 @@ func TestDeploy(t *testing.T) {
 					ModelVersion:    "1",
 					Revision:        1,
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
-				}).Return(&deployment.Manifest{}, nil)
+				}).Return(nil, nil)
 				mockDeployer.On("Undeploy", mock.Anything, &models.WorkerData{
 					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,
@@ -314,7 +314,7 @@ func TestDeploy(t *testing.T) {
 					ModelVersion:    "1",
 					Revision:        1,
 					TopicSource:     "caraml-project-1-model-1-1-prediction-log",
-				}).Return(&deployment.Manifest{}, nil)
+				}).Return(nil, nil)
 				mockDeployer.On("Undeploy", mock.Anything, &models.WorkerData{
 					Project:         "project-1",
 					ModelSchemaSpec: schemaSpec,

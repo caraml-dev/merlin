@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // ObservabilityPublisher
 type ObservabilityPublisher struct {
 	ArizeSink          ArizeSink
@@ -11,6 +13,7 @@ type ObservabilityPublisher struct {
 	Replicas           int32
 	TargetNamespace    string
 	ServiceAccountName string
+	DeploymentTimeout  time.Duration `default:"30m"`
 }
 
 // KafkaConsumer

@@ -127,24 +127,26 @@ func getPredictionLogTopicForVersion(project string, modelName string, modelVers
 
 func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
 	projectLabelsMap := map[string]int{}
+	updatedLabels := make(mlp.Labels, 0)
 	for index, projectLabel := range projectLabels {
 		projectLabelsMap[projectLabel.Key] = index
+		updatedLabels = append(updatedLabels, projectLabel)
 	}
 
 	for versionLabelKey, versionLabelValue := range versionLabels {
 		if _, labelExists := projectLabelsMap[versionLabelKey]; labelExists {
 			index := projectLabelsMap[versionLabelKey]
-			projectLabels[index].Value = fmt.Sprint(versionLabelValue)
+			updatedLabels[index].Value = fmt.Sprint(versionLabelValue)
 			continue
 		}
 
-		projectLabels = append(projectLabels, mlpclient.Label{
+		updatedLabels = append(updatedLabels, mlpclient.Label{
 			Key:   versionLabelKey,
 			Value: fmt.Sprint(versionLabelValue),
 		})
 	}
 
-	return projectLabels
+	return updatedLabels
 }
 
 func CreateInferenceServiceName(modelName, versionID, revisionID string) string {

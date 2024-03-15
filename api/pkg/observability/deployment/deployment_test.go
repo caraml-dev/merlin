@@ -3,6 +3,8 @@ package deployment
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"net/http"
 	"reflect"
 	"strconv"
@@ -52,6 +54,7 @@ const (
 
 func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList, imageName string) *appsv1.Deployment {
 	labels := data.Metadata.ToLabel()
+	labels[appLabelKey] = data.Metadata.App
 	numReplicas := int32(2)
 	cfgVolName := "config-volume"
 	depl := &appsv1.Deployment{
@@ -70,6 +73,12 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 				},
 			},
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+					Annotations: map[string]string{
+						PublisherRevisionAnnotationKey: strconv.Itoa(data.Revision),
+					},
+				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: serviceAccountName,
 					Containers: []corev1.Container{
@@ -201,6 +210,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		Replicas:           2,
 		TargetNamespace:    namespace,
 		ServiceAccountName: serviceAccountName,
+		DeploymentTimeout:  5 * time.Second,
 	}
 	requestResource := corev1.ResourceList{
 		corev1.ResourceCPU:    resource.MustParse("1"),

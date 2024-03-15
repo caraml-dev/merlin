@@ -169,6 +169,10 @@ func TestExecuteDeployment(t *testing.T) {
 					ResourceRequest:          env.DefaultResourceRequest,
 					VersionID:                version.ID,
 					Namespace:                project.Name,
+					RevisionID:               models.ID(1),
+					Status:                   models.EndpointRunning,
+					URL:                      fmt.Sprintf("%s-%d-1.example.com", model.Name, version.ID),
+					ServiceName:              fmt.Sprintf("%s-%d-1.project.svc.cluster.local", model.Name, version.ID),
 					EnableModelObservability: true,
 				}, &models.Model{Name: "model", Project: project, ObservabilitySupported: true}).Return(nil)
 				return producer
@@ -225,6 +229,10 @@ func TestExecuteDeployment(t *testing.T) {
 					ResourceRequest:          env.DefaultResourceRequest,
 					VersionID:                version.ID,
 					Namespace:                project.Name,
+					RevisionID:               models.ID(1),
+					Status:                   models.EndpointRunning,
+					URL:                      fmt.Sprintf("%s-%d-1.example.com", model.Name, version.ID),
+					ServiceName:              fmt.Sprintf("%s-%d-1.project.svc.cluster.local", model.Name, version.ID),
 					EnableModelObservability: true,
 				}, &models.Model{Name: "model", Project: project, ObservabilitySupported: true}).Return(fmt.Errorf("producer error"))
 				return producer
@@ -669,11 +677,12 @@ func TestExecuteDeployment(t *testing.T) {
 				},
 			}
 			svc := &ModelServiceDeployment{
-				ClusterControllers:   controllers,
-				ImageBuilder:         imgBuilder,
-				Storage:              mockStorage,
-				DeploymentStorage:    mockDeploymentStorage,
-				LoggerDestinationURL: loggerDestinationURL,
+				ClusterControllers:         controllers,
+				ImageBuilder:               imgBuilder,
+				Storage:                    mockStorage,
+				DeploymentStorage:          mockDeploymentStorage,
+				LoggerDestinationURL:       loggerDestinationURL,
+				ObservabilityEventProducer: tt.eventProducer,
 			}
 
 			err := svc.Deploy(job)

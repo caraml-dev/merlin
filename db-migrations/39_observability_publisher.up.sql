@@ -1,4 +1,4 @@
-CREATE TYPE publisher_status as ENUM ('pending', 'running', 'failed', 'terminating');
+CREATE TYPE publisher_status as ENUM ('pending', 'running', 'failed', 'terminated');
 
 CREATE TABLE IF NOT EXISTS observability_publishers
 (
