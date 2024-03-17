@@ -10,7 +10,7 @@ cat "${CONDA_ENV_PATH}"
 yq --inplace 'del(.dependencies[].pip[] | select(. == "*merlin-sdk*"))' "${CONDA_ENV_PATH}"
 
 # Add `merlin-batch-predictor` with pinned version to conda's pip dependencies, if not exist
-yq --inplace 'with(.dependencies[].pip; select(all_c(. != "*merlin-batch-predictor*")) | . += ["merlin-batch-predictor==0.40.2.dev31"] )' "${CONDA_ENV_PATH}"
+yq --inplace 'with(.dependencies[].pip; select(all_c(. != "*merlin-batch-predictor*")) | . += ["merlin-batch-predictor==0.40.2.dev33"] )' "${CONDA_ENV_PATH}"
 
 echo "Processed conda environment file content:"
 cat "${CONDA_ENV_PATH}"
