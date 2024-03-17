@@ -59,9 +59,6 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf - -C /
 
-COPY batch-predictor/docker/merlin_entrypoint.sh /usr/bin/merlin_entrypoint.sh
-COPY batch-predictor/docker/process_conda_env.sh /usr/bin/process_conda_env.sh
-
 # Configure non-root user
 ENV USER spark
 ENV UID 185
@@ -83,3 +80,7 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MI
     rm ~/miniconda.sh && \
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
+
+COPY batch-predictor/docker/main.py ${HOME}/main.py
+COPY batch-predictor/docker/merlin_entrypoint.sh /usr/bin/merlin_entrypoint.sh
+COPY batch-predictor/docker/process_conda_env.sh /usr/bin/process_conda_env.sh
