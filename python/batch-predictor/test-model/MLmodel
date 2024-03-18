@@ -1,0 +1,16 @@
+artifact_path: model
+flavors:
+  python_function:
+    artifacts:
+      model_path:
+        path: artifacts/model.joblib
+        uri: model/model.joblib
+    cloudpickle_version: 2.0.0
+    env: conda.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+mlflow_version: 1.26.1
+model_uuid: 49ff290d6d854ee3ad83f6233ad891b9
+run_id: d65892b5f2f44cbaae64c682c61bccd6
+utc_time_created: '2024-03-18 09:59:03.832273'

@@ -293,6 +293,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Batch Predictor Base Docker
         run: docker build -t ${{ env.DOCKER_IMAGE_TAG }} -f python/batch-predictor/docker/base.Dockerfile python
+      - name: Test Build Batch Predictor Docker
+        run: |
+          docker build -t "test-batch-predictor:1" \
+            -f python/batch-predictor/docker/local-app.Dockerfile \
+            --build-arg BASE_IMAGE=${{ env.DOCKER_IMAGE_TAG }} \
+            --build-arg MODEL_DEPENDENCIES_URL=batch-predictor/test-model/conda.yaml \
+            --build-arg MODEL_ARTIFACTS_URL=batch-predictor/test-model \
+            python
       - name: Save Batch Predictor Base Docker
         run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Batch Predictor Base Docker Artifact

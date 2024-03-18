@@ -52,7 +52,7 @@ def test_integration(spark_session, bq):
     log_model(
         "model",
         python_model=IrisModel(),
-        artifacts={"model_path": "test-model/model.joblib"},
+        artifacts={"model_path": "test-model/artifacts/model.joblib"},
     )
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
 
