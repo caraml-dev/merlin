@@ -1,0 +1,9 @@
+dependencies:
+  - python=3.10.*
+  - pip:
+      - mlflow
+      - merlin-pyfunc-server
+      - joblib>=0.13.0,<1.2.0
+      - numpy<=1.23.5
+      - scikit-learn>=1.1.2
+      - xgboost==1.6.2
