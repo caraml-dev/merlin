@@ -24,7 +24,7 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
-RUN process_conda_env.sh conda.yaml
+RUN process_conda_env.sh conda.yaml "merlin-batch-predictor" ""
 RUN conda env create --name merlin-model --file conda.yaml
 
 # Download and dry-run user model artifacts and code

@@ -75,10 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # TODO(arief): Fix running test on python 3.8 and 3.9
-        # Why dep install so slow? -- https://github.com/caraml-dev/merlin/actions/runs/8259312091/job/22593010564
-        # python-version: ["3.8", "3.9", "3.10"]
-        python-version: ["3.10"]
+        python-version: ["3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
