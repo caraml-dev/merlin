@@ -101,6 +101,7 @@ class ArizeSink(ObservationSink):
             model_type = ArizeModelType.REGRESSION
         elif isinstance(prediction_output, RankingOutput):
             schema_attributes = self._common_arize_schema_attributes() | dict(
+                prediction_score_column_name=prediction_output.rank_score_column,
                 rank_column_name=prediction_output.rank_column,
                 prediction_group_id_column_name=self._inference_schema.session_id_column,
             )
