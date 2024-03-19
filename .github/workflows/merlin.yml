@@ -300,6 +300,7 @@ jobs:
             --build-arg BASE_IMAGE=${{ env.DOCKER_IMAGE_TAG }} \
             --build-arg MODEL_DEPENDENCIES_URL=batch-predictor/test-model/conda.yaml \
             --build-arg MODEL_ARTIFACTS_URL=batch-predictor/test-model \
+            --build-arg MERLIN_DEP_CONSTRAINT="" \
             python
       - name: Save Batch Predictor Base Docker
         run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
@@ -329,6 +330,7 @@ jobs:
             --build-arg BASE_IMAGE=${{ env.DOCKER_IMAGE_TAG }} \
             --build-arg MODEL_DEPENDENCIES_URL=pyfunc-server/test/local-artifacts/conda.yaml \
             --build-arg MODEL_ARTIFACTS_URL=pyfunc-server/test/local-artifacts \
+            --build-arg MERLIN_DEP_CONSTRAINT="" \
             python
       - name: Save Pyfunc Server Base Docker
         run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
