@@ -10,53 +10,53 @@ from merlin.requirements import process_conda_env
         (
             "test/requirements/empty_in.yaml",
             "test/requirements/empty_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/no_pip_reqs_in.yaml",
             "test/requirements/no_pip_reqs_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/pyfunc_server_with_version_in.yaml",
             "test/requirements/pyfunc_server_with_version_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/pyfunc_server_without_version_in.yaml",
             "test/requirements/pyfunc_server_without_version_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/other_reqs_in.yaml",
             "test/requirements/other_reqs_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # Conda files have pip dependencies that use requirements.txt
         (
             "test/requirements/with-requirements-txt/empty_in.yaml",
             "test/requirements/with-requirements-txt/empty_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/with-requirements-txt/no_pyfunc_server_in.yaml",
             "test/requirements/with-requirements-txt/no_pyfunc_server_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/with-requirements-txt/pyfunc_server_with_version_in.yaml",
             "test/requirements/with-requirements-txt/pyfunc_server_with_version_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/with-requirements-txt/pyfunc_server_without_version_in.yaml",
             "test/requirements/with-requirements-txt/pyfunc_server_without_version_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         (
             "test/requirements/with-requirements-txt/constraints_in.yaml",
             "test/requirements/with-requirements-txt/constraints_out.yaml",
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # Test using dictionary
         # Empty conda env
@@ -65,10 +65,10 @@ from merlin.requirements import process_conda_env
             {
                 "dependencies": [
                     "python=3.10.*",
-                    {"pip": ["merlin-pyfunc-server==0.41.0"]},
+                    {"pip": ["merlin-pyfunc-server<0.42.0"]},
                 ]
             },
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # Using old python version, no pip reqs
         (
@@ -80,10 +80,10 @@ from merlin.requirements import process_conda_env
             {
                 "dependencies": [
                     "python=3.10.*",
-                    {"pip": ["merlin-pyfunc-server==0.41.0"]},
+                    {"pip": ["merlin-pyfunc-server<0.42.0"]},
                 ]
             },
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # Using old python version, with empty pip reqs
         (
@@ -96,10 +96,10 @@ from merlin.requirements import process_conda_env
             {
                 "dependencies": [
                     "python=3.10.*",
-                    {"pip": ["merlin-pyfunc-server==0.41.0"]},
+                    {"pip": ["merlin-pyfunc-server<0.42.0"]},
                 ]
             },
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # pip reqs has merlin-pyfunc-server without version
         (
@@ -115,7 +115,7 @@ from merlin.requirements import process_conda_env
                     {"pip": ["merlin-pyfunc-server"]},
                 ]
             },
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # pip reqs has merlin-pyfunc-server with older version, should not be updated
         (
@@ -131,7 +131,7 @@ from merlin.requirements import process_conda_env
                     {"pip": ["merlin-pyfunc-server==0.20.0"]},
                 ]
             },
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
         # pip reqs has merlin-pyfunc-server with newer version, should not be updated
         (
@@ -147,7 +147,7 @@ from merlin.requirements import process_conda_env
                     {"pip": ["merlin-pyfunc-server==0.50.0"]},
                 ]
             },
-            ["merlin-pyfunc-server==0.41.0"],
+            ["merlin-pyfunc-server<0.42.0"],
         ),
     ],
 )

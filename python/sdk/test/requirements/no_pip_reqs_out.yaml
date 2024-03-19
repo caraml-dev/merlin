@@ -1,4 +1,4 @@
 dependencies:
   - python=3.10.*
   - pip:
-      - merlin-pyfunc-server==0.41.0
+      - merlin-pyfunc-server<0.42.0

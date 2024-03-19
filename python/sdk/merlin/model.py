@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import client
 import docker
+import mlflow
 import pyprind
 from client import (
     EndpointApi,
@@ -36,6 +37,7 @@ from client import (
 )
 from docker import APIClient
 from docker.models.containers import Container
+from merlin import pyfunc
 from merlin.autoscaling import (
     RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
     SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
@@ -67,9 +69,6 @@ from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
 from mlflow.tracking.client import MlflowClient
-
-import mlflow
-from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -997,9 +996,9 @@ class ModelVersion:
                 "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
             )
 
-        merlin_requirements = ["merlin-pyfunc-server==0.41.0"]
+        merlin_requirements = ["merlin-pyfunc-server<0.42.0"]
         if self._model.type == ModelType.PYFUNC_V2:
-            merlin_requirements = ["merlin-batch-predictor==0.41.0"]
+            merlin_requirements = ["merlin-batch-predictor<0.42.0"]
 
         # add/replace python version in conda to match that used to create model version
         conda_env = process_conda_env(
