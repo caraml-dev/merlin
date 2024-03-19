@@ -521,8 +521,7 @@ jobs:
       - build-pyfunc-server-base-image
       - build-observation-publisher
       - test-python-sdk
-      # TODO(arief): Uncomment this
-      # - e2e-test
+      - e2e-test
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:
