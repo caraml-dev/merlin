@@ -362,7 +362,7 @@ func (c *imageBuilder) imageExists(imageName, imageTag string) bool {
 // GCP container registry and artifact registry domains are used to determine which keychain to use when interacting with container registry.
 // This is needed because GCP registries use different authentication method than other container registry.
 func getGCPSubDomains() []string {
-	return []string{ "gcr.io", "pkg.dev" }
+	return []string{"gcr.io", "pkg.dev"}
 }
 
 // ImageExists returns true if the versioned image (tag) already exist in the image repository.
