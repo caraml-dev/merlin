@@ -31,13 +31,12 @@ ImageBuilderConfig:
     DockerfilePath: docker/Dockerfile
     BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
     BuildContextSubPath: python
-    MainAppPath: /merlin-spark-app/main.py
   PredictionJobBaseImage:
     ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.37.0
     DockerfilePath: docker/app.Dockerfile
     BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
     BuildContextSubPath: python
-    MainAppPath: /merlin-spark-app/main.py
+    MainAppPath: /home/spark/main.py
   BuildNamespace: mlp
   DockerRegistry: ghcr.io/caraml-dev
   BuildTimeout: 10m
