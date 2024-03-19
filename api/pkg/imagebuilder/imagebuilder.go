@@ -174,7 +174,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 		return hashedDependenciesUrl, nil
 	}
 
-	if err != nil && !errors.Is(err, storage.ErrObjectNotExist) {
+	if !errors.Is(err, storage.ErrObjectNotExist) {
 		return "", err
 	}
 
@@ -357,6 +357,14 @@ func (c *imageBuilder) imageExists(imageName, imageTag string) bool {
 	return imageExists
 }
 
+// getGCPSubDomains returns the list of GCP container registry and artifact registry subdomains.
+//
+// GCP container registry and artifact registry domains are used to determine which keychain to use when interacting with container registry.
+// This is needed because GCP registries use different authentication method than other container registry.
+func getGCPSubDomains() []string {
+	return []string{ "gcr.io", "pkg.dev" }
+}
+
 // ImageExists returns true if the versioned image (tag) already exist in the image repository.
 //
 // We are using Crane to interacting with container registry because the authentication already handled by Crane's keychain.
@@ -366,8 +374,11 @@ func (c *imageBuilder) imageExists(imageName, imageTag string) bool {
 // https://github.com/google/go-containerregistry/blob/master/pkg/v1/google/README.md
 func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) {
 	keychain := authn.DefaultKeychain
-	if strings.Contains(c.config.DockerRegistry, "gcr.io") {
-		keychain = google.Keychain
+
+	for _, domain := range getGCPSubDomains() {
+		if strings.Contains(c.config.DockerRegistry, domain) {
+			keychain = google.Keychain
+		}
 	}
 
 	repo, err := name.NewRepository(imageName)
