@@ -13,9 +13,19 @@
 # limitations under the License.
 
 ARG BASE_IMAGE
-
 FROM ${BASE_IMAGE}
 
-# Get the model
-COPY model /model
-RUN /bin/bash -c ". activate merlin-model && conda env update --name merlin-model --file /model/conda.yaml && python ${HOME}/merlin-spark-app/main.py --dry-run-model /model"
+# Download and install user model dependencies
+ARG MODEL_DEPENDENCIES_URL
+COPY ${MODEL_DEPENDENCIES_URL} conda.yaml
+
+ARG MERLIN_DEP_CONSTRAINT
+RUN process_conda_env.sh conda.yaml "merlin-batch-predictor" "${MERLIN_DEP_CONSTRAINT}"
+RUN conda env create --name merlin-model --file conda.yaml
+
+# Download and dry-run user model artifacts and code
+ARG MODEL_ARTIFACTS_URL
+COPY ${MODEL_ARTIFACTS_URL} model
+RUN /bin/bash -c ". activate merlin-model && merlin-batch-predictor --dry-run-model ${HOME}/model"
+
+ENTRYPOINT ["merlin_entrypoint.sh"]

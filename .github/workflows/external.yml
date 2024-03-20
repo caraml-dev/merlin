@@ -1,17 +1,17 @@
 name: External Dependencies CI Workflow
 on:
   push:
-    branches: 
-    - main 
+    branches:
+      - main
   pull_request:
-  
+
 jobs:
   publish-mlflow-docker:
     runs-on: ubuntu-latest
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build and push MLflow Docker image
         uses: docker/build-push-action@v1
         with:

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM condaforge/miniforge3:23.3.1-1
+FROM condaforge/miniforge3:23.11.0-0
 
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
@@ -22,5 +22,12 @@ ENV GRPC_HEALTH_PROBE_VERSION=v0.4.4
 RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
     chmod +x /bin/grpc_health_probe
 
+ENV YQ_VERSION=v4.42.1
+RUN wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq && \
+    chmod +x /usr/bin/yq
+
 RUN mkdir /prom_dir
 ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir prometheus_multiproc_dir=/prom_dir
+
+COPY pyfunc-server/docker/process_conda_env.sh /bin/process_conda_env.sh
+COPY pyfunc-server/docker/run.sh /bin/run.sh

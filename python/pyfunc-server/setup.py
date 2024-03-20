@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import imp
 import os
 
 from setuptools import find_packages, setup
 
-tests_require = [
+version = imp.load_source(
+    "pyfuncserver.version", os.path.join("pyfuncserver", "version.py")
+).VERSION
+
+with open("requirements.txt") as f:
+    REQUIRE = f.read().splitlines()
+
+TESTS_REQUIRE = [
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy",
     "pytest-benchmark",
@@ -29,31 +37,20 @@ tests_require = [
     "xgboost==1.6.2",
 ]
 
-with open("requirements.txt") as f:
-    REQUIRE = f.read().splitlines()
-
-
-# replace merlin relative path in requirements.txt into absolute path
-# setuptools could not install relative path requirements
-
-merlin_path = os.path.join(os.getcwd(), "../sdk")
-merlin_sdk_package = "merlin-sdk"
-for index, item in enumerate(REQUIRE):
-    if merlin_sdk_package in item:
-        REQUIRE[
-            index
-        ] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
-
 setup(
-    name="pyfuncserver",
-    version="0.6.0",
+    name="merlin-pyfunc-server",
+    version=version,
     author_email="merlin-dev@gojek.com",
-    description="Model Server implementation for mlflow pyfunc model",
+    description="Model Server implementation for Merlin PyFunc model",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     python_requires=">=3.8,<3.11",
     packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
-    tests_require=tests_require,
-    extras_require={"test": tests_require},
+    tests_require=TESTS_REQUIRE,
+    extras_require={"test": TESTS_REQUIRE},
+    entry_points="""
+        [console_scripts]
+        merlin-pyfunc-server=pyfuncserver.__main__:main
+    """,
 )

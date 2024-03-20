@@ -21,15 +21,14 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.8
+          cache: pip
       - name: Install dependencies
         working-directory: ./python/sdk
-        run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel twine
+        run: pip install setuptools>=64 setuptools_scm>=8 twine wheel
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.pypi_username }}
@@ -38,6 +37,56 @@ jobs:
         run: |
           tag=$(git describe --tags --always --first-parent)
           sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag//v}"`\"|g" ./merlin/version.py
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
+
+  publish-merlin-pyfunc-server:
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+          cache: pip
+      - name: Install dependencies
+        working-directory: ./python/pyfunc-server
+        run: pip install setuptools>=64 setuptools_scm>=8 twine wheel
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.pypi_username }}
+          TWINE_PASSWORD: ${{ secrets.pypi_password }}
+        working-directory: ./python/pyfunc-server
+        run: |
+          tag=$(python -m setuptools_scm -r ../.. | sed 's/\+.*//')
+          sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag}"`\"|g" ./pyfuncserver/version.py
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
+
+  publish-merlin-batch-predictor:
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+          cache: pip
+      - name: Install dependencies
+        working-directory: ./python/batch-predictor
+        run: pip install setuptools>=64 setuptools_scm>=8 twine wheel
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.pypi_username }}
+          TWINE_PASSWORD: ${{ secrets.pypi_password }}
+        working-directory: ./python/batch-predictor
+        run: |
+          tag=$(python -m setuptools_scm -r ../.. | sed 's/\+.*//')
+          sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag}"`\"|g" ./merlinpyspark/version.py
           python setup.py sdist bdist_wheel
           twine upload dist/*
 
@@ -50,7 +99,7 @@ jobs:
     needs:
       - publish-python-sdk
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Log in to the Container registry
         uses: docker/login-action@v1
         with:
@@ -117,7 +166,7 @@ jobs:
           docker tag merlin-logger:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
 
-  publish-batch-predictor:
+  publish-batch-predictor-base-image:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyspark-base:${{ inputs.version }}"
@@ -137,7 +186,7 @@ jobs:
           docker image load --input merlin-pyspark-base.${{ inputs.version }}.tar
           docker push ${{ env.DOCKER_IMAGE_TAG }}
 
-  publish-pyfunc:
+  publish-pyfunc-server-base-image:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-pyfunc-base:${{ inputs.version }}"

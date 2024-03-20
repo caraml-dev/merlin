@@ -12,39 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import json
 import types
 from unittest.mock import patch
-import datetime
 
 import client
 import client as cl
-import merlin
 import pytest
 from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
-from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY)
+from merlin.autoscaling import (
+    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+)
 from merlin.batch.config import PredictionJobConfig, ResultType
 from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
 from merlin.batch.source import BigQuerySource
 from merlin.endpoint import VersionEndpoint
 from merlin.model import ModelType
+from merlin.model_schema import InferenceSchema, ModelSchema, RankingOutput, ValueType
 from merlin.protocol import Protocol
-from merlin.model_schema import ModelSchema, InferenceSchema, ValueType, RankingOutput
 from urllib3_mock import Responses
 
 responses = Responses("requests.packages.urllib3")
 
-default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
+default_resource_request = cl.ResourceRequest(
+    min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi"
+)
 gpu = cl.GPUConfig(
     name="nvidia-tesla-p4",
     values=["1", "4", "8"],
     resource_type="nvidia.com/gpu",
     node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
     tolerations=[
-        cl.GPUToleration(key="caraml/nvidia-tesla-p4", operator="Equal", value="enabled", effect="NoSchedule"),
-        cl.GPUToleration(key="nvidia.com/gpu", operator="Equal", value="present", effect="NoSchedule"),
+        cl.GPUToleration(
+            key="caraml/nvidia-tesla-p4",
+            operator="Equal",
+            value="enabled",
+            effect="NoSchedule",
+        ),
+        cl.GPUToleration(
+            key="nvidia.com/gpu", operator="Equal", value="present", effect="NoSchedule"
+        ),
     ],
 )
 
@@ -68,53 +78,52 @@ env_3 = cl.Environment(
     cluster="cluster-3",
     is_default=False,
     default_resource_request=default_resource_request,
-    gpus=[gpu]
+    gpus=[gpu],
 )
 
 ep1 = cl.VersionEndpoint(
-    id="1234", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-1", 
-    environment_name=env_1.name, 
-    environment=env_1, 
-    monitoring_url="grafana.com"
+    id="1234",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_1.name,
+    environment=env_1,
+    monitoring_url="grafana.com",
 )
 ep2 = cl.VersionEndpoint(
-    id="4567", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-2", 
-    environment_name=env_2.name, 
-    environment=env_2, 
-    monitoring_url="grafana.com"
+    id="4567",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-2",
+    environment_name=env_2.name,
+    environment=env_2,
+    monitoring_url="grafana.com",
 )
 ep3 = cl.VersionEndpoint(
-    id="1234", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-1", 
-    environment_name=env_1.name, 
-    environment=env_1, 
+    id="1234",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_1.name,
+    environment=env_1,
     monitoring_url="grafana.com",
-    deployment_mode="raw_deployment"
+    deployment_mode="raw_deployment",
 )
 ep4 = cl.VersionEndpoint(
-    id="1234", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-1", 
-    environment_name=env_1.name, 
-    environment=env_1, 
+    id="1234",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_1.name,
+    environment=env_1,
     monitoring_url="grafana.com",
     autoscaling_policy=client.AutoscalingPolicy(
-        metrics_type=cl.MetricsType.CPU_UTILIZATION,
-        target_value=10
-    )
+        metrics_type=cl.MetricsType.CPU_UTILIZATION, target_value=10
+    ),
 )
 resource_request_with_gpu = cl.ResourceRequest(
     min_replica=1,
@@ -125,76 +134,80 @@ resource_request_with_gpu = cl.ResourceRequest(
     gpu_request="1",
 )
 ep5 = cl.VersionEndpoint(
-    id="789", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-1", 
-    environment_name=env_3.name, 
-    environment=env_3, 
+    id="789",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_3.name,
+    environment=env_3,
     monitoring_url="grafana.com",
-    resource_request=resource_request_with_gpu
+    resource_request=resource_request_with_gpu,
 )
 upi_ep = cl.VersionEndpoint(
-    id="1234", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-1", 
-    environment_name=env_1.name, 
-    environment=env_1, 
+    id="1234",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_1.name,
+    environment=env_1,
     monitoring_url="grafana.com",
-    protocol=cl.Protocol.UPI_V1
+    protocol=cl.Protocol.UPI_V1,
 )
 observability_enabled_ep = cl.VersionEndpoint(
-    id="7899", 
-    version_id=1, 
-    status="running", 
-    url="localhost/1", 
-    service_name="svc-1", 
-    environment_name=env_3.name, 
-    environment=env_3, 
+    id="7899",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_3.name,
+    environment=env_3,
     monitoring_url="grafana.com",
-    enable_model_observability=True
+    enable_model_observability=True,
 )
 
 rule_1 = cl.ModelEndpointRule(
-    destinations=[cl.ModelEndpointRuleDestination(version_endpoint_id=ep1.id, weight=100)]
+    destinations=[
+        cl.ModelEndpointRuleDestination(version_endpoint_id=ep1.id, weight=100)
+    ]
 )
 rule_2 = cl.ModelEndpointRule(
-    destinations=[cl.ModelEndpointRuleDestination(version_endpoint_id=ep2.id, weight=100)]
+    destinations=[
+        cl.ModelEndpointRuleDestination(version_endpoint_id=ep2.id, weight=100)
+    ]
 )
 mdl_endpoint_1 = cl.ModelEndpoint(
-    id=1, 
-    model_id=1, 
-    model=None, 
-    status="serving", 
-    url="localhost/1", 
-    rule=rule_1, 
-    environment_name=env_1.name, 
-    environment=env_1
+    id=1,
+    model_id=1,
+    model=None,
+    status="serving",
+    url="localhost/1",
+    rule=rule_1,
+    environment_name=env_1.name,
+    environment=env_1,
 )
 mdl_endpoint_2 = cl.ModelEndpoint(
-    id=2, 
-    model_id=1, 
-    model=None, 
-    status="serving", 
-    url="localhost/2", 
-    rule=rule_2, 
-    environment_name=env_2.name, 
-    environment=env_2
+    id=2,
+    model_id=1,
+    model=None,
+    status="serving",
+    url="localhost/2",
+    rule=rule_2,
+    environment_name=env_2.name,
+    environment=env_2,
 )
 
 mdl_endpoint_upi = cl.ModelEndpoint(
-    id=1, 
-    model_id=1, 
-    model=None, 
-    status="serving", 
-    url="localhost/1", 
-    rule=rule_1, 
-    environment_name=env_1.name, 
+    id=1,
+    model_id=1,
+    model=None,
+    status="serving",
+    url="localhost/1",
+    rule=rule_1,
+    environment_name=env_1.name,
     environment=env_1,
-    protocol=cl.Protocol.UPI_V1
+    protocol=cl.Protocol.UPI_V1,
 )
 
 config = {
@@ -260,10 +273,12 @@ job_2 = cl.PredictionJob(
     updated_at="2019-08-29T08:13:12.377Z",
 )
 
+
 def serialize_datetime(obj):
     if isinstance(obj, datetime.datetime):
         return obj.isoformat()
     raise TypeError("Type is not serializable")
+
 
 class TestProject:
     secret_1 = cl.Secret(id=1, name="secret-1", data="secret-data-1")
@@ -551,7 +566,8 @@ class TestModelVersion:
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         responses.add(
-            "GET", "/v1/models/1/versions/1/endpoint",
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
@@ -702,9 +718,12 @@ class TestModelVersion:
         )
 
         # Redeployment (add autoscaling policy and change deployment mode)
-        endpoint = version.deploy(environment_name=env_1.name,
-                                  autoscaling_policy=AutoscalingPolicy(metrics_type=MetricsType.CPU_UTILIZATION,
-                                                                       target_value=10))
+        endpoint = version.deploy(
+            environment_name=env_1.name,
+            autoscaling_policy=AutoscalingPolicy(
+                metrics_type=MetricsType.CPU_UTILIZATION, target_value=10
+            ),
+        )
 
         assert endpoint.id == ep4.id
         assert endpoint.status.value == ep4.status
@@ -762,10 +781,7 @@ class TestModelVersion:
         assert endpoint.environment.cluster == env_3.cluster
         assert endpoint.environment.name == env_3.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert (
-            endpoint.resource_request.gpu_name
-            == resource_request_with_gpu.gpu_name
-        )
+        assert endpoint.resource_request.gpu_name == resource_request_with_gpu.gpu_name
         assert (
             endpoint.resource_request.gpu_request
             == resource_request_with_gpu.gpu_request
@@ -810,7 +826,9 @@ class TestModelVersion:
             content_type="application/json",
         )
 
-        endpoint = version.deploy(environment_name=env_3.name, enable_model_observability=True)
+        endpoint = version.deploy(
+            environment_name=env_3.name, enable_model_observability=True
+        )
 
         assert endpoint.id == observability_enabled_ep.id
         assert endpoint.status.value == observability_enabled_ep.status
@@ -924,7 +942,9 @@ class TestModelVersion:
         responses.add(
             method="GET",
             url="/v1/models/1/versions/1/jobs",
-            body=json.dumps([job_1.to_dict(), job_2.to_dict()], default=serialize_datetime),
+            body=json.dumps(
+                [job_1.to_dict(), job_2.to_dict()], default=serialize_datetime
+            ),
             status=200,
             content_type="application/json",
         )
@@ -1315,46 +1335,53 @@ class TestModelVersion:
 class TestModel:
     v1 = cl.Version(id=1, model_id=1)
     v2 = cl.Version(id=2, model_id=1)
-    v3 = cl.Version(id=3, model_id=1, labels={"model": "T-800"}, python_version="3.7.*")
+    v3 = cl.Version(
+        id=3, model_id=1, labels={"model": "T-800"}, python_version="3.10.*"
+    )
 
     schema = client.ModelSchema(
-                id=3,
-                model_id=1,
-                spec=client.SchemaSpec(
-                    tag_columns=["tags", "extras"],
-                    feature_types={
-                        "featureA": client.ValueType.FLOAT64,
-                        "featureB": client.ValueType.INT64,
-                        "featureC": client.ValueType.BOOLEAN,
-                        "featureD": client.ValueType.STRING
-                    },
-                    model_prediction_output=client.ModelPredictionOutput(
-                        client.RankingOutput(
-                            rank_score_column="score",
-                            relevance_score_column="relevance_score",
-                            output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT
-                        )
-                    ) 
+        id=3,
+        model_id=1,
+        spec=client.SchemaSpec(
+            tag_columns=["tags", "extras"],
+            feature_types={
+                "featureA": client.ValueType.FLOAT64,
+                "featureB": client.ValueType.INT64,
+                "featureC": client.ValueType.BOOLEAN,
+                "featureD": client.ValueType.STRING,
+            },
+            model_prediction_output=client.ModelPredictionOutput(
+                client.RankingOutput(
+                    rank_score_column="score",
+                    relevance_score_column="relevance_score",
+                    output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT,
                 )
-            )
+            ),
+        ),
+    )
     merlin_model_schema = ModelSchema(
-                id=3,
-                model_id=1,
-                spec=InferenceSchema(
-                    tag_columns=["tags", "extras"],
-                    feature_types={
-                        "featureA": ValueType.FLOAT64,
-                        "featureB": ValueType.INT64,
-                        "featureC": ValueType.BOOLEAN,
-                        "featureD": ValueType.STRING
-                    },
-                    model_prediction_output=RankingOutput(
-                        rank_score_column="score",
-                        relevance_score_column="relevance_score"
-                    )
-                ),
-            )
-    v4 = cl.Version(id=4, model_id=1, labels={"model": "T-800"}, python_version="3.7.*", model_schema=schema)
+        id=3,
+        model_id=1,
+        spec=InferenceSchema(
+            tag_columns=["tags", "extras"],
+            feature_types={
+                "featureA": ValueType.FLOAT64,
+                "featureB": ValueType.INT64,
+                "featureC": ValueType.BOOLEAN,
+                "featureD": ValueType.STRING,
+            },
+            model_prediction_output=RankingOutput(
+                rank_score_column="score", relevance_score_column="relevance_score"
+            ),
+        ),
+    )
+    v4 = cl.Version(
+        id=4,
+        model_id=1,
+        labels={"model": "T-800"},
+        python_version="3.10.*",
+        model_schema=schema,
+    )
 
     @responses.activate
     def test_list_version(self, model):
@@ -1420,8 +1447,10 @@ class TestModel:
             content_type="application/json",
         )
 
-        mv = model.new_model_version(labels={"model": "T-800"}, model_schema=self.merlin_model_schema)
-        assert mv._python_version == "3.7.*"
+        mv = model.new_model_version(
+            labels={"model": "T-800"}, model_schema=self.merlin_model_schema
+        )
+        assert mv._python_version == "3.10.*"
         assert mv._id == 4
         assert mv._model._id == 1
         assert mv._labels == {"model": "T-800"}
@@ -1711,25 +1740,3 @@ class TestModel:
         response = model.delete_model()
 
         assert response == 1
-
-
-def test_process_conda_env():
-    # test dict version
-    conda = {
-        "name": "test-env",
-        "channels": ["conda-forge"],
-        "dependencies": [
-            "python=3.7.0",
-            {
-                "pip": ["scikit-learn==x.y.z"],
-            },
-        ],
-    }
-
-    new_conda = merlin.model._process_conda_env(conda_env=conda, python_version="3.7.*")
-    assert "python=3.7.*" in new_conda["dependencies"]
-
-    # test file version
-    conda = "test/pyfunc/env.yaml"
-    new_conda = merlin.model._process_conda_env(conda_env=conda, python_version="3.7.*")
-    assert "python=3.7.*" in new_conda["dependencies"]

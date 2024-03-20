@@ -1,0 +1,7 @@
+dependencies:
+  - python=3.10.*
+  - pip:
+      - merlin-pyfunc-server<0.42.0
+      - cloudpickle==2.0.0
+      - scikit-learn==1.4.0
+      - tensorflow==2.16.1

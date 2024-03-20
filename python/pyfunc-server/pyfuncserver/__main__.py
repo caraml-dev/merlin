@@ -18,33 +18,42 @@ import logging
 import traceback
 
 import uvloop
-
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.server import PyFuncServer
 from pyfuncserver.utils.contants import ERR_DRY_RUN
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_dir', required=True,
-                    help='A URI pointer to the model binary')
-parser.add_argument('--dry_run', default=False, action='store_true', required=False,
-                    help="Dry run pyfunc server by loading the specified model "
-                         "in --model_dir without starting webserver")
+parser.add_argument(
+    "--model_dir", required=True, help="A URI pointer to the model binary"
+)
+parser.add_argument(
+    "--dry_run",
+    default=False,
+    action="store_true",
+    required=False,
+    help="Dry run pyfunc server by loading the specified model "
+    "in --model_dir without starting webserver",
+)
 args, _ = parser.parse_known_args()
 
-logging.getLogger('tornado.access').disabled = True
+logging.getLogger("tornado.access").disabled = True
 
-if __name__ == "__main__":
+
+def main():
+    config = Config(args.model_dir)
+    logging.basicConfig(level=config.log_level)
+
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-    config = Config(args.model_dir)
-    logging.basicConfig(level=config.log_level)
     # load model
     model = PyFuncModel(config.model_manifest)
 
     try:
+        logging.info("Initializing model...")
         model.load()
+        logging.info("Model initialized successfully.")
     except Exception as e:
         logging.error(f"Unable to initalize model")
         logging.error(traceback.format_exc())
@@ -55,4 +64,9 @@ if __name__ == "__main__":
         logging.info("dry run success")
         exit(0)
 
+    logging.info("Starting server...")
     PyFuncServer(config).start(model)
+
+
+if __name__ == "__main__":
+    main()

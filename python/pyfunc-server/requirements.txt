@@ -1,14 +1,12 @@
 argparse>=1.4.0
-numpy >= 1.8.2
-cloudpickle==2.0.0
-prometheus_client==0.14.1
-#TODO: Remove uvloop pinning once we drop Python 3.7 support
-uvloop>=0.15.2,<0.18.0
-orjson>=2.6.8
-tornado
 caraml-upi-protos>=0.3.4
-grpcio-reflection
-grpcio-health-checking
+cloudpickle==2.0.0
 confluent-kafka==2.3.0
-
-file:${SDK_PATH}#egg=merlin-sdk
+grpcio-health-checking
+grpcio-reflection
+merlin-sdk==0.40.1
+numpy >= 1.8.2
+orjson>=2.6.8
+prometheus_client==0.14.1
+tornado
+uvloop

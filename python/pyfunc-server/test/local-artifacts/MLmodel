@@ -1,0 +1,19 @@
+artifact_path: model
+flavors:
+  python_function:
+    artifacts:
+      sklearn_model:
+        path: artifacts/model_2.joblib
+        uri: models/model_2.joblib
+      xgb_model:
+        path: artifacts/model_1.bst
+        uri: models/model_1.bst
+    cloudpickle_version: 2.0.0
+    env: conda.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+mlflow_version: 1.26.1
+model_uuid: 126ccf3f97024b43a011b5aee072010c
+run_id: 74232b10e8064ccda29611c265921034
+utc_time_created: '2024-03-18 07:27:00.346244'

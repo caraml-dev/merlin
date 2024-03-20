@@ -24,19 +24,14 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
+
+ARG MERLIN_DEP_CONSTRAINT
+RUN process_conda_env.sh conda.yaml "merlin-pyfunc-server" "${MERLIN_DEP_CONSTRAINT}"
 RUN conda env create --name merlin-model --file conda.yaml
-
-# Copy and install pyfunc-server and merlin-sdk dependencies
-COPY pyfunc-server /pyfunc-server
-COPY sdk /sdk
-ENV SDK_PATH=/sdk
-
-WORKDIR /pyfunc-server
-RUN /bin/bash -c ". activate merlin-model && pip uninstall -y merlin-sdk && pip install -r /pyfunc-server/requirements.txt"
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
-RUN /bin/bash -c ". activate merlin-model && python -m pyfuncserver --model_dir model --dry_run"
+RUN /bin/bash -c ". activate merlin-model && merlin-pyfunc-server --model_dir model --dry_run"
 
-CMD ["/bin/bash", "/pyfunc-server/run.sh"]
+CMD ["run.sh"]

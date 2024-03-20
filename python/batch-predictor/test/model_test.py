@@ -21,29 +21,33 @@ import numpy as np
 import pandas as pd
 import pytest
 from merlin.model import PyFuncV2Model
-from mlflow.pyfunc import log_model
-from sklearn.datasets import load_iris
-
 from merlinpyspark.config import ModelConfig
 from merlinpyspark.model import create_model_udf
-from merlinpyspark.spec.prediction_job_pb2 import Model, ResultType, ModelType
-
+from merlinpyspark.spec.prediction_job_pb2 import Model, ModelType, ResultType
+from mlflow.pyfunc import log_model
 from pandas.testing import assert_frame_equal
+from sklearn.datasets import load_iris
+
 
 class IrisModel(PyFuncV2Model):
     def initialize(self, artifacts: dict):
         self._model = joblib.load(artifacts["model_path"])
 
-    def infer(self, model_input: pd.DataFrame) -> Union[np.ndarray,
-                                                        pd.Series,
-                                                        pd.DataFrame]:
+    def infer(
+        self, model_input: pd.DataFrame
+    ) -> Union[np.ndarray, pd.Series, pd.DataFrame]:
         return self._model.predict(model_input)
+
 
 @pytest.mark.ci
 def test_pyfuncv2_model(spark_session):
-    log_model("model", python_model=IrisModel(), artifacts={
-        "model_path": "test-model/model.joblib"}, code_path=["merlinpyspark", "test"],
-              conda_env="test-model/conda.yaml")
+    log_model(
+        "model",
+        python_model=IrisModel(),
+        artifacts={"model_path": "test-model/artifacts/model.joblib"},
+        code_path=["merlinpyspark", "test"],
+        conda_env="test-model/conda.yaml",
+    )
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
 
     iris = load_iris()
@@ -51,16 +55,19 @@ def test_pyfuncv2_model(spark_session):
     pdf = pd.DataFrame(iris.data, columns=columns)
     df = spark_session.createDataFrame(pdf)
 
-    model_cfg_proto = Model(type=ModelType.PYFUNC_V2,
-                            uri=model_path,
-                            result=Model.ModelResult(type=ResultType.DOUBLE))
+    model_cfg_proto = Model(
+        type=ModelType.PYFUNC_V2,
+        uri=model_path,
+        result=Model.ModelResult(type=ResultType.DOUBLE),
+    )
 
     model_udf = create_model_udf(spark_session, ModelConfig(model_cfg_proto), columns)
     iris_model = mlflow.pyfunc.load_model(model_path)
 
-    df = df.withColumn("prediction",
-                       model_udf("sepal_length", "sepal_width", "petal_length",
-                                 "petal_width"))
+    df = df.withColumn(
+        "prediction",
+        model_udf("sepal_length", "sepal_width", "petal_length", "petal_width"),
+    )
 
     result_pandas = df.toPandas()
     r = result_pandas.drop(columns=["prediction"])

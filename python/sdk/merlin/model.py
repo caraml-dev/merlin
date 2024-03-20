@@ -14,7 +14,6 @@
 
 import os
 import pathlib
-import re
 import shutil
 import tempfile
 import warnings
@@ -26,8 +25,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import client
 import docker
+import mlflow
 import pyprind
-import yaml
 from client import (
     EndpointApi,
     EnvironmentApi,
@@ -38,6 +37,7 @@ from client import (
 )
 from docker import APIClient
 from docker.models.containers import Container
+from merlin import pyfunc
 from merlin.autoscaling import (
     RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
     SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
@@ -54,6 +54,7 @@ from merlin.logger import Logger
 from merlin.model_schema import ModelSchema
 from merlin.protocol import Protocol
 from merlin.pyfunc import run_pyfunc_local_server
+from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.util import (
@@ -64,14 +65,10 @@ from merlin.util import (
     valid_name_check,
 )
 from merlin.validation import validate_model_dir
-from merlin.version import VERSION
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 from mlflow.pyfunc import PythonModel
 from mlflow.tracking.client import MlflowClient
-
-import mlflow
-from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -999,8 +996,14 @@ class ModelVersion:
                 "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
             )
 
+        merlin_requirements = ["merlin-pyfunc-server<0.42.0"]
+        if self._model.type == ModelType.PYFUNC_V2:
+            merlin_requirements = ["merlin-batch-predictor<0.42.0"]
+
         # add/replace python version in conda to match that used to create model version
-        conda_env = _process_conda_env(conda_env, self._python_version)
+        conda_env = process_conda_env(
+            conda_env, self._python_version, merlin_requirements
+        )
 
         mlflow.pyfunc.log_model(
             DEFAULT_MODEL_PATH,
@@ -1768,50 +1771,3 @@ def _get_default_target_env_name(env_list: List[client.models.Environment]) -> s
             "Unable to find default environment, " "pass environment_name to the method"
         )
     return target_env_name
-
-
-def _process_conda_env(
-    conda_env: Union[str, Dict[str, Any]], python_version: Optional[str]
-) -> Dict[str, Any]:
-    """
-    This function will replace/add python version dependency to the conda environment file.
-
-    :param conda_env: Either a dictionary representation of a conda environment or the path to a conda environment yaml file.
-    :param python_version: The python version to replace the conda environment with
-    :return: dict representation of the conda environment with python_version set as per given input
-    """
-
-    def match_dependency(spec, name):
-        # Using direct match or regex match to match the dependency name,
-        # where the regex accounts for the official conda dependency formats:
-        # https://docs.conda.io/projects/conda-build/en/latest/resources/package-spec.html
-        # There are no convenient python libraries to carry out the parsing of
-        # conda dependencies whose spec differs slightly from Python's setuptools.
-        # We could install the complete conda library but this is too bulky if the goal is
-        # to just carry out this matching.
-        return isinstance(spec, str) and (
-            spec == name or re.match(name + r"[><=\s]+", spec) is not None
-        )
-
-    if python_version is None:
-        raise ValueError("python version must be set")
-
-    new_conda_env = {}
-
-    if isinstance(conda_env, str):
-        with open(conda_env, "r") as f:
-            new_conda_env = yaml.safe_load(f)
-    elif isinstance(conda_env, dict):
-        new_conda_env = conda_env
-
-    if "dependencies" not in new_conda_env:
-        new_conda_env["dependencies"] = []
-
-    # Replace python dependency to match minor version
-    new_conda_env["dependencies"] = [f"python={python_version}"] + [
-        spec
-        for spec in new_conda_env["dependencies"]
-        if not match_dependency(spec, "python")
-    ]
-
-    return new_conda_env

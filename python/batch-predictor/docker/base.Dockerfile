@@ -49,6 +49,11 @@ RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -
     libglib2.0-0 libxext6 libsm6 libxrender1 \
     git mercurial subversion
 
+# Install yq
+ENV YQ_VERSION=v4.42.1
+RUN wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq && \
+    chmod +x /usr/bin/yq
+
 # Install gcloud SDK
 ENV PATH=$PATH:/google-cloud-sdk/bin
 ENV GCLOUD_VERSION=405.0.1
@@ -68,10 +73,14 @@ WORKDIR ${HOME}
 # Install miniconda
 ENV CONDA_DIR ${HOME}/miniconda3
 ENV PATH ${CONDA_DIR}/bin:$PATH
-ENV MINIFORGE_VERSION=23.3.1-1
+ENV MINIFORGE_VERSION=23.11.0-0
 
 RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh -O miniconda.sh && \
     /bin/bash miniconda.sh -b -p ${CONDA_DIR} && \
     rm ~/miniconda.sh && \
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
+
+COPY batch-predictor/docker/main.py ${HOME}/main.py
+COPY batch-predictor/docker/merlin_entrypoint.sh /usr/bin/merlin_entrypoint.sh
+COPY batch-predictor/docker/process_conda_env.sh /usr/bin/process_conda_env.sh

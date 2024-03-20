@@ -24,21 +24,14 @@ RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
+
+ARG MERLIN_DEP_CONSTRAINT
+RUN process_conda_env.sh conda.yaml "merlin-batch-predictor" "${MERLIN_DEP_CONSTRAINT}"
 RUN conda env create --name merlin-model --file conda.yaml
-
-# Copy and install batch predictor dependencies
-COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
-COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
-ENV SDK_PATH=${HOME}/sdk
-
-RUN /bin/bash -c ". activate merlin-model && pip uninstall -y merlin-sdk && pip install -r ${HOME}/merlin-spark-app/requirements.txt"
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
 RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
-RUN /bin/bash -c ". activate merlin-model && python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"
+RUN /bin/bash -c ". activate merlin-model && merlin-batch-predictor --dry-run-model ${HOME}/model"
 
-# Copy batch predictor application entrypoint to protected directory
-COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
-
-ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]
+ENTRYPOINT ["merlin_entrypoint.sh"]

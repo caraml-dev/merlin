@@ -12,30 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import imp
 import os
-from setuptools import setup, find_packages
 
-with open('requirements_test.txt') as f:
-    TEST_REQUIRE = f.read().splitlines()
+from setuptools import find_packages, setup
 
-with open('requirements.txt') as f:
+version = imp.load_source(
+    "merlinpyspark.version", os.path.join("merlinpyspark", "version.py")
+).VERSION
+
+with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
 
-merlin_path = os.path.join(os.getcwd(), "../sdk")
-merlin_sdk_package = "merlin-sdk"
-for index, item in enumerate(REQUIRE):
-    if merlin_sdk_package in item:
-        REQUIRE[index] = f"{merlin_sdk_package} @ file://localhost/{merlin_path}#egg={merlin_sdk_package}"
+with open("requirements_test.txt") as f:
+    TESTS_REQUIRE = f.read().splitlines()
 
 setup(
-    name='merlin-pyspark-app',
-    version='0.2.0',
-    author_email='merlin-dev@gojek.com',
-    description='Base pyspark application for running merlin prediction job',
-    long_description=open('README.md').read(),
-    python_requires='>=3.8,<3.11',
-    packages=find_packages("merlinpyspark"),
+    name="merlin-batch-predictor",
+    version=version,
+    author_email="merlin-dev@gojek.com",
+    description="Base PySpark application for running Merlin prediction batch job",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    python_requires=">=3.8,<3.11",
+    packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
-    tests_require=TEST_REQUIRE,
-    extras_require={'test': TEST_REQUIRE}
+    tests_require=TESTS_REQUIRE,
+    extras_require={"test": TESTS_REQUIRE},
+    entry_points="""
+        [console_scripts]
+        merlin-batch-predictor=merlinpyspark.__main__:main
+    """,
 )
