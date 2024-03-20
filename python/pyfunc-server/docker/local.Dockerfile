@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}
 ARG MODEL_DEPENDENCIES_URL
 COPY ${MODEL_DEPENDENCIES_URL} conda.yaml
 
-ARG MERLIN_DEP_CONSTRAINT="<0.42.0"
+ARG MERLIN_DEP_CONSTRAINT
 RUN process_conda_env.sh conda.yaml "merlin-pyfunc-server" "${MERLIN_DEP_CONSTRAINT}"
 RUN conda env create --name merlin-model --file conda.yaml
 
