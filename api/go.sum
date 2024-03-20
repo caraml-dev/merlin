@@ -253,8 +253,8 @@ github.com/caraml-dev/mlp v1.12.0 h1:yb/EgMh+83oKj0C1AhH3R6xt0eSd9GX+incZEOwM7oo
 github.com/caraml-dev/mlp v1.12.0/go.mod h1:Zdz4bALO9WOHXhOgsoLmCjMCJnDVEZEnQFg8rk+u2cE=
 github.com/caraml-dev/protopath v0.1.0 h1:hjJ/U9RGD6QZ0Ee9SIYbVmwPugps4S5EpL6R+5ZrBe0=
 github.com/caraml-dev/protopath v0.1.0/go.mod h1:hVA2HkTrMYv+Q57gtrzu9/P7EXlNtBUcTz43z6EE010=
-github.com/caraml-dev/universal-prediction-interface v0.3.6 h1:G/D4aukfjLECl8armJqFy/R2+0u/f4AiurSFqAo33uQ=
-github.com/caraml-dev/universal-prediction-interface v0.3.6/go.mod h1:e0qmFOXQxx8HFg5ObYyQO3WVnrqsr5v5JApFmeF7eJo=
+github.com/caraml-dev/universal-prediction-interface v1.0.0 h1:3Z6adv1XZnBVRzFIeCu3mPcPnJrdB5IByYfdD9K/atI=
+github.com/caraml-dev/universal-prediction-interface v1.0.0/go.mod h1:e0qmFOXQxx8HFg5ObYyQO3WVnrqsr5v5JApFmeF7eJo=
 github.com/cenkalti/backoff v2.1.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/cenkalti/backoff/v4 v4.1.2 h1:6Yo7N8UP2K6LWZnW94DLVSSrbobcWdVzAYOisuDPIFo=

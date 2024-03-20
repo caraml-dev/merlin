@@ -289,10 +289,6 @@ func getModelNameAndVersion(inferenceServiceName string) (modelName string, mode
 	return
 }
 
-func getTopicName(serviceName string) string {
-	return fmt.Sprintf("merlin-%s-inference-log", serviceName)
-}
-
 func getNewRelicAPIKey(newRelicUrl string) (string, error) {
 	apiKey := ""
 	url, err := url.Parse(newRelicUrl)
@@ -318,7 +314,6 @@ func getLogSink(
 	projectName := *namespace
 	modelName, modelVersion := getModelNameAndVersion(*inferenceService)
 	serviceName := getServiceName(projectName, modelName)
-	topicName := getTopicName(serviceName)
 
 	switch sinkKind {
 	case merlinlogger.NewRelic:
@@ -354,16 +349,41 @@ func getLogSink(
 			log.Info(err)
 			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
 		}
-
-		// Test that we are able to query the broker on the topic. If the topic
-		// does not already exist on the broker, this should create it.
-		_, err = kafkaProducer.GetMetadata(&topicName, false, merlinlogger.ConnectTimeoutMS)
+		kafkaAdmin, err := kafka.NewAdminClient(
+			&kafka.ConfigMap{
+				"bootstrap.servers": url,
+			},
+		)
 		if err != nil {
 			log.Info(err)
-			return nil, fmt.Errorf("failed to get kafka producer's metadata: %w", err)
+			return nil, fmt.Errorf("failed to create new kafka admin: %w", err)
+		}
+		return merlinlogger.NewKafkaSink(log, kafkaProducer, kafkaAdmin, projectName, modelName, modelVersion)
+	case merlinlogger.MLObs:
+		// Initialize kafka clients
+		var kafkaProducer merlinlogger.KafkaProducer
+		// Create Kafka Producer
+		kafkaProducer, err := kafka.NewProducer(
+			&kafka.ConfigMap{
+				"bootstrap.servers": url,
+				"message.max.bytes": merlinlogger.MaxMessageBytes,
+				"compression.type":  merlinlogger.CompressionType,
+			},
+		)
+		if err != nil {
+			log.Info(err)
+			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
+		}
+		kafkaAdmin, err := kafka.NewAdminClient(
+			&kafka.ConfigMap{
+				"bootstrap.servers": url,
+			},
+		)
+		if err != nil {
+			return nil, err
 		}
 
-		return merlinlogger.NewKafkaSink(log, kafkaProducer, serviceName, projectName, modelName, modelVersion, topicName), nil
+		return merlinlogger.NewMLObsSink(log, kafkaProducer, kafkaAdmin, projectName, modelName, modelVersion)
 	default:
 		return merlinlogger.NewConsoleSink(log), nil
 	}

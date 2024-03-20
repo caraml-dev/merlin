@@ -2,13 +2,7 @@ package main
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
-
-func TestGetTopicName(t *testing.T) {
-	assert.Equal(t, "merlin-my-project-my-model-inference-log", getTopicName(getServiceName("my-project", "my-model")))
-}
 
 func Test_getNewRelicAPIKey(t *testing.T) {
 	type args struct {

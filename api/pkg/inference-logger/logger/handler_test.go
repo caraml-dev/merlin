@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
@@ -189,11 +191,17 @@ func Test(t *testing.T) {
 					mockKafkaProducer := &mocks.KafkaProducer{}
 					mockKafkaProducer.On("Events", mock.Anything, mock.Anything).Return(nil)
 					mockKafkaProducer.On("Produce", mock.Anything, mock.Anything).Return(nil)
+					mockKafkaAdmin := &mocks.KafkaAdmin{}
+					mockKafkaAdmin.On("CreateTopics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]kafka.TopicResult{{Error: kafka.NewError(kafka.ErrNoError, "", false)}}, nil)
 					workerConfig := &WorkerConfig{
 						MinBatchSize: 1,
 						MaxBatchSize: 5,
 					}
-					dispatcher := NewDispatcher(10, 100, workerConfig, logger, NewKafkaSink(zapLogger, mockKafkaProducer, serviceName, projectName, modelName, modelVersion, topicName), NewConsoleSink(logger))
+					kafkaSink, err := NewKafkaSink(zapLogger, mockKafkaProducer, mockKafkaAdmin, projectName, modelName, modelVersion)
+					if err != nil {
+						t.Errorf("failed to create kafka sink: %v", err)
+					}
+					dispatcher := NewDispatcher(10, 100, workerConfig, logger, kafkaSink, NewConsoleSink(logger))
 					dispatcher.Start()
 					httpProxy := httputil.NewSingleHostReverseProxy(targetUri)
 					oh := NewLoggerHandler(dispatcher, LogModeAll, httpProxy, logger)
