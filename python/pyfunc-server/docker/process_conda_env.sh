@@ -19,6 +19,10 @@ echo "Processing conda environment file: ${CONDA_ENV_PATH}"
 echo "Current conda environment file content:"
 cat "${CONDA_ENV_PATH}"
 
+# Remove `mlflow` constraint
+yq --inplace 'del(.dependencies[].pip[] | select(. == "mlflow*"))' "${CONDA_ENV_PATH}"
+yq --inplace ".dependencies[].pip += [\"mlflow\"]" "${CONDA_ENV_PATH}"
+
 # Remove `merlin-sdk` from conda's pip dependencies
 yq --inplace 'del(.dependencies[].pip[] | select(. == "*merlin-sdk*"))' "${CONDA_ENV_PATH}"
 

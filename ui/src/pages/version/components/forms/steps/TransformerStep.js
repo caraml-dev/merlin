@@ -21,7 +21,7 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
   const { errors } = useContext(FormValidationContext);
 
   return (
-    <EuiFlexGroup direction="column" gutterSize="m">f
+    <EuiFlexGroup direction="column" gutterSize="m">
       <EuiFlexItem grow={false}>
         <SelectTransformerPanel
           transformer={transformer}
