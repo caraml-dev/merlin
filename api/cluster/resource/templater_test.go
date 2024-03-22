@@ -161,10 +161,12 @@ var (
 
 	pyfuncPublisherConfig = config.PyFuncPublisherConfig{
 		Kafka: config.KafkaConfig{
-			Brokers:          "kafka-broker:1111",
-			LingerMS:         1000,
-			Acks:             0,
-			AdditionalConfig: "{}",
+			Brokers:           "kafka-broker:1111",
+			LingerMS:          1000,
+			Acks:              0,
+			NumPartitions:     24,
+			ReplicationFactor: 3,
+			AdditionalConfig:  "{}",
 		},
 		SamplingRatioRate: 0.1,
 	}
@@ -1916,7 +1918,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				assert.Error(t, err)
 				return
 			}
-
 			assert.NoError(t, err)
 			assert.Equal(t, tt.exp, infSvcSpec)
 		})
@@ -4427,6 +4428,14 @@ func createPyFuncPublisherEnvVars(svc *models.Service, pyfuncPublisher config.Py
 		models.EnvVar{
 			Name:  envPublisherKafkaTopic,
 			Value: svc.GetPredictionLogTopicForVersion(),
+		},
+		models.EnvVar{
+			Name:  envPublisherNumPartitions,
+			Value: fmt.Sprintf("%d", pyfuncPublisher.Kafka.NumPartitions),
+		},
+		models.EnvVar{
+			Name:  envPublisherReplicationFactor,
+			Value: fmt.Sprintf("%d", pyfuncPublisher.Kafka.ReplicationFactor),
 		},
 		models.EnvVar{
 			Name:  envPublisherKafkaBrokers,

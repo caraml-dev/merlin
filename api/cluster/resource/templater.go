@@ -81,13 +81,15 @@ const (
 	defaultGRPCPort                  = 9000
 	defaultPredictorPort             = 80
 
-	envPublisherKafkaTopic    = "PUBLISHER_KAFKA_TOPIC"
-	envPublisherKafkaBrokers  = "PUBLISHER_KAFKA_BROKERS"
-	envPublisherEnabled       = "PUBLISHER_ENABLED"
-	envPublisherKafkaLinger   = "PUBLISHER_KAFKA_LINGER_MS"
-	envPublisherKafkaAck      = "PUBLISHER_KAFKA_ACKS"
-	envPublisherSamplingRatio = "PUBLISHER_SAMPLING_RATIO"
-	envPublisherKafkaConfig   = "PUBLISHER_KAFKA_CONFIG"
+	envPublisherKafkaTopic        = "PUBLISHER_KAFKA_TOPIC"
+	envPublisherNumPartitions     = "PUBLISHER_KAFKA_NUM_PARTITIONS"
+	envPublisherReplicationFactor = "PUBLISHER_KAFKA_REPLICATION_FACTOR"
+	envPublisherKafkaBrokers      = "PUBLISHER_KAFKA_BROKERS"
+	envPublisherEnabled           = "PUBLISHER_ENABLED"
+	envPublisherKafkaLinger       = "PUBLISHER_KAFKA_LINGER_MS"
+	envPublisherKafkaAck          = "PUBLISHER_KAFKA_ACKS"
+	envPublisherSamplingRatio     = "PUBLISHER_SAMPLING_RATIO"
+	envPublisherKafkaConfig       = "PUBLISHER_KAFKA_CONFIG"
 
 	grpcHealthProbeCommand = "grpc_health_probe"
 )
@@ -336,6 +338,8 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
 			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
 			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherNumPartitions, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.NumPartitions)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherReplicationFactor, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.ReplicationFactor)})
 			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
 			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
 			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})

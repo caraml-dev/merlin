@@ -344,6 +344,8 @@ type KafkaConfig struct {
 	ConnectTimeoutMS    int    `validate:"required" default:"1000"`
 	SerializationFmt    string `validate:"required" default:"protobuf"`
 	LingerMS            int    `validate:"required" default:"100"`
+	NumPartitions       int    `validate:"required" default:"24"`
+	ReplicationFactor   int    `validate:"required" default:"3"`
 
 	AdditionalConfig string `validate:"required" default:"{}"`
 }
