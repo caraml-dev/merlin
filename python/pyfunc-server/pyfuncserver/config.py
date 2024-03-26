@@ -30,6 +30,8 @@ PUBLISHER_KAFKA_TOPIC = ("PUBLISHER_KAFKA_TOPIC", "")
 PUBLISHER_KAFKA_BROKERS = ("PUBLISHER_KAFKA_BROKERS", "")
 PUBLISHER_KAKFA_LINGER_MS = ("PUBLISHER_KAFKA_LINGER_MS", 1000)
 PUBLISHER_KAFKA_ACKS = ("PUBLISHER_KAFKA_ACKS", 0)
+PUBLISHER_KAFKA_NUM_PARTITIONS = ("PUBLISHER_KAFKA_NUM_PARTITIONS", 24)
+PUBLISHER_KAFKA_REPLICATION_FACTOR = ("PUBLISHER_KAFKA_REPLICATION_FACTOR", 3)
 PUBLISHER_KAFKA_CONFIG = ("PUBLISHER_KAFKA_CONFIG", "{}")
 PUBLISHER_SAMPLING_RATIO = ("PUBLISHER_SAMPLING_RATIO", 0.01)
 PUBLISHER_ENABLED = ("PUBLISHER_ENABLED", "false")
@@ -74,6 +76,8 @@ class Publisher:
     sampling_ratio: float
     enabled: bool
     kafka: Kafka
+    num_partitions: int
+    replication_factor: int
 
 
 class Config:
@@ -130,6 +134,8 @@ class Config:
                 raise ValueError("kafka brokers must be set")
             kafka_linger_ms = int(os.getenv(*PUBLISHER_KAKFA_LINGER_MS))
             kafka_acks = int(os.getenv(*PUBLISHER_KAFKA_ACKS))
+            num_partitions = int(os.getenv(*PUBLISHER_KAFKA_NUM_PARTITIONS))
+            replication_factor = int(os.getenv(*PUBLISHER_KAFKA_REPLICATION_FACTOR))
             kafka_cfgs = self._kafka_config()
             kafka = Kafka(
                 kafka_topic, 
@@ -137,7 +143,7 @@ class Config:
                 kafka_linger_ms, 
                 kafka_acks, 
                 kafka_cfgs)
-            self.publisher = Publisher(sampling_ratio, publisher_enabled, kafka)
+            self.publisher = Publisher(sampling_ratio, publisher_enabled, kafka, num_partitions, replication_factor)
 
     
     def _kafka_config(self):
