@@ -28,13 +28,18 @@ func main() {
 	}
 
 	cfg := client.NewConfiguration()
-	cfg.BasePath = basePath
+	cfg.Servers = client.ServerConfigurations{
+		{
+			URL:         basePath,
+			Description: "Merlin base path",
+		},
+	}
 	cfg.HTTPClient = httpClient
 
 	apiClient := client.NewAPIClient(cfg)
 
 	// Get all projects
-	projects, _, err := apiClient.ProjectApi.ProjectsGet(ctx, nil)
+	projects, _, err := apiClient.ProjectAPI.ProjectsGet(ctx).Execute()
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +54,7 @@ func main() {
 
 		// Get all models in the given project
 
-		models, _, err := apiClient.ModelsApi.ProjectsProjectIdModelsGet(ctx, project.Id, nil)
+		models, _, err := apiClient.ModelsAPI.ProjectsProjectIdModelsGet(ctx, project.Id).Execute()
 		if err != nil {
 			panic(err)
 		}
@@ -60,7 +65,7 @@ func main() {
 			log.Println("- Model:", model.Name)
 
 			// Get all model's endpoints
-			modelEndpoints, _, err := apiClient.ModelEndpointsApi.ModelsModelIdEndpointsGet(ctx, model.Id)
+			modelEndpoints, _, err := apiClient.ModelEndpointsAPI.ModelsModelIdEndpointsGet(ctx, *model.Id).Execute()
 			if err != nil {
 				panic(err)
 			}
