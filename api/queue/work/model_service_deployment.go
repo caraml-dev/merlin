@@ -40,6 +40,7 @@ type ModelServiceDeployment struct {
 	Storage                    storage.VersionEndpointStorage
 	DeploymentStorage          storage.DeploymentStorage
 	LoggerDestinationURL       string
+	MLObsLoggerDestinationURL  string
 	ObservabilityEventProducer event.EventProducer
 }
 
@@ -83,7 +84,11 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 	// Need to reassign destionationURL because it is ignored when marshalled and unmarshalled
 	if endpoint.Logger != nil {
-		endpoint.Logger.DestinationURL = depl.LoggerDestinationURL
+		if model.ObservabilitySupported {
+			endpoint.Logger.DestinationURL = depl.MLObsLoggerDestinationURL
+		} else {
+			endpoint.Logger.DestinationURL = depl.LoggerDestinationURL
+		}
 	}
 
 	endpoint.RevisionID++

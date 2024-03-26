@@ -44,13 +44,14 @@ const (
 )
 
 type Config struct {
-	Environment          string `validate:"required" default:"dev"`
-	Port                 int    `validate:"required" default:"8080"`
-	LoggerDestinationURL string
-	Sentry               sentry.Config
-	NewRelic             newrelic.Config
-	NumOfQueueWorkers    int    `validate:"required" default:"2"`
-	SwaggerPath          string `validate:"required" default:"./swagger.yaml"`
+	Environment               string `validate:"required" default:"dev"`
+	Port                      int    `validate:"required" default:"8080"`
+	LoggerDestinationURL      string
+	MLObsLoggerDestinationURL string
+	Sentry                    sentry.Config
+	NewRelic                  newrelic.Config
+	NumOfQueueWorkers         int    `validate:"required" default:"2"`
+	SwaggerPath               string `validate:"required" default:"./swagger.yaml"`
 
 	DeploymentLabelPrefix string `validate:"required" default:"gojek.com/"`
 	PyfuncGRPCOptions     string `validate:"required" default:"{}"`
