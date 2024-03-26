@@ -66,7 +66,7 @@ func main() {
 
 		log.Println("Model endpoints:")
 		for _, modelEndpoint := range modelEndpoints {
-			log.Printf("- %s in %s: %s\n", modelEndpoint.Model.Name, modelEndpoint.EnvironmentName, modelEndpoint.Url)
+			log.Printf("- %s in %v: %v\n", modelEndpoint.Model.Name, modelEndpoint.EnvironmentName, modelEndpoint.Url)
 		}
 	}
 }
