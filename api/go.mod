@@ -14,6 +14,7 @@ require (
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
 	github.com/caraml-dev/mlp v1.12.0
 	github.com/caraml-dev/protopath v0.1.0
+	github.com/caraml-dev/universal-prediction-interface v1.0.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cespare/xxhash v1.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
@@ -239,7 +240,6 @@ require (
 )
 
 require (
-	github.com/caraml-dev/universal-prediction-interface v0.3.6
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect

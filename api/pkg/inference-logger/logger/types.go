@@ -38,6 +38,7 @@ const (
 	Kafka    LoggerSinkKind = "kafka"
 	NewRelic LoggerSinkKind = "newrelic"
 	Console  LoggerSinkKind = "console"
+	MLObs    LoggerSinkKind = "mlobs"
 )
 
 var LoggerSinkKinds = []LoggerSinkKind{Kafka, NewRelic, Console}
