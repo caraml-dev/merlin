@@ -14,8 +14,8 @@ require (
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
 	github.com/caraml-dev/mlp v1.12.0
 	github.com/caraml-dev/protopath v0.1.0
-	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/caraml-dev/universal-prediction-interface v1.0.0
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cespare/xxhash v1.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
@@ -89,6 +89,7 @@ require (
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.2
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	knative.dev/networking v0.0.0-20240116081125-ce0738abf051
 	knative.dev/pkg v0.0.0-20240116073220-b488e7be5902
 	knative.dev/serving v0.40.1
@@ -245,11 +246,10 @@ require (
 )
 
 require (
-	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
-	k8s.io/klog/v2 v2.80.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
-	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
+	golang.org/x/time v0.5.0 // indirect
+	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20231113174909-778a5567bc1e // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
 replace (
