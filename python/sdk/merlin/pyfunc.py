@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import docker
 import grpc
+import mlflow
 import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
@@ -14,8 +15,6 @@ from merlin.docker.docker import copy_pyfunc_dockerfile, wait_build_complete
 from merlin.protocol import Protocol
 from merlin.version import VERSION
 from mlflow.pyfunc import PythonModel
-
-import mlflow
 
 PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
 PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
@@ -473,7 +472,7 @@ def run_pyfunc_local_server(
 ):
     if pyfunc_base_image is None:
         if "dev" in VERSION or "0.0.0" in VERSION:
-            pyfunc_base_image = "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.38.1"
+            pyfunc_base_image = "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.41.0"
         else:
             pyfunc_base_image = (
                 f"ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:{VERSION}"

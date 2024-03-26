@@ -58,6 +58,7 @@ def _get_local_endpoint(model_full_name, port):
     return f"http://{host}:{port}/v1/models/{model_full_name}:predict"
 
 
+@pytest.mark.skip(reason="need to release merlin-sdk==0.41.0 first")
 @pytest.mark.local_server_test
 def test_examples_iris():
     XGB_PATH = os.path.join("examples/iris_http/models/", "model_1.bst")
