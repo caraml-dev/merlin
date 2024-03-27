@@ -41,7 +41,7 @@ const (
 	MLObs    LoggerSinkKind = "mlobs"
 )
 
-var LoggerSinkKinds = []LoggerSinkKind{Kafka, NewRelic, Console}
+var LoggerSinkKinds = []LoggerSinkKind{Kafka, NewRelic, Console, MLObs}
 
 func ParseSinkKindAndUrl(logUrl string) (LoggerSinkKind, string) {
 	sinkKind := Console
