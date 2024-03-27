@@ -62,6 +62,7 @@ type EndpointServiceParams struct {
 	Environment               string
 	MonitoringConfig          config.MonitoringConfig
 	LoggerDestinationURL      string
+	MLObsLoggerDestinationURL string
 	JobProducer               queue.Producer
 	FeastCoreClient           core.CoreServiceClient
 	StandardTransformerConfig config.StandardTransformerConfig
@@ -75,6 +76,7 @@ type endpointService struct {
 	environment               string
 	monitoringConfig          config.MonitoringConfig
 	loggerDestinationURL      string
+	mlObsLoggerDestinationURL string
 	jobProducer               queue.Producer
 	feastCoreClient           core.CoreServiceClient
 	standardTransformerConfig config.StandardTransformerConfig
@@ -89,6 +91,7 @@ func NewEndpointService(params EndpointServiceParams) EndpointsService {
 		environment:               params.Environment,
 		monitoringConfig:          params.MonitoringConfig,
 		loggerDestinationURL:      params.LoggerDestinationURL,
+		mlObsLoggerDestinationURL: params.MLObsLoggerDestinationURL,
 		jobProducer:               params.JobProducer,
 		feastCoreClient:           params.FeastCoreClient,
 		standardTransformerConfig: params.StandardTransformerConfig,

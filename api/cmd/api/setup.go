@@ -425,6 +425,7 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 		Storage:                    storage.NewVersionEndpointStorage(db),
 		DeploymentStorage:          storage.NewDeploymentStorage(db),
 		LoggerDestinationURL:       cfg.LoggerDestinationURL,
+		MLObsLoggerDestinationURL:  cfg.MLObsLoggerDestinationURL,
 		ObservabilityEventProducer: observabilityEvent,
 	}
 }
@@ -506,6 +507,7 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 		DeploymentStorage:         storage.NewDeploymentStorage(db),
 		MonitoringConfig:          cfg.FeatureToggleConfig.MonitoringConfig,
 		LoggerDestinationURL:      cfg.LoggerDestinationURL,
+		MLObsLoggerDestinationURL: cfg.MLObsLoggerDestinationURL,
 		JobProducer:               producer,
 		FeastCoreClient:           feastCoreClient,
 		StandardTransformerConfig: cfg.StandardTransformerConfig,
