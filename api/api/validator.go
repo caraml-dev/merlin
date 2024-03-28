@@ -2,7 +2,10 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
@@ -34,6 +37,16 @@ var supportedUPIModelTypes = map[string]bool{
 	models.ModelTypeCustom:   true,
 	models.ModelTypePyFuncV3: true,
 }
+
+var supportedObservabilityModelTypes = []string{
+	models.ModelTypePyFunc,
+	models.ModelTypePyFuncV3,
+	models.ModelTypeXgboost,
+}
+
+var (
+	ErrUnsupportedObservabilityModelType = errors.New("observability cannot be enabled not for this model type")
+)
 
 func isModelSupportUPI(model *models.Model) bool {
 	_, isSupported := supportedUPIModelTypes[model.Type]
@@ -147,9 +160,11 @@ func deploymentModeValidation(prev *models.VersionEndpoint, new *models.VersionE
 }
 
 func modelObservabilityValidation(endpoint *models.VersionEndpoint, model *models.Model) requestValidator {
+
 	return newFuncValidate(func() error {
-		if endpoint.EnableModelObservability && model.Type != models.ModelTypePyFuncV3 && model.Type != models.ModelTypePyFunc {
-			return fmt.Errorf("model type should be pyfunc or pyfunc_v3 if want to enable model observablity")
+		if endpoint.EnableModelObservability && !slices.Contains(supportedObservabilityModelTypes, model.Type) {
+			return fmt.Errorf("%s: %w", model.Type, ErrUnsupportedObservabilityModelType)
+
 		}
 		return nil
 	})
