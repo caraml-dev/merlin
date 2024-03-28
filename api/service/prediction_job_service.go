@@ -21,7 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
-	clock2 "k8s.io/apimachinery/pkg/util/clock"
+	clock2 "k8s.io/utils/clock"
 
 	"github.com/caraml-dev/merlin/batch"
 	"github.com/caraml-dev/merlin/log"

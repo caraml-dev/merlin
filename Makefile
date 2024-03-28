@@ -9,7 +9,7 @@ VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent)
 LOG_URL?=localhost:8002
 TEST_TAGS?=
 
-GOLANGCI_LINT_VERSION="v1.51.2"
+GOLANGCI_LINT_VERSION="v1.56.2"
 PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
 PROTOC_GEN_GO_VERSION="v1.26"
 PYTHON_VERSION ?= "39"	#set as 38 39 310 for 3.8-3.10 respectively

@@ -1,7 +1,7 @@
 # ============================================================
 # Build stage 1: Build web server
 # ============================================================
-FROM golang:1.20-alpine as go-builder
+FROM golang:1.22-alpine as go-builder
 
 RUN mkdir -p /src/model
 WORKDIR /src/model

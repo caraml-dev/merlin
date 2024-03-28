@@ -21,12 +21,11 @@ import (
 	"github.com/gorilla/mux"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/copier"
+	"github.com/pkg/errors"
+	"github.com/soheilhy/cmux"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/pkg/errors"
-	"github.com/soheilhy/cmux"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"go.uber.org/zap"
@@ -108,8 +107,8 @@ func (us *UPIServer) Run() {
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			interceptors.PanicRecoveryInterceptor(),
-			otelgrpc.UnaryServerInterceptor(),
 		)),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	}
 	grpcServer := grpc.NewServer(opts...)
 	reflection.Register(grpcServer)

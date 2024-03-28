@@ -13,22 +13,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caraml-dev/merlin/pkg/inference-logger/liveness"
+	merlinlogger "github.com/caraml-dev/merlin/pkg/inference-logger/logger"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/kelseyhightower/envconfig"
 	nrconfig "github.com/newrelic/newrelic-client-go/v2/pkg/config"
 	nrlog "github.com/newrelic/newrelic-client-go/v2/pkg/logs"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	network "knative.dev/networking/pkg"
+	"knative.dev/networking/pkg/http/header"
+	"knative.dev/networking/pkg/http/proxy"
 	pkgnet "knative.dev/pkg/network"
 	pkghandler "knative.dev/pkg/network/handlers"
 	"knative.dev/pkg/signals"
 	"knative.dev/serving/pkg/queue"
 	"knative.dev/serving/pkg/queue/health"
 	"knative.dev/serving/pkg/queue/readiness"
-
-	"github.com/caraml-dev/merlin/pkg/inference-logger/liveness"
-	merlinlogger "github.com/caraml-dev/merlin/pkg/inference-logger/logger"
 )
 
 var (
@@ -216,10 +216,9 @@ func buildServer(target *url.URL, dispatcher *merlinlogger.Dispatcher, loggingMo
 
 	httpProxy := httputil.NewSingleHostReverseProxy(target)
 	httpProxy.Transport = pkgnet.NewAutoTransport(maxIdleConns /* max-idle */, maxIdleConns /* max-idle-per-host */)
-	// nolint:staticcheck
-	httpProxy.ErrorHandler = pkgnet.ErrorHandler(log)
-	httpProxy.BufferPool = network.NewBufferPool()
-	httpProxy.FlushInterval = network.FlushInterval
+	httpProxy.ErrorHandler = pkghandler.Error(log)
+	httpProxy.BufferPool = proxy.NewBufferPool()
+	httpProxy.FlushInterval = proxy.FlushInterval
 
 	var composedHandler http.Handler = httpProxy
 	composedHandler = merlinlogger.NewLoggerHandler(dispatcher, loggingMode, composedHandler, log)
@@ -230,7 +229,7 @@ func buildServer(target *url.URL, dispatcher *merlinlogger.Dispatcher, loggingMo
 	drainer := &pkghandler.Drainer{
 		QuietPeriod: drainSleepDuration,
 		// Add Activator probe header to the drainer so it can handle probes directly from activator
-		HealthCheckUAPrefixes: []string{network.ActivatorUserAgent},
+		HealthCheckUAPrefixes: []string{header.ActivatorUserAgent},
 		Inner:                 composedHandler,
 		HealthCheck:           health.ProbeHandler(probe, false),
 	}

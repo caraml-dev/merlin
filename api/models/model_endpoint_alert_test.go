@@ -154,7 +154,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Kind:  yamlv3.ScalarNode,
 									Style: yamlv3.LiteralStyle,
 									Tag:   "!!str",
-									Value: "histogram_quantile(0.99, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))) > 100",
+									Value: "histogram_quantile(0.99, sum by (le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))) > 100",
 								},
 								For: "5m",
 								Labels: PromAlertRuleLabels{

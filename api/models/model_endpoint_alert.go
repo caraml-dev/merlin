@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/caraml-dev/merlin/pkg/protocol"
-	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	yamlv3 "gopkg.in/yaml.v3"
@@ -35,7 +35,7 @@ const (
 
 const (
 	throughputSliExprFormat    = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)"
-	latencySliExprFormat       = "histogram_quantile(%f, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
+	latencySliExprFormat       = "histogram_quantile(%f, sum by (le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
 	errorRateSliExprHTTPFormat = "(100 * sum(rate(istio_requests_total{cluster_name=\"%s\",destination_service_name=~\"%s.*\",destination_workload_namespace=\"%s\",response_code!=\"200\",request_protocol=\"http\"}[1m])) / sum(rate(istio_requests_total{cluster_name=\"%s\",destination_service_name=~\"%s.*\",destination_workload_namespace=\"%s\",request_protocol=\"http\"}[1m])))"
 	errorRateSliExprGRPCFormat = "(100 * sum(rate(istio_requests_total{cluster_name=\"%s\",destination_service_name=~\"%s.*\",destination_workload_namespace=\"%s\",grpc_response_status!=\"0\",request_protocol=\"grpc\"}[1m])) / sum(rate(istio_requests_total{cluster_name=\"%s\",destination_service_name=~\"%s.*\",destination_workload_namespace=\"%s\",request_protocol=\"grpc\"}[1m])))"
 	cpuSliExprFormat           = "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}[1m])) / sum(kube_pod_container_resource_requests{resource=\"cpu\",cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
@@ -152,7 +152,8 @@ func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) (PromAl
 	// Lint alert to comply PromQL
 	for i, group := range spec.Groups {
 		for j, rule := range group.Rules {
-			exp, err := promql.ParseExpr(rule.Expr.Value)
+			parser := parser.NewParser(rule.Expr.Value)
+			exp, err := parser.ParseExpr()
 			if err != nil {
 				return PromAlert{}, err
 			}

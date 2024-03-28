@@ -15,7 +15,7 @@
 # ============================================================
 # Build stage 1: Build web server
 # ============================================================
-FROM golang:1.20-alpine as go-builder
+FROM golang:1.22-alpine as go-builder
 
 ENV GO111MODULE=on \
     GOOS=linux \

@@ -15,9 +15,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/clock"
 
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/batch"
@@ -403,8 +403,11 @@ func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIC
 
 		batchJobTemplator := batch.NewBatchJobTemplater(cfg.BatchConfig)
 
-		ctl := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager,
+		ctl, err := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager,
 			envMetadata, batchJobTemplator)
+		if err != nil {
+			log.Panicf("unable to create batch controller: %v", err)
+		}
 		stopCh := make(chan struct{})
 		go ctl.Run(stopCh)
 
