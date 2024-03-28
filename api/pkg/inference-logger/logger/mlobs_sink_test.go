@@ -2,6 +2,7 @@ package logger
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -53,9 +54,10 @@ func newTestLogEntry(request *StandardModelRequest, response *StandardModelRespo
 
 func TestLogEntryToPredictionLogConversion(t *testing.T) {
 	tests := []struct {
-		name     string
-		request  *StandardModelRequest
-		response *StandardModelResponse
+		name          string
+		request       *StandardModelRequest
+		response      *StandardModelResponse
+		expectedError error
 	}{
 		{
 			"multi rows predictions",
@@ -64,6 +66,7 @@ func TestLogEntryToPredictionLogConversion(t *testing.T) {
 				{asInstanceValue(3.0), asInstanceValue(4.0)},
 			}),
 			newTestStandardModelResponse([]float64{0.5, 0.7}),
+			nil,
 		},
 		{
 			"null feature values",
@@ -71,6 +74,29 @@ func TestLogEntryToPredictionLogConversion(t *testing.T) {
 				{nil},
 			}),
 			newTestStandardModelResponse([]float64{0.0}),
+			nil,
+		},
+		{
+			"empty row ids",
+			&StandardModelRequest{
+				SessionId: "1234",
+				Instances: [][]*float64{
+					{asInstanceValue(1.0)},
+				},
+			},
+			newTestStandardModelResponse([]float64{0.0}),
+			ErrMalformedLogEntry,
+		},
+		{
+			"missing session id",
+			&StandardModelRequest{
+				RowIds: []string{"1"},
+				Instances: [][]*float64{
+					{asInstanceValue(1.0)},
+				},
+			},
+			newTestStandardModelResponse([]float64{0.0}),
+			ErrMalformedLogEntry,
 		},
 	}
 
@@ -83,35 +109,43 @@ func TestLogEntryToPredictionLogConversion(t *testing.T) {
 			}
 			logEntry := newTestLogEntry(tt.request, tt.response)
 			predictionLog, err := sink.newPredictionLog(logEntry)
-			if err != nil {
-				t.Errorf("unable to convert log entry: %v", err)
-			}
-			for i, row := range predictionLog.
-				GetInput().
-				GetFeaturesTable().
-				GetFields()["data"].GetListValue().GetValues() {
-				for j, col := range row.GetListValue().GetValues() {
-					switch col.GetKind().(type) {
-					case *structpb.Value_NullValue:
-						if tt.request.Instances[i][j] != nil {
-							t.Errorf("feature value should have been nil on index (%d, %d)", i, j)
-						}
-					default:
-						if col.GetNumberValue() != *tt.request.Instances[i][j] {
-							t.Errorf("unexpected feature data on index (%d, %d)", i, j)
+			if tt.expectedError != nil {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("unexpected error: %v", err)
+					t.FailNow()
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unable to convert log entry: %v", err)
+					t.FailNow()
+				}
+				for i, row := range predictionLog.
+					GetInput().
+					GetFeaturesTable().
+					GetFields()["data"].GetListValue().GetValues() {
+					for j, col := range row.GetListValue().GetValues() {
+						switch col.GetKind().(type) {
+						case *structpb.Value_NullValue:
+							if tt.request.Instances[i][j] != nil {
+								t.Errorf("feature value should have been nil on index (%d, %d)", i, j)
+							}
+						default:
+							if col.GetNumberValue() != *tt.request.Instances[i][j] {
+								t.Errorf("unexpected feature data on index (%d, %d)", i, j)
+							}
 						}
 					}
 				}
-			}
 
-			if predictionLog.ModelVersion != sink.modelVersion {
-				t.Errorf("unexpected model version: %s", predictionLog.ModelVersion)
-			}
-			if predictionLog.ModelName != sink.modelName {
-				t.Errorf("unexpected model name: %s", predictionLog.ModelName)
-			}
-			if predictionLog.ProjectName != sink.projectName {
-				t.Errorf("unexpected project name: %s", predictionLog.ProjectName)
+				if predictionLog.ModelVersion != sink.modelVersion {
+					t.Errorf("unexpected model version: %s", predictionLog.ModelVersion)
+				}
+				if predictionLog.ModelName != sink.modelName {
+					t.Errorf("unexpected model name: %s", predictionLog.ModelName)
+				}
+				if predictionLog.ProjectName != sink.projectName {
+					t.Errorf("unexpected project name: %s", predictionLog.ProjectName)
+				}
 			}
 		})
 	}

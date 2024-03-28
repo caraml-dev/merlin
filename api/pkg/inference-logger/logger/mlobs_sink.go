@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
@@ -10,6 +11,10 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
+)
+
+var (
+	ErrMalformedLogEntry = errors.New("malformed log entry")
 )
 
 type MLObsSink struct {
@@ -74,6 +79,12 @@ func (m *MLObsSink) newPredictionLog(rawLogEntry *LogEntry) (*upiv1.PredictionLo
 	err = json.Unmarshal(rawLogEntry.ResponsePayload.Body, standardModelResponse)
 	if err != nil {
 		return nil, err
+	}
+	if len(standardModelRequest.RowIds) != len(standardModelResponse.Predictions) {
+		return nil, fmt.Errorf("%w: number of row ids and predictions do not match", ErrMalformedLogEntry)
+	}
+	if standardModelRequest.SessionId == "" {
+		return nil, fmt.Errorf("%w: missing session id", ErrMalformedLogEntry)
 	}
 	predictionLog.PredictionId = standardModelRequest.SessionId
 	predictionLog.ModelName = m.modelName
