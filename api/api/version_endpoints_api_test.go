@@ -1479,7 +1479,7 @@ func TestCreateEndpoint(t *testing.T) {
 			feastCoreMock: func() *feastmocks.CoreServiceClient {
 				return &feastmocks.CoreServiceClient{}
 			},
-			expected: BadRequest("Request validation failed: model type should be pyfunc or pyfunc_v3 if want to enable model observablity"),
+			expected: BadRequest("Request validation failed: tensorflow: observability cannot be enabled not for this model type"),
 		},
 		{
 			desc: "Should return 400 if UPI is not supported",
@@ -4828,7 +4828,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 		},
 		{
-			desc: "Should 400 if new endpoint enable model observability but the model is not pyfunc_v3",
+			desc: "Should 400 if new endpoint enable model observability but the model is not one of the supported model type",
 			vars: map[string]string{
 				"model_id":    "1",
 				"version_id":  "1",
@@ -4939,7 +4939,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Request validation failed: model type should be pyfunc or pyfunc_v3 if want to enable model observablity"},
+				data: Error{Message: "Request validation failed: tensorflow: observability cannot be enabled not for this model type"},
 			},
 		},
 		{
