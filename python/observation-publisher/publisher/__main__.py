@@ -26,6 +26,7 @@ def start_consumer(cfg: PublisherConfig) -> None:
     observation_sinks = [
         new_observation_sink(
             sink_config=sink_config,
+            project=cfg.environment.project,
             inference_schema=inference_schema,
             model_id=cfg.environment.model_id,
             model_version=cfg.environment.model_version,

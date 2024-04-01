@@ -14,6 +14,7 @@ def test_config_initialization():
         cfg = compose(config_name="config", overrides=["+environment=example-override"])
         expected_cfg = PublisherConfig(
             environment=Environment(
+                project="test-project",
                 model_id="test-model",
                 model_version="0.1.0",
                 inference_schema=dict(
@@ -65,3 +66,5 @@ def test_config_initialization():
         assert cfg.environment.observation_source == dataclasses.asdict(
             expected_cfg.environment.observation_source
         )
+        assert cfg.environment.project == expected_cfg.environment.project
+        assert cfg.environment.model_id == expected_cfg.environment.model_id

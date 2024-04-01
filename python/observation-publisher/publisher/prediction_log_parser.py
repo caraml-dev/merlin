@@ -4,7 +4,8 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 from google.protobuf.struct_pb2 import ListValue, Struct
-from merlin.observability.inference import InferenceSchema, ValueType
+from merlin.observability.inference import InferenceSchema, ValueType, BinaryClassificationOutput, RankingOutput, \
+    RegressionOutput
 from typing_extensions import Self
 
 PREDICTION_LOG_TIMESTAMP_COLUMN = "request_timestamp"
@@ -20,8 +21,11 @@ class PredictionLogFeatureTable:
     def from_struct(
         cls, table_struct: Struct, inference_schema: InferenceSchema
     ) -> Self:
-        assert isinstance(table_struct["columns"], ListValue)
-        columns = list_value_as_string_list(table_struct["columns"])
+        if inference_schema.feature_orders is not None:
+            columns = inference_schema.feature_orders
+        else:
+            assert isinstance(table_struct["columns"], ListValue)
+            columns = list_value_as_string_list(table_struct["columns"])
         column_types = inference_schema.feature_types
         assert isinstance(table_struct["data"], ListValue)
         rows = list_value_as_rows(table_struct["data"])
@@ -29,6 +33,17 @@ class PredictionLogFeatureTable:
             columns=columns,
             rows=[list_value_as_numpy_list(row, columns, column_types) for row in rows],
         )
+
+
+def prediction_columns(inference_schema: InferenceSchema) -> List[str]:
+    if isinstance(inference_schema.model_prediction_output, BinaryClassificationOutput):
+        return [inference_schema.model_prediction_output.prediction_score_column]
+    elif isinstance(inference_schema.model_prediction_output, RankingOutput):
+        return [inference_schema.model_prediction_output.rank_score_column]
+    elif isinstance(inference_schema.model_prediction_output, RegressionOutput):
+        return [inference_schema.model_prediction_output.prediction_score_column]
+    else:
+        raise ValueError(f"Unknown prediction output type: {type(inference_schema.model_prediction_output)}")
 
 
 @dataclass
@@ -41,10 +56,13 @@ class PredictionLogResultsTable:
     def from_struct(
         cls, table_struct: Struct, inference_schema: InferenceSchema
     ) -> Self:
-        assert isinstance(table_struct["columns"], ListValue)
+        if "columns" in table_struct.keys():
+            assert isinstance(table_struct["columns"], ListValue)
+            columns = list_value_as_string_list(table_struct["columns"])
+        else:
+            columns = prediction_columns(inference_schema)
         assert isinstance(table_struct["data"], ListValue)
         assert isinstance(table_struct["row_ids"], ListValue)
-        columns = list_value_as_string_list(table_struct["columns"])
         column_types = inference_schema.model_prediction_output.prediction_types()
         rows = list_value_as_rows(table_struct["data"])
         row_ids = list_value_as_string_list(table_struct["row_ids"])

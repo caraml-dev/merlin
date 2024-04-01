@@ -116,6 +116,7 @@ def test_binary_classification_model_arize_schema(
 ):
     arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
+        "test-project",
         binary_classification_inference_schema,
         "test-model",
         "0.1.0",
@@ -134,6 +135,7 @@ def test_ranking_model_arize_schema(
 ):
     arize_client = MockArizeClient(api_key="test", space_key="test")
     arize_sink = ArizeSink(
+        "test-project",
         ranking_inference_schema,
         "test-model",
         "0.1.0",
@@ -152,9 +154,10 @@ def test_bigquery_sink_schema_migration(
 ):
     client = BigQueryClient()
     client.delete_table(
-        f"{bq_project}.{bq_dataset}.prediction_log_test_model", not_found_ok=True
+        f"{bq_project}.{bq_dataset}.prediction_log_test_project_test_model", not_found_ok=True
     )
     bq_sink = BigQuerySink(
+        "test-project",
         binary_classification_inference_schema,
         "test-model",
         "0.1.0",

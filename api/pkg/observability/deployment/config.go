@@ -5,6 +5,7 @@ import (
 )
 
 type ConsumerConfig struct {
+	Project           string             `yaml:"project"`
 	ModelID           string             `yaml:"model_id"`
 	ModelVersion      string             `yaml:"model_version"`
 	InferenceSchema   *models.SchemaSpec `yaml:"inference_schema"`
