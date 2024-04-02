@@ -21,20 +21,35 @@ from publisher.prediction_log_parser import (PREDICTION_LOG_MODEL_VERSION_COLUMN
 
 
 class PredictionLogConsumer(abc.ABC):
+    """
+    Abstract class for consuming prediction logs from a streaming source, then write to one or multiple sinks
+    """
     def __init__(self, buffer_capacity: int, buffer_max_duration_seconds: int):
         self.buffer_capacity = buffer_capacity
         self.buffer_max_duration_seconds = buffer_max_duration_seconds
 
     @abc.abstractmethod
     def poll_new_logs(self) -> List[PredictionLog]:
+        """
+        Poll new logs from the source
+        :return:
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def commit(self):
+        """
+        Commit the current offset after the logs have been written to all the sinks
+        :return:
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def close(self):
+        """
+        Clean up the resources when the polling process run into error unexpectedly.
+        :return:
+        """
         raise NotImplementedError
 
     def start_polling(
@@ -43,6 +58,13 @@ class PredictionLogConsumer(abc.ABC):
         inference_schema: InferenceSchema,
         model_version: str,
     ):
+        """
+        Start polling new logs from the source, then write to the sinks. The prediction logs are written to each sink asynchronously.
+        :param observation_sinks:
+        :param inference_schema:
+        :param model_version:
+        :return:
+        """
         try:
             buffered_logs = []
             buffer_start_time = datetime.now()
@@ -155,6 +177,11 @@ def new_consumer(config: ObservationSourceConfig) -> PredictionLogConsumer:
 
 
 def parse_message_to_prediction_log(msg: str) -> PredictionLog:
+    """
+    Parse the message from the Kafka consumer to a PredictionLog object
+    :param msg:
+    :return:
+    """
     log = PredictionLog()
     log.ParseFromString(msg)
     return log
@@ -163,6 +190,13 @@ def parse_message_to_prediction_log(msg: str) -> PredictionLog:
 def log_to_records(
     log: PredictionLog, inference_schema: InferenceSchema, model_version: str
 ) -> Tuple[List[List[np.int64 | np.float64 | np.bool_ | np.str_]], List[str]]:
+    """
+    Convert a PredictionLog object to a list of records and column names
+    :param log: Prediction log.
+    :param inference_schema: Inference schema.
+    :param model_version: Model version.
+    :return:
+    """
     request_timestamp = log.request_timestamp.ToDatetime()
     feature_table = PredictionLogFeatureTable.from_struct(
         log.input.features_table, inference_schema
@@ -199,6 +233,13 @@ def log_to_records(
 def log_batch_to_dataframe(
     logs: List[PredictionLog], inference_schema: InferenceSchema, model_version: str
 ) -> pd.DataFrame:
+    """
+    Combines several logs into a single DataFrame
+    :param logs: List of prediction logs.
+    :param inference_schema: Inference schema.
+    :param model_version: Model version.
+    :return:
+    """
     combined_records = []
     column_names: List[str] = []
     for log in logs:
