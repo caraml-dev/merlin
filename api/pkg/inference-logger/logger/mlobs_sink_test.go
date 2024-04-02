@@ -77,7 +77,19 @@ func TestLogEntryToPredictionLogConversion(t *testing.T) {
 			nil,
 		},
 		{
-			"empty row ids",
+			"empty row ids, multiple rows",
+			&StandardModelRequest{
+				SessionId: "1234",
+				Instances: [][]*float64{
+					{asInstanceValue(1.0)},
+					{asInstanceValue(2.0)},
+				},
+			},
+			newTestStandardModelResponse([]float64{0.0}),
+			ErrMalformedLogEntry,
+		},
+		{
+			"empty row ids, single rows",
 			&StandardModelRequest{
 				SessionId: "1234",
 				Instances: [][]*float64{
@@ -85,7 +97,7 @@ func TestLogEntryToPredictionLogConversion(t *testing.T) {
 				},
 			},
 			newTestStandardModelResponse([]float64{0.0}),
-			ErrMalformedLogEntry,
+			nil,
 		},
 		{
 			"missing session id",

@@ -80,6 +80,11 @@ func (m *MLObsSink) newPredictionLog(rawLogEntry *LogEntry) (*upiv1.PredictionLo
 	if err != nil {
 		return nil, err
 	}
+	// If there is only one prediction, session id alone is enough to for unique prediction id
+	if len(standardModelRequest.Instances) == 1 && standardModelRequest.RowIds == nil {
+		standardModelRequest.RowIds = []string{""}
+	}
+
 	if len(standardModelRequest.RowIds) != len(standardModelResponse.Predictions) {
 		return nil, fmt.Errorf("%w: number of row ids and predictions do not match", ErrMalformedLogEntry)
 	}
