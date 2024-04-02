@@ -253,6 +253,7 @@ func (c *deployer) applySecret(ctx context.Context, data *models.WorkerData) (se
 
 func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, error) {
 	consumerCfg := &ConsumerConfig{
+		Project:         data.Project,
 		ModelID:         data.ModelName,
 		ModelVersion:    data.ModelVersion,
 		InferenceSchema: data.ModelSchemaSpec,

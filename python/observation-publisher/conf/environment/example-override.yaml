@@ -1,3 +1,4 @@
+project: "test-project"
 model_id: "test-model"
 model_version: "0.1.0"
 inference_schema:

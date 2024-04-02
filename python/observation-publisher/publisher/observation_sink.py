@@ -31,10 +31,12 @@ class ObservationSink(abc.ABC):
 
     def __init__(
         self,
+        project: str,
         inference_schema: InferenceSchema,
         model_id: str,
         model_version: str,
     ):
+        self._project = project
         self._inference_schema = inference_schema
         self._model_id = model_id
         self._model_version = model_version
@@ -65,18 +67,20 @@ class ArizeSink(ObservationSink):
 
     def __init__(
         self,
+        project: str,
         inference_schema: InferenceSchema,
         model_id: str,
         model_version: str,
         arize_client: ArizeClient,
     ):
         """
+        :param project: CaraML project
         :param inference_schema: Inference schema for the ingested model
         :param model_id: Merlin model id
         :param model_version: Merlin model version
         :param arize_client: Arize Pandas Logger client
         """
-        super().__init__(inference_schema, model_id, model_version)
+        super().__init__(project, inference_schema, model_id, model_version)
         self._client = arize_client
 
     def _common_arize_schema_attributes(self) -> dict:
@@ -121,7 +125,7 @@ class ArizeSink(ObservationSink):
                 dataframe=df,
                 environment=Environments.PRODUCTION,
                 schema=arize_schema,
-                model_id=self._model_id,
+                model_id=f"{self._project}-{self._model_id}",
                 model_type=model_type,
                 model_version=self._model_version,
             )
@@ -176,27 +180,26 @@ class BigQuerySink(ObservationSink):
 
     def __init__(
         self,
+        project: str,
         inference_schema: InferenceSchema,
         model_id: str,
         model_version: str,
         config: BigQueryConfig,
     ):
         """
+        :param project: CaraML project
         :param inference_schema: Inference schema for the ingested model
         :param model_id: Merlin model id
         :param model_version: Merlin model version
         :param config: Configuration to write to bigquery sink
         """
-        super().__init__(inference_schema, model_id, model_version)
+        super().__init__(project, inference_schema, model_id, model_version)
         self._client = BigQueryClient()
-        self._inference_schema = inference_schema
-        self._model_id = model_id
-        self._model_version = model_version
         self._config = config
         self._table = self.create_or_update_table()
 
     @property
-    def project(self) -> str:
+    def bq_project(self) -> str:
         return self._config.project
 
     @property
@@ -275,10 +278,15 @@ class BigQuerySink(ObservationSink):
 
     @property
     def write_location(self) -> str:
-        table_name = f"prediction_log_{self._model_id}".replace("-", "_").replace(
+        """
+        Returns the BigQuery table location to write the prediction logs, which will be unique
+        for each CaraML project / model pair. Different versions of a model share the same table.
+        :return:
+        """
+        table_name = f"prediction_log_{self._project}_{self._model_id}".replace("-", "_").replace(
             ".", "_"
         )
-        return f"{self.project}.{self.dataset}.{table_name}"
+        return f"{self.bq_project}.{self.dataset}.{table_name}"
 
     def write(self, dataframe: pd.DataFrame):
         for i in range(0, self.retry.retry_attempts + 1):
@@ -308,6 +316,7 @@ class BigQuerySink(ObservationSink):
 
 def new_observation_sink(
     sink_config: ObservationSinkConfig,
+    project: str,
     inference_schema: InferenceSchema,
     model_id: str,
     model_version: str,
@@ -317,6 +326,7 @@ def new_observation_sink(
             bq_config: BigQueryConfig = BigQueryConfig.from_dict(sink_config.config)  # type: ignore[attr-defined]
 
             return BigQuerySink(
+                project=project,
                 inference_schema=inference_schema,
                 model_id=model_id,
                 model_version=model_version,
@@ -328,6 +338,7 @@ def new_observation_sink(
                 space_key=arize_config.space_key, api_key=arize_config.api_key
             )
             return ArizeSink(
+                project=project,
                 inference_schema=inference_schema,
                 model_id=model_id,
                 model_version=model_version,

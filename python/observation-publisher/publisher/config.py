@@ -30,6 +30,7 @@ class ObservationSourceConfig:
 
 @dataclass
 class Environment:
+    project: str
     model_id: str
     model_version: str
     inference_schema: dict
