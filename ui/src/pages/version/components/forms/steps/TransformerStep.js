@@ -14,7 +14,7 @@ import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
 
 export const TransformerStep = ({ maxAllowedReplica }) => {
   const {
-    data: { transformer, logger, protocol },
+    data: { transformer, logger, protocol, environment_name },
     onChangeHandler,
   } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -34,6 +34,7 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
         <>
           <EuiFlexItem grow={false}>
             <ResourcesPanel
+              environment={environment_name}
               isGPUEnabled={false}
               resourcesConfig={transformer.resource_request}
               onChangeHandler={onChange("transformer.resource_request")}
