@@ -21,6 +21,12 @@ class PredictionLogFeatureTable:
     def from_struct(
         cls, table_struct: Struct, inference_schema: InferenceSchema
     ) -> Self:
+        """
+        Create a PredictionLogFeatureTable object from a Protobuf Struct object
+        :param table_struct: A Protobuf Struct object that represents a feature table.
+        :param inference_schema: Model inference schema.
+        :return: Instance of PredictionLogFeatureTable.
+        """
         if inference_schema.feature_orders is not None:
             columns = inference_schema.feature_orders
         else:
@@ -36,6 +42,11 @@ class PredictionLogFeatureTable:
 
 
 def prediction_columns(inference_schema: InferenceSchema) -> List[str]:
+    """
+    Get the column name for the prediction output
+    :param inference_schema: Model inference schema
+    :return: List of column names
+    """
     if isinstance(inference_schema.model_prediction_output, BinaryClassificationOutput):
         return [inference_schema.model_prediction_output.prediction_score_column]
     elif isinstance(inference_schema.model_prediction_output, RankingOutput):
@@ -56,6 +67,12 @@ class PredictionLogResultsTable:
     def from_struct(
         cls, table_struct: Struct, inference_schema: InferenceSchema
     ) -> Self:
+        """
+        Create a PredictionLogResultsTable object from a Protobuf Struct object
+        :param table_struct: Protobuf Struct object that represents a prediction result table.
+        :param inference_schema: Model InferenceSchema.
+        :return: PredictionLogResultsTable instnace.
+        """
         if "columns" in table_struct.keys():
             assert isinstance(table_struct["columns"], ListValue)
             columns = list_value_as_string_list(table_struct["columns"])
@@ -102,6 +119,9 @@ def convert_to_numpy_value(
 
 
 def list_value_as_string_list(list_value: ListValue) -> List[str]:
+    """
+    Convert protobuf string list to it's native python type counterpart.
+    """
     string_list: List[str] = []
     for v in list_value.items():
         assert isinstance(v, str)
@@ -110,10 +130,19 @@ def list_value_as_string_list(list_value: ListValue) -> List[str]:
 
 
 def list_value_as_rows(list_value: ListValue) -> List[ListValue]:
+    """
+    Convert a ListValue object to a list of ListValue objects
+    :param list_value: ListValue object representing a two dimensional matrix or a vector.
+    :return: List of ListValue objects, representing a two dimensional matrix.
+    """
     rows: List[ListValue] = []
     for d in list_value.items():
-        assert isinstance(d, ListValue)
-        rows.append(d)
+        if isinstance(d, ListValue):
+            rows.append(d)
+        else:
+            nd = ListValue()
+            nd.append(d)
+            rows.append(nd)
 
     return rows
 
@@ -121,6 +150,13 @@ def list_value_as_rows(list_value: ListValue) -> List[ListValue]:
 def list_value_as_numpy_list(
     list_value: ListValue, column_names: List[str], column_types: Dict[str, ValueType]
 ) -> List[np.int64 | np.float64 | np.bool_ | np.str_]:
+    """
+    Convert a ListValue representing a row, to it's native python type counterpart.
+    :param list_value: ListValue object representing a row.
+    :param column_names: Column names corresponds to each column in a row.
+    :param column_types: Map of column name to type.
+    :return: List of numpy types.
+    """
     column_values: List[int | str | float | bool | None] = []
     for v in list_value.items():
         assert isinstance(v, (int, str, float, bool, NoneType))
