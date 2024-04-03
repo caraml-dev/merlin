@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.uber.org/zap"
@@ -70,6 +72,7 @@ func NewMLObsSink(
 
 func (m *MLObsSink) newPredictionLog(rawLogEntry *LogEntry) (*upiv1.PredictionLog, error) {
 	predictionLog := &upiv1.PredictionLog{}
+	predictionLog.RequestTimestamp = timestamppb.Now()
 	standardModelRequest := &StandardModelRequest{}
 	err := json.Unmarshal(rawLogEntry.RequestPayload.Body, standardModelRequest)
 	if err != nil {
