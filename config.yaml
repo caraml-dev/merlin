@@ -36,7 +36,7 @@ ImageBuilderConfig:
     DockerfilePath: docker/app.Dockerfile
     BuildContextURI: git://github.com/gojek/merlin.git#refs/tags/v0.37.0
     BuildContextSubPath: python
-    MainAppPath: /home/spark/main.py
+    MainAppPath: /home/spark/merlin-spark-app/main.py
   BuildNamespace: mlp
   DockerRegistry: ghcr.io/caraml-dev
   BuildTimeout: 10m

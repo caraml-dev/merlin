@@ -81,6 +81,6 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MI
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
 
-COPY batch-predictor/docker/main.py ${HOME}/main.py
+COPY batch-predictor/docker/main.py ${HOME}/merlin-spark-app/main.py
 COPY batch-predictor/docker/merlin_entrypoint.sh /usr/bin/merlin_entrypoint.sh
 COPY batch-predictor/docker/process_conda_env.sh /usr/bin/process_conda_env.sh
