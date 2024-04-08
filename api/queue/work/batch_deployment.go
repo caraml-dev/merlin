@@ -14,7 +14,7 @@ import (
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage"
 	"gorm.io/gorm"
-	clock2 "k8s.io/apimachinery/pkg/util/clock"
+	clock2 "k8s.io/utils/clock"
 )
 
 type BatchDeployment struct {

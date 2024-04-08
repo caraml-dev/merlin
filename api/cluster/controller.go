@@ -217,7 +217,8 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	if modelService.CurrentIsvcName != "" {
 		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-			currentIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.CurrentIsvcName, metav1.GetOptions{})
+			currentIsvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(ctx,
+				modelService.CurrentIsvcName, metav1.GetOptions{})
 			if err != nil && !kerrors.IsNotFound(err) {
 				return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToGetInferenceServiceStatus, isvcName))
 			}
@@ -234,10 +235,10 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	// check the cluster to see if the inference service has already been deployed
-	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.Name, metav1.GetOptions{})
+	s, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(ctx, modelService.Name, metav1.GetOptions{})
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(spec)
+			s, err = c.kserveClient.InferenceServices(modelService.Namespace).Create(ctx, spec, metav1.CreateOptions{})
 			if err != nil {
 				log.Errorf("unable to create inference service %s: %v", isvcName, err)
 				return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
@@ -260,7 +261,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	s, err = c.waitInferenceServiceReady(s)
 	if err != nil {
 		// remove created inferenceservice when got error
-		if err := c.deleteInferenceService(isvcName, modelService.Namespace); err != nil {
+		if err := c.deleteInferenceService(ctx, isvcName, modelService.Namespace); err != nil {
 			log.Errorf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
@@ -288,7 +289,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 
 	// Delete previous inference service
 	if modelService.CurrentIsvcName != "" {
-		if err := c.deleteInferenceService(modelService.CurrentIsvcName, modelService.Namespace); err != nil {
+		if err := c.deleteInferenceService(ctx, modelService.CurrentIsvcName, modelService.Namespace); err != nil {
 			log.Errorf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
 			return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToDeletePreviousInferenceService, modelService.CurrentIsvcName))
 		}
@@ -305,7 +306,8 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 }
 
 func (c *controller) Delete(ctx context.Context, modelService *models.Service) (*models.Service, error) {
-	infSvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(modelService.Name, metav1.GetOptions{})
+	infSvc, err := c.kserveClient.InferenceServices(modelService.Namespace).Get(ctx, modelService.Name,
+		metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			return nil, errors.Wrapf(err, "unable to check status of inference service: %s", infSvc.Name)
@@ -313,7 +315,7 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 		return modelService, nil
 	}
 
-	if err := c.deleteInferenceService(modelService.Name, modelService.Namespace); err != nil {
+	if err := c.deleteInferenceService(ctx, modelService.Name, modelService.Namespace); err != nil {
 		return nil, err
 	}
 
@@ -336,9 +338,10 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 	return modelService, nil
 }
 
-func (c *controller) deleteInferenceService(serviceName string, namespace string) error {
+func (c *controller) deleteInferenceService(ctx context.Context, serviceName string, namespace string) error {
 	gracePeriod := int64(deletionGracePeriodSecond)
-	err := c.kserveClient.InferenceServices(namespace).Delete(serviceName, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
+	err := c.kserveClient.InferenceServices(namespace).Delete(ctx, serviceName,
+		metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
 	if client.IgnoreNotFound(err) != nil {
 		return errors.Wrapf(err, "unable to delete inference service: %s %v", serviceName, err)
 	}
@@ -373,7 +376,7 @@ func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceS
 		}
 	}()
 
-	isvcWatcher, err := c.kserveClient.InferenceServices(service.Namespace).Watch(metav1.ListOptions{
+	isvcWatcher, err := c.kserveClient.InferenceServices(service.Namespace).Watch(ctx, metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", service.Name),
 	})
 	if err != nil {

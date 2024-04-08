@@ -556,7 +556,7 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 
 func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   httpPath,
 				Scheme: "HTTP",
@@ -575,7 +575,7 @@ func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
 
 func createGRPCLivenessProbe(port int) *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
 				Command: []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", port)},
 			},
