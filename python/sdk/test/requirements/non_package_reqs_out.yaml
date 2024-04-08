@@ -1,0 +1,7 @@
+dependencies:
+  - python=3.10.*
+  - pip:
+      - merlin-pyfunc-server<0.42.0
+      - --extra-index-url=http://artifactory.com
+      - --trusted-host=artifactory.com
+      - scikit-learn==1.4.0

@@ -28,6 +28,11 @@ from merlin.requirements import process_conda_env
             ["merlin-pyfunc-server<0.42.0"],
         ),
         (
+            "test/requirements/non_package_reqs_in.yaml",
+            "test/requirements/non_package_reqs_out.yaml",
+            ["merlin-pyfunc-server<0.42.0"],
+        ),
+        (
             "test/requirements/other_reqs_in.yaml",
             "test/requirements/other_reqs_out.yaml",
             ["merlin-pyfunc-server<0.42.0"],
