@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import yaml
-from packaging.requirements import Requirement
+from packaging.requirements import Requirement, InvalidRequirement
 
 _CONSTRAINTS_FILE_NAME = "constraints.txt"
 
@@ -51,6 +51,11 @@ def process_conda_env(
         for additional_merlin_req in additional_merlin_reqs:
             exist = False
             for pip_req in pip_reqs:
+                # Skip requirement comparison for pip reqs that is not a package, which can happen if the user specifies
+                # repository or trusted host as part of the pip file
+                if pip_req.strip().startswith("--"):
+                    continue
+
                 pip_req_obj = Requirement(pip_req)
                 additional_merlin_req_obj = Requirement(additional_merlin_req)
                 if pip_req_obj.name.lower() == additional_merlin_req_obj.name.lower():

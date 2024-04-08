@@ -1,0 +1,6 @@
+dependencies:
+  - python=3.10.*
+  - pip:
+      - --extra-index-url=http://artifactory.com
+      - --trusted-host=artifactory.com
+      - scikit-learn==1.4.0
