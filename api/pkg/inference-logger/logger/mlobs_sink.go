@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -17,6 +18,10 @@ import (
 
 var (
 	ErrMalformedLogEntry = errors.New("malformed log entry")
+)
+
+const (
+	SamplingRate = 0.01
 )
 
 type MLObsSink struct {
@@ -163,6 +168,9 @@ func (m *MLObsSink) buildNewKafkaMessage(predictionLog *upiv1.PredictionLog) (*k
 
 func (m *MLObsSink) Sink(rawLogEntries []*LogEntry) error {
 	for _, rawLogEntry := range rawLogEntries {
+		if rand.Float64() >= SamplingRate {
+			continue
+		}
 		predictionLog, err := m.newPredictionLog(rawLogEntry)
 		if err != nil {
 			m.logger.Errorf("unable to convert log entry: %v", err)
