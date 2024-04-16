@@ -27,7 +27,7 @@ class PredictionLogFeatureTable:
         :param inference_schema: Model inference schema.
         :return: Instance of PredictionLogFeatureTable.
         """
-        if inference_schema.feature_orders is not None:
+        if inference_schema.feature_orders is not None and len(inference_schema.feature_orders) > 0:
             columns = inference_schema.feature_orders
         else:
             assert isinstance(table_struct["columns"], ListValue)
