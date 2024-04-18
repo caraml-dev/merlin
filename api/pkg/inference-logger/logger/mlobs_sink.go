@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"net/http"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -168,16 +169,18 @@ func (m *MLObsSink) buildNewKafkaMessage(predictionLog *upiv1.PredictionLog) (*k
 
 func (m *MLObsSink) Sink(rawLogEntries []*LogEntry) error {
 	for _, rawLogEntry := range rawLogEntries {
-		if rand.Float64() >= SamplingRate {
+		if rawLogEntry.ResponsePayload.StatusCode != http.StatusOK || rand.Float64() >= SamplingRate {
 			continue
 		}
 		predictionLog, err := m.newPredictionLog(rawLogEntry)
 		if err != nil {
 			m.logger.Errorf("unable to convert log entry: %v", err)
+			continue
 		}
 		kafkaMessage, err := m.buildNewKafkaMessage(predictionLog)
 		if err != nil {
 			m.logger.Errorf("unable to build kafka message: %v", err)
+			continue
 		}
 		err = m.producer.Produce(kafkaMessage, m.producer.Events())
 		if err != nil {
