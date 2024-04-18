@@ -151,7 +151,7 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         return [
             parse_message_to_prediction_log(msg.value())
             for msg in messages
-            if (msg is not None and msg.error() is None)
+            if (msg is not None and msg.error() is None and msg.value() is not None)
         ]
 
     def commit(self):
