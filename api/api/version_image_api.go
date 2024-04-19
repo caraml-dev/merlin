@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 )
 
@@ -66,7 +67,12 @@ func (c *VersionImageController) BuildImage(r *http.Request, vars map[string]str
 	// Image building might require a long time to complete, so we start the image building process asynchronously in a different Go routine
 	// and return immediately with an accepted status.
 	// We use a new context.Background() to ensure that the process is not cancelled when the request is finished
-	go c.VersionImageService.BuildImage(context.Background(), model, version, options)
+	go func() {
+		_, err := c.VersionImageService.BuildImage(context.Background(), model, version, options)
+		if err != nil {
+			log.Errorf("Error building image: %v", err)
+		}
+	}()
 
 	return Accepted(nil)
 }

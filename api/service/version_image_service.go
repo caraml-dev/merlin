@@ -54,7 +54,7 @@ func (s *versionImageService) BuildImage(ctx context.Context, model *models.Mode
 
 	imageRef, err := imageBuilder.BuildImage(ctx, model.Project, model, version, options.ResourceRequest)
 	if err != nil {
-		return "", fmt.Errorf("error building image: %v", err)
+		return "", fmt.Errorf("error building image: %w", err)
 	}
 
 	return imageRef, nil
