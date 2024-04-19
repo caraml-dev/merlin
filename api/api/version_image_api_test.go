@@ -125,7 +125,7 @@ func TestVersionImageController_BuildImage(t *testing.T) {
 			versionImageService: func() *mocks.VersionImageService {
 				svc := &mocks.VersionImageService{}
 				svc.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(nil)
+					Return("ghcr.io/caraml-dev/project-model:1", nil)
 				return svc
 			},
 			want: &Response{
