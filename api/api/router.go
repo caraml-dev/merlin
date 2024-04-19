@@ -59,6 +59,7 @@ type AppContext struct {
 	ModelsService             service.ModelsService
 	ModelEndpointsService     service.ModelEndpointsService
 	VersionsService           service.VersionsService
+	VersionImageService       service.VersionImageService
 	EndpointsService          service.EndpointsService
 	LogService                service.LogService
 	PredictionJobService      service.PredictionJobService
@@ -161,6 +162,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	projectsController := ProjectsController{&appCtx}
 	modelEndpointsController := ModelEndpointsController{&appCtx}
 	versionsController := VersionsController{&appCtx}
+	versionImageController := VersionImageController{&appCtx}
 	modelsController := ModelsController{&appCtx, &versionsController}
 	endpointsController := EndpointsController{&appCtx}
 	predictionJobController := PredictionJobController{&appCtx}
@@ -203,6 +205,10 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.GetVersion, "GetVersion"},
 		{http.MethodPatch, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", models.VersionPatch{}, versionsController.PatchVersion, "PatchVersion"},
 		{http.MethodDelete, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.DeleteVersion, "DeleteVersion"},
+
+		// Version Image API
+		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/image", nil, versionImageController.GetImage, "GetImage"},
+		{http.MethodPut, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/image", models.BuildImageOptions{}, versionImageController.BuildImage, "BuildImage"},
 
 		// Version Endpoint API
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint", nil, endpointsController.ListEndpoint, "ListEndpoint"},

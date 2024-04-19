@@ -88,6 +88,14 @@ func Created(data interface{}) *Response {
 	}
 }
 
+// Accepted represents the response of status code 202.
+func Accepted(data interface{}) *Response {
+	return &Response{
+		code: http.StatusAccepted,
+		data: data,
+	}
+}
+
 // NoContent represents the response of status code 204.
 func NoContent() *Response {
 	return &Response{

@@ -91,6 +91,20 @@ func (_m *ImageBuilder) GetMainAppPath(version *models.Version) (string, error) 
 	return r0, r1
 }
 
+// GetVersionImage provides a mock function with given fields: ctx, project, model, version
+func (_m *ImageBuilder) GetVersionImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) models.VersionImage {
+	ret := _m.Called(ctx, project, model, version)
+
+	var r0 models.VersionImage
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version) models.VersionImage); ok {
+		r0 = rf(ctx, project, model, version)
+	} else {
+		r0 = ret.Get(0).(models.VersionImage)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewImageBuilder interface {
 	mock.TestingT
 	Cleanup(func())
