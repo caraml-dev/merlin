@@ -69,6 +69,8 @@ type APIClient struct {
 	StandardTransformerAPI *StandardTransformerAPIService
 
 	VersionAPI *VersionAPIService
+
+	VersionImageAPI *VersionImageAPIService
 }
 
 type service struct {
@@ -98,6 +100,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.SecretAPI = (*SecretAPIService)(&c.common)
 	c.StandardTransformerAPI = (*StandardTransformerAPIService)(&c.common)
 	c.VersionAPI = (*VersionAPIService)(&c.common)
+	c.VersionImageAPI = (*VersionImageAPIService)(&c.common)
 
 	return c
 }

@@ -20,6 +20,8 @@ tags:
 - name: endpoint
   description: Deployment Management API. Endpoint represent a deployment of a specific
     model version
+- name: version_image
+  description: The model version's Docker image management API.
 - name: model_endpoints
   description: Serving Traffic Management API. API to manage traffic routing to a
     running endpoint.
@@ -541,6 +543,60 @@ paths:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/VersionEndpoint"
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
+      x-codegen-request-body-name: body
+  "/models/{model_id}/versions/{version_id}/image":
+    get:
+      tags:
+      - version_image
+      summary: Get the Docker image for given model version
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VersionImage"
+        '404':
+          description: Version with given `version_id` not found
+          content: {}
+    put:
+      tags:
+      - version_image
+      summary: Build the Docker image for given model version
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/BuildImageOptions"
+        required: false
+      responses:
+        '202':
+          description: Accepted
         '404':
           description: Version with given `version_id` not found
           content: {}
@@ -1779,6 +1835,27 @@ components:
         updated_at:
           type: string
           format: date-time
+    VersionImage:
+      type: object
+      properties:
+        project_id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        version_id:
+          type: integer
+          format: int32
+        image_ref:
+          type: string
+        existed:
+          type: boolean
+    BuildImageOptions:
+      type: object
+      properties:
+        resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
     Logger:
       type: object
       properties:

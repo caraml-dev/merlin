@@ -124,6 +124,8 @@ Class | Method | HTTP request | Description
 *VersionApi* | [**models_model_id_versions_version_id_delete**](client/docs/VersionApi.md#models_model_id_versions_version_id_delete) | **DELETE** /models/{model_id}/versions/{version_id} | Delete version by ID from model
 *VersionApi* | [**models_model_id_versions_version_id_get**](client/docs/VersionApi.md#models_model_id_versions_version_id_get) | **GET** /models/{model_id}/versions/{version_id} | Get version by ID from model
 *VersionApi* | [**models_model_id_versions_version_id_patch**](client/docs/VersionApi.md#models_model_id_versions_version_id_patch) | **PATCH** /models/{model_id}/versions/{version_id} | Patch the version 
+*VersionImageApi* | [**models_model_id_versions_version_id_image_get**](client/docs/VersionImageApi.md#models_model_id_versions_version_id_image_get) | **GET** /models/{model_id}/versions/{version_id}/image | Get the Docker image for given model version
+*VersionImageApi* | [**models_model_id_versions_version_id_image_put**](client/docs/VersionImageApi.md#models_model_id_versions_version_id_image_put) | **PUT** /models/{model_id}/versions/{version_id}/image | Build the Docker image for given model version
 
 
 ## Documentation For Models
@@ -132,6 +134,7 @@ Class | Method | HTTP request | Description
  - [AlertConditionSeverity](client/docs/AlertConditionSeverity.md)
  - [AutoscalingPolicy](client/docs/AutoscalingPolicy.md)
  - [BinaryClassificationOutput](client/docs/BinaryClassificationOutput.md)
+ - [BuildImageOptions](client/docs/BuildImageOptions.md)
  - [Config](client/docs/Config.md)
  - [Container](client/docs/Container.md)
  - [CustomPredictor](client/docs/CustomPredictor.md)
@@ -185,6 +188,7 @@ Class | Method | HTTP request | Description
  - [ValueType](client/docs/ValueType.md)
  - [Version](client/docs/Version.md)
  - [VersionEndpoint](client/docs/VersionEndpoint.md)
+ - [VersionImage](client/docs/VersionImage.md)
 
 
 <a id="documentation-for-authorization"></a>

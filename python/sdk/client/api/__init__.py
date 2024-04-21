@@ -13,4 +13,5 @@ from client.api.project_api import ProjectApi
 from client.api.secret_api import SecretApi
 from client.api.standard_transformer_api import StandardTransformerApi
 from client.api.version_api import VersionApi
+from client.api.version_image_api import VersionImageApi
 
