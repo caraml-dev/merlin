@@ -1,3 +1,5 @@
+from typing import Optional
+
 import client
 from merlin.util import autostr
 
@@ -12,21 +14,21 @@ class VersionImage:
         self._existed = image.existed
 
     @property
-    def project_id(self) -> int:
+    def project_id(self) -> Optional[int]:
         return self._project_id
 
     @property
-    def model_id(self) -> int:
+    def model_id(self) -> Optional[int]:
         return self._model_id
 
     @property
-    def version_id(self) -> int:
+    def version_id(self) -> Optional[int]:
         return self._version_id
 
     @property
-    def image_ref(self) -> str:
+    def image_ref(self) -> Optional[str]:
         return self._image_ref
 
     @property
-    def existed(self) -> bool:
+    def existed(self) -> Optional[bool]:
         return self._existed
