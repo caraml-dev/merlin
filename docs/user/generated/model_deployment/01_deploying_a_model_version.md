@@ -30,6 +30,10 @@ A Model Version Endpoint has several states:
 
 Depending on the type of the model being deployed, there may be an intermediate step to build the Docker image (using Kaniko). This is applicable to PyFunc models.
 
+{% hint style="info" %}
+You can separately start the image building process without actually deploying your model by using `build_image()` function. For more details, you can check [Build Image](../12_build_image.md).
+{% endhint %}
+
 ## Deploying a Model Version
 
 A model version can be deployed via the SDK or the UI.
@@ -106,7 +110,7 @@ new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
 Merlin supports configurable autoscaling policy to ensure that users have complete control over the autoscaling behavior of their models. There are 4 types of autoscaling metrics in Merlin:
 
-* **CPU Utilization:** The autoscaling is based on the ration of model service's CPU usage and its CPU request. This autoscaling policy is available on all deployment mode. 
+* **CPU Utilization:** The autoscaling is based on the ration of model service's CPU usage and its CPU request. This autoscaling policy is available on all deployment mode.
 * **Memory Utilization:** The autoscaling is based on the ration of model service's Memory usage and its Memory request. This autoscaling policy is available only on `SERVERLESS` deployment mode.
 * **Model Throughput (RPS):** The autoscaling is based on RPS per replica of the model service. This autoscaling policy is available only on `SERVERLESS` deployment mode.
 * **Concurrency:** The autoscaling is based on number of concurrent request served by a replica of the model service. This autoscaling policy is available only on `SERVERLESS` deployment mode.
