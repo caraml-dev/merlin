@@ -34,21 +34,12 @@ from mlflow.pyfunc import PythonModel
 from mlflow.tracking.client import MlflowClient
 
 import client
-from client import (
-    EndpointApi,
-    EnvironmentApi,
-    ModelEndpointsApi,
-    ModelsApi,
-    SecretApi,
-    VersionApi,
-    VersionImageApi,
-)
+from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
+                    SecretApi, VersionApi, VersionImageApi)
 from merlin import pyfunc
-from merlin.autoscaling import (
-    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-    AutoscalingPolicy,
-)
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+                                AutoscalingPolicy)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
@@ -63,13 +54,9 @@ from merlin.pyfunc import run_pyfunc_local_server
 from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (
-    autostr,
-    download_files_from_gcs,
-    extract_optional_value_with_default,
-    guess_mlp_ui_url,
-    valid_name_check,
-)
+from merlin.util import (autostr, download_files_from_gcs,
+                         extract_optional_value_with_default, guess_mlp_ui_url,
+                         valid_name_check)
 from merlin.validation import validate_model_dir
 from merlin.version_image import VersionImage
 
@@ -1157,7 +1144,7 @@ class ModelVersion:
             if image.existed:
                 break
 
-            sleep(5)
+            sleep(10)
             bar.update()
 
         bar.stop()
