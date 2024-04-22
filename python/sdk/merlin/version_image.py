@@ -13,20 +13,20 @@ class VersionImage:
 
     @property
     def project_id(self) -> int:
-        self._project_id
+        return self._project_id
 
     @property
     def model_id(self) -> int:
-        self._model_id
+        return self._model_id
 
     @property
     def version_id(self) -> int:
-        self._version_id
+        return self._version_id
 
     @property
     def image_ref(self) -> str:
-        self._image_ref
+        return self._image_ref
 
     @property
     def existed(self) -> bool:
-        self._existed
+        return self._existed
