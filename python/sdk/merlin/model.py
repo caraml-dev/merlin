@@ -23,10 +23,17 @@ from sys import version_info
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import client
 import docker
 import mlflow
 import pyprind
+from docker import APIClient
+from docker.models.containers import Container
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
+from mlflow.tracking.client import MlflowClient
+
+import client
 from client import (
     EndpointApi,
     EnvironmentApi,
@@ -34,9 +41,8 @@ from client import (
     ModelsApi,
     SecretApi,
     VersionApi,
+    VersionImageApi,
 )
-from docker import APIClient
-from docker.models.containers import Container
 from merlin import pyfunc
 from merlin.autoscaling import (
     RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
@@ -65,10 +71,7 @@ from merlin.util import (
     valid_name_check,
 )
 from merlin.validation import validate_model_dir
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
-from mlflow.tracking.client import MlflowClient
+from merlin.version_image import VersionImage
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -1114,6 +1117,62 @@ class ModelVersion:
         for ep in ep_list:
             endpoints.append(VersionEndpoint(ep))
         return endpoints
+
+    def build_image(self, resource_request: Optional[ResourceRequest] = None):
+        """
+        Build the Docker image for this model version.
+
+        :param resource_request: The resource requirement (CPU & memory) for image building job.
+
+        :return: VersionImage object
+        """
+        target_resource_request = None
+        if resource_request is not None:
+            target_resource_request = client.ResourceRequest(
+                cpu_request=resource_request.cpu_request,
+                memory_request=resource_request.memory_request,
+            )
+
+        options = client.BuildImageOptions(
+            resource_request=target_resource_request,
+        )
+
+        version_image_api = VersionImageApi(self._api_client)
+        version_image_api.models_model_id_versions_version_id_image_put(
+            model_id=self.model.id,
+            version_id=self.id,
+            body=options,
+        )
+
+        bar = pyprind.ProgBar(
+            100,
+            track_time=True,
+            title=f"Building Docker image for model {self.model.name} version {self.id}",
+        )
+
+        while True:
+            image = version_image_api.models_model_id_versions_version_id_image_get(
+                model_id=self.model.id, version_id=self.id
+            )
+            if image.existed:
+                break
+
+            sleep(5)
+            bar.update()
+
+        bar.stop()
+
+        if image.existed:
+            print(
+                f"Succefully built Docker image for model {self.model.name} version {self.id}."
+                f"\nDocker image ref: {image.image_ref}"
+            )
+        else:
+            print(
+                f"Failed to build Docker image for model {self.model.name} version {self.id}."
+            )
+
+        return VersionImage(image)
 
     def deploy(
         self,

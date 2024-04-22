@@ -63,6 +63,9 @@ log_pytorch_model = merlin.fluent.log_pytorch_model
 log_model = merlin.fluent.log_model
 log_custom_model = merlin.fluent.log_custom_model
 
+# Build image
+build_image = merlin.fluent.build_image
+
 # Model deployment - deploy active model version
 deploy = merlin.fluent.deploy
 undeploy = merlin.fluent.undeploy
@@ -107,6 +110,7 @@ __all__ = [
     "log_pyfunc_model",
     "log_pytorch_model",
     "log_model",
+    "build_image",
     "deploy",
     "undeploy",
     "set_traffic",
