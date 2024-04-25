@@ -87,7 +87,6 @@ func main() {
 		log.Panicf("Failed initializing config: %v", err)
 	}
 
-	// cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
 	environmentConfigs, err := config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
 	if err != nil {
 		log.Panicf("Failed initializing environment configs: %v", err)
@@ -303,6 +302,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	}
 	modelsService := service.NewModelsService(db, mlpAPIClient)
 	versionsService := service.NewVersionsService(db, mlpAPIClient)
+	versionImageService := service.NewVersionImageService(webServiceBuilder, predJobBuilder)
 	environmentService := initEnvironmentService(cfg, db)
 	secretService := service.NewSecretService(mlpAPIClient)
 	deploymentService := service.NewDeploymentService(storage.NewDeploymentStorage(db))
@@ -345,6 +345,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		ModelsService:             modelsService,
 		ModelEndpointsService:     modelEndpointService,
 		VersionsService:           versionsService,
+		VersionImageService:       versionImageService,
 		EndpointsService:          versionEndpointService,
 		LogService:                logService,
 		PredictionJobService:      predictionJobService,

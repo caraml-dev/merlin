@@ -74,6 +74,8 @@ type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
 	// return docker image ref
 	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error)
+	// GetVersionImage gets the Docker image ref for the given model version
+	GetVersionImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) models.VersionImage
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
 	GetMainAppPath(version *models.Version) (string, error)
@@ -183,6 +185,21 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 	}
 
 	return hashedDependenciesUrl, nil
+}
+
+func (c *imageBuilder) GetVersionImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) models.VersionImage {
+	imageName := c.nameGenerator.generateDockerImageName(project, model)
+	imageRef := c.imageRef(project, model, version)
+	imageExists := c.imageExists(imageName, version.ID.String())
+
+	versionImage := models.VersionImage{
+		ProjectID: models.ID(project.ID),
+		ModelID:   model.ID,
+		VersionID: version.ID,
+		ImageRef:  imageRef,
+		Exists:    imageExists,
+	}
+	return versionImage
 }
 
 // BuildImage build a docker image for the given model version
