@@ -69,6 +69,12 @@ jobs:
       - name: Run batch-predictor test
         working-directory: ./python/batch-predictor
         run: make unit-test
+      - uses: codecov/codecov-action@v4
+        with:
+          flags: batch-predictor-test
+          name: batch-predictor-test
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: ./python/batch-predictor
 
   test-pyfunc-server:
     runs-on: ubuntu-latest
@@ -101,6 +107,12 @@ jobs:
       - name: Run pyfunc-server test
         working-directory: ./python/pyfunc-server
         run: make test
+      - uses: codecov/codecov-action@v4
+        with:
+          flags: pyfunc-server-test
+          name: pyfunc-server-test
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: ./python/pyfunc-server
 
   test-python-sdk:
     runs-on: ubuntu-latest
@@ -135,6 +147,12 @@ jobs:
           E2E_USE_GOOGLE_OAUTH: false
         working-directory: ./python/sdk
         run: make unit-test
+      - uses: codecov/codecov-action@v4
+        with:
+          flags: sdk-test
+          name: sdk-test
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: ./python/sdk
 
   lint-api:
     runs-on: ubuntu-latest
@@ -190,7 +208,7 @@ jobs:
           flags: api-test
           name: api-test
           token: ${{ secrets.CODECOV_TOKEN }}
-          working-directory: api
+          working-directory: ./api
 
   test-observation-publisher:
     runs-on: ubuntu-latest
@@ -213,6 +231,12 @@ jobs:
       - name: Unit test observation publisher
         working-directory: ./python/observation-publisher
         run: make test
+      - uses: codecov/codecov-action@v4
+        with:
+          flags: mlobs-publisher-test
+          name: mlobs-publisher-test
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: ./python/observation-publisher
 
   build-ui:
     runs-on: ubuntu-latest

@@ -52,7 +52,7 @@ func TestVersionImageController_GetImage(t *testing.T) {
 						ModelID:   1,
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
-						Existed:   true,
+						Exists:    true,
 					}, nil)
 				return svc
 			},
@@ -63,7 +63,7 @@ func TestVersionImageController_GetImage(t *testing.T) {
 					ModelID:   1,
 					VersionID: 1,
 					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
-					Existed:   true,
+					Exists:    true,
 				},
 			},
 		},
@@ -141,7 +141,7 @@ func TestVersionImageController_GetImage(t *testing.T) {
 						ModelID:   1,
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
-						Existed:   true,
+						Exists:    true,
 					}, nil)
 				return svc
 			},

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -35,7 +36,7 @@ func Test_versionImageService_GetImage(t *testing.T) {
 						ModelID:   1,
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
-						Existed:   true,
+						Exists:    true,
 					}, nil)
 				return ib
 			},
@@ -57,9 +58,39 @@ func Test_versionImageService_GetImage(t *testing.T) {
 				ModelID:   1,
 				VersionID: 1,
 				ImageRef:  "ghcr.io/caraml-dev/project-model:1",
-				Existed:   true,
+				Exists:    true,
 			},
 			wantErr: false,
+		},
+		{
+			name: "invalid model type",
+			imageBuilder: func() *mocks.ImageBuilder {
+				ib := &mocks.ImageBuilder{}
+				ib.On("GetVersionImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(models.VersionImage{
+						ProjectID: 1,
+						ModelID:   1,
+						VersionID: 1,
+						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
+						Exists:    true,
+					}, nil)
+				return ib
+			},
+			args: args{
+				ctx: context.Background(),
+				model: &models.Model{
+					ID: 1,
+					Project: mlp.Project{
+						ID: 1,
+					},
+					Type: models.ModelTypeXgboost,
+				},
+				version: &models.Version{
+					ID: 1,
+				},
+			},
+			want:    models.VersionImage{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -107,7 +138,7 @@ func Test_versionImageService_BuildImage(t *testing.T) {
 					Project: mlp.Project{
 						ID: 1,
 					},
-					Type: models.ModelTypePyFunc,
+					Type: models.ModelTypePyFuncV2,
 				},
 				version: &models.Version{
 					ID: 1,
@@ -121,6 +152,66 @@ func Test_versionImageService_BuildImage(t *testing.T) {
 			},
 			want:    "ghcr.io/caraml-dev/project-model:1",
 			wantErr: false,
+		},
+		{
+			name: "invalid model type",
+			imageBuilder: func() *mocks.ImageBuilder {
+				ib := &mocks.ImageBuilder{}
+				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return("ghcr.io/caraml-dev/project-model:1", nil)
+				return ib
+			},
+			args: args{
+				ctx: context.Background(),
+				model: &models.Model{
+					ID: 1,
+					Project: mlp.Project{
+						ID: 1,
+					},
+					Type: models.ModelTypeXgboost,
+				},
+				version: &models.Version{
+					ID: 1,
+				},
+				options: &models.BuildImageOptions{
+					ResourceRequest: &models.ResourceRequest{
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+				},
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "failed building image",
+			imageBuilder: func() *mocks.ImageBuilder {
+				ib := &mocks.ImageBuilder{}
+				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return("", fmt.Errorf("error building image: timeout"))
+				return ib
+			},
+			args: args{
+				ctx: context.Background(),
+				model: &models.Model{
+					ID: 1,
+					Project: mlp.Project{
+						ID: 1,
+					},
+					Type: models.ModelTypePyFuncV2,
+				},
+				version: &models.Version{
+					ID: 1,
+				},
+				options: &models.BuildImageOptions{
+					ResourceRequest: &models.ResourceRequest{
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+				},
+			},
+			want:    "",
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

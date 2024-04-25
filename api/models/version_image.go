@@ -9,5 +9,5 @@ type VersionImage struct {
 	ModelID   ID     `json:"model_id"`
 	VersionID ID     `json:"version_id"`
 	ImageRef  string `json:"image_ref"`
-	Existed   bool   `json:"existed"`
+	Exists    bool   `json:"exists"`
 }
