@@ -197,7 +197,7 @@ func (c *imageBuilder) GetVersionImage(ctx context.Context, project mlp.Project,
 		ModelID:   model.ID,
 		VersionID: version.ID,
 		ImageRef:  imageRef,
-		Existed:   imageExists,
+		Exists:    imageExists,
 	}
 	return versionImage
 }
