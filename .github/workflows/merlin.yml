@@ -185,6 +185,12 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: make it-test-api-ci
+      - uses: codecov/codecov-action@v4
+        with:
+          flags: api-test
+          name: api-test
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: api
 
   test-observation-publisher:
     runs-on: ubuntu-latest
