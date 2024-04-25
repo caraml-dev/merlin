@@ -23,19 +23,14 @@ from sys import version_info
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import client
 import docker
 import mlflow
 import pyprind
-from docker import APIClient
-from docker.models.containers import Container
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
-from mlflow.tracking.client import MlflowClient
-
-import client
 from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
                     SecretApi, VersionApi, VersionImageApi)
+from docker import APIClient
+from docker.models.containers import Container
 from merlin import pyfunc
 from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
                                 SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
@@ -59,6 +54,10 @@ from merlin.util import (autostr, download_files_from_gcs,
                          valid_name_check)
 from merlin.validation import validate_model_dir
 from merlin.version_image import VersionImage
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
+from mlflow.tracking.client import MlflowClient
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -1141,7 +1140,7 @@ class ModelVersion:
             image = version_image_api.models_model_id_versions_version_id_image_get(
                 model_id=self.model.id, version_id=self.id
             )
-            if image.existed:
+            if image.exists:
                 break
 
             sleep(10)
@@ -1149,7 +1148,7 @@ class ModelVersion:
 
         bar.stop()
 
-        if image.existed:
+        if image.exists:
             print(
                 f"Succefully built Docker image for model {self.model.name} version {self.id}."
                 f"\nDocker image ref: {image.image_ref}"

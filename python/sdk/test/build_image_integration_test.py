@@ -1,9 +1,8 @@
 from test.batch_integration_test import IrisClassifier
 from test.pyfunc_integration_test import EnvVarModel
 
-import pytest
-
 import merlin
+import pytest
 from merlin.model import ModelType
 
 
@@ -24,7 +23,7 @@ def test_build_image_pyfunc(integration_test_url, project_name, use_google_oauth
         )
 
     image = merlin.build_image(v)
-    assert image.existed == True
+    assert image.exists == True
 
 
 @pytest.mark.build_image
@@ -44,4 +43,4 @@ def test_build_image_batch(integration_test_url, project_name, use_google_oauth)
         )
 
     image = merlin.build_image(v)
-    assert image.existed == True
+    assert image.exists == True

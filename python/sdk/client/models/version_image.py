@@ -33,8 +33,8 @@ class VersionImage(BaseModel):
     model_id: Optional[StrictInt] = None
     version_id: Optional[StrictInt] = None
     image_ref: Optional[StrictStr] = None
-    existed: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["project_id", "model_id", "version_id", "image_ref", "existed"]
+    exists: Optional[StrictBool] = None
+    __properties: ClassVar[List[str]] = ["project_id", "model_id", "version_id", "image_ref", "exists"]
 
     model_config = {
         "populate_by_name": True,
@@ -88,7 +88,7 @@ class VersionImage(BaseModel):
             "model_id": obj.get("model_id"),
             "version_id": obj.get("version_id"),
             "image_ref": obj.get("image_ref"),
-            "existed": obj.get("existed")
+            "exists": obj.get("exists")
         })
         return _obj
 

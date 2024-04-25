@@ -570,8 +570,14 @@ paths:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/VersionImage"
+        '400':
+          description: Invalid model type
+          content: {}
         '404':
-          description: Version with given `version_id` not found
+          description: Model or Model Version not found
+          content: {}
+        '500':
+          description: Internal server error when getting image
           content: {}
     put:
       tags:
@@ -597,8 +603,11 @@ paths:
       responses:
         '202':
           description: Accepted
+        '400':
+          description: Invalid model type
+          content: {}
         '404':
-          description: Version with given `version_id` not found
+          description: Model or Model Version not found
           content: {}
       x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}":
@@ -1849,7 +1858,7 @@ components:
           format: int32
         image_ref:
           type: string
-        existed:
+        exists:
           type: boolean
     BuildImageOptions:
       type: object

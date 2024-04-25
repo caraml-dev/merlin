@@ -106,7 +106,9 @@ class VersionImageApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "VersionImage",
-            '404': None
+            '400': None,
+            '404': None,
+            '500': None
             
         }
         response_data = self.api_client.call_api(
@@ -178,7 +180,9 @@ class VersionImageApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "VersionImage",
-            '404': None
+            '400': None,
+            '404': None,
+            '500': None
             
         }
         response_data = self.api_client.call_api(
@@ -250,7 +254,9 @@ class VersionImageApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "VersionImage",
-            '404': None
+            '400': None,
+            '404': None,
+            '500': None
             
         }
         response_data = self.api_client.call_api(

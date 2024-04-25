@@ -11,7 +11,7 @@ class VersionImage:
         self._model_id = image.model_id
         self._version_id = image.version_id
         self._image_ref = image.image_ref
-        self._existed = image.existed
+        self._exists = image.exists
 
     @property
     def project_id(self) -> Optional[int]:
@@ -30,5 +30,5 @@ class VersionImage:
         return self._image_ref
 
     @property
-    def existed(self) -> Optional[bool]:
-        return self._existed
+    def exists(self) -> Optional[bool]:
+        return self._exists

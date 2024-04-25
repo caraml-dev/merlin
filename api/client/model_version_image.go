@@ -23,7 +23,7 @@ type VersionImage struct {
 	ModelId   *int32  `json:"model_id,omitempty"`
 	VersionId *int32  `json:"version_id,omitempty"`
 	ImageRef  *string `json:"image_ref,omitempty"`
-	Existed   *bool   `json:"existed,omitempty"`
+	Exists    *bool   `json:"exists,omitempty"`
 }
 
 // NewVersionImage instantiates a new VersionImage object
@@ -171,36 +171,36 @@ func (o *VersionImage) SetImageRef(v string) {
 	o.ImageRef = &v
 }
 
-// GetExisted returns the Existed field value if set, zero value otherwise.
-func (o *VersionImage) GetExisted() bool {
-	if o == nil || IsNil(o.Existed) {
+// GetExists returns the Exists field value if set, zero value otherwise.
+func (o *VersionImage) GetExists() bool {
+	if o == nil || IsNil(o.Exists) {
 		var ret bool
 		return ret
 	}
-	return *o.Existed
+	return *o.Exists
 }
 
-// GetExistedOk returns a tuple with the Existed field value if set, nil otherwise
+// GetExistsOk returns a tuple with the Exists field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *VersionImage) GetExistedOk() (*bool, bool) {
-	if o == nil || IsNil(o.Existed) {
+func (o *VersionImage) GetExistsOk() (*bool, bool) {
+	if o == nil || IsNil(o.Exists) {
 		return nil, false
 	}
-	return o.Existed, true
+	return o.Exists, true
 }
 
-// HasExisted returns a boolean if a field has been set.
-func (o *VersionImage) HasExisted() bool {
-	if o != nil && !IsNil(o.Existed) {
+// HasExists returns a boolean if a field has been set.
+func (o *VersionImage) HasExists() bool {
+	if o != nil && !IsNil(o.Exists) {
 		return true
 	}
 
 	return false
 }
 
-// SetExisted gets a reference to the given bool and assigns it to the Existed field.
-func (o *VersionImage) SetExisted(v bool) {
-	o.Existed = &v
+// SetExists gets a reference to the given bool and assigns it to the Exists field.
+func (o *VersionImage) SetExists(v bool) {
+	o.Exists = &v
 }
 
 func (o VersionImage) MarshalJSON() ([]byte, error) {
@@ -225,8 +225,8 @@ func (o VersionImage) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.ImageRef) {
 		toSerialize["image_ref"] = o.ImageRef
 	}
-	if !IsNil(o.Existed) {
-		toSerialize["existed"] = o.Existed
+	if !IsNil(o.Exists) {
+		toSerialize["exists"] = o.Exists
 	}
 	return toSerialize, nil
 }
