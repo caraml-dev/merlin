@@ -29,6 +29,7 @@ from client.models.environment import Environment
 from client.models.file_format import FileFormat
 from client.models.gpu_config import GPUConfig
 from client.models.gpu_toleration import GPUToleration
+from client.models.image_building_job_status import ImageBuildingJobStatus
 from client.models.label import Label
 from client.models.logger import Logger
 from client.models.logger_config import LoggerConfig

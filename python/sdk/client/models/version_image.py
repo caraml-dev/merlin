@@ -20,6 +20,7 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictBool, StrictInt, StrictStr
+from client.models.image_building_job_status import ImageBuildingJobStatus
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +35,8 @@ class VersionImage(BaseModel):
     version_id: Optional[StrictInt] = None
     image_ref: Optional[StrictStr] = None
     exists: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["project_id", "model_id", "version_id", "image_ref", "exists"]
+    image_building_job_status: Optional[ImageBuildingJobStatus] = None
+    __properties: ClassVar[List[str]] = ["project_id", "model_id", "version_id", "image_ref", "exists", "image_building_job_status"]
 
     model_config = {
         "populate_by_name": True,
@@ -88,7 +90,8 @@ class VersionImage(BaseModel):
             "model_id": obj.get("model_id"),
             "version_id": obj.get("version_id"),
             "image_ref": obj.get("image_ref"),
-            "exists": obj.get("exists")
+            "exists": obj.get("exists"),
+            "image_building_job_status": obj.get("image_building_job_status")
         })
         return _obj
 

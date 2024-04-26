@@ -23,18 +23,32 @@ from sys import version_info
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import client
 import docker
 import mlflow
 import pyprind
-from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
-                    SecretApi, VersionApi, VersionImageApi)
 from docker import APIClient
 from docker.models.containers import Container
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
+from mlflow.tracking.client import MlflowClient
+
+import client
+from client import (
+    EndpointApi,
+    EnvironmentApi,
+    ModelEndpointsApi,
+    ModelsApi,
+    SecretApi,
+    VersionApi,
+    VersionImageApi,
+)
 from merlin import pyfunc
-from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-                                AutoscalingPolicy)
+from merlin.autoscaling import (
+    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+    AutoscalingPolicy,
+)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
@@ -49,15 +63,15 @@ from merlin.pyfunc import run_pyfunc_local_server
 from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (autostr, download_files_from_gcs,
-                         extract_optional_value_with_default, guess_mlp_ui_url,
-                         valid_name_check)
+from merlin.util import (
+    autostr,
+    download_files_from_gcs,
+    extract_optional_value_with_default,
+    guess_mlp_ui_url,
+    valid_name_check,
+)
 from merlin.validation import validate_model_dir
 from merlin.version_image import VersionImage
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
-from mlflow.tracking.client import MlflowClient
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -1135,16 +1149,22 @@ class ModelVersion:
             track_time=True,
             title=f"Building Docker image for model {self.model.name} version {self.id}",
         )
+        bar.update()
+        sleep(10)
 
         while True:
             image = version_image_api.models_model_id_versions_version_id_image_get(
                 model_id=self.model.id, version_id=self.id
             )
+
             if image.exists:
                 break
 
-            sleep(10)
+            if image.image_building_job_status != "active":
+                break
+
             bar.update()
+            sleep(10)
 
         bar.stop()
 

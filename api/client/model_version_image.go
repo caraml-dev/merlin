@@ -19,11 +19,12 @@ var _ MappedNullable = &VersionImage{}
 
 // VersionImage struct for VersionImage
 type VersionImage struct {
-	ProjectId *int32  `json:"project_id,omitempty"`
-	ModelId   *int32  `json:"model_id,omitempty"`
-	VersionId *int32  `json:"version_id,omitempty"`
-	ImageRef  *string `json:"image_ref,omitempty"`
-	Exists    *bool   `json:"exists,omitempty"`
+	ProjectId              *int32                  `json:"project_id,omitempty"`
+	ModelId                *int32                  `json:"model_id,omitempty"`
+	VersionId              *int32                  `json:"version_id,omitempty"`
+	ImageRef               *string                 `json:"image_ref,omitempty"`
+	Exists                 *bool                   `json:"exists,omitempty"`
+	ImageBuildingJobStatus *ImageBuildingJobStatus `json:"image_building_job_status,omitempty"`
 }
 
 // NewVersionImage instantiates a new VersionImage object
@@ -203,6 +204,38 @@ func (o *VersionImage) SetExists(v bool) {
 	o.Exists = &v
 }
 
+// GetImageBuildingJobStatus returns the ImageBuildingJobStatus field value if set, zero value otherwise.
+func (o *VersionImage) GetImageBuildingJobStatus() ImageBuildingJobStatus {
+	if o == nil || IsNil(o.ImageBuildingJobStatus) {
+		var ret ImageBuildingJobStatus
+		return ret
+	}
+	return *o.ImageBuildingJobStatus
+}
+
+// GetImageBuildingJobStatusOk returns a tuple with the ImageBuildingJobStatus field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *VersionImage) GetImageBuildingJobStatusOk() (*ImageBuildingJobStatus, bool) {
+	if o == nil || IsNil(o.ImageBuildingJobStatus) {
+		return nil, false
+	}
+	return o.ImageBuildingJobStatus, true
+}
+
+// HasImageBuildingJobStatus returns a boolean if a field has been set.
+func (o *VersionImage) HasImageBuildingJobStatus() bool {
+	if o != nil && !IsNil(o.ImageBuildingJobStatus) {
+		return true
+	}
+
+	return false
+}
+
+// SetImageBuildingJobStatus gets a reference to the given ImageBuildingJobStatus and assigns it to the ImageBuildingJobStatus field.
+func (o *VersionImage) SetImageBuildingJobStatus(v ImageBuildingJobStatus) {
+	o.ImageBuildingJobStatus = &v
+}
+
 func (o VersionImage) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -227,6 +260,9 @@ func (o VersionImage) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Exists) {
 		toSerialize["exists"] = o.Exists
+	}
+	if !IsNil(o.ImageBuildingJobStatus) {
+		toSerialize["image_building_job_status"] = o.ImageBuildingJobStatus
 	}
 	return toSerialize, nil
 }
