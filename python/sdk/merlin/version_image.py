@@ -1,7 +1,15 @@
+from enum import Enum
 from typing import Optional
 
 import client
 from merlin.util import autostr
+
+
+class ImageBuildingJobStatus(Enum):
+    ACTIVE = "active"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
 
 
 @autostr
@@ -35,5 +43,5 @@ class VersionImage:
         return self._exists
 
     @property
-    def image_building_job_status(self) -> Optional[bool]:
+    def image_building_job_status(self) -> Optional[ImageBuildingJobStatus]:
         return self._image_building_job_status
