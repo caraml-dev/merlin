@@ -21,10 +21,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/storage"
+	cfg "github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	"github.com/caraml-dev/mlp/api/pkg/artifact/mocks"
 	"github.com/stretchr/testify/assert"
@@ -42,10 +46,6 @@ import (
 	fakebatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
-
-	cfg "github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/mlp"
-	"github.com/caraml-dev/merlin/models"
 )
 
 const (
@@ -1863,6 +1863,145 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("imageBuilder.getHashedModelDependenciesUrl() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
+	config := Config{
+		BuildNamespace: testBuildNamespace,
+	}
+
+	type args struct {
+		ctx     context.Context
+		project mlp.Project
+		model   *models.Model
+		version *models.Version
+	}
+	tests := []struct {
+		name       string
+		config     Config
+		args       args
+		mockGetJob func(action ktesting.Action) (handled bool, ret runtime.Object, err error)
+		want       models.ImageBuildingJobStatus
+		wantErr    bool
+	}{
+		{
+			name: "succeeded",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				job := &batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Namespace: config.BuildNamespace,
+					},
+					Status: batchv1.JobStatus{
+						Succeeded: 1,
+					},
+				}
+				return true, job, nil
+			},
+			want:    models.ImageBuildingJobStatusSucceeded,
+			wantErr: false,
+		},
+		{
+			name: "failed",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				job := &batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Namespace: config.BuildNamespace,
+					},
+					Status: batchv1.JobStatus{
+						Failed: 1,
+					},
+				}
+				return true, job, nil
+			},
+			want:    models.ImageBuildingJobStatusFailed,
+			wantErr: false,
+		},
+		{
+			name: "active",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				job := &batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Namespace: config.BuildNamespace,
+					},
+					Status: batchv1.JobStatus{
+						Active: 1,
+					},
+				}
+				return true, job, nil
+			},
+			want:    models.ImageBuildingJobStatusActive,
+			wantErr: false,
+		},
+		{
+			name: "error when getting job",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, nil, fmt.Errorf("timeout")
+			},
+			want:    models.ImageBuildingJobStatusUnknown,
+			wantErr: true,
+		},
+		{
+			name: "unknown",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				job := &batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Namespace: config.BuildNamespace,
+					},
+				}
+				return true, job, nil
+			},
+			want:    models.ImageBuildingJobStatusUnknown,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kubeClient := fake.NewSimpleClientset()
+
+			jobClient := kubeClient.BatchV1().Jobs(tt.config.BuildNamespace).(*fakebatchv1.FakeJobs)
+			jobClient.Fake.PrependReactor("get", "jobs", tt.mockGetJob)
+
+			c := NewModelServiceImageBuilder(kubeClient, config, nil)
+
+			got, err := c.GetImageBuildingJobStatus(tt.args.ctx, tt.args.project, tt.args.model, tt.args.version)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("imageBuilder.GetImageBuildingJobStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("imageBuilder.GetImageBuildingJobStatus() = %v, want %v", got, tt.want)
 			}
 		})
 	}
