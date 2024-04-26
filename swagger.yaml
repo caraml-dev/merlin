@@ -1860,6 +1860,15 @@ components:
           type: string
         exists:
           type: boolean
+        image_building_job_status:
+          "$ref": "#/components/schemas/ImageBuildingJobStatus"
+    ImageBuildingJobStatus:
+      type: string
+      enum:
+      - active
+      - succeeded
+      - failed
+      - unknown
     BuildImageOptions:
       type: object
       properties:

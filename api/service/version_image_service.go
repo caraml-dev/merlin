@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/imagebuilder"
 )
@@ -43,6 +44,13 @@ func (s *versionImageService) GetImage(ctx context.Context, model *models.Model,
 	}
 
 	versionImage := imageBuilder.GetVersionImage(ctx, model.Project, model, version)
+
+	jobStatus, err := imageBuilder.GetImageBuildingJobStatus(ctx, model.Project, model, version)
+	if err != nil {
+		log.Errorf("error getting image building job status: %v", err)
+	}
+	versionImage.JobStatus = jobStatus
+
 	return versionImage, nil
 }
 

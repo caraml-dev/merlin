@@ -79,6 +79,7 @@ type ImageBuilder interface {
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
 	GetMainAppPath(version *models.Version) (string, error)
+	GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (models.ImageBuildingJobStatus, error)
 }
 
 type nameGenerator interface {
@@ -717,4 +718,28 @@ func (c *imageBuilder) createKanikoJobSpec(
 		job.Spec.Template.Spec.ServiceAccountName = c.config.KanikoServiceAccount
 	}
 	return job, nil
+}
+
+func (c *imageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (models.ImageBuildingJobStatus, error) {
+	kanikoJobName := c.nameGenerator.generateBuilderJobName(project, model, version)
+
+	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
+	job, err := jobClient.Get(ctx, kanikoJobName, metav1.GetOptions{})
+	if err != nil {
+		return models.ImageBuildingJobStatusUnknown, err
+	}
+
+	if job.Status.Active != 0 {
+		return models.ImageBuildingJobStatusActive, nil
+	}
+
+	if job.Status.Succeeded != 0 {
+		return models.ImageBuildingJobStatusSucceeded, nil
+	}
+
+	if job.Status.Failed != 0 {
+		return models.ImageBuildingJobStatusFailed, nil
+	}
+
+	return models.ImageBuildingJobStatusUnknown, nil
 }

@@ -67,6 +67,30 @@ func (_m *ImageBuilder) GetContainers(ctx context.Context, project mlp.Project, 
 	return r0, r1
 }
 
+// GetImageBuildingJobStatus provides a mock function with given fields: ctx, project, model, version
+func (_m *ImageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (models.ImageBuildingJobStatus, error) {
+	ret := _m.Called(ctx, project, model, version)
+
+	var r0 models.ImageBuildingJobStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version) (models.ImageBuildingJobStatus, error)); ok {
+		return rf(ctx, project, model, version)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version) models.ImageBuildingJobStatus); ok {
+		r0 = rf(ctx, project, model, version)
+	} else {
+		r0 = ret.Get(0).(models.ImageBuildingJobStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, mlp.Project, *models.Model, *models.Version) error); ok {
+		r1 = rf(ctx, project, model, version)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMainAppPath provides a mock function with given fields: version
 func (_m *ImageBuilder) GetMainAppPath(version *models.Version) (string, error) {
 	ret := _m.Called(version)
