@@ -1167,7 +1167,10 @@ class ModelVersion:
             if image.exists:
                 break
 
-            if image.image_building_job_status.state != "active":
+            if (
+                image.image_building_job_status is not None
+                and image.image_building_job_status.state != "active"
+            ):
                 break
 
             bar.update()
@@ -1181,9 +1184,13 @@ class ModelVersion:
             )
         else:
             print(
-                f"Failed to build Docker image for model {self.model.name} version {self.id}:"
-                f"\n\n{image.image_building_job_status.message}"
+                f"Failed to build Docker image for model {self.model.name} version {self.id}"
             )
+            if (
+                image.image_building_job_status is not None
+                and image.image_building_job_status.message != ""
+            ):
+                print(f"{image.image_building_job_status.message}")
 
         return VersionImage(image)
 

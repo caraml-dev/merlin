@@ -34,9 +34,10 @@ class VersionImage:
         self._version_id = image.version_id
         self._image_ref = image.image_ref
         self._exists = image.exists
-        self._image_building_job_status = ImageBuildingJobStatus(
-            image.image_building_job_status
-        )
+        if image.image_building_job_status is not None:
+            self._image_building_job_status = ImageBuildingJobStatus(
+                image.image_building_job_status
+            )
 
     @property
     def project_id(self) -> Optional[int]:
@@ -59,5 +60,5 @@ class VersionImage:
         return self._exists
 
     @property
-    def image_building_job_status(self) -> Optional[ImageBuildingJobState]:
+    def image_building_job_status(self) -> Optional[ImageBuildingJobStatus]:
         return self._image_building_job_status
