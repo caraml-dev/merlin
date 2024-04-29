@@ -145,6 +145,7 @@ Class | Method | HTTP request | Description
  - [FileFormat](client/docs/FileFormat.md)
  - [GPUConfig](client/docs/GPUConfig.md)
  - [GPUToleration](client/docs/GPUToleration.md)
+ - [ImageBuildingJobState](client/docs/ImageBuildingJobState.md)
  - [ImageBuildingJobStatus](client/docs/ImageBuildingJobStatus.md)
  - [Label](client/docs/Label.md)
  - [Logger](client/docs/Logger.md)

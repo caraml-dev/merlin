@@ -74,6 +74,9 @@ class VersionImage(BaseModel):
             },
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of image_building_job_status
+        if self.image_building_job_status:
+            _dict['image_building_job_status'] = self.image_building_job_status.to_dict()
         return _dict
 
     @classmethod
@@ -91,7 +94,7 @@ class VersionImage(BaseModel):
             "version_id": obj.get("version_id"),
             "image_ref": obj.get("image_ref"),
             "exists": obj.get("exists"),
-            "image_building_job_status": obj.get("image_building_job_status")
+            "image_building_job_status": ImageBuildingJobStatus.from_dict(obj.get("image_building_job_status")) if obj.get("image_building_job_status") is not None else None
         })
         return _obj
 

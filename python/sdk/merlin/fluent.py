@@ -353,21 +353,23 @@ def log_custom_model(
 
 def build_image(
     model_version: ModelVersion = None,
+    backoff_limit: int = 0,
     resource_request: ResourceRequest = None,
 ) -> VersionImage:
     """
     Build image for a model version
 
     :param model_version: If model_version is not given it will build image for active model version
+    :param backoff_limit: The maximum number of retries before considering a job as failed.
     :param resource_request: The resource requirement (CPU & memory) for image builder job.
     :return: VersionImage
     """
     _check_active_client()
     if model_version is None:
         _check_active_model_version()
-        return _active_model_version.build_image(resource_request)  # type: ignore
+        return _active_model_version.build_image(backoff_limit=backoff_limit, resource_request=resource_request)  # type: ignore
 
-    return _merlin_client.build_image(model_version, resource_request)  # type: ignore
+    return _merlin_client.build_image(model_version=model_version, backoff_limit=backoff_limit, resource_request=resource_request)  # type: ignore
 
 
 def deploy(

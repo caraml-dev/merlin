@@ -53,7 +53,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 						Exists:    true,
-						JobStatus: models.ImageBuildingJobStatusSucceeded,
+						JobStatus: models.ImageBuildingJobStatus{
+							State: models.ImageBuildingJobStateSucceeded,
+						},
 					}, nil)
 				return svc
 			},
@@ -65,7 +67,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 					VersionID: 1,
 					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 					Exists:    true,
-					JobStatus: models.ImageBuildingJobStatusSucceeded,
+					JobStatus: models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateSucceeded,
+					},
 				},
 			},
 		},
@@ -101,7 +105,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 						Exists:    true,
-						JobStatus: models.ImageBuildingJobStatusUnknown,
+						JobStatus: models.ImageBuildingJobStatus{
+							State: models.ImageBuildingJobStateUnknown,
+						},
 					}, nil)
 				return svc
 			},
@@ -113,7 +119,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 					VersionID: 1,
 					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 					Exists:    true,
-					JobStatus: models.ImageBuildingJobStatusUnknown,
+					JobStatus: models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateUnknown,
+					},
 				},
 			},
 		},
@@ -149,7 +157,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 						Exists:    false,
-						JobStatus: models.ImageBuildingJobStatusActive,
+						JobStatus: models.ImageBuildingJobStatus{
+							State: models.ImageBuildingJobStateActive,
+						},
 					}, nil)
 				return svc
 			},
@@ -161,7 +171,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 					VersionID: 1,
 					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 					Exists:    false,
-					JobStatus: models.ImageBuildingJobStatusActive,
+					JobStatus: models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateActive,
+					},
 				},
 			},
 		},

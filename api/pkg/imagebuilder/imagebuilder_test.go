@@ -270,6 +270,7 @@ func TestBuildImage(t *testing.T) {
 		model           *models.Model
 		version         *models.Version
 		resourceRequest *models.ResourceRequest
+		backoffLimit    *int32
 	}
 
 	tests := []struct {
@@ -1520,7 +1521,7 @@ func TestBuildImage(t *testing.T) {
 
 			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, artifactServiceMock)
 
-			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version, tt.args.resourceRequest)
+			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version, tt.args.resourceRequest, tt.args.backoffLimit)
 			var actions []ktesting.Action
 			assert.NoError(t, err)
 			assert.Equal(t, tt.wantImageRef, imageRef)
@@ -1880,12 +1881,13 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 		version *models.Version
 	}
 	tests := []struct {
-		name       string
-		config     Config
-		args       args
-		mockGetJob func(action ktesting.Action) (handled bool, ret runtime.Object, err error)
-		want       models.ImageBuildingJobStatus
-		wantErr    bool
+		name         string
+		config       Config
+		args         args
+		mockGetJob   func(action ktesting.Action) (handled bool, ret runtime.Object, err error)
+		mockListPods func(action ktesting.Action) (handled bool, ret runtime.Object, err error)
+		want         models.ImageBuildingJobStatus
+		wantErr      bool
 	}{
 		{
 			name: "succeeded",
@@ -1906,29 +1908,9 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 				}
 				return true, job, nil
 			},
-			want:    models.ImageBuildingJobStatusSucceeded,
-			wantErr: false,
-		},
-		{
-			name: "failed",
-			args: args{
-				project: project,
-				model:   model,
-				version: modelVersion,
+			want: models.ImageBuildingJobStatus{
+				State: models.ImageBuildingJobStateSucceeded,
 			},
-			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-				job := &batchv1.Job{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-						Namespace: config.BuildNamespace,
-					},
-					Status: batchv1.JobStatus{
-						Failed: 1,
-					},
-				}
-				return true, job, nil
-			},
-			want:    models.ImageBuildingJobStatusFailed,
 			wantErr: false,
 		},
 		{
@@ -1950,24 +1932,13 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 				}
 				return true, job, nil
 			},
-			want:    models.ImageBuildingJobStatusActive,
+			want: models.ImageBuildingJobStatus{
+				State: models.ImageBuildingJobStateActive,
+			},
 			wantErr: false,
 		},
 		{
-			name: "error when getting job",
-			args: args{
-				project: project,
-				model:   model,
-				version: modelVersion,
-			},
-			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, nil, fmt.Errorf("timeout")
-			},
-			want:    models.ImageBuildingJobStatusUnknown,
-			wantErr: true,
-		},
-		{
-			name: "unknown",
+			name: "failed",
 			args: args{
 				project: project,
 				model:   model,
@@ -1979,10 +1950,91 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 						Namespace: config.BuildNamespace,
 					},
+					Status: batchv1.JobStatus{
+						Failed: 1,
+						Conditions: []batchv1.JobCondition{
+							{
+								LastProbeTime: metav1.Date(2024, 4, 29, 0o0, 0o0, 0o0, 0, time.UTC),
+								Type:          batchv1.JobFailed,
+								Reason:        "BackoffLimitExceeded",
+								Message:       "Job has reached the specified backoff limit",
+							},
+						},
+					},
 				}
 				return true, job, nil
 			},
-			want:    models.ImageBuildingJobStatusUnknown,
+			mockListPods: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				pod := &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: fmt.Sprintf("%s-%s-%s-1", project.Name, model.Name, modelVersion.ID),
+						Labels: map[string]string{
+							"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						},
+					},
+					Status: v1.PodStatus{
+						Phase: v1.PodFailed,
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: containerName,
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 1,
+										Reason:   "Error",
+										Message:  "CondaEnvException: Pip failed",
+									},
+								},
+							},
+						},
+					},
+				}
+				return true, &v1.PodList{
+					Items: []v1.Pod{*pod},
+				}, nil
+			},
+			want: models.ImageBuildingJobStatus{
+				State: models.ImageBuildingJobStateFailed,
+				Message: `Error
+
+Job conditions:
+┌───────────────────────────────┬────────┬──────────────────────┬─────────────────────────────────────────────┐
+│ TIMESTAMP                     │ TYPE   │ REASON               │ MESSAGE                                     │
+├───────────────────────────────┼────────┼──────────────────────┼─────────────────────────────────────────────┤
+│ Mon, 29 Apr 2024 00:00:00 UTC │ Failed │ BackoffLimitExceeded │ Job has reached the specified backoff limit │
+└───────────────────────────────┴────────┴──────────────────────┴─────────────────────────────────────────────┘
+
+Pod container status:
+┌──────────────────────┬────────────┬───────────┬────────┐
+│ CONTAINER NAME       │ STATUS     │ EXIT CODE │ REASON │
+├──────────────────────┼────────────┼───────────┼────────┤
+│ pyfunc-image-builder │ Terminated │ 1         │ Error  │
+└──────────────────────┴────────────┴───────────┴────────┘
+
+Pod last termination message:
+CondaEnvException: Pip failed`,
+			},
+			wantErr: false,
+		},
+		{
+			name: "unknown",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				job := &batchv1.Job{}
+				return true, job, nil
+			},
+			mockListPods: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				pod := &v1.Pod{}
+				return true, &v1.PodList{
+					Items: []v1.Pod{*pod},
+				}, nil
+			},
+			want: models.ImageBuildingJobStatus{
+				State: models.ImageBuildingJobStateUnknown,
+			},
 			wantErr: false,
 		},
 	}
@@ -1992,14 +2044,11 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 
 			jobClient := kubeClient.BatchV1().Jobs(tt.config.BuildNamespace).(*fakebatchv1.FakeJobs)
 			jobClient.Fake.PrependReactor("get", "jobs", tt.mockGetJob)
+			jobClient.Fake.PrependReactor("list", "pods", tt.mockListPods)
 
 			c := NewModelServiceImageBuilder(kubeClient, config, nil)
 
-			got, err := c.GetImageBuildingJobStatus(tt.args.ctx, tt.args.project, tt.args.model, tt.args.version)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("imageBuilder.GetImageBuildingJobStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := c.GetImageBuildingJobStatus(tt.args.ctx, tt.args.project, tt.args.model, tt.args.version)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("imageBuilder.GetImageBuildingJobStatus() = %v, want %v", got, tt.want)
 			}

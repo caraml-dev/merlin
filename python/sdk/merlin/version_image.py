@@ -5,11 +5,25 @@ import client
 from merlin.util import autostr
 
 
-class ImageBuildingJobStatus(Enum):
+class ImageBuildingJobState(Enum):
     ACTIVE = "active"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     UNKNOWN = "unknown"
+
+
+class ImageBuildingJobStatus:
+    def __init__(self, status: client.ImageBuildingJobStatus):
+        self._state = ImageBuildingJobState(status.state)
+        self._message = status.message
+
+    @property
+    def state(self) -> Optional[ImageBuildingJobState]:
+        return self._state
+
+    @property
+    def message(self) -> Optional[str]:
+        return self._message
 
 
 @autostr
@@ -45,5 +59,5 @@ class VersionImage:
         return self._exists
 
     @property
-    def image_building_job_status(self) -> Optional[ImageBuildingJobStatus]:
+    def image_building_job_status(self) -> Optional[ImageBuildingJobState]:
         return self._image_building_job_status

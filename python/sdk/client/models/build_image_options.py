@@ -19,7 +19,7 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictInt
 from client.models.resource_request import ResourceRequest
 try:
     from typing import Self
@@ -30,8 +30,9 @@ class BuildImageOptions(BaseModel):
     """
     BuildImageOptions
     """ # noqa: E501
+    backoff_limit: Optional[StrictInt] = None
     resource_request: Optional[ResourceRequest] = None
-    __properties: ClassVar[List[str]] = ["resource_request"]
+    __properties: ClassVar[List[str]] = ["backoff_limit", "resource_request"]
 
     model_config = {
         "populate_by_name": True,
@@ -84,6 +85,7 @@ class BuildImageOptions(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "backoff_limit": obj.get("backoff_limit"),
             "resource_request": ResourceRequest.from_dict(obj.get("resource_request")) if obj.get("resource_request") is not None else None
         })
         return _obj

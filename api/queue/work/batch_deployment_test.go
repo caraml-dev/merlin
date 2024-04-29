@@ -16,6 +16,7 @@ import (
 	storageMock "github.com/caraml-dev/merlin/storage/mocks"
 	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/resource"
 	clock "k8s.io/utils/clock/testing"
@@ -123,7 +124,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 				ctrl.On("Submit", context.Background(), savedJob, project.Name).Return(nil)
 			},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests).Return(imageRef, nil)
+				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests, mock.Anything).Return(imageRef, nil)
 				imgBuilder.On("GetMainAppPath", version).Return(mainApplicationPath, nil)
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
@@ -135,7 +136,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			deployErr:      fmt.Errorf("failed building image"),
 			controllerMock: func(ctrl *mocks.Controller) {},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests).Return("", fmt.Errorf("failed building image"))
+				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests, mock.Anything).Return("", fmt.Errorf("failed building image"))
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
 				st.On("Get", savedJob.ID).Return(savedJob, nil)
@@ -147,7 +148,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			deployErr:      fmt.Errorf("failed getting mainAppPath"),
 			controllerMock: func(ctrl *mocks.Controller) {},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests).Return(imageRef, nil)
+				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests, mock.Anything).Return(imageRef, nil)
 				imgBuilder.On("GetMainAppPath", version).Return("", fmt.Errorf("failed getting mainAppPath"))
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
@@ -162,7 +163,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 				ctrl.On("Submit", context.Background(), savedJob, project.Name).Return(fmt.Errorf("failed submit job"))
 			},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests).Return(imageRef, nil)
+				imgBuilder.On("BuildImage", context.Background(), project, model, version, imageBuilderResourceRequests, mock.Anything).Return(imageRef, nil)
 				imgBuilder.On("GetMainAppPath", version).Return(mainApplicationPath, nil)
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {

@@ -1118,14 +1118,20 @@ class ModelVersion:
             endpoints.append(VersionEndpoint(ep))
         return endpoints
 
-    def build_image(self, resource_request: Optional[ResourceRequest] = None):
+    def build_image(
+        self,
+        backoff_limit: int = 0,
+        resource_request: Optional[ResourceRequest] = None,
+    ):
         """
         Build the Docker image for this model version.
 
+        :param backoff_limit: The maximum number of retries before considering a job as failed.
         :param resource_request: The resource requirement (CPU & memory) for image building job.
 
         :return: VersionImage object
         """
+
         target_resource_request = None
         if resource_request is not None:
             target_resource_request = client.ResourceRequest(
@@ -1134,6 +1140,7 @@ class ModelVersion:
             )
 
         options = client.BuildImageOptions(
+            backoff_limit=backoff_limit,
             resource_request=target_resource_request,
         )
 
@@ -1152,7 +1159,7 @@ class ModelVersion:
         bar.update()
         sleep(10)
 
-        while True:
+        while bar.active:
             image = version_image_api.models_model_id_versions_version_id_image_get(
                 model_id=self.model.id, version_id=self.id
             )
@@ -1160,12 +1167,11 @@ class ModelVersion:
             if image.exists:
                 break
 
-            if image.image_building_job_status != "active":
+            if image.image_building_job_status.state != "active":
                 break
 
             bar.update()
             sleep(10)
-
         bar.stop()
 
         if image.exists:
@@ -1175,7 +1181,8 @@ class ModelVersion:
             )
         else:
             print(
-                f"Failed to build Docker image for model {self.model.name} version {self.id}."
+                f"Failed to build Docker image for model {self.model.name} version {self.id}:"
+                f"\n\n{image.image_building_job_status.message}"
             )
 
         return VersionImage(image)

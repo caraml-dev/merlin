@@ -39,7 +39,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 						Exists:    true,
 					}, nil)
 				ib.On("GetImageBuildingJobStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(models.ImageBuildingJobStatusSucceeded, nil)
+					Return(models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateSucceeded,
+					}, nil)
 				return ib
 			},
 			args: args{
@@ -61,7 +63,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 				VersionID: 1,
 				ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 				Exists:    true,
-				JobStatus: models.ImageBuildingJobStatusSucceeded,
+				JobStatus: models.ImageBuildingJobStatus{
+					State: models.ImageBuildingJobStateSucceeded,
+				},
 			},
 			wantErr: false,
 		},
@@ -78,7 +82,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 						Exists:    true,
 					}, nil)
 				ib.On("GetImageBuildingJobStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(models.ImageBuildingJobStatusUnknown, nil)
+					Return(models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateUnknown,
+					}, nil)
 				return ib
 			},
 			args: args{
@@ -100,7 +106,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 				VersionID: 1,
 				ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 				Exists:    true,
-				JobStatus: models.ImageBuildingJobStatusUnknown,
+				JobStatus: models.ImageBuildingJobStatus{
+					State: models.ImageBuildingJobStateUnknown,
+				},
 			},
 			wantErr: false,
 		},
@@ -117,7 +125,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 						Exists:    false,
 					}, nil)
 				ib.On("GetImageBuildingJobStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(models.ImageBuildingJobStatusActive, nil)
+					Return(models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateActive,
+					}, nil)
 				return ib
 			},
 			args: args{
@@ -139,7 +149,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 				VersionID: 1,
 				ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 				Exists:    false,
-				JobStatus: models.ImageBuildingJobStatusActive,
+				JobStatus: models.ImageBuildingJobStatus{
+					State: models.ImageBuildingJobStateActive,
+				},
 			},
 			wantErr: false,
 		},
@@ -178,7 +190,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 						Exists:    true,
 					}, nil)
 				ib.On("GetImageBuildingJobStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(models.ImageBuildingJobStatusUnknown, fmt.Errorf("context deadline exceeded"))
+					Return(models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateUnknown,
+					}, fmt.Errorf("context deadline exceeded"))
 				return ib
 			},
 			args: args{
@@ -200,7 +214,9 @@ func Test_versionImageService_GetImage(t *testing.T) {
 				VersionID: 1,
 				ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 				Exists:    true,
-				JobStatus: models.ImageBuildingJobStatusUnknown,
+				JobStatus: models.ImageBuildingJobStatus{
+					State: models.ImageBuildingJobStateUnknown,
+				},
 			},
 			wantErr: false,
 		},
@@ -239,7 +255,7 @@ func Test_versionImageService_BuildImage(t *testing.T) {
 			name: "success",
 			imageBuilder: func() *mocks.ImageBuilder {
 				ib := &mocks.ImageBuilder{}
-				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return("ghcr.io/caraml-dev/project-model:1", nil)
 				return ib
 			},
@@ -269,7 +285,7 @@ func Test_versionImageService_BuildImage(t *testing.T) {
 			name: "invalid model type",
 			imageBuilder: func() *mocks.ImageBuilder {
 				ib := &mocks.ImageBuilder{}
-				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return("ghcr.io/caraml-dev/project-model:1", nil)
 				return ib
 			},
@@ -299,7 +315,7 @@ func Test_versionImageService_BuildImage(t *testing.T) {
 			name: "failed building image",
 			imageBuilder: func() *mocks.ImageBuilder {
 				ib := &mocks.ImageBuilder{}
-				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				ib.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return("", fmt.Errorf("error building image: timeout"))
 				return ib
 			},

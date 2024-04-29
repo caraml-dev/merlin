@@ -19,6 +19,7 @@ var _ MappedNullable = &BuildImageOptions{}
 
 // BuildImageOptions struct for BuildImageOptions
 type BuildImageOptions struct {
+	BackoffLimit    *int32           `json:"backoff_limit,omitempty"`
 	ResourceRequest *ResourceRequest `json:"resource_request,omitempty"`
 }
 
@@ -37,6 +38,38 @@ func NewBuildImageOptions() *BuildImageOptions {
 func NewBuildImageOptionsWithDefaults() *BuildImageOptions {
 	this := BuildImageOptions{}
 	return &this
+}
+
+// GetBackoffLimit returns the BackoffLimit field value if set, zero value otherwise.
+func (o *BuildImageOptions) GetBackoffLimit() int32 {
+	if o == nil || IsNil(o.BackoffLimit) {
+		var ret int32
+		return ret
+	}
+	return *o.BackoffLimit
+}
+
+// GetBackoffLimitOk returns a tuple with the BackoffLimit field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *BuildImageOptions) GetBackoffLimitOk() (*int32, bool) {
+	if o == nil || IsNil(o.BackoffLimit) {
+		return nil, false
+	}
+	return o.BackoffLimit, true
+}
+
+// HasBackoffLimit returns a boolean if a field has been set.
+func (o *BuildImageOptions) HasBackoffLimit() bool {
+	if o != nil && !IsNil(o.BackoffLimit) {
+		return true
+	}
+
+	return false
+}
+
+// SetBackoffLimit gets a reference to the given int32 and assigns it to the BackoffLimit field.
+func (o *BuildImageOptions) SetBackoffLimit(v int32) {
+	o.BackoffLimit = &v
 }
 
 // GetResourceRequest returns the ResourceRequest field value if set, zero value otherwise.
@@ -81,6 +114,9 @@ func (o BuildImageOptions) MarshalJSON() ([]byte, error) {
 
 func (o BuildImageOptions) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if !IsNil(o.BackoffLimit) {
+		toSerialize["backoff_limit"] = o.BackoffLimit
+	}
 	if !IsNil(o.ResourceRequest) {
 		toSerialize["resource_request"] = o.ResourceRequest
 	}

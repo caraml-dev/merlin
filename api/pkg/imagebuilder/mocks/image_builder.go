@@ -17,23 +17,23 @@ type ImageBuilder struct {
 	mock.Mock
 }
 
-// BuildImage provides a mock function with given fields: ctx, project, model, version, resourceRequest
-func (_m *ImageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error) {
-	ret := _m.Called(ctx, project, model, version, resourceRequest)
+// BuildImage provides a mock function with given fields: ctx, project, model, version, resourceRequest, backoffLimit
+func (_m *ImageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest, backoffLimit *int32) (string, error) {
+	ret := _m.Called(ctx, project, model, version, resourceRequest, backoffLimit)
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version, *models.ResourceRequest) (string, error)); ok {
-		return rf(ctx, project, model, version, resourceRequest)
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version, *models.ResourceRequest, *int32) (string, error)); ok {
+		return rf(ctx, project, model, version, resourceRequest, backoffLimit)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version, *models.ResourceRequest) string); ok {
-		r0 = rf(ctx, project, model, version, resourceRequest)
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version, *models.ResourceRequest, *int32) string); ok {
+		r0 = rf(ctx, project, model, version, resourceRequest, backoffLimit)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, mlp.Project, *models.Model, *models.Version, *models.ResourceRequest) error); ok {
-		r1 = rf(ctx, project, model, version, resourceRequest)
+	if rf, ok := ret.Get(1).(func(context.Context, mlp.Project, *models.Model, *models.Version, *models.ResourceRequest, *int32) error); ok {
+		r1 = rf(ctx, project, model, version, resourceRequest, backoffLimit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -68,27 +68,17 @@ func (_m *ImageBuilder) GetContainers(ctx context.Context, project mlp.Project, 
 }
 
 // GetImageBuildingJobStatus provides a mock function with given fields: ctx, project, model, version
-func (_m *ImageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (models.ImageBuildingJobStatus, error) {
+func (_m *ImageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) models.ImageBuildingJobStatus {
 	ret := _m.Called(ctx, project, model, version)
 
 	var r0 models.ImageBuildingJobStatus
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version) (models.ImageBuildingJobStatus, error)); ok {
-		return rf(ctx, project, model, version)
-	}
 	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *models.Model, *models.Version) models.ImageBuildingJobStatus); ok {
 		r0 = rf(ctx, project, model, version)
 	} else {
 		r0 = ret.Get(0).(models.ImageBuildingJobStatus)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, mlp.Project, *models.Model, *models.Version) error); ok {
-		r1 = rf(ctx, project, model, version)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // GetMainAppPath provides a mock function with given fields: version

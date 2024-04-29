@@ -257,9 +257,13 @@ class MerlinClient:
     def build_image(
         self,
         model_version: ModelVersion,
+        backoff_limit: int = 0,
         resource_request: ResourceRequest = None,
     ) -> VersionImage:
-        return model_version.build_image(resource_request)
+        return model_version.build_image(
+            backoff_limit=backoff_limit,
+            resource_request=resource_request,
+        )
 
     def deploy(
         self,
