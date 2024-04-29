@@ -12,16 +12,16 @@ test: type-check
 
 .PHONY: integration-test
 integration-test: type-check
-	@pipenv run pytest -n 8 -m integration -W ignore
+	@pipenv run pytest -n 8 --cov=merlin -m integration -W ignore
 
 .PHONY: integration-test-no-feast
 integration-test-no-feast: type-check
-	@pipenv run pytest -n 8 -m "not feast" -W ignore
+	@pipenv run pytest -n 8 --cov=merlin -m "not feast" -W ignore
 
 .PHONY: local-server-test
 local-server-test: type-check
-	@pipenv run pytest -n 8 -m local_server_test -W ignore
+	@pipenv run pytest -n 8 --cov=merlin -m local_server_test -W ignore
 
 .PHONY: unit-test
 unit-test: type-check
-	@pipenv run pytest -n 1 -m "not integration" -W ignore
+	@pipenv run pytest -n 1 --cov=merlin -m "not integration" -W ignore
