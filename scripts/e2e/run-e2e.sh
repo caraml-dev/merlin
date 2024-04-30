@@ -33,4 +33,4 @@ kubectl create namespace ${E2E_PROJECT_NAME} --dry-run=client -o yaml | kubectl 
 cd ../../python/sdk
 pip install pipenv==2023.7.23
 pipenv install --dev --skip-lock --python ${PYTHON_VERSION}
-pipenv run pytest -n=4 -W=ignore --cov=merlin -m "not (gpu or feast or batch or pyfunc or local_server_test or cli or customtransformer)" --durations=0
+pipenv run pytest -n=4 -W=ignore --cov=merlin -m "not (gpu or feast or batch or pyfunc or local_server_test or cli or customtransformer or build_image)" --durations=0

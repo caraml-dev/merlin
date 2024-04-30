@@ -29,6 +29,7 @@ from client.api.project_api import ProjectApi
 from client.api.secret_api import SecretApi
 from client.api.standard_transformer_api import StandardTransformerApi
 from client.api.version_api import VersionApi
+from client.api.version_image_api import VersionImageApi
 
 # import ApiClient
 from client.api_response import ApiResponse
@@ -46,6 +47,7 @@ from client.models.alert_condition_metric_type import AlertConditionMetricType
 from client.models.alert_condition_severity import AlertConditionSeverity
 from client.models.autoscaling_policy import AutoscalingPolicy
 from client.models.binary_classification_output import BinaryClassificationOutput
+from client.models.build_image_options import BuildImageOptions
 from client.models.config import Config
 from client.models.container import Container
 from client.models.custom_predictor import CustomPredictor
@@ -56,6 +58,8 @@ from client.models.environment import Environment
 from client.models.file_format import FileFormat
 from client.models.gpu_config import GPUConfig
 from client.models.gpu_toleration import GPUToleration
+from client.models.image_building_job_state import ImageBuildingJobState
+from client.models.image_building_job_status import ImageBuildingJobStatus
 from client.models.label import Label
 from client.models.logger import Logger
 from client.models.logger_config import LoggerConfig
@@ -99,3 +103,4 @@ from client.models.transformer import Transformer
 from client.models.value_type import ValueType
 from client.models.version import Version
 from client.models.version_endpoint import VersionEndpoint
+from client.models.version_image import VersionImage

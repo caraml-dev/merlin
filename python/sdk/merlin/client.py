@@ -18,6 +18,10 @@ from typing import Any, Dict, List, Optional
 
 import urllib3
 from caraml_auth.id_token_credentials import get_default_id_token_credentials
+from google.auth.transport.requests import Request
+from google.auth.transport.urllib3 import AuthorizedHttp
+
+import client
 from client import (
     ApiClient,
     Configuration,
@@ -29,22 +33,19 @@ from client import (
     StandardTransformerSimulationRequest,
     VersionApi,
 )
-
-import client
-from google.auth.transport.requests import Request
-from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
 from merlin.environment import Environment
 from merlin.logger import Logger
 from merlin.model import Model, ModelType, ModelVersion, Project
+from merlin.model_schema import ModelSchema
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.util import valid_name_check
 from merlin.version import VERSION
-from merlin.model_schema import ModelSchema
+from merlin.version_image import VersionImage
 
 
 class MerlinClient:
@@ -214,7 +215,7 @@ class MerlinClient:
         m_list = self._model_api.projects_project_id_models_get(
             project_id=int(prj.id), name=model_name
         )
-        
+
         model = None
         for mdl in m_list:
             if mdl.name == model_name:
@@ -228,13 +229,17 @@ class MerlinClient:
                 )
             model = self._model_api.projects_project_id_models_post(
                 project_id=int(prj.id),
-                body=client.Model(name=model_name, type=model_type.value)
+                body=client.Model(name=model_name, type=model_type.value),
             )
 
         return Model(model, prj, self._api_client)
 
     def new_model_version(
-        self, model_name: str, project_name: str, labels: Dict[str, str] = None, model_schema: Optional[ModelSchema] = None
+        self,
+        model_name: str,
+        project_name: str,
+        labels: Dict[str, str] = None,
+        model_schema: Optional[ModelSchema] = None,
     ) -> ModelVersion:
         """
         Create new model version for the given model and project
@@ -249,6 +254,17 @@ class MerlinClient:
             raise ValueError(f"Model with name: {model_name} is not found")
         return mdl.new_model_version(labels=labels, model_schema=model_schema)
 
+    def build_image(
+        self,
+        model_version: ModelVersion,
+        backoff_limit: int = 0,
+        resource_request: ResourceRequest = None,
+    ) -> VersionImage:
+        return model_version.build_image(
+            backoff_limit=backoff_limit,
+            resource_request=resource_request,
+        )
+
     def deploy(
         self,
         model_version: ModelVersion,
@@ -261,7 +277,7 @@ class MerlinClient:
         deployment_mode: DeploymentMode = None,
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
-        enable_model_observability: bool = False
+        enable_model_observability: bool = False,
     ) -> VersionEndpoint:
         return model_version.deploy(
             environment_name,
@@ -273,7 +289,7 @@ class MerlinClient:
             deployment_mode,
             autoscaling_policy,
             protocol,
-            enable_model_observability
+            enable_model_observability,
         )
 
     def undeploy(self, model_version: ModelVersion, environment_name: str = None):
@@ -287,7 +303,11 @@ class MerlinClient:
         model_prediction_config: Dict = None,
         protocol: str = "HTTP_JSON",
     ):
-        prediction_config = client.ModelPredictionConfig.from_dict(model_prediction_config) if model_prediction_config is not None else None
+        prediction_config = (
+            client.ModelPredictionConfig.from_dict(model_prediction_config)
+            if model_prediction_config is not None
+            else None
+        )
         request = StandardTransformerSimulationRequest(
             payload=payload,
             headers=headers,

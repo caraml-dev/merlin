@@ -22,7 +22,7 @@ func TestVersionImageController_GetImage(t *testing.T) {
 		want                *Response
 	}{
 		{
-			name: "success, image existed",
+			name: "success, image exists and job still exists",
 			vars: map[string]string{
 				"model_id":   "1",
 				"version_id": "1",
@@ -53,6 +53,9 @@ func TestVersionImageController_GetImage(t *testing.T) {
 						VersionID: 1,
 						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 						Exists:    true,
+						JobStatus: models.ImageBuildingJobStatus{
+							State: models.ImageBuildingJobStateSucceeded,
+						},
 					}, nil)
 				return svc
 			},
@@ -64,6 +67,113 @@ func TestVersionImageController_GetImage(t *testing.T) {
 					VersionID: 1,
 					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
 					Exists:    true,
+					JobStatus: models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateSucceeded,
+					},
+				},
+			},
+		},
+		{
+			name: "success, image exists but job is not exists anymore",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					ProjectID: models.ID(1),
+					Type:      "pyfunc",
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+				}, nil)
+				return svc
+			},
+			versionImageService: func() *mocks.VersionImageService {
+				svc := &mocks.VersionImageService{}
+				svc.On("GetImage", mock.Anything, mock.Anything, mock.Anything).
+					Return(models.VersionImage{
+						ProjectID: 1,
+						ModelID:   1,
+						VersionID: 1,
+						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
+						Exists:    true,
+						JobStatus: models.ImageBuildingJobStatus{
+							State: models.ImageBuildingJobStateUnknown,
+						},
+					}, nil)
+				return svc
+			},
+			want: &Response{
+				code: http.StatusOK,
+				data: models.VersionImage{
+					ProjectID: 1,
+					ModelID:   1,
+					VersionID: 1,
+					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
+					Exists:    true,
+					JobStatus: models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateUnknown,
+					},
+				},
+			},
+		},
+		{
+			name: "success, image not exists but job still active",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					ProjectID: models.ID(1),
+					Type:      "pyfunc",
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+				}, nil)
+				return svc
+			},
+			versionImageService: func() *mocks.VersionImageService {
+				svc := &mocks.VersionImageService{}
+				svc.On("GetImage", mock.Anything, mock.Anything, mock.Anything).
+					Return(models.VersionImage{
+						ProjectID: 1,
+						ModelID:   1,
+						VersionID: 1,
+						ImageRef:  "ghcr.io/caraml-dev/project-model:1",
+						Exists:    false,
+						JobStatus: models.ImageBuildingJobStatus{
+							State: models.ImageBuildingJobStateActive,
+						},
+					}, nil)
+				return svc
+			},
+			want: &Response{
+				code: http.StatusOK,
+				data: models.VersionImage{
+					ProjectID: 1,
+					ModelID:   1,
+					VersionID: 1,
+					ImageRef:  "ghcr.io/caraml-dev/project-model:1",
+					Exists:    false,
+					JobStatus: models.ImageBuildingJobStatus{
+						State: models.ImageBuildingJobStateActive,
+					},
 				},
 			},
 		},

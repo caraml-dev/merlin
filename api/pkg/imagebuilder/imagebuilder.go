@@ -73,12 +73,13 @@ var (
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
 	// return docker image ref
-	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error)
+	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest, backoffLimit *int32) (string, error)
 	// GetVersionImage gets the Docker image ref for the given model version
 	GetVersionImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) models.VersionImage
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
 	GetMainAppPath(version *models.Version) (string, error)
+	GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) models.ImageBuildingJobStatus
 }
 
 type nameGenerator interface {
@@ -204,7 +205,14 @@ func (c *imageBuilder) GetVersionImage(ctx context.Context, project mlp.Project,
 
 // BuildImage build a docker image for the given model version
 // Returns the docker image ref
-func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version, resourceRequest *models.ResourceRequest) (string, error) {
+func (c *imageBuilder) BuildImage(
+	ctx context.Context,
+	project mlp.Project,
+	model *models.Model,
+	version *models.Version,
+	resourceRequest *models.ResourceRequest,
+	backoffLimit *int32,
+) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
 	imageExists := c.imageExists(imageName, version.ID.String())
@@ -237,6 +245,10 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 	}
 	imageBuilderAttempts.WithLabelValues(labelValues...).Inc()
 
+	if backoffLimit == nil {
+		backoffLimit = &c.config.MaximumRetry
+	}
+
 	defer func() {
 		labelValues = append(labelValues, result)
 		imageBuilderResults.WithLabelValues(labelValues...).Inc()
@@ -252,7 +264,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl, backoffLimit)
 		if err != nil {
 			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 			return "", ErrUnableToCreateJobSpec{
@@ -282,7 +294,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version, resourceRequest, hashedModelDependenciesUrl, backoffLimit)
 			if err != nil {
 				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
 				return "", ErrUnableToCreateJobSpec{
@@ -576,6 +588,7 @@ func (c *imageBuilder) createKanikoJobSpec(
 	version *models.Version,
 	resourceRequest *models.ResourceRequest,
 	modelDependenciesUrl string,
+	backoffLimit *int32,
 ) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
@@ -684,7 +697,7 @@ func (c *imageBuilder) createKanikoJobSpec(
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
-			BackoffLimit:            &c.config.MaximumRetry,
+			BackoffLimit:            backoffLimit,
 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
@@ -717,4 +730,74 @@ func (c *imageBuilder) createKanikoJobSpec(
 		job.Spec.Template.Spec.ServiceAccountName = c.config.KanikoServiceAccount
 	}
 	return job, nil
+}
+
+func (c *imageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (status models.ImageBuildingJobStatus) {
+	status.State = models.ImageBuildingJobStateUnknown
+
+	jobConditionTable := ""
+	podContainerTable := ""
+	podLastTerminationMessage := ""
+	podLastTerminationReason := ""
+
+	defer func() {
+		if jobConditionTable != "" {
+			status.Message = fmt.Sprintf("%s\n\nJob conditions:\n%s", status.Message, jobConditionTable)
+		}
+
+		if podContainerTable != "" {
+			status.Message = fmt.Sprintf("%s\n\nPod container status:\n%s", status.Message, podContainerTable)
+		}
+
+		if podLastTerminationMessage != "" {
+			status.Message = fmt.Sprintf("%s\n\nPod last termination message:\n%s", status.Message, podLastTerminationMessage)
+		}
+	}()
+
+	kanikoJobName := c.nameGenerator.generateBuilderJobName(project, model, version)
+
+	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
+	job, err := jobClient.Get(ctx, kanikoJobName, metav1.GetOptions{})
+	if err != nil && !kerrors.IsNotFound(err) {
+		status.Message = err.Error()
+		return
+	}
+
+	if job.Status.Active != 0 {
+		status.State = models.ImageBuildingJobStateActive
+		return
+	}
+
+	if job.Status.Succeeded != 0 {
+		status.State = models.ImageBuildingJobStateSucceeded
+		return
+	}
+
+	if job.Status.Failed != 0 {
+		status.State = models.ImageBuildingJobStateFailed
+	}
+
+	if len(job.Status.Conditions) > 0 {
+		jobConditionTable, err = parseJobConditions(job.Status.Conditions)
+		status.Message = err.Error()
+	}
+
+	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
+	pods, err := podClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("job-name=%s", kanikoJobName),
+	})
+	if err != nil && !kerrors.IsNotFound(err) {
+		status.Message = err.Error()
+		return
+	}
+
+	for _, pod := range pods.Items {
+		if len(pod.Status.ContainerStatuses) > 0 {
+			podContainerTable, podLastTerminationMessage, podLastTerminationReason = utils.ParsePodContainerStatuses(pod.Status.ContainerStatuses)
+			status.Message = podLastTerminationReason
+			break
+		}
+	}
+
+	return
 }

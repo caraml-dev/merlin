@@ -135,6 +135,12 @@ jobs:
           E2E_USE_GOOGLE_OAUTH: false
         working-directory: ./python/sdk
         run: make unit-test
+      - uses: codecov/codecov-action@v4
+        with:
+          flags: sdk-test-${{ matrix.python-version }}
+          name: sdk-test-${{ matrix.python-version }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: ./python/sdk
 
   lint-api:
     runs-on: ubuntu-latest

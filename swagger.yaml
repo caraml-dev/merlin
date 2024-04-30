@@ -1,55 +1,65 @@
 openapi: 3.0.1
 info:
   title: Merlin
-  description: API Guide for accessing Merlin's model management, deployment, and
+  description:
+    API Guide for accessing Merlin's model management, deployment, and
     serving functionalities
   version: 0.14.0
 servers:
-- url: http://localhost:8080/v1
+  - url: http://localhost:8080/v1
 security:
-- Bearer: []
+  - Bearer: []
 tags:
-- name: project
-  description: Project Management API. Project is used to namespace model, secret,
-    and user access
-- name: models
-  description: Model Management API. API to manage ML model in Merlin.
-- name: version
-  description: Model Version Management API. Model version represents the iteration
-    of an ML model
-- name: endpoint
-  description: Deployment Management API. Endpoint represent a deployment of a specific
-    model version
-- name: model_endpoints
-  description: Serving Traffic Management API. API to manage traffic routing to a
-    running endpoint.
-- name: secret
-  description: Secret Management API. Secret is stored securely inside merlin and
-    can be used to run prediction job
-- name: alert
-  description: Alert Management API.
-- name: environment
-  description: Environment is the infrastructure on which model deployments / batch
-    predictions are running
-- name: prediction_jobs
-  description: Batch prediction job API. Run a prediction as a batch job using model
-    in Merlin
-- name: log
-  description: Log API for accessing log in the container running a model deployment
+  - name: project
+    description:
+      Project Management API. Project is used to namespace model, secret,
+      and user access
+  - name: models
+    description: Model Management API. API to manage ML model in Merlin.
+  - name: version
+    description:
+      Model Version Management API. Model version represents the iteration
+      of an ML model
+  - name: endpoint
+    description:
+      Deployment Management API. Endpoint represent a deployment of a specific
+      model version
+  - name: version_image
+    description: The model version's Docker image management API.
+  - name: model_endpoints
+    description:
+      Serving Traffic Management API. API to manage traffic routing to a
+      running endpoint.
+  - name: secret
+    description:
+      Secret Management API. Secret is stored securely inside merlin and
+      can be used to run prediction job
+  - name: alert
+    description: Alert Management API.
+  - name: environment
+    description:
+      Environment is the infrastructure on which model deployments / batch
+      predictions are running
+  - name: prediction_jobs
+    description:
+      Batch prediction job API. Run a prediction as a batch job using model
+      in Merlin
+  - name: log
+    description: Log API for accessing log in the container running a model deployment
 paths:
   "/environments":
     get:
       tags:
-      - environment
+        - environment
       summary: List available environment
       description: Environment can be filtered by optional `name` parameter
       parameters:
-      - name: name
-        in: query
-        schema:
-          type: string
+        - name: name
+          in: query
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -60,16 +70,16 @@ paths:
   "/projects":
     get:
       tags:
-      - project
+        - project
       summary: List existing projects
       description: Projects can be filtered by optional `name` parameter
       parameters:
-      - name: name
-        in: query
-        schema:
-          type: string
+        - name: name
+          in: query
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -79,7 +89,7 @@ paths:
                   "$ref": "#/components/schemas/Project"
     post:
       tags:
-      - project
+        - project
       summary: Create new project
       requestBody:
         description: Project object that has to be added
@@ -89,52 +99,52 @@ paths:
               "$ref": "#/components/schemas/Project"
         required: true
       responses:
-        '201':
+        "201":
           description: Created
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Project"
-        '400':
+        "400":
           description: Invalid request format
           content: {}
-        '409':
+        "409":
           description: Project with the same name already exists
           content: {}
       x-codegen-request-body-name: body
   "/projects/{project_id}":
     get:
       tags:
-      - project
+        - project
       summary: Get project
       parameters:
-      - name: project_id
-        in: path
-        description: project id of the project to be retrieved
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          description: project id of the project to be retrieved
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: Ok
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Project"
-        '404':
+        "404":
           description: Project Not Found
           content: {}
     put:
       tags:
-      - project
+        - project
       summary: Update project
       parameters:
-      - name: project_id
-        in: path
-        description: project id of the project to be updated
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          description: project id of the project to be updated
+          required: true
+          schema:
+            type: integer
       requestBody:
         description: Project object that has to be updated
         content:
@@ -143,36 +153,36 @@ paths:
               "$ref": "#/components/schemas/Project"
         required: true
       responses:
-        '200':
+        "200":
           description: Ok
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Project"
-        '400':
+        "400":
           description: Invalid request format
           content: {}
       x-codegen-request-body-name: body
   "/projects/{project_id}/models/{model_id}":
     get:
       tags:
-      - models
+        - models
       summary: Get model
       parameters:
-      - name: project_id
-        in: path
-        description: project id of the project to be retrieved
-        required: true
-        schema:
-          type: integer
-      - name: model_id
-        in: path
-        description: model id of the model to be retrieved
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          description: project id of the project to be retrieved
+          required: true
+          schema:
+            type: integer
+        - name: model_id
+          in: path
+          description: model id of the model to be retrieved
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -180,62 +190,63 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Model"
-        '404':
+        "404":
           description: Project/Model with given id not found
           content: {}
     delete:
       tags:
-      - models
+        - models
       summary: Delete model
       parameters:
-      - name: project_id
-        in: path
-        description: project id of the project to be deleted
-        required: true
-        schema:
-          type: integer
-      - name: model_id
-        in: path
-        description: model id of the model to be deleted
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          description: project id of the project to be deleted
+          required: true
+          schema:
+            type: integer
+        - name: model_id
+          in: path
+          description: model id of the model to be deleted
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 type: integer
-        '400':
-          description: There are other entity still using this model (model version
+        "400":
+          description:
+            There are other entity still using this model (model version
             endpoint / model endpoint / prediction jobs)
           content: {}
-        '404':
+        "404":
           description: Project/Model with given id not found
           content: {}
-        '500':
+        "500":
           description: Deletion failed
           content: {}
   "/projects/{project_id}/models":
     get:
       tags:
-      - models
+        - models
       summary: List existing models
       parameters:
-      - name: project_id
-        in: path
-        description: Filter list of models by specific `project_id`
-        required: true
-        schema:
-          type: integer
-      - name: name
-        in: query
-        description: Filter list of models by specific models `name`
-        schema:
-          type: string
+        - name: project_id
+          in: path
+          description: Filter list of models by specific `project_id`
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: query
+          description: Filter list of models by specific models `name`
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -243,20 +254,20 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Model"
-        '404':
+        "404":
           description: Project with given `project_id` not found
           content: {}
     post:
       tags:
-      - models
+        - models
       summary: Register a new models
       parameters:
-      - name: project_id
-        in: path
-        description: Create new model in a specific `project_id`
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          description: Create new model in a specific `project_id`
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -264,56 +275,56 @@ paths:
               "$ref": "#/components/schemas/Model"
         required: false
       responses:
-        '201':
+        "201":
           description: Created
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Model"
-        '400':
+        "400":
           description: Invalid request format
           content: {}
-        '404':
+        "404":
           description: Project with given `project_id` not found
           content: {}
       x-codegen-request-body-name: body
   "/projects/{project_id}/jobs":
     get:
       tags:
-      - prediction_jobs
+        - prediction_jobs
       summary: List all prediction jobs created using the model
       parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: id
-        in: query
-        schema:
-          type: integer
-      - name: name
-        in: query
-        schema:
-          type: string
-      - name: model_id
-        in: query
-        schema:
-          type: integer
-      - name: version_id
-        in: query
-        schema:
-          type: integer
-      - name: status
-        in: query
-        schema:
-          type: string
-      - name: error
-        in: query
-        schema:
-          type: string
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: query
+          schema:
+            type: integer
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: model_id
+          in: query
+          schema:
+            type: integer
+        - name: version_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: error
+          in: query
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -321,41 +332,41 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/PredictionJob"
-        '404':
+        "404":
           description: Project with given `project_id` not found
           content: {}
   "/models/{model_id}/versions":
     get:
       tags:
-      - version
+        - version
       summary: List versions of the models
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: limit
-        in: query
-        schema:
-          type: integer
-      - name: cursor
-        in: query
-        schema:
-          type: string
-      - name: search
-        in: query
-        description: |
-          Search query to filter the model versions. These searches are currently supported:
-          - Search by "mlflow_run_id" e.g. `?search=cfca7716b45f4b149479630a98332a13`
-          - Search by "environment_name" e.g `?search=environment_name:myenv`
-          - Search by "labels" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)`
-          - Search by "environment_name" and "labels" e.g.
-            `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)`
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: |
+            Search query to filter the model versions. These searches are currently supported:
+            - Search by "mlflow_run_id" e.g. `?search=cfca7716b45f4b149479630a98332a13`
+            - Search by "environment_name" e.g `?search=environment_name:myenv`
+            - Search by "labels" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)`
+            - Search by "environment_name" and "labels" e.g.
+              `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)`
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           headers:
             Next-Cursor:
@@ -368,19 +379,19 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Version"
-        '404':
+        "404":
           description: Model with given `model_id` not found
           content: {}
     post:
       tags:
-      - version
+        - version
       summary: Log a new version of the models
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -388,7 +399,7 @@ paths:
               "$ref": "#/components/schemas/Version"
         required: false
       responses:
-        '201':
+        "201":
           description: Created
           content:
             "*/*":
@@ -398,76 +409,77 @@ paths:
   "/models/{model_id}/versions/{version_id}":
     get:
       tags:
-      - version
+        - version
       summary: Get version by ID from model
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Version"
-        '404':
+        "404":
           description: Model with given `model_id` not found
           content: {}
     delete:
       tags:
-      - version
+        - version
       summary: Delete version by ID from model
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 type: integer
-        '400':
-          description: There are other entity still using this model (model version
+        "400":
+          description:
+            There are other entity still using this model (model version
             endpoint / prediction jobs)
           content: {}
-        '404':
+        "404":
           description: Model with given `model_id` not found
           content: {}
-        '500':
+        "500":
           description: Deletion failed
           content: {}
     patch:
       tags:
-      - version
-      summary: 'Patch the version '
+        - version
+      summary: "Patch the version "
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -475,34 +487,34 @@ paths:
               "$ref": "#/components/schemas/Version"
         required: false
       responses:
-        '200':
+        "200":
           description: OK
           content: {}
-        '400':
+        "400":
           description: Invalid request format
           content: {}
-        '404':
+        "404":
           description: Version with given `version_id` not found
           content: {}
       x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/endpoint":
     get:
       tags:
-      - endpoint
+        - endpoint
       summary: List all endpoint of a model version
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -510,24 +522,24 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/VersionEndpoint"
-        '404':
+        "404":
           description: Version with given `version_id` not found
           content: {}
     post:
       tags:
-      - endpoint
+        - endpoint
       summary: Deploy specific version of the models
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -535,67 +547,130 @@ paths:
               "$ref": "#/components/schemas/VersionEndpoint"
         required: false
       responses:
-        '201':
+        "201":
           description: Created
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/VersionEndpoint"
-        '404':
+        "404":
           description: Version with given `version_id` not found
+          content: {}
+      x-codegen-request-body-name: body
+  "/models/{model_id}/versions/{version_id}/image":
+    get:
+      tags:
+        - version_image
+      summary: Get the Docker image for given model version
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VersionImage"
+        "400":
+          description: Invalid model type
+          content: {}
+        "404":
+          description: Model or Model Version not found
+          content: {}
+        "500":
+          description: Internal server error when getting image
+          content: {}
+    put:
+      tags:
+        - version_image
+      summary: Build the Docker image for given model version
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          "*/*":
+            schema:
+              "$ref": "#/components/schemas/BuildImageOptions"
+        required: false
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Invalid model type
+          content: {}
+        "404":
+          description: Model or Model Version not found
           content: {}
       x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}":
     get:
       tags:
-      - endpoint
+        - endpoint
       summary: Get version endpoint resource
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/VersionEndpoint"
-        '404':
+        "404":
           description: Version endpoint with given `endpoint_id` not found
           content: {}
     put:
       tags:
-      - endpoint
+        - endpoint
       summary: Modify version endpoint, this API will redeploy the associated deployment
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           "*/*":
@@ -603,93 +678,93 @@ paths:
               "$ref": "#/components/schemas/VersionEndpoint"
         required: false
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/VersionEndpoint"
-        '404':
+        "404":
           description: Version endpoint with given `endpoint_id` not found
           content: {}
       x-codegen-request-body-name: body
     delete:
       tags:
-      - endpoint
+        - endpoint
       summary: Undeploy the specified model version deployment
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content: {}
-        '404':
+        "404":
           description: Version endpoint with given `endpoint_id` not found
           content: {}
   "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}/containers":
     get:
       tags:
-      - endpoint
+        - endpoint
       summary: Get all container belong to a version endpoint
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Container"
-        '404':
+        "404":
           description: Version endpoint with given `endpoint_id` not found
           content: {}
   "/projects/{project_id}/model_endpoints":
     get:
       tags:
-      - model_endpoints
+        - model_endpoints
       summary: List existing model endpoints for all models in particular project
       parameters:
-      - name: project_id
-        in: path
-        description: Filter list of model endpoints by specific `project_id`
-        required: true
-        schema:
-          type: integer
-      - name: region
-        in: query
-        description: Filter list of model endpoints by specific environment's `region`
-        schema:
-          type: string
+        - name: project_id
+          in: path
+          description: Filter list of model endpoints by specific `project_id`
+          required: true
+          schema:
+            type: integer
+        - name: region
+          in: query
+          description: Filter list of model endpoints by specific environment's `region`
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -700,16 +775,16 @@ paths:
   "/models/{model_id}/endpoints":
     get:
       tags:
-      - model_endpoints
+        - model_endpoints
       summary: List model endpoint
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -719,14 +794,14 @@ paths:
                   "$ref": "#/components/schemas/ModelEndpoint"
     post:
       tags:
-      - model_endpoints
+        - model_endpoints
       summary: Create a model endpoint
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         description: Model endpoint object that has to be added
         content:
@@ -735,7 +810,7 @@ paths:
               "$ref": "#/components/schemas/ModelEndpoint"
         required: true
       responses:
-        '201':
+        "201":
           description: Created
           content:
             "*/*":
@@ -745,21 +820,21 @@ paths:
   "/models/{model_id}/endpoints/{model_endpoint_id}":
     get:
       tags:
-      - model_endpoints
+        - model_endpoints
       summary: Get a model endpoint
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: model_endpoint_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: model_endpoint_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -767,19 +842,19 @@ paths:
                 "$ref": "#/components/schemas/ModelEndpoint"
     put:
       tags:
-      - model_endpoints
+        - model_endpoints
       summary: Update model endpoint data. Mainly used to update its rule.
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: model_endpoint_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: model_endpoint_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -787,7 +862,7 @@ paths:
               "$ref": "#/components/schemas/ModelEndpoint"
         required: false
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -796,31 +871,31 @@ paths:
       x-codegen-request-body-name: body
     delete:
       tags:
-      - model_endpoints
+        - model_endpoints
       summary: Stop serving traffic to the model endpoint, then delete it.
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: model_endpoint_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: model_endpoint_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content: {}
   "/alerts/teams":
     get:
       tags:
-      - models
-      - alert
+        - models
+        - alert
       summary: Lists teams for alert notification channel.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -831,17 +906,17 @@ paths:
   "/models/{model_id}/alerts":
     get:
       tags:
-      - models
-      - alert
+        - models
+        - alert
       summary: Lists alerts for given model.
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -852,22 +927,22 @@ paths:
   "/models/{model_id}/endpoints/{model_endpoint_id}/alert":
     get:
       tags:
-      - models
-      - alert
+        - models
+        - alert
       summary: Gets alert for given model endpoint.
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: model_endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: model_endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -875,20 +950,20 @@ paths:
                 "$ref": "#/components/schemas/ModelEndpointAlert"
     put:
       tags:
-      - models
-      - alert
+        - models
+        - alert
       summary: Creates alert for given model endpoint.
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: model_endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: model_endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           "*/*":
@@ -896,26 +971,26 @@ paths:
               "$ref": "#/components/schemas/ModelEndpointAlert"
         required: false
       responses:
-        '200':
+        "200":
           description: Ok
           content: {}
       x-codegen-request-body-name: body
     post:
       tags:
-      - models
-      - alert
+        - models
+        - alert
       summary: Creates alert for given model endpoint.
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: model_endpoint_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: model_endpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           "*/*":
@@ -923,110 +998,110 @@ paths:
               "$ref": "#/components/schemas/ModelEndpointAlert"
         required: false
       responses:
-        '201':
+        "201":
           description: Created
           content: {}
       x-codegen-request-body-name: body
   "/logs":
     get:
       tags:
-      - log
+        - log
       summary: Retrieve log from a container
       parameters:
-      - name: project_name
-        in: query
-        schema:
-          type: string
-      - name: model_id
-        in: query
-        schema:
-          type: string
-      - name: model_name
-        in: query
-        schema:
-          type: string
-      - name: version_id
-        in: query
-        schema:
-          type: string
-      - name: prediction_job_id
-        in: query
-        schema:
-          type: string
-      - name: cluster
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: namespace
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: component_type
-        in: query
-        required: true
-        schema:
-          type: string
-          enum:
-          - image_builder
-          - model
-          - transformer
-          - batch_job_driver
-          - batch_job_executor
-      - name: container_name
-        in: query
-        schema:
-          type: string
-      - name: prefix
-        in: query
-        schema:
-          type: string
-      - name: follow
-        in: query
-        schema:
-          type: string
-      - name: previous
-        in: query
-        schema:
-          type: string
-      - name: since_seconds
-        in: query
-        schema:
-          type: string
-      - name: since_time
-        in: query
-        schema:
-          type: string
-      - name: timestamps
-        in: query
-        schema:
-          type: string
-      - name: tail_lines
-        in: query
-        schema:
-          type: string
-      - name: limit_bytes
-        in: query
-        schema:
-          type: string
+        - name: project_name
+          in: query
+          schema:
+            type: string
+        - name: model_id
+          in: query
+          schema:
+            type: string
+        - name: model_name
+          in: query
+          schema:
+            type: string
+        - name: version_id
+          in: query
+          schema:
+            type: string
+        - name: prediction_job_id
+          in: query
+          schema:
+            type: string
+        - name: cluster
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: component_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - image_builder
+              - model
+              - transformer
+              - batch_job_driver
+              - batch_job_executor
+        - name: container_name
+          in: query
+          schema:
+            type: string
+        - name: prefix
+          in: query
+          schema:
+            type: string
+        - name: follow
+          in: query
+          schema:
+            type: string
+        - name: previous
+          in: query
+          schema:
+            type: string
+        - name: since_seconds
+          in: query
+          schema:
+            type: string
+        - name: since_time
+          in: query
+          schema:
+            type: string
+        - name: timestamps
+          in: query
+          schema:
+            type: string
+        - name: tail_lines
+          in: query
+          schema:
+            type: string
+        - name: limit_bytes
+          in: query
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content: {}
   "/projects/{project_id}/secrets":
     get:
       tags:
-      - secret
+        - secret
       summary: List secret
       parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: Ok
           content:
             "*/*":
@@ -1036,14 +1111,14 @@ paths:
                   "$ref": "#/components/schemas/Secret"
     post:
       tags:
-      - secret
+        - secret
       summary: Create secret
       parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -1051,7 +1126,7 @@ paths:
               "$ref": "#/components/schemas/Secret"
         required: false
       responses:
-        '201':
+        "201":
           description: Created
           content:
             "*/*":
@@ -1061,38 +1136,38 @@ paths:
   "/projects/{project_id}/secrets/{secret_id}":
     delete:
       tags:
-      - secret
+        - secret
       summary: Delete secret
       parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: secret_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: secret_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '204':
+        "204":
           description: No content
           content: {}
     patch:
       tags:
-      - secret
+        - secret
       summary: Update secret
       parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: secret_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: secret_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -1100,7 +1175,7 @@ paths:
               "$ref": "#/components/schemas/Secret"
         required: false
       responses:
-        '200':
+        "200":
           description: Updated
           content:
             "*/*":
@@ -1110,21 +1185,21 @@ paths:
   "/models/{model_id}/versions/{version_id}/jobs":
     get:
       tags:
-      - prediction_jobs
+        - prediction_jobs
       summary: List all prediction jobs of a model version
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -1132,24 +1207,24 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/PredictionJob"
-        '404':
+        "404":
           description: Version with given `version_id` not found
           content: {}
     post:
       tags:
-      - prediction_jobs
+        - prediction_jobs
       summary: Create a prediction job from the given model version
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -1157,110 +1232,110 @@ paths:
               "$ref": "#/components/schemas/PredictionJob"
         required: false
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/PredictionJob"
-        '404':
+        "404":
           description: Version with given `version_id` not found
           content: {}
       x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/jobs/{job_id}":
     get:
       tags:
-      - prediction_jobs
+        - prediction_jobs
       summary: Get prediction jobs with given id
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: job_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/PredictionJob"
-        '404':
+        "404":
           description: Prediction job with given ID is not found
           content: {}
   "/models/{model_id}/versions/{version_id}/jobs/{job_id}/stop":
     put:
       tags:
-      - prediction_jobs
+        - prediction_jobs
       summary: Stop prediction jobs with given id
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: job_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '204':
+        "204":
           description: No content
           content: {}
-        '404':
+        "404":
           description: Prediction job with given ID is not found
           content: {}
   "/models/{model_id}/versions/{version_id}/jobs/{job_id}/containers":
     get:
       tags:
-      - prediction_jobs
+        - prediction_jobs
       summary: Get all container belong to a prediction job
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: version_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: job_id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
               schema:
                 "$ref": "#/components/schemas/Container"
-        '404':
+        "404":
           description: Version endpoint with given `endpoint_id` not found
           content: {}
   "/standard_transformer/simulate":
     post:
       tags:
-      - standard_transformer
+        - standard_transformer
       summary: Simulate standard transformer
       requestBody:
         content:
@@ -1269,7 +1344,7 @@ paths:
               "$ref": "#/components/schemas/StandardTransformerSimulationRequest"
         required: false
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -1280,15 +1355,15 @@ paths:
     get:
       summary: List all of the model schemas
       tags:
-      - model_schema
+        - model_schema
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -1299,13 +1374,13 @@ paths:
     put:
       summary: Creating new schemas for a model
       tags:
-      - model_schema
+        - model_schema
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           "*/*":
@@ -1313,7 +1388,7 @@ paths:
               "$ref": "#/components/schemas/ModelSchema"
         required: false
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -1324,20 +1399,20 @@ paths:
     get:
       summary: Get detail of the schema
       tags:
-      - model_schema
+        - model_schema
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: schema_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: schema_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             "*/*":
@@ -1346,22 +1421,22 @@ paths:
     delete:
       summary: Delete schema
       tags:
-      - model_schema
+        - model_schema
       parameters:
-      - name: model_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: schema_id
-        in: path
-        required: true
-        schema:
-          type: integer
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: schema_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '204':
+        "204":
           description: No Content
-    
+
 components:
   schemas:
     ModelSchema:
@@ -1376,7 +1451,7 @@ components:
           type: integer
           format: int32
         spec:
-          $ref: '#/components/schemas/SchemaSpec'
+          $ref: "#/components/schemas/SchemaSpec"
     SchemaSpec:
       type: object
       required:
@@ -1388,7 +1463,7 @@ components:
         row_id_column:
           type: string
         model_prediction_output:
-          $ref : '#/components/schemas/ModelPredictionOutput'
+          $ref: "#/components/schemas/ModelPredictionOutput"
         tag_columns:
           type: array
           items:
@@ -1396,7 +1471,7 @@ components:
         feature_types:
           type: object
           additionalProperties:
-            $ref : '#/components/schemas/ValueType'
+            $ref: "#/components/schemas/ValueType"
         feature_orders:
           type: array
           items:
@@ -1419,9 +1494,9 @@ components:
       discriminator:
         propertyName: output_class
       oneOf:
-      - $ref: '#/components/schemas/BinaryClassificationOutput'
-      - $ref: '#/components/schemas/RankingOutput'
-      - $ref: '#/components/schemas/RegressionOutput'
+        - $ref: "#/components/schemas/BinaryClassificationOutput"
+        - $ref: "#/components/schemas/RankingOutput"
+        - $ref: "#/components/schemas/RegressionOutput"
     BinaryClassificationOutput:
       type: object
       required:
@@ -1442,7 +1517,7 @@ components:
         score_threshold:
           type: number
         output_class:
-          $ref: '#/components/schemas/ModelPredictionOutputClass'
+          $ref: "#/components/schemas/ModelPredictionOutputClass"
 
     RankingOutput:
       type: object
@@ -1455,7 +1530,7 @@ components:
         relevance_score_column:
           type: string
         output_class:
-          $ref: '#/components/schemas/ModelPredictionOutputClass'
+          $ref: "#/components/schemas/ModelPredictionOutputClass"
     RegressionOutput:
       type: object
       required:
@@ -1468,19 +1543,19 @@ components:
         actual_score_column:
           type: string
         output_class:
-          $ref: '#/components/schemas/ModelPredictionOutputClass'
+          $ref: "#/components/schemas/ModelPredictionOutputClass"
     EndpointStatus:
       type: string
       enum:
-      - pending
-      - running
-      - serving
-      - failed
-      - terminated
+        - pending
+        - running
+        - serving
+        - failed
+        - terminated
     Environment:
       required:
-      - name
-      - cluster
+        - name
+        - cluster
       type: object
       properties:
         id:
@@ -1514,8 +1589,8 @@ components:
           format: date-time
     Project:
       required:
-      - id
-      - name
+        - id
+        - name
       type: object
       properties:
         id:
@@ -1567,14 +1642,14 @@ components:
           type: string
           description: Model type
           enum:
-          - xgboost
-          - tensorflow
-          - sklearn
-          - pytorch
-          - pyfunc
-          - pyfunc_v2
-          - pyfunc_v3
-          - custom
+            - xgboost
+            - tensorflow
+            - sklearn
+            - pytorch
+            - pyfunc
+            - pyfunc_v2
+            - pyfunc_v3
+            - custom
         mlflow_url:
           type: string
         endpoints:
@@ -1669,16 +1744,16 @@ components:
     AlertConditionMetricType:
       type: string
       enum:
-      - throughput
-      - latency
-      - error_rate
-      - cpu
-      - memory
+        - throughput
+        - latency
+        - error_rate
+        - cpu
+        - memory
     AlertConditionSeverity:
       type: string
       enum:
-      - WARNING
-      - CRITICAL
+        - WARNING
+        - CRITICAL
     Version:
       type: object
       properties:
@@ -1779,6 +1854,45 @@ components:
         updated_at:
           type: string
           format: date-time
+    VersionImage:
+      type: object
+      properties:
+        project_id:
+          type: integer
+          format: int32
+        model_id:
+          type: integer
+          format: int32
+        version_id:
+          type: integer
+          format: int32
+        image_ref:
+          type: string
+        exists:
+          type: boolean
+        image_building_job_status:
+          "$ref": "#/components/schemas/ImageBuildingJobStatus"
+    ImageBuildingJobStatus:
+      type: object
+      properties:
+        state:
+          "$ref": "#/components/schemas/ImageBuildingJobState"
+        message:
+          type: string
+    ImageBuildingJobState:
+      type: string
+      enum:
+        - active
+        - succeeded
+        - failed
+        - unknown
+    BuildImageOptions:
+      type: object
+      properties:
+        backoff_limit:
+          type: integer
+        resource_request:
+          "$ref": "#/components/schemas/ResourceRequest"
     Logger:
       type: object
       properties:
@@ -1812,9 +1926,9 @@ components:
     LoggerMode:
       type: string
       enum:
-      - all
-      - request
-      - response
+        - all
+        - request
+        - response
     Transformer:
       type: object
       properties:
@@ -1846,8 +1960,8 @@ components:
       type: string
       default: serverless
       enum:
-      - serverless
-      - raw_deployment
+        - serverless
+        - raw_deployment
     Container:
       type: object
       properties:
@@ -1858,11 +1972,11 @@ components:
         component_type:
           type: string
           enum:
-          - image_builder
-          - model
-          - transformer
-          - batch_job_driver
-          - batch_job_executor
+            - image_builder
+            - model
+            - transformer
+            - batch_job_driver
+            - batch_job_executor
         namespace:
           type: string
         cluster:
@@ -1900,10 +2014,10 @@ components:
     MetricsType:
       type: string
       enum:
-      - concurrency
-      - cpu_utilization
-      - memory_utilization
-      - rps
+        - concurrency
+        - cpu_utilization
+        - memory_utilization
+        - rps
     EnvVar:
       type: object
       properties:
@@ -2073,15 +2187,15 @@ components:
               type: string
               default: INVALID_MODEL_TYPE
               enum:
-              - INVALID_MODEL_TYPE
-              - XGBOOST
-              - TENSORFLOW
-              - SKLEARN
-              - PYTORCH
-              - ONNX
-              - PYFUNC
-              - PYFUNC_V2
-              - CUSTOM
+                - INVALID_MODEL_TYPE
+                - XGBOOST
+                - TENSORFLOW
+                - SKLEARN
+                - PYTORCH
+                - ONNX
+                - PYFUNC
+                - PYFUNC_V2
+                - CUSTOM
             uri:
               type: string
             result:
@@ -2129,35 +2243,35 @@ components:
       type: string
       default: INVALID_FILE_FORMAT
       enum:
-      - INVALID_FILE_FORMAT
-      - CSV
-      - PARQUET
-      - AVRO
-      - JSON
+        - INVALID_FILE_FORMAT
+        - CSV
+        - PARQUET
+        - AVRO
+        - JSON
     ResultType:
       type: string
       default: DOUBLE
       enum:
-      - DOUBLE
-      - FLOAT
-      - INTEGER
-      - LONG
-      - STRING
-      - ARRAY
+        - DOUBLE
+        - FLOAT
+        - INTEGER
+        - LONG
+        - STRING
+        - ARRAY
     SaveMode:
       type: integer
       enum:
-      - 0
-      - 1
-      - 2
-      - 3
-      - 4
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
       x-enum-names:
-      - ERRORIFEXISTS
-      - OVERWRITE
-      - APPEND
-      - IGNORE
-      - ERROR
+        - ERRORIFEXISTS
+        - OVERWRITE
+        - APPEND
+        - IGNORE
+        - ERROR
     StandardTransformerSimulationRequest:
       type: object
       properties:
@@ -2190,7 +2304,7 @@ components:
           items:
             "$ref": "#/components/schemas/PipelineTracing"
     PipelineTracing:
-      type: object 
+      type: object
       properties:
         operation_type:
           type: string
@@ -2200,7 +2314,7 @@ components:
           "$ref": "#/components/schemas/FreeFormObject"
         output:
           "$ref": "#/components/schemas/FreeFormObject"
-          
+
     ModelPredictionConfig:
       type: object
       properties:
@@ -2218,8 +2332,8 @@ components:
     Protocol:
       type: string
       enum:
-      - HTTP_JSON
-      - UPI_V1
+        - HTTP_JSON
+        - UPI_V1
   securitySchemes:
     Bearer:
       type: apiKey

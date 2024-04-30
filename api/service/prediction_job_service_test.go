@@ -171,7 +171,7 @@ func TestCreatePredictionJob(t *testing.T) {
 	savedJob.Config.ImageRef = imageRef
 
 	mockStorage.On("Save", job).Return(nil)
-	mockImageBuilder.On("BuildImage", project, model, version).Return(imageRef, nil)
+	mockImageBuilder.On("BuildImage", project, model, version, mock.Anything, mock.Anything).Return(imageRef, nil)
 	mockController := mockControllers[envName]
 	mockController.(*mocks.Controller).On("Submit", savedJob, project.Name).Return(nil)
 	mockJobProducer.On("EnqueueJob", mock.Anything).Return(nil)
