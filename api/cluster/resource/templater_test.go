@@ -1596,6 +1596,28 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
+			name: "serverless deployment using concurrency autoscaling where target after rounding < 0.01",
+			modelSvc: &models.Service{
+				Name:           modelSvc.Name,
+				ModelName:      modelSvc.ModelName,
+				ModelVersion:   modelSvc.ModelVersion,
+				Namespace:      project.Name,
+				ArtifactURI:    modelSvc.ArtifactURI,
+				Type:           models.ModelTypeTensorflow,
+				Options:        &models.ModelOption{},
+				Metadata:       modelSvc.Metadata,
+				DeploymentMode: deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+					MetricsType: autoscaling.Concurrency,
+					TargetValue: 0.004,
+				},
+				Protocol: protocol.HttpJson,
+			},
+			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
+			wantErr:            true,
+		},
+		{
 			name: "serverless deployment using rps autoscaling",
 			modelSvc: &models.Service{
 				Name:           modelSvc.Name,
