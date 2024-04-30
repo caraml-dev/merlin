@@ -1561,7 +1561,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
-						knautoscaling.TargetAnnotationKey:                     "2",
+						knautoscaling.TargetAnnotationKey:                     "2.00",
 						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
