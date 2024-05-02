@@ -1561,7 +1561,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
-						knautoscaling.TargetAnnotationKey:                     "2",
+						knautoscaling.TargetAnnotationKey:                     "2.00",
 						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 					},
 					Labels: map[string]string{
@@ -1594,6 +1594,28 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "serverless deployment using concurrency autoscaling where target after rounding < 0.01",
+			modelSvc: &models.Service{
+				Name:           modelSvc.Name,
+				ModelName:      modelSvc.ModelName,
+				ModelVersion:   modelSvc.ModelVersion,
+				Namespace:      project.Name,
+				ArtifactURI:    modelSvc.ArtifactURI,
+				Type:           models.ModelTypeTensorflow,
+				Options:        &models.ModelOption{},
+				Metadata:       modelSvc.Metadata,
+				DeploymentMode: deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+					MetricsType: autoscaling.Concurrency,
+					TargetValue: 0.004,
+				},
+				Protocol: protocol.HttpJson,
+			},
+			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
+			wantErr:            true,
 		},
 		{
 			name: "serverless deployment using rps autoscaling",

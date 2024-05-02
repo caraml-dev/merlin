@@ -1211,7 +1211,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.KPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Concurrency,
-						knautoscaling.TargetAnnotationKey:                     "2",
+						knautoscaling.TargetAnnotationKey:                     "2.00",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,

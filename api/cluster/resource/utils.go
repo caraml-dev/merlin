@@ -27,7 +27,10 @@ func toKNativeAutoscalerMetrics(metricsType autoscaling.MetricsType, metricsValu
 		targetValue := fmt.Sprintf("%.0f", metricsValue)
 		return knautoscaling.RPS, targetValue, nil
 	case autoscaling.Concurrency:
-		targetValue := fmt.Sprintf("%.0f", metricsValue)
+		targetValue := fmt.Sprintf("%.2f", metricsValue)
+		if targetValue == "0.00" {
+			return "", "", fmt.Errorf("concurrency target %v should be at least 0.01", metricsValue)
+		}
 		return knautoscaling.Concurrency, targetValue, nil
 	default:
 		return "", "", fmt.Errorf("unsuppported autoscaler metrics on serverless deployment: %s", metricsType)
