@@ -20,7 +20,8 @@ From above architecture diagram, we can see that there are three places where th
 As the architecture diagram illustrate, the end to end model onboarding to model observability needs to involving several components. The scope of this section is limited to merlin model modification. 
 
 ### PyFunc modification
-Currently the only supported model for model observability is PyFunc model, the model should implements class `PyFuncV3Model` instead of `PyFuncModel`. This `PyFuncV3Model` has difference method signature that must be implemented. Following are the new methods:
+PyFunc model should implements class `PyFuncV3Model` instead of `PyFuncModel`. This `PyFuncV3Model` has difference method signature that must be implemented. Following are the new methods:
+
 | Method Name | Description |
 |-------------|-------------|
 | `preprocess(self, request: dict, **kwargs) -> ModelInput` | Doing preprocessing that returning all the required features for prediction. Must be implemented if using `HTTP_JSON` protocol |
@@ -29,23 +30,29 @@ Currently the only supported model for model observability is PyFunc model, the 
 | `upiv1_postprocess(self, model_output: ModelOutput, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse` | Postprocess method signature that only callend when using `UPI_V1` protocol. Must be implemented if using `UPI_V1` protocol |
 
 Beside changes in signature, you can see some of those methods returning new type, `ModelInput` and `ModelOutput`. `ModelInput` is a class that represents input information of the models, this class contains following fields:
+
 | Field | Type | Description|
 |-------|------|------------|
-| `prediction_ids` | List[str] | Unique identifier for each prediction |
+| `prediction_ids` | List[str] | Unique identifier for each row in prediction |
 | `features` | Union[Values, pandas.DataFrame] | Features value that is used by the model to generate prediction. Length of features should be the same with `prediction_ids` | 
 | `entities` | Optional[Union[Values, pandas.DataFrame]] | Additional data that are not used for prediction, but this data is used to retrieved another features, e.g `driver_id`, we can retrieve features associated with certain `driver_id`|
 | `session_id` | str | Identifier for the request. This value will be used together with `prediction_ids` as prediction identifier in model observability system  |
 
 `ModelInput` data is essential for model observability since it contains features values and identifier of prediction. Features values are used to calculate feature drift, and identifier is used as join key between features, prediction data with ground truth data. On the other hand, `ModelOutput` is the class that represent raw model prediction output, not the final output of PyFunc model. `ModelOutput` class contains following fields:
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `prediction` | Values | `predictions` contains prediction output from ml_predict, it may contains multiple columns e.g for multiclass classification or for binary classification that contains prediction score and label |
-| `prediction_ids` | List[str] | Unique identifier for each prediction output |
+| `prediction_ids` | List[str] | Unique identifier for each row in prediction output |
 
 Same like `ModelInput`, `ModelOutput` is also essential for model observability, it can be used to calculate prediction drift but more importantly it can calculate performance metrics.
 
+### Standard Model
+Only xgboost model is supported at the moment. To enable model observability, user will need to enable request response logging for the model. 1% of the predictions will be sampled, and this is not configurable at the moment.
+
 ### Configure Model Schema
-Model schema is essential for model observability because it is used by the kafka consumer to choose which columns that is relevant to model observability and do necessary preprocessing before publishing the data to model observability system. Users can see more detail of configuring model schema [here](../generated/10_model_schema.md)
+
+Model schema is essential for model observability because it is used by the kafka consumer to choose which columns that is relevant to model observability and do necessary preprocessing before publishing the data to model observability system. Users can see more detail of configuring model schema [here](../templates/09_model_schema.md)
 
 ### Deployment
 There is not much change on the deployment part, users just needs to set `enable_model_observability` parameter to `True` during model deploy. For clarity, we take one use case for model observability example, suppose a model has 4 features:
@@ -82,7 +89,8 @@ model_schema = ModelSchema(spec=InferenceSchema(
             "featureC": ValueType.STRING,
             "featureD": ValueType.BOOLEAN
         },
-        prediction_id_column="prediction_id",
+        session_id_column="session_id",
+        row_id_column="prediction_id",
         model_prediction_output=RankingOutput(
             rank_score_column="score",
             prediction_group_id_column="session_id",
@@ -96,3 +104,18 @@ with merlin.new_model_version(model_schema=model_schema) as v:
                            artifacts={"model": ARTIFACT_PATH})
 endpoint = merlin.deploy(v, enable_model_observability=True)
 ```
+
+For standard model, we will also need to add an additional field, `feature_orders` to the inference schema:
+
+```python
+InferenceSchema(
+    ...
+    feature_orders=["featureA", "featureB", "featureC", "featureD"],
+)
+```
+
+The features in the list should follow the same order as the expected input to the standard model.
+
+The json request body to the standard model is also expected to have these additional fields:
+* `session_id (String)` - Identifier for the request.
+* `row_ids (Array)` - Unique identifier for each row in prediction. Optional if you only have one row per prediction.
