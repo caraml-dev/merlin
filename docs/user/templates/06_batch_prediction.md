@@ -104,15 +104,25 @@ Source: https://github.com/GoogleCloudDataproc/spark-bigquery-connector
 
 ## Configuring Resource Request
 
-Class `PredictionJobResourceRequest` is useful to configure the resource request for running prediction job. Following are the parameters that can be configured:
+Class `PredictionJobResourceRequest` is useful to configure the resource request for running prediction job. It contains several configurable parameters of the underlying Spark application. Broadly, configurations for the following Spark components are exposed:
+* Driver - The driver is responsible for orchestration of the computation. It is the central coordinator that manages the execution of the Spark application.
+* Executor - The executors execute the tasks assigned to them by the driver. These are the worker nodes responsible for performing the actual computations.
 
-1. `driver_cpu_request` : Driver CPU request. e.g: 1, 1500m , 500m
-1. `driver_memory_request`: Driver memory request. e.g. 1Gi, 512Mi
-1. `executor_cpu_request`: executor CPU request. e.g: 1, 1500m , 500m
-1. `executor_memory_request`: executor memory request. e.g. 1Gi, 512Mi
-1. `executor_replica`: number of executor replica. e.g. 1, 2
+The executor resources play a crucial role in the performance of the prediction jobs. The driver resources, on the other hand, are more relevant to driver-intensive tasks (when a lot of aggregations are involved) and are thus less important for the prediction jobs. For both the driver and the executor, increasing the CPU allocation can result in better parallelism and faster computations. Similarly, increasing the memory allocation allows for larger amounts of data to be retained in memory (as opposed to saving chunks onto the disk) which in turn improves the processing time.
 
-Without specifying `PredictionJobResourceRequest` the prediction job will run with the system default as follows:
+The below configurations of the driver and executor may be modified.
+
+1. `driver_cpu_request` : Driver CPU request. e.g: 1, 1500m , 500m.
+2. `driver_memory_request`: Driver memory request. e.g. 1Gi, 512Mi
+3. `executor_cpu_request`: executor CPU request. e.g: 1, 1500m , 500m
+4. `executor_memory_request`: executor memory request. e.g. 1Gi, 512Mi
+5. `executor_replica`: number of executor replica. e.g. 1, 2
+
+The same configurations may also be applied from the UI when submitting a batch job:
+
+![Batch resource configuration](../../images/batch_resource_configuration.png)
+
+Without specifying any resources, the prediction job will run with the system default as follows:
 
 ```
 executor_replica: 3
@@ -122,9 +132,13 @@ executor_cpu_request: "2"
 executor_memory_request: "2Gi"
 ```
 
-This default configuration is good enough for most cases. However, it might not be sufficient for case where you have large model size , the dataset has a wide table (a lot of column), or the processing requires a lot of memory. In such case you might want to increase the `executor_memory_request` to a larger value. The best value can be determined by observing the memory usage of the executor in the monitoring dashboard.
+This default configuration is good enough for most cases. However, it might not be sufficient for cases where you have large model size, the dataset has a wide table (a lot of column), or the processing requires a lot of memory. In such cases, you might want to increase the `executor_memory_request` to a larger value.
 
 You might also want to make the prediction job to complete faster by increasing the `executor_cpu_request` and `executor_replica`. However, **it will increase the cost significantly**.
+
+**Note:** When optimizing the resource configurations, the best values can be determined by observing the resource usage of the components in the monitoring dashboard. However, we must also account for spikes instead of simply relying on the average value over a time window.
+
+![Monitoring Dashboard](../../images/batch_resource_metrics.png)
 
 ## Known Issues
 
