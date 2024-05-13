@@ -42,8 +42,8 @@ ProjectsGet List existing projects
 
 Projects can be filtered by optional `name` parameter
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ApiProjectsGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiProjectsGetRequest
 */
 func (a *ProjectAPIService) ProjectsGet(ctx context.Context) ApiProjectsGetRequest {
 	return ApiProjectsGetRequest{
@@ -53,8 +53,7 @@ func (a *ProjectAPIService) ProjectsGet(ctx context.Context) ApiProjectsGetReque
 }
 
 // Execute executes the request
-//
-//	@return []Project
+//  @return []Project
 func (a *ProjectAPIService) ProjectsGetExecute(r ApiProjectsGetRequest) ([]Project, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -164,8 +163,8 @@ func (r ApiProjectsPostRequest) Execute() (*Project, *http.Response, error) {
 /*
 ProjectsPost Create new project
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ApiProjectsPostRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiProjectsPostRequest
 */
 func (a *ProjectAPIService) ProjectsPost(ctx context.Context) ApiProjectsPostRequest {
 	return ApiProjectsPostRequest{
@@ -175,8 +174,7 @@ func (a *ProjectAPIService) ProjectsPost(ctx context.Context) ApiProjectsPostReq
 }
 
 // Execute executes the request
-//
-//	@return Project
+//  @return Project
 func (a *ProjectAPIService) ProjectsPostExecute(r ApiProjectsPostRequest) (*Project, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
@@ -282,9 +280,9 @@ func (r ApiProjectsProjectIdGetRequest) Execute() (*Project, *http.Response, err
 /*
 ProjectsProjectIdGet Get project
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId project id of the project to be retrieved
-	@return ApiProjectsProjectIdGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param projectId project id of the project to be retrieved
+ @return ApiProjectsProjectIdGetRequest
 */
 func (a *ProjectAPIService) ProjectsProjectIdGet(ctx context.Context, projectId int32) ApiProjectsProjectIdGetRequest {
 	return ApiProjectsProjectIdGetRequest{
@@ -295,8 +293,7 @@ func (a *ProjectAPIService) ProjectsProjectIdGet(ctx context.Context, projectId 
 }
 
 // Execute executes the request
-//
-//	@return Project
+//  @return Project
 func (a *ProjectAPIService) ProjectsProjectIdGetExecute(r ApiProjectsProjectIdGetRequest) (*Project, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -405,9 +402,9 @@ func (r ApiProjectsProjectIdPutRequest) Execute() (*Project, *http.Response, err
 /*
 ProjectsProjectIdPut Update project
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId project id of the project to be updated
-	@return ApiProjectsProjectIdPutRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param projectId project id of the project to be updated
+ @return ApiProjectsProjectIdPutRequest
 */
 func (a *ProjectAPIService) ProjectsProjectIdPut(ctx context.Context, projectId int32) ApiProjectsProjectIdPutRequest {
 	return ApiProjectsProjectIdPutRequest{
@@ -418,8 +415,7 @@ func (a *ProjectAPIService) ProjectsProjectIdPut(ctx context.Context, projectId 
 }
 
 // Execute executes the request
-//
-//	@return Project
+//  @return Project
 func (a *ProjectAPIService) ProjectsProjectIdPutExecute(r ApiProjectsProjectIdPutRequest) (*Project, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPut

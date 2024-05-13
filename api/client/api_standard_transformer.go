@@ -39,8 +39,8 @@ func (r ApiStandardTransformerSimulatePostRequest) Execute() (*StandardTransform
 /*
 StandardTransformerSimulatePost Simulate standard transformer
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ApiStandardTransformerSimulatePostRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiStandardTransformerSimulatePostRequest
 */
 func (a *StandardTransformerAPIService) StandardTransformerSimulatePost(ctx context.Context) ApiStandardTransformerSimulatePostRequest {
 	return ApiStandardTransformerSimulatePostRequest{
@@ -50,8 +50,7 @@ func (a *StandardTransformerAPIService) StandardTransformerSimulatePost(ctx cont
 }
 
 // Execute executes the request
-//
-//	@return StandardTransformerSimulationResponse
+//  @return StandardTransformerSimulationResponse
 func (a *StandardTransformerAPIService) StandardTransformerSimulatePostExecute(r ApiStandardTransformerSimulatePostRequest) (*StandardTransformerSimulationResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost

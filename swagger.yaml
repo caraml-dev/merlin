@@ -335,6 +335,63 @@ paths:
         "404":
           description: Project with given `project_id` not found
           content: {}
+  "/projects/{project_id}/jobs/page/{page}":
+    get:
+      tags:
+        - prediction_jobs
+      summary: List all prediction jobs created using the model
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: id
+          in: query
+          schema:
+            type: integer
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: model_id
+          in: query
+          schema:
+            type: integer
+        - name: version_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: error
+          in: query
+          schema:
+            type: string
+        - name: page_size
+          description: Number of items on each page. It defaults to 50.
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ListJobsPaginatedResponse"
+        "404":
+          description: Page not found
+          content: {}
   "/models/{model_id}/versions":
     get:
       tags:
@@ -1331,6 +1388,49 @@ paths:
                 "$ref": "#/components/schemas/Container"
         "404":
           description: Version endpoint with given `endpoint_id` not found
+          content: {}
+  "/models/{model_id}/versions/{version_id}/jobs/page/{page}":
+    get:
+      tags:
+        - prediction_jobs
+      summary: List all prediction jobs of a model version
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page_size
+          description: Number of items on each page. It defaults to 50.
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ListJobsPaginatedResponse"
+        "404":
+          description: Page not found
           content: {}
   "/standard_transformer/simulate":
     post:
@@ -2334,6 +2434,34 @@ components:
       enum:
         - HTTP_JSON
         - UPI_V1
+    Paging:
+      required:
+        - total
+        - page
+        - pages
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+          description: Total number of results matching the query criteria
+        page:
+          type: integer
+          format: int32
+          description: Number of the current page
+        pages:
+          type: integer
+          format: int32
+          description: Total number of pages
+    ListJobsPaginatedResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PredictionJob"
+        paging:
+          "$ref": "#/components/schemas/Paging"
   securitySchemes:
     Bearer:
       type: apiKey

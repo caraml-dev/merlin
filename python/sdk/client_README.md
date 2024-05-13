@@ -108,8 +108,10 @@ Class | Method | HTTP request | Description
 *PredictionJobsApi* | [**models_model_id_versions_version_id_jobs_job_id_containers_get**](client/docs/PredictionJobsApi.md#models_model_id_versions_version_id_jobs_job_id_containers_get) | **GET** /models/{model_id}/versions/{version_id}/jobs/{job_id}/containers | Get all container belong to a prediction job
 *PredictionJobsApi* | [**models_model_id_versions_version_id_jobs_job_id_get**](client/docs/PredictionJobsApi.md#models_model_id_versions_version_id_jobs_job_id_get) | **GET** /models/{model_id}/versions/{version_id}/jobs/{job_id} | Get prediction jobs with given id
 *PredictionJobsApi* | [**models_model_id_versions_version_id_jobs_job_id_stop_put**](client/docs/PredictionJobsApi.md#models_model_id_versions_version_id_jobs_job_id_stop_put) | **PUT** /models/{model_id}/versions/{version_id}/jobs/{job_id}/stop | Stop prediction jobs with given id
+*PredictionJobsApi* | [**models_model_id_versions_version_id_jobs_page_page_get**](client/docs/PredictionJobsApi.md#models_model_id_versions_version_id_jobs_page_page_get) | **GET** /models/{model_id}/versions/{version_id}/jobs/page/{page} | List all prediction jobs of a model version
 *PredictionJobsApi* | [**models_model_id_versions_version_id_jobs_post**](client/docs/PredictionJobsApi.md#models_model_id_versions_version_id_jobs_post) | **POST** /models/{model_id}/versions/{version_id}/jobs | Create a prediction job from the given model version
 *PredictionJobsApi* | [**projects_project_id_jobs_get**](client/docs/PredictionJobsApi.md#projects_project_id_jobs_get) | **GET** /projects/{project_id}/jobs | List all prediction jobs created using the model
+*PredictionJobsApi* | [**projects_project_id_jobs_page_page_get**](client/docs/PredictionJobsApi.md#projects_project_id_jobs_page_page_get) | **GET** /projects/{project_id}/jobs/page/{page} | List all prediction jobs created using the model
 *ProjectApi* | [**projects_get**](client/docs/ProjectApi.md#projects_get) | **GET** /projects | List existing projects
 *ProjectApi* | [**projects_post**](client/docs/ProjectApi.md#projects_post) | **POST** /projects | Create new project
 *ProjectApi* | [**projects_project_id_get**](client/docs/ProjectApi.md#projects_project_id_get) | **GET** /projects/{project_id} | Get project
@@ -148,6 +150,7 @@ Class | Method | HTTP request | Description
  - [ImageBuildingJobState](client/docs/ImageBuildingJobState.md)
  - [ImageBuildingJobStatus](client/docs/ImageBuildingJobStatus.md)
  - [Label](client/docs/Label.md)
+ - [ListJobsPaginatedResponse](client/docs/ListJobsPaginatedResponse.md)
  - [Logger](client/docs/Logger.md)
  - [LoggerConfig](client/docs/LoggerConfig.md)
  - [LoggerMode](client/docs/LoggerMode.md)
@@ -164,6 +167,7 @@ Class | Method | HTTP request | Description
  - [ModelPredictionOutputClass](client/docs/ModelPredictionOutputClass.md)
  - [ModelSchema](client/docs/ModelSchema.md)
  - [OperationTracing](client/docs/OperationTracing.md)
+ - [Paging](client/docs/Paging.md)
  - [PipelineTracing](client/docs/PipelineTracing.md)
  - [PredictionJob](client/docs/PredictionJob.md)
  - [PredictionJobConfig](client/docs/PredictionJobConfig.md)

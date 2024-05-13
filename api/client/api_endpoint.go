@@ -37,11 +37,11 @@ func (r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetRequest)
 /*
 ModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGet Get all container belong to a version endpoint
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@param endpointId
-	@return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @param endpointId
+ @return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetRequest
 */
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGet(ctx context.Context, modelId int32, versionId int32, endpointId string) ApiModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetRequest {
 	return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetRequest{
@@ -54,8 +54,7 @@ func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 }
 
 // Execute executes the request
-//
-//	@return Container
+//  @return Container
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetExecute(r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGetRequest) (*Container, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -161,11 +160,11 @@ func (r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdDeleteRequest) Execut
 /*
 ModelsModelIdVersionsVersionIdEndpointEndpointIdDelete Undeploy the specified model version deployment
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@param endpointId
-	@return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdDeleteRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @param endpointId
+ @return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdDeleteRequest
 */
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDelete(ctx context.Context, modelId int32, versionId int32, endpointId string) ApiModelsModelIdVersionsVersionIdEndpointEndpointIdDeleteRequest {
 	return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdDeleteRequest{
@@ -273,11 +272,11 @@ func (r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdGetRequest) Execute()
 /*
 ModelsModelIdVersionsVersionIdEndpointEndpointIdGet Get version endpoint resource
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@param endpointId
-	@return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @param endpointId
+ @return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdGetRequest
 */
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet(ctx context.Context, modelId int32, versionId int32, endpointId string) ApiModelsModelIdVersionsVersionIdEndpointEndpointIdGetRequest {
 	return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdGetRequest{
@@ -290,8 +289,7 @@ func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet
 }
 
 // Execute executes the request
-//
-//	@return VersionEndpoint
+//  @return VersionEndpoint
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGetExecute(r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdGetRequest) (*VersionEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -403,11 +401,11 @@ func (r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutRequest) Execute()
 /*
 ModelsModelIdVersionsVersionIdEndpointEndpointIdPut Modify version endpoint, this API will redeploy the associated deployment
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@param endpointId
-	@return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @param endpointId
+ @return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutRequest
 */
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut(ctx context.Context, modelId int32, versionId int32, endpointId string) ApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutRequest {
 	return ApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutRequest{
@@ -420,8 +418,7 @@ func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 }
 
 // Execute executes the request
-//
-//	@return VersionEndpoint
+//  @return VersionEndpoint
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPutExecute(r ApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutRequest) (*VersionEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPut
@@ -528,10 +525,10 @@ func (r ApiModelsModelIdVersionsVersionIdEndpointGetRequest) Execute() ([]Versio
 /*
 ModelsModelIdVersionsVersionIdEndpointGet List all endpoint of a model version
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@return ApiModelsModelIdVersionsVersionIdEndpointGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @return ApiModelsModelIdVersionsVersionIdEndpointGetRequest
 */
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointGet(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdEndpointGetRequest {
 	return ApiModelsModelIdVersionsVersionIdEndpointGetRequest{
@@ -543,8 +540,7 @@ func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointGet(ctx conte
 }
 
 // Execute executes the request
-//
-//	@return []VersionEndpoint
+//  @return []VersionEndpoint
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointGetExecute(r ApiModelsModelIdVersionsVersionIdEndpointGetRequest) ([]VersionEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -654,10 +650,10 @@ func (r ApiModelsModelIdVersionsVersionIdEndpointPostRequest) Execute() (*Versio
 /*
 ModelsModelIdVersionsVersionIdEndpointPost Deploy specific version of the models
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@return ApiModelsModelIdVersionsVersionIdEndpointPostRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @return ApiModelsModelIdVersionsVersionIdEndpointPostRequest
 */
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointPost(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdEndpointPostRequest {
 	return ApiModelsModelIdVersionsVersionIdEndpointPostRequest{
@@ -669,8 +665,7 @@ func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointPost(ctx cont
 }
 
 // Execute executes the request
-//
-//	@return VersionEndpoint
+//  @return VersionEndpoint
 func (a *EndpointAPIService) ModelsModelIdVersionsVersionIdEndpointPostExecute(r ApiModelsModelIdVersionsVersionIdEndpointPostRequest) (*VersionEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
