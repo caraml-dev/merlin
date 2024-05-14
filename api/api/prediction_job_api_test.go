@@ -93,7 +93,7 @@ func TestList(t *testing.T) {
 						VersionModelID:  models.ID(1),
 						EnvironmentName: "dev",
 					},
-				}, nil)
+				}, nil, nil)
 				return svc
 			},
 			expected: &Response{
@@ -177,7 +177,7 @@ func TestList(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return(nil, fmt.Errorf("Connection refused"))
+				}).Return(nil, nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -1441,7 +1441,7 @@ func TestListAllInProject(t *testing.T) {
 						VersionModelID:  models.ID(1),
 						EnvironmentName: "dev",
 					},
-				}, nil)
+				}, nil, nil)
 				return svc
 			},
 			expected: &Response{
@@ -1504,7 +1504,7 @@ func TestListAllInProject(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
 					ModelID: models.ID(1),
-				}).Return(nil, fmt.Errorf("Error creating secret: db is down"))
+				}).Return(nil, nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{

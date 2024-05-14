@@ -134,6 +134,7 @@ func TestGetPredictionJob(t *testing.T) {
 }
 
 func TestListPredictionJob(t *testing.T) {
+	var intPtr *int
 	jobs := []*models.PredictionJob{job}
 	svc, _, _, mockStorage, _ := newMockPredictionJobService()
 	query := &ListPredictionJobQuery{
@@ -154,7 +155,7 @@ func TestListPredictionJob(t *testing.T) {
 		Status:         query.Status,
 		Error:          query.Error,
 	}
-	mockStorage.On("List", expDbQuery).Return(jobs, nil)
+	mockStorage.On("List", expDbQuery, intPtr, intPtr).Return(jobs, nil)
 	j, _, err := svc.ListPredictionJobs(context.Background(), project, query)
 	assert.NoError(t, err)
 	assert.Equal(t, jobs, j)
