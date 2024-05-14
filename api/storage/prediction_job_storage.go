@@ -23,10 +23,11 @@ type PredictionJobStorage interface {
 	// Get get prediction job with given ID
 	Get(ID models.ID) (*models.PredictionJob, error)
 	// List list all prediction job matching the given query
-	List(query *models.PredictionJob) (endpoints []*models.PredictionJob, err error)
+	List(query *models.PredictionJob, offset *int, limit *int) (endpoints []*models.PredictionJob, err error)
+	// Count returns the count of rows in the given query
+	Count(query *models.PredictionJob) int
 	// Save save the prediction job to underlying storage
 	Save(predictionJob *models.PredictionJob) error
-	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
 	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
 	GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error)
 	Delete(*models.PredictionJob) error
@@ -50,10 +51,25 @@ func (p *predictionJobStorage) Get(id models.ID) (*models.PredictionJob, error) 
 }
 
 // List list all prediction job matching the given query
-func (p *predictionJobStorage) List(query *models.PredictionJob) (predictionJobs []*models.PredictionJob, err error) {
-	err = p.query().Select("id, name, version_id, version_model_id, project_id, environment_name, status, error, created_at, updated_at").
-		Where(query).Find(&predictionJobs).Error
+func (p *predictionJobStorage) List(query *models.PredictionJob, offset *int, limit *int) (predictionJobs []*models.PredictionJob, err error) {
+	q := p.query().Select("id, name, version_id, version_model_id, project_id, environment_name, status, error, created_at, updated_at").
+		Where(query).
+		Order("updated_at desc") // preserve order in case offset or limit are being set
+	if offset != nil {
+		q = q.Offset(*offset)
+	}
+	if limit != nil {
+		q = q.Limit(*limit)
+	}
+	err = q.Find(&predictionJobs).Error
 	return
+}
+
+func (p *predictionJobStorage) Count(query *models.PredictionJob) int {
+	var count int64
+	_ = p.query().Select("id, name, version_id, version_model_id, project_id, environment_name, status, error, created_at, updated_at").
+		Where(query).Count(&count)
+	return int(count)
 }
 
 // Save save the prediction job to underlying storage

@@ -18,8 +18,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"gorm.io/gorm"
+
+	"github.com/caraml-dev/mlp/api/pkg/pagination"
 
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
@@ -83,7 +86,47 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 		VersionID: versionID,
 	}
 
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
+	}
+
+	return Ok(jobs)
+}
+
+// ListInPage method lists all prediction jobs of a model and version ID, in the given page.
+func (c *PredictionJobController) ListInPage(r *http.Request, vars map[string]string, _ interface{}) *Response {
+	ctx := r.Context()
+
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	page, pageErr := strconv.Atoi(vars["page"])
+	pageSize, pageSizeErr := strconv.Atoi(vars["page_size"])
+
+	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
+	}
+
+	paginationOpts := pagination.Options{}
+	if pageErr == nil {
+		pageInt32 := int32(page)
+		paginationOpts.Page = &pageInt32
+	}
+	if pageSizeErr == nil {
+		pageSizeInt32 := int32(pageSize)
+		paginationOpts.PageSize = &pageSizeInt32
+	}
+	query := &service.ListPredictionJobQuery{
+		ModelID:    modelID,
+		VersionID:  versionID,
+		Pagination: paginationOpts,
+	}
+
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
@@ -205,7 +248,7 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}

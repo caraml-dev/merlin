@@ -159,8 +159,8 @@ github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dR
 github.com/boombuler/barcode v1.0.0/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
-github.com/caraml-dev/mlp v1.12.0 h1:yb/EgMh+83oKj0C1AhH3R6xt0eSd9GX+incZEOwM7oo=
-github.com/caraml-dev/mlp v1.12.0/go.mod h1:Zdz4bALO9WOHXhOgsoLmCjMCJnDVEZEnQFg8rk+u2cE=
+github.com/caraml-dev/mlp v1.12.1-0.20240508082653-5bd5a0786bcf h1:Nwpjzsex8b6mNQnkYGEN5KM6t84mbSIpSbzxo8Xld2w=
+github.com/caraml-dev/mlp v1.12.1-0.20240508082653-5bd5a0786bcf/go.mod h1:Zdz4bALO9WOHXhOgsoLmCjMCJnDVEZEnQFg8rk+u2cE=
 github.com/caraml-dev/protopath v0.1.0 h1:hjJ/U9RGD6QZ0Ee9SIYbVmwPugps4S5EpL6R+5ZrBe0=
 github.com/caraml-dev/protopath v0.1.0/go.mod h1:hVA2HkTrMYv+Q57gtrzu9/P7EXlNtBUcTz43z6EE010=
 github.com/caraml-dev/universal-prediction-interface v1.0.0 h1:3Z6adv1XZnBVRzFIeCu3mPcPnJrdB5IByYfdD9K/atI=

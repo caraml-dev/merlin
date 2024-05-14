@@ -12,7 +12,7 @@ require (
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
-	github.com/caraml-dev/mlp v1.12.0
+	github.com/caraml-dev/mlp v1.12.1-0.20240508082653-5bd5a0786bcf
 	github.com/caraml-dev/protopath v0.1.0
 	github.com/caraml-dev/universal-prediction-interface v1.0.0
 	github.com/cenkalti/backoff/v4 v4.2.1
