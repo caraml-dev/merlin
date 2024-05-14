@@ -335,11 +335,11 @@ paths:
         "404":
           description: Project with given `project_id` not found
           content: {}
-  "/projects/{project_id}/jobs/page/{page}":
+  "/projects/{project_id}/jobs-by-page":
     get:
       tags:
         - prediction_jobs
-      summary: List all prediction jobs created using the model
+      summary: List all prediction jobs created using the model with pagination
       parameters:
         - name: project_id
           in: path
@@ -347,8 +347,7 @@ paths:
           schema:
             type: integer
         - name: page
-          in: path
-          required: true
+          in: query
           schema:
             type: integer
             format: int32
@@ -1389,11 +1388,11 @@ paths:
         "404":
           description: Version endpoint with given `endpoint_id` not found
           content: {}
-  "/models/{model_id}/versions/{version_id}/jobs/page/{page}":
+  "/models/{model_id}/versions/{version_id}/jobs-by-page":
     get:
       tags:
         - prediction_jobs
-      summary: List all prediction jobs of a model version
+      summary: List all prediction jobs of a model version with pagination
       parameters:
         - name: model_id
           in: path
@@ -1411,8 +1410,7 @@ paths:
           schema:
             type: integer
         - name: page
-          in: path
-          required: true
+          in: query
           schema:
             type: integer
             format: int32

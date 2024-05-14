@@ -33,6 +33,11 @@ type PredictionJobController struct {
 	*AppContext
 }
 
+type ListJobsPaginatedResponse struct {
+	Results []*models.PredictionJob `json:"results,omitempty"`
+	Paging  *pagination.Paging      `json:"paging,omitempty"`
+}
+
 // Create method creates a prediction job.
 func (c *PredictionJobController) Create(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
@@ -111,6 +116,7 @@ func (c *PredictionJobController) ListInPage(r *http.Request, vars map[string]st
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
+	// We will append page and pageSize to the query if they are set.
 	paginationOpts := pagination.Options{}
 	if pageErr == nil {
 		pageInt32 := int32(page)
@@ -126,12 +132,15 @@ func (c *PredictionJobController) ListInPage(r *http.Request, vars map[string]st
 		Pagination: paginationOpts,
 	}
 
-	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
 
-	return Ok(jobs)
+	return Ok(ListJobsPaginatedResponse{
+		Results: jobs,
+		Paging:  paging,
+	})
 }
 
 // Get method gets a prediction job.
