@@ -1404,11 +1404,6 @@ paths:
           required: true
           schema:
             type: integer
-        - name: project_id
-          in: path
-          required: true
-          schema:
-            type: integer
         - name: page
           in: query
           schema:

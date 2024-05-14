@@ -27,7 +27,6 @@ type ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest struct {
 	ApiService *PredictionJobsAPIService
 	modelId    int32
 	versionId  int32
-	projectId  int32
 	page       *int32
 	pageSize   *int32
 }
@@ -53,16 +52,14 @@ ModelsModelIdVersionsVersionIdJobsByPageGet List all prediction jobs of a model 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  @param modelId
  @param versionId
- @param projectId
  @return ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest
 */
-func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGet(ctx context.Context, modelId int32, versionId int32, projectId int32) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
+func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGet(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest{
 		ApiService: a,
 		ctx:        ctx,
 		modelId:    modelId,
 		versionId:  versionId,
-		projectId:  projectId,
 	}
 }
 
@@ -84,7 +81,6 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGetEx
 	localVarPath := localBasePath + "/models/{model_id}/versions/{version_id}/jobs-by-page"
 	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", url.PathEscape(parameterValueToString(r.modelId, "modelId")), -1)
 	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", url.PathEscape(parameterValueToString(r.versionId, "versionId")), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", url.PathEscape(parameterValueToString(r.projectId, "projectId")), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}

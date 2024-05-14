@@ -56,7 +56,6 @@ class PredictionJobsApi:
         self,
         model_id: StrictInt,
         version_id: StrictInt,
-        project_id: StrictInt,
         page: Optional[StrictInt] = None,
         page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
         _request_timeout: Union[
@@ -79,8 +78,6 @@ class PredictionJobsApi:
         :type model_id: int
         :param version_id: (required)
         :type version_id: int
-        :param project_id: (required)
-        :type project_id: int
         :param page:
         :type page: int
         :param page_size: Number of items on each page. It defaults to 50.
@@ -110,7 +107,6 @@ class PredictionJobsApi:
         _param = self._models_model_id_versions_version_id_jobs_by_page_get_serialize(
             model_id=model_id,
             version_id=version_id,
-            project_id=project_id,
             page=page,
             page_size=page_size,
             _request_auth=_request_auth,
@@ -140,7 +136,6 @@ class PredictionJobsApi:
         self,
         model_id: StrictInt,
         version_id: StrictInt,
-        project_id: StrictInt,
         page: Optional[StrictInt] = None,
         page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
         _request_timeout: Union[
@@ -163,8 +158,6 @@ class PredictionJobsApi:
         :type model_id: int
         :param version_id: (required)
         :type version_id: int
-        :param project_id: (required)
-        :type project_id: int
         :param page:
         :type page: int
         :param page_size: Number of items on each page. It defaults to 50.
@@ -194,7 +187,6 @@ class PredictionJobsApi:
         _param = self._models_model_id_versions_version_id_jobs_by_page_get_serialize(
             model_id=model_id,
             version_id=version_id,
-            project_id=project_id,
             page=page,
             page_size=page_size,
             _request_auth=_request_auth,
@@ -224,7 +216,6 @@ class PredictionJobsApi:
         self,
         model_id: StrictInt,
         version_id: StrictInt,
-        project_id: StrictInt,
         page: Optional[StrictInt] = None,
         page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
         _request_timeout: Union[
@@ -247,8 +238,6 @@ class PredictionJobsApi:
         :type model_id: int
         :param version_id: (required)
         :type version_id: int
-        :param project_id: (required)
-        :type project_id: int
         :param page:
         :type page: int
         :param page_size: Number of items on each page. It defaults to 50.
@@ -278,7 +267,6 @@ class PredictionJobsApi:
         _param = self._models_model_id_versions_version_id_jobs_by_page_get_serialize(
             model_id=model_id,
             version_id=version_id,
-            project_id=project_id,
             page=page,
             page_size=page_size,
             _request_auth=_request_auth,
@@ -303,7 +291,6 @@ class PredictionJobsApi:
         self,
         model_id,
         version_id,
-        project_id,
         page,
         page_size,
         _request_auth,
@@ -330,8 +317,6 @@ class PredictionJobsApi:
             _path_params['model_id'] = model_id
         if version_id is not None:
             _path_params['version_id'] = version_id
-        if project_id is not None:
-            _path_params['project_id'] = project_id
         # process the query parameters
         if page is not None:
             

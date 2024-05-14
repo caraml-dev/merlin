@@ -99,8 +99,8 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 	return Ok(jobs)
 }
 
-// ListInPage method lists all prediction jobs of a model and version ID, in the given page.
-func (c *PredictionJobController) ListInPage(r *http.Request, vars map[string]string, _ interface{}) *Response {
+// ListInPage method lists all prediction jobs of a model and version ID, with pagination.
+func (c *PredictionJobController) ListByPage(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -263,4 +263,46 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 	}
 
 	return Ok(jobs)
+}
+
+// ListAllInProject lists all prediction jobs of a project, with pagination
+func (c *PredictionJobController) ListAllInProjectByPage(r *http.Request, vars map[string]string, body interface{}) *Response {
+	ctx := r.Context()
+
+	var query service.ListPredictionJobQuery
+	err := decoder.Decode(&query, r.URL.Query())
+	if err != nil {
+		return BadRequest(fmt.Sprintf("Bad query %s", r.URL.Query()))
+	}
+
+	projectID, _ := models.ParseID(vars["project_id"])
+	page, pageErr := strconv.Atoi(vars["page"])
+	pageSize, pageSizeErr := strconv.Atoi(vars["page_size"])
+
+	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
+	if err != nil {
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
+	}
+
+	// We will append page and pageSize to the query if they are set.
+	paginationOpts := pagination.Options{}
+	if pageErr == nil {
+		pageInt32 := int32(page)
+		paginationOpts.Page = &pageInt32
+	}
+	if pageSizeErr == nil {
+		pageSizeInt32 := int32(pageSize)
+		paginationOpts.PageSize = &pageSizeInt32
+	}
+	query.Pagination = paginationOpts
+
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
+	}
+
+	return Ok(ListJobsPaginatedResponse{
+		Results: jobs,
+		Paging:  paging,
+	})
 }

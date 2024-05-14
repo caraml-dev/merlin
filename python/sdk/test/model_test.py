@@ -941,10 +941,15 @@ class TestModelVersion:
     def test_list_prediction_job(self, version):
         responses.add(
             method="GET",
-            url="/v1/models/1/versions/1/jobs",
-            body=json.dumps(
-                [job_1.to_dict(), job_2.to_dict()], default=serialize_datetime
-            ),
+            url="/v1/models/1/versions/1/jobs-by-page",
+            body=json.dumps({
+                "results": [job_1.to_dict(), job_2.to_dict()],
+                "paging": {
+                    "page": 1,
+                    "pages": 1,
+                    "total": 2,
+                },
+            }, default=serialize_datetime),
             status=200,
             content_type="application/json",
         )
