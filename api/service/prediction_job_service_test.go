@@ -134,32 +134,107 @@ func TestGetPredictionJob(t *testing.T) {
 }
 
 func TestListPredictionJob(t *testing.T) {
-	var intPtr *int
-	jobs := []*models.PredictionJob{job}
-	svc, _, _, mockStorage, _ := newMockPredictionJobService()
-	query := &ListPredictionJobQuery{
-		ID:        1,
-		Name:      "test",
-		ModelID:   2,
-		VersionID: 3,
-		Status:    models.JobFailed,
-		Error:     "runtime error",
+	var intNil *int
+	var int32Two, int32Three int32 = 2, 3
+	tests := map[string]struct {
+		query       ListPredictionJobQuery
+		isPaginated bool
+		total       int
+		offset      int
+		limit       int
+		expected    []*models.PredictionJob
+	}{
+		"basic": {
+			query: ListPredictionJobQuery{
+				ID:        1,
+				Name:      "test",
+				ModelID:   2,
+				VersionID: 3,
+				Status:    models.JobFailed,
+				Error:     "runtime error",
+			},
+			total:    1,
+			expected: []*models.PredictionJob{job},
+		},
+		"search": {
+			query: ListPredictionJobQuery{
+				Search: model.Name,
+			},
+			total:    1,
+			expected: []*models.PredictionJob{job},
+		},
+		"pagination": {
+			query: ListPredictionJobQuery{
+				ID:        1,
+				Name:      "test",
+				ModelID:   2,
+				VersionID: 3,
+				Status:    models.JobFailed,
+				Error:     "runtime error",
+				Page:      &int32Three,
+				PageSize:  &int32Two,
+			},
+			isPaginated: true,
+			total:       10,
+			offset:      4,
+			limit:       2,
+			expected: []*models.PredictionJob{
+				job,
+				{
+					ID:   1,
+					Name: fmt.Sprintf("%s-test", model.Name),
+				},
+			},
+		},
+		"pagination defaults": {
+			query: ListPredictionJobQuery{
+				ID:        1,
+				Name:      "test",
+				ModelID:   2,
+				VersionID: 3,
+				Status:    models.JobFailed,
+				Error:     "runtime error",
+			},
+			isPaginated: true,
+			total:       10,
+			offset:      0,
+			limit:       int(DefaultPageSize),
+			expected: []*models.PredictionJob{
+				job,
+				{
+					ID:   1,
+					Name: fmt.Sprintf("%s-test", model.Name),
+				},
+			},
+		},
 	}
 
-	expDbQuery := &models.PredictionJob{
-		ID:             query.ID,
-		Name:           query.Name,
-		VersionID:      query.VersionID,
-		VersionModelID: query.ModelID,
-		ProjectID:      models.ID(project.ID),
-		Status:         query.Status,
-		Error:          query.Error,
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			svc, _, _, mockStorage, _ := newMockPredictionJobService()
+			expDbQuery := &models.PredictionJob{
+				ID:             tt.query.ID,
+				Name:           tt.query.Name,
+				VersionID:      tt.query.VersionID,
+				VersionModelID: tt.query.ModelID,
+				ProjectID:      models.ID(project.ID),
+				Status:         tt.query.Status,
+				Error:          tt.query.Error,
+			}
+
+			if tt.isPaginated {
+				mockStorage.On("List", expDbQuery, tt.query.Search, &tt.offset, &tt.limit).Return(tt.expected, nil)
+				mockStorage.On("Count", expDbQuery, tt.query.Search).Return(int(tt.total))
+			} else {
+				mockStorage.On("List", expDbQuery, tt.query.Search, intNil, intNil).Return(tt.expected, nil)
+			}
+
+			j, _, err := svc.ListPredictionJobs(context.Background(), project, &tt.query, tt.isPaginated)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, j)
+			mockStorage.AssertExpectations(t)
+		})
 	}
-	mockStorage.On("List", expDbQuery, "", intPtr, intPtr).Return(jobs, nil)
-	j, _, err := svc.ListPredictionJobs(context.Background(), project, query, false)
-	assert.NoError(t, err)
-	assert.Equal(t, jobs, j)
-	mockStorage.AssertExpectations(t)
 }
 
 func TestCreatePredictionJob(t *testing.T) {
