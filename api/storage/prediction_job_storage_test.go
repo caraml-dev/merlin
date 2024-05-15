@@ -337,26 +337,27 @@ func TestPredictionJobStorage_List_And_Count(t *testing.T) {
 		}, fmt.Sprintf("%s", time1), nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 1)
-		assert(t, jobs[0].Name, name1)
+		assert.Equal(t, jobs[0].Name, name1)
 
 		// Test offset. Selects the less recently updated jobs.
+		intOne := 1
 		jobs, err = predJobStore.List(&models.PredictionJob{
 			VersionModelID: m.ID,
-		}, "", 1, nil)
+		}, "", &intOne, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 1)
-		assert(t, jobs[0].Name, name1)
+		assert.Equal(t, jobs[0].Name, name1)
 
 		// Test limit. Selects the most recently updated job.
 		jobs, err = predJobStore.List(&models.PredictionJob{
 			VersionModelID: m.ID,
-		}, "", nil, 1)
+		}, "", nil, &intOne)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 1)
-		assert(t, jobs[0].Name, name2)
+		assert.Equal(t, jobs[0].Name, name2)
 
 		// Test Count
-		count := predJobStore.Count(&models.PredictionJob{VersionModelID: m.ID}, time1)
+		count := predJobStore.Count(&models.PredictionJob{VersionModelID: m.ID}, fmt.Sprintf("%s", time1))
 		assert.Equal(t, 1, count)
 	})
 }
