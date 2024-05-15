@@ -290,9 +290,10 @@ paths:
       x-codegen-request-body-name: body
   "/projects/{project_id}/jobs":
     get:
+      deprecated: true
       tags:
         - prediction_jobs
-      summary: List all prediction jobs created using the model
+      summary: List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
       parameters:
         - name: project_id
           in: path
@@ -1250,9 +1251,10 @@ paths:
       x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/jobs":
     get:
+      deprecated: true
       tags:
         - prediction_jobs
-      summary: List all prediction jobs of a model version
+      summary: List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
       parameters:
         - name: model_id
           in: path

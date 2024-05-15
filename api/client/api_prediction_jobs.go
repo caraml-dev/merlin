@@ -172,12 +172,14 @@ func (r ApiModelsModelIdVersionsVersionIdJobsGetRequest) Execute() ([]Prediction
 }
 
 /*
-ModelsModelIdVersionsVersionIdJobsGet List all prediction jobs of a model version
+ModelsModelIdVersionsVersionIdJobsGet List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  @param modelId
  @param versionId
  @return ApiModelsModelIdVersionsVersionIdJobsGetRequest
+
+Deprecated
 */
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsGet(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdJobsGetRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsGetRequest{
@@ -190,6 +192,7 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsGet(ctx con
 
 // Execute executes the request
 //  @return []PredictionJob
+// Deprecated
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsGetExecute(r ApiModelsModelIdVersionsVersionIdJobsGetRequest) ([]PredictionJob, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -1016,11 +1019,13 @@ func (r ApiProjectsProjectIdJobsGetRequest) Execute() ([]PredictionJob, *http.Re
 }
 
 /*
-ProjectsProjectIdJobsGet List all prediction jobs created using the model
+ProjectsProjectIdJobsGet List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  @param projectId
  @return ApiProjectsProjectIdJobsGetRequest
+
+Deprecated
 */
 func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGet(ctx context.Context, projectId int32) ApiProjectsProjectIdJobsGetRequest {
 	return ApiProjectsProjectIdJobsGetRequest{
@@ -1032,6 +1037,7 @@ func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGet(ctx context.Context,
 
 // Execute executes the request
 //  @return []PredictionJob
+// Deprecated
 func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGetExecute(r ApiProjectsProjectIdJobsGetRequest) ([]PredictionJob, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet

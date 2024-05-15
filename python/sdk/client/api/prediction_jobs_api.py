@@ -380,7 +380,7 @@ class PredictionJobsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[PredictionJob]:
-        """List all prediction jobs of a model version
+        """(Deprecated) List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
 
         :param model_id: (required)
@@ -408,6 +408,7 @@ class PredictionJobsApi:
         :type _host_index: int, optional
         :return: Returns the result object.
         """ # noqa: E501
+        warnings.warn("GET /models/{model_id}/versions/{version_id}/jobs is deprecated.", DeprecationWarning)
 
         _param = self._models_model_id_versions_version_id_jobs_get_serialize(
             model_id=model_id,
@@ -452,7 +453,7 @@ class PredictionJobsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[PredictionJob]]:
-        """List all prediction jobs of a model version
+        """(Deprecated) List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
 
         :param model_id: (required)
@@ -480,6 +481,7 @@ class PredictionJobsApi:
         :type _host_index: int, optional
         :return: Returns the result object.
         """ # noqa: E501
+        warnings.warn("GET /models/{model_id}/versions/{version_id}/jobs is deprecated.", DeprecationWarning)
 
         _param = self._models_model_id_versions_version_id_jobs_get_serialize(
             model_id=model_id,
@@ -524,7 +526,7 @@ class PredictionJobsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List all prediction jobs of a model version
+        """(Deprecated) List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
 
         :param model_id: (required)
@@ -552,6 +554,7 @@ class PredictionJobsApi:
         :type _host_index: int, optional
         :return: Returns the result object.
         """ # noqa: E501
+        warnings.warn("GET /models/{model_id}/versions/{version_id}/jobs is deprecated.", DeprecationWarning)
 
         _param = self._models_model_id_versions_version_id_jobs_get_serialize(
             model_id=model_id,
@@ -2234,7 +2237,7 @@ class PredictionJobsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[PredictionJob]:
-        """List all prediction jobs created using the model
+        """(Deprecated) List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
 
         :param project_id: (required)
@@ -2274,6 +2277,7 @@ class PredictionJobsApi:
         :type _host_index: int, optional
         :return: Returns the result object.
         """ # noqa: E501
+        warnings.warn("GET /projects/{project_id}/jobs is deprecated.", DeprecationWarning)
 
         _param = self._projects_project_id_jobs_get_serialize(
             project_id=project_id,
@@ -2330,7 +2334,7 @@ class PredictionJobsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[PredictionJob]]:
-        """List all prediction jobs created using the model
+        """(Deprecated) List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
 
         :param project_id: (required)
@@ -2370,6 +2374,7 @@ class PredictionJobsApi:
         :type _host_index: int, optional
         :return: Returns the result object.
         """ # noqa: E501
+        warnings.warn("GET /projects/{project_id}/jobs is deprecated.", DeprecationWarning)
 
         _param = self._projects_project_id_jobs_get_serialize(
             project_id=project_id,
@@ -2426,7 +2431,7 @@ class PredictionJobsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List all prediction jobs created using the model
+        """(Deprecated) List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
 
         :param project_id: (required)
@@ -2466,6 +2471,7 @@ class PredictionJobsApi:
         :type _host_index: int, optional
         :return: Returns the result object.
         """ # noqa: E501
+        warnings.warn("GET /projects/{project_id}/jobs is deprecated.", DeprecationWarning)
 
         _param = self._projects_project_id_jobs_get_serialize(
             project_id=project_id,
