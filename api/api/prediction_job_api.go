@@ -34,7 +34,7 @@ type PredictionJobController struct {
 
 type ListJobsPaginatedResponse struct {
 	Results []*models.PredictionJob `json:"results"`
-	Paging  *pagination.Paging      `json:"paging"`
+	Paging  pagination.Paging       `json:"paging"`
 }
 
 // Create method creates a prediction job.
@@ -123,7 +123,7 @@ func (c *PredictionJobController) ListByPage(r *http.Request, vars map[string]st
 
 	return Ok(ListJobsPaginatedResponse{
 		Results: jobs,
-		Paging:  paging,
+		Paging:  *paging,
 	})
 }
 
@@ -273,6 +273,6 @@ func (c *PredictionJobController) ListAllInProjectByPage(r *http.Request, vars m
 
 	return Ok(ListJobsPaginatedResponse{
 		Results: jobs,
-		Paging:  paging,
+		Paging:  *paging,
 	})
 }

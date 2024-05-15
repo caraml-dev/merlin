@@ -30,6 +30,7 @@ import (
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/caraml-dev/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/pkg/pagination"
 )
 
 func TestList(t *testing.T) {
@@ -209,6 +210,199 @@ func TestList(t *testing.T) {
 			}
 
 			resp := ctl.List(&http.Request{}, tC.vars, nil)
+			assertEqualResponses(t, tC.expected, resp)
+		})
+	}
+}
+
+func TestListByPage(t *testing.T) {
+	testCases := []struct {
+		desc                 string
+		vars                 map[string]string
+		modelService         func() *mocks.ModelsService
+		versionService       func() *mocks.VersionsService
+		predictionJobService func() *mocks.PredictionJobService
+		expected             *Response
+	}{
+		{
+			desc: "Should succcess list prediction job",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}, true).Return([]*models.PredictionJob{
+					{
+						ID:              models.ID(1),
+						Name:            "prediction-job-1",
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
+						EnvironmentName: "dev",
+					},
+				}, &pagination.Paging{
+					Total: 1,
+					Page:  1,
+					Pages: 1,
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: ListJobsPaginatedResponse{
+					Results: []*models.PredictionJob{
+						{
+							ID:              models.ID(1),
+							Name:            "prediction-job-1",
+							ProjectID:       models.ID(1),
+							VersionID:       models.ID(1),
+							VersionModelID:  models.ID(1),
+							EnvironmentName: "dev",
+						},
+					},
+					Paging: pagination.Paging{
+						Total: 1,
+						Page:  1,
+						Pages: 1,
+					},
+				},
+			},
+		},
+		{
+			desc: "Should return 500 if error fetching model",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
+			},
+		},
+		{
+			desc: "Should return 500 if list prediction job returning error",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}, true).Return(nil, nil, fmt.Errorf("Connection refused"))
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Error listing prediction jobs: Connection refused"},
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			modelSvc := tC.modelService()
+			versionSvc := tC.versionService()
+			predictionJobSvc := tC.predictionJobService()
+			ctl := &PredictionJobController{
+				AppContext: &AppContext{
+					ModelsService:        modelSvc,
+					VersionsService:      versionSvc,
+					PredictionJobService: predictionJobSvc,
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
+					},
+				},
+			}
+
+			resp := ctl.ListByPage(&http.Request{}, tC.vars, nil)
 			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
@@ -1534,6 +1728,156 @@ func TestListAllInProject(t *testing.T) {
 				},
 			}
 			resp := ctl.ListAllInProject(tC.request, tC.vars, nil)
+			assertEqualResponses(t, tC.expected, resp)
+		})
+	}
+}
+
+func TestListAllInProjectByPage(t *testing.T) {
+	testCases := []struct {
+		desc                 string
+		request              *http.Request
+		vars                 map[string]string
+		projectService       func() *mocks.ProjectsService
+		predictionJobService func() *mocks.PredictionJobService
+		expected             *Response
+	}{
+		{
+			desc: "Should success list of prediction job",
+			request: &http.Request{URL: &url.URL{
+				RawQuery: "name=prediction-job&model_id=1",
+			}},
+			vars: map[string]string{
+				"project_id": "1",
+			},
+			projectService: func() *mocks.ProjectsService {
+				svc := &mocks.ProjectsService{}
+				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
+					ID:                1,
+					Name:              "project-1",
+					MLFlowTrackingURL: "http://mlflow.com",
+					Team:              "dsp",
+					Stream:            "dsp",
+				}), nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
+					Name:    "prediction-job",
+					ModelID: models.ID(1),
+				}, true).Return([]*models.PredictionJob{
+					{
+						ID:              models.ID(1),
+						Name:            "prediction-job-1",
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
+						EnvironmentName: "dev",
+					},
+				}, &pagination.Paging{
+					Total: 1,
+					Page:  1,
+					Pages: 1,
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: ListJobsPaginatedResponse{
+					Results: []*models.PredictionJob{
+						{
+							ID:              models.ID(1),
+							Name:            "prediction-job-1",
+							ProjectID:       models.ID(1),
+							VersionID:       models.ID(1),
+							VersionModelID:  models.ID(1),
+							EnvironmentName: "dev",
+						},
+					},
+					Paging: pagination.Paging{
+						Total: 1,
+						Page:  1,
+						Pages: 1,
+					},
+				},
+			},
+		},
+		{
+			desc: "Should return 404 when error fetching project",
+			request: &http.Request{URL: &url.URL{
+				RawQuery: "name=prediction-job&model_id=1",
+			}},
+			vars: map[string]string{
+				"project_id": "1",
+			},
+			projectService: func() *mocks.ProjectsService {
+				svc := &mocks.ProjectsService{}
+				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project{}, fmt.Errorf("API is down"))
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusNotFound,
+				data: Error{Message: "Project not found: API is down"},
+			},
+		},
+		{
+			desc: "Should return 500 when error get list of prediction jobs",
+			request: &http.Request{URL: &url.URL{
+				RawQuery: "name=prediction-job&model_id=1",
+			}},
+			vars: map[string]string{
+				"project_id": "1",
+			},
+			projectService: func() *mocks.ProjectsService {
+				svc := &mocks.ProjectsService{}
+				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
+					ID:                1,
+					Name:              "project-1",
+					MLFlowTrackingURL: "http://mlflow.com",
+					Team:              "dsp",
+					Stream:            "dsp",
+				}), nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
+					Name:    "prediction-job",
+					ModelID: models.ID(1),
+				}, true).Return(nil, nil, fmt.Errorf("Error creating secret: db is down"))
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Error listing prediction jobs: Error creating secret: db is down"},
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			projectSvc := tC.projectService()
+			predictionJobSvc := tC.predictionJobService()
+			ctl := &PredictionJobController{
+				AppContext: &AppContext{
+					ProjectsService:      projectSvc,
+					PredictionJobService: predictionJobSvc,
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
+					},
+				},
+			}
+			resp := ctl.ListAllInProjectByPage(tC.request, tC.vars, nil)
 			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
