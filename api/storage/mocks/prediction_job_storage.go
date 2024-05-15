@@ -12,17 +12,17 @@ type PredictionJobStorage struct {
 	mock.Mock
 }
 
-// Count provides a mock function with given fields: query
-func (_m *PredictionJobStorage) Count(query *models.PredictionJob) int {
-	ret := _m.Called(query)
+// Count provides a mock function with given fields: query, search
+func (_m *PredictionJobStorage) Count(query *models.PredictionJob, search string) int {
+	ret := _m.Called(query, search)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Count")
 	}
 
 	var r0 int
-	if rf, ok := ret.Get(0).(func(*models.PredictionJob) int); ok {
-		r0 = rf(query)
+	if rf, ok := ret.Get(0).(func(*models.PredictionJob, string) int); ok {
+		r0 = rf(query, search)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
@@ -108,9 +108,9 @@ func (_m *PredictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[model
 	return r0, r1
 }
 
-// List provides a mock function with given fields: query, offset, limit
-func (_m *PredictionJobStorage) List(query *models.PredictionJob, offset *int, limit *int) ([]*models.PredictionJob, error) {
-	ret := _m.Called(query, offset, limit)
+// List provides a mock function with given fields: query, search, offset, limit
+func (_m *PredictionJobStorage) List(query *models.PredictionJob, search string, offset *int, limit *int) ([]*models.PredictionJob, error) {
+	ret := _m.Called(query, search, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for List")
@@ -118,19 +118,19 @@ func (_m *PredictionJobStorage) List(query *models.PredictionJob, offset *int, l
 
 	var r0 []*models.PredictionJob
 	var r1 error
-	if rf, ok := ret.Get(0).(func(*models.PredictionJob, *int, *int) ([]*models.PredictionJob, error)); ok {
-		return rf(query, offset, limit)
+	if rf, ok := ret.Get(0).(func(*models.PredictionJob, string, *int, *int) ([]*models.PredictionJob, error)); ok {
+		return rf(query, search, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(*models.PredictionJob, *int, *int) []*models.PredictionJob); ok {
-		r0 = rf(query, offset, limit)
+	if rf, ok := ret.Get(0).(func(*models.PredictionJob, string, *int, *int) []*models.PredictionJob); ok {
+		r0 = rf(query, search, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.PredictionJob)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*models.PredictionJob, *int, *int) error); ok {
-		r1 = rf(query, offset, limit)
+	if rf, ok := ret.Get(1).(func(*models.PredictionJob, string, *int, *int) error); ok {
+		r1 = rf(query, search, offset, limit)
 	} else {
 		r1 = ret.Error(1)
 	}

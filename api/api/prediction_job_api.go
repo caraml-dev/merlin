@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"gorm.io/gorm"
 
@@ -75,8 +74,8 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseID(vars["model_id"])
 	versionID, _ := models.ParseID(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -90,8 +89,7 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 		ModelID:   modelID,
 		VersionID: versionID,
 	}
-
-	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query, false)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
@@ -103,10 +101,8 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 func (c *PredictionJobController) ListByPage(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseID(vars["model_id"])
 	versionID, _ := models.ParseID(vars["version_id"])
-	page, pageErr := strconv.Atoi(vars["page"])
-	pageSize, pageSizeErr := strconv.Atoi(vars["page_size"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -116,23 +112,11 @@ func (c *PredictionJobController) ListByPage(r *http.Request, vars map[string]st
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
-	// We will append page and pageSize to the query if they are set.
-	paginationOpts := pagination.Options{}
-	if pageErr == nil {
-		pageInt32 := int32(page)
-		paginationOpts.Page = &pageInt32
-	}
-	if pageSizeErr == nil {
-		pageSizeInt32 := int32(pageSize)
-		paginationOpts.PageSize = &pageSizeInt32
-	}
 	query := &service.ListPredictionJobQuery{
-		ModelID:    modelID,
-		VersionID:  versionID,
-		Pagination: paginationOpts,
+		ModelID:   modelID,
+		VersionID: versionID,
 	}
-
-	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query, true)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
@@ -257,7 +241,7 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
-	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query, false)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
@@ -276,27 +260,13 @@ func (c *PredictionJobController) ListAllInProjectByPage(r *http.Request, vars m
 	}
 
 	projectID, _ := models.ParseID(vars["project_id"])
-	page, pageErr := strconv.Atoi(vars["page"])
-	pageSize, pageSizeErr := strconv.Atoi(vars["page_size"])
 
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
-	// We will append page and pageSize to the query if they are set.
-	paginationOpts := pagination.Options{}
-	if pageErr == nil {
-		pageInt32 := int32(page)
-		paginationOpts.Page = &pageInt32
-	}
-	if pageSizeErr == nil {
-		pageSizeInt32 := int32(pageSize)
-		paginationOpts.PageSize = &pageSizeInt32
-	}
-	query.Pagination = paginationOpts
-
-	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query, true)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}

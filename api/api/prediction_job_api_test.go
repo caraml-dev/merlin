@@ -84,7 +84,7 @@ func TestList(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return([]*models.PredictionJob{
+				}, false).Return([]*models.PredictionJob{
 					{
 						ID:              models.ID(1),
 						Name:            "prediction-job-1",
@@ -177,7 +177,7 @@ func TestList(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return(nil, nil, fmt.Errorf("Connection refused"))
+				}, false).Return(nil, nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -207,6 +207,7 @@ func TestList(t *testing.T) {
 					},
 				},
 			}
+
 			resp := ctl.List(&http.Request{}, tC.vars, nil)
 			assertEqualResponses(t, tC.expected, resp)
 		})
@@ -1432,7 +1433,7 @@ func TestListAllInProject(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
 					ModelID: models.ID(1),
-				}).Return([]*models.PredictionJob{
+				}, false).Return([]*models.PredictionJob{
 					{
 						ID:              models.ID(1),
 						Name:            "prediction-job-1",
@@ -1504,7 +1505,7 @@ func TestListAllInProject(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
 					ModelID: models.ID(1),
-				}).Return(nil, nil, fmt.Errorf("Error creating secret: db is down"))
+				}, false).Return(nil, nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{

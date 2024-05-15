@@ -110,9 +110,9 @@ func (_m *PredictionJobService) ListContainers(ctx context.Context, env *models.
 	return r0, r1
 }
 
-// ListPredictionJobs provides a mock function with given fields: ctx, project, query
-func (_m *PredictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *service.ListPredictionJobQuery) ([]*models.PredictionJob, *pagination.Paging, error) {
-	ret := _m.Called(ctx, project, query)
+// ListPredictionJobs provides a mock function with given fields: ctx, project, query, paginated
+func (_m *PredictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *service.ListPredictionJobQuery, paginated bool) ([]*models.PredictionJob, *pagination.Paging, error) {
+	ret := _m.Called(ctx, project, query, paginated)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListPredictionJobs")
@@ -121,27 +121,27 @@ func (_m *PredictionJobService) ListPredictionJobs(ctx context.Context, project 
 	var r0 []*models.PredictionJob
 	var r1 *pagination.Paging
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery) ([]*models.PredictionJob, *pagination.Paging, error)); ok {
-		return rf(ctx, project, query)
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery, bool) ([]*models.PredictionJob, *pagination.Paging, error)); ok {
+		return rf(ctx, project, query, paginated)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery) []*models.PredictionJob); ok {
-		r0 = rf(ctx, project, query)
+	if rf, ok := ret.Get(0).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery, bool) []*models.PredictionJob); ok {
+		r0 = rf(ctx, project, query, paginated)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.PredictionJob)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery) *pagination.Paging); ok {
-		r1 = rf(ctx, project, query)
+	if rf, ok := ret.Get(1).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery, bool) *pagination.Paging); ok {
+		r1 = rf(ctx, project, query, paginated)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*pagination.Paging)
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery) error); ok {
-		r2 = rf(ctx, project, query)
+	if rf, ok := ret.Get(2).(func(context.Context, mlp.Project, *service.ListPredictionJobQuery, bool) error); ok {
+		r2 = rf(ctx, project, query, paginated)
 	} else {
 		r2 = ret.Error(2)
 	}

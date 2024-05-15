@@ -46,7 +46,7 @@ type PredictionJobService interface {
 	// GetPredictionJob return prediction job with given ID
 	GetPredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
 	// ListPredictionJobs return all prediction job created in a project
-	ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, *pagination.Paging, error)
+	ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery, paginated bool) ([]*models.PredictionJob, *pagination.Paging, error)
 	// CreatePredictionJob creates and start a new prediction job from the given model version
 	CreatePredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error)
 	// ListContainers return all containers which used for the given model version
@@ -57,13 +57,15 @@ type PredictionJobService interface {
 
 // ListPredictionJobQuery represent query string for list prediction job api
 type ListPredictionJobQuery struct {
-	ID         models.ID          `schema:"id"`
-	Name       string             `schema:"name"`
-	ModelID    models.ID          `schema:"model_id"`
-	VersionID  models.ID          `schema:"version_id"`
-	Status     models.State       `schema:"status"`
-	Error      string             `schema:"error"`
-	Pagination pagination.Options `schema:"pagination"`
+	ID        models.ID    `schema:"id"`
+	Name      string       `schema:"name"`
+	Search    string       `schema:"search"`
+	ModelID   models.ID    `schema:"model_id"`
+	VersionID models.ID    `schema:"version_id"`
+	Status    models.State `schema:"status"`
+	Error     string       `schema:"error"`
+	Page      *int32       `schema:"page"`
+	PageSize  *int32       `schema:"page_size"`
 }
 
 type predictionJobService struct {
@@ -95,7 +97,7 @@ func (p *predictionJobService) GetPredictionJob(ctx context.Context, _ *models.E
 }
 
 // ListPredictionJobs return all prediction job created from the given project filtered by the given query
-func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, *pagination.Paging, error) {
+func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery, paginated bool) ([]*models.PredictionJob, *pagination.Paging, error) {
 	predJobQuery := &models.PredictionJob{
 		ID:             query.ID,
 		Name:           query.Name,
@@ -106,14 +108,14 @@ func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project m
 		Error:          query.Error,
 	}
 
-	if query.Pagination.Page != nil || query.Pagination.PageSize != nil {
-		err := p.paginator.ValidatePaginationParams(query.Pagination.Page, query.Pagination.PageSize)
+	if paginated {
+		err := p.paginator.ValidatePaginationParams(query.Page, query.PageSize)
 		if err != nil {
 			return nil, nil, err
 		}
-		pageOpts := p.paginator.NewPaginationOptions(query.Pagination.Page, query.Pagination.PageSize)
+		pageOpts := p.paginator.NewPaginationOptions(query.Page, query.PageSize)
 		// Count total
-		count := p.store.Count(predJobQuery)
+		count := p.store.Count(predJobQuery, query.Search)
 		// Format opts into paging response
 		pagingResponse := pagination.ToPaging(pageOpts, int(count))
 		if pagingResponse.Page > 1 && pagingResponse.Pages < pagingResponse.Page {
@@ -123,14 +125,14 @@ func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project m
 		// Get results for current page
 		offset := int((*pageOpts.Page - 1) * *pageOpts.PageSize)
 		limit := int(*pageOpts.PageSize)
-		results, err := p.store.List(predJobQuery, &offset, &limit)
+		results, err := p.store.List(predJobQuery, query.Search, &offset, &limit)
 		if err != nil {
 			return nil, nil, err
 		}
 		return results, pagingResponse, nil
 	}
 
-	results, err := p.store.List(predJobQuery, nil, nil)
+	results, err := p.store.List(predJobQuery, query.Search, nil, nil)
 	return results, nil, err
 }
 

@@ -155,8 +155,8 @@ func TestListPredictionJob(t *testing.T) {
 		Status:         query.Status,
 		Error:          query.Error,
 	}
-	mockStorage.On("List", expDbQuery, intPtr, intPtr).Return(jobs, nil)
-	j, _, err := svc.ListPredictionJobs(context.Background(), project, query)
+	mockStorage.On("List", expDbQuery, "", intPtr, intPtr).Return(jobs, nil)
+	j, _, err := svc.ListPredictionJobs(context.Background(), project, query, false)
 	assert.NoError(t, err)
 	assert.Equal(t, jobs, j)
 	mockStorage.AssertExpectations(t)

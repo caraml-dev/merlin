@@ -771,6 +771,7 @@ type ApiProjectsProjectIdJobsByPageGetRequest struct {
 	page       *int32
 	id         *int32
 	name       *string
+	search     *string
 	modelId    *int32
 	versionId  *int32
 	status     *string
@@ -790,6 +791,12 @@ func (r ApiProjectsProjectIdJobsByPageGetRequest) Id(id int32) ApiProjectsProjec
 
 func (r ApiProjectsProjectIdJobsByPageGetRequest) Name(name string) ApiProjectsProjectIdJobsByPageGetRequest {
 	r.name = &name
+	return r
+}
+
+// Search job name for a partial match of the search text
+func (r ApiProjectsProjectIdJobsByPageGetRequest) Search(search string) ApiProjectsProjectIdJobsByPageGetRequest {
+	r.search = &search
 	return r
 }
 
@@ -868,6 +875,9 @@ func (a *PredictionJobsAPIService) ProjectsProjectIdJobsByPageGetExecute(r ApiPr
 	}
 	if r.name != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "name", r.name, "")
+	}
+	if r.search != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "search", r.search, "")
 	}
 	if r.modelId != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "model_id", r.modelId, "")
@@ -958,6 +968,7 @@ type ApiProjectsProjectIdJobsGetRequest struct {
 	projectId  int32
 	id         *int32
 	name       *string
+	search     *string
 	modelId    *int32
 	versionId  *int32
 	status     *string
@@ -971,6 +982,12 @@ func (r ApiProjectsProjectIdJobsGetRequest) Id(id int32) ApiProjectsProjectIdJob
 
 func (r ApiProjectsProjectIdJobsGetRequest) Name(name string) ApiProjectsProjectIdJobsGetRequest {
 	r.name = &name
+	return r
+}
+
+// Search job name for a partial match of the search text
+func (r ApiProjectsProjectIdJobsGetRequest) Search(search string) ApiProjectsProjectIdJobsGetRequest {
+	r.search = &search
 	return r
 }
 
@@ -1040,6 +1057,9 @@ func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGetExecute(r ApiProjects
 	}
 	if r.name != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "name", r.name, "")
+	}
+	if r.search != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "search", r.search, "")
 	}
 	if r.modelId != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "model_id", r.modelId, "")

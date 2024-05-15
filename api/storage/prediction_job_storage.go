@@ -15,6 +15,8 @@
 package storage
 
 import (
+	"fmt"
+
 	"github.com/caraml-dev/merlin/models"
 	"gorm.io/gorm"
 )
@@ -22,10 +24,10 @@ import (
 type PredictionJobStorage interface {
 	// Get get prediction job with given ID
 	Get(ID models.ID) (*models.PredictionJob, error)
-	// List list all prediction job matching the given query
-	List(query *models.PredictionJob, offset *int, limit *int) (endpoints []*models.PredictionJob, err error)
+	// List lists all prediction job matching the given query
+	List(query *models.PredictionJob, search string, offset *int, limit *int) (endpoints []*models.PredictionJob, err error)
 	// Count returns the count of rows in the given query
-	Count(query *models.PredictionJob) int
+	Count(query *models.PredictionJob, search string) int
 	// Save save the prediction job to underlying storage
 	Save(predictionJob *models.PredictionJob) error
 	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
@@ -51,10 +53,16 @@ func (p *predictionJobStorage) Get(id models.ID) (*models.PredictionJob, error) 
 }
 
 // List list all prediction job matching the given query
-func (p *predictionJobStorage) List(query *models.PredictionJob, offset *int, limit *int) (predictionJobs []*models.PredictionJob, err error) {
+func (p *predictionJobStorage) List(query *models.PredictionJob, search string, offset *int, limit *int) (predictionJobs []*models.PredictionJob, err error) {
 	q := p.query().Select("id, name, version_id, version_model_id, project_id, environment_name, status, error, created_at, updated_at").
 		Where(query).
 		Order("updated_at desc") // preserve order in case offset or limit are being set
+
+	// Do a partial match on the name
+	if search != "" {
+		q = q.Where(fmt.Sprintf("name ILIKE '%%%s%%'", search))
+	}
+
 	if offset != nil {
 		q = q.Offset(*offset)
 	}
@@ -65,10 +73,18 @@ func (p *predictionJobStorage) List(query *models.PredictionJob, offset *int, li
 	return
 }
 
-func (p *predictionJobStorage) Count(query *models.PredictionJob) int {
+func (p *predictionJobStorage) Count(query *models.PredictionJob, search string) int {
 	var count int64
-	_ = p.query().Select("id, name, version_id, version_model_id, project_id, environment_name, status, error, created_at, updated_at").
-		Where(query).Count(&count)
+	var jobs []*models.PredictionJob
+
+	q := p.query().Model(&jobs).Where(query)
+
+	// Do a partial match on the name
+	if search != "" {
+		q = q.Where(fmt.Sprintf("name ILIKE '%%%s%%'", search))
+	}
+
+	_ = q.Count(&count)
 	return int(count)
 }
 

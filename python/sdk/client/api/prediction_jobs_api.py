@@ -1802,6 +1802,7 @@ class PredictionJobsApi:
         page: Optional[StrictInt] = None,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -1831,6 +1832,8 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -1868,6 +1871,7 @@ class PredictionJobsApi:
             page=page,
             id=id,
             name=name,
+            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -1902,6 +1906,7 @@ class PredictionJobsApi:
         page: Optional[StrictInt] = None,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -1931,6 +1936,8 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -1968,6 +1975,7 @@ class PredictionJobsApi:
             page=page,
             id=id,
             name=name,
+            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2002,6 +2010,7 @@ class PredictionJobsApi:
         page: Optional[StrictInt] = None,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2031,6 +2040,8 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2068,6 +2079,7 @@ class PredictionJobsApi:
             page=page,
             id=id,
             name=name,
+            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2097,6 +2109,7 @@ class PredictionJobsApi:
         page,
         id,
         name,
+        search,
         model_id,
         version_id,
         status,
@@ -2136,6 +2149,10 @@ class PredictionJobsApi:
         if name is not None:
             
             _query_params.append(('name', name))
+            
+        if search is not None:
+            
+            _query_params.append(('search', search))
             
         if model_id is not None:
             
@@ -2199,6 +2216,7 @@ class PredictionJobsApi:
         project_id: StrictInt,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2225,6 +2243,8 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2259,6 +2279,7 @@ class PredictionJobsApi:
             project_id=project_id,
             id=id,
             name=name,
+            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2291,6 +2312,7 @@ class PredictionJobsApi:
         project_id: StrictInt,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2317,6 +2339,8 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2351,6 +2375,7 @@ class PredictionJobsApi:
             project_id=project_id,
             id=id,
             name=name,
+            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2383,6 +2408,7 @@ class PredictionJobsApi:
         project_id: StrictInt,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2409,6 +2435,8 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2443,6 +2471,7 @@ class PredictionJobsApi:
             project_id=project_id,
             id=id,
             name=name,
+            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2470,6 +2499,7 @@ class PredictionJobsApi:
         project_id,
         id,
         name,
+        search,
         model_id,
         version_id,
         status,
@@ -2504,6 +2534,10 @@ class PredictionJobsApi:
         if name is not None:
             
             _query_params.append(('name', name))
+            
+        if search is not None:
+            
+            _query_params.append(('search', search))
             
         if model_id is not None:
             
