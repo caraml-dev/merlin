@@ -2458,6 +2458,9 @@ components:
           description: Total number of pages
     ListJobsPaginatedResponse:
       type: object
+      required:
+        - results
+        - paging
       properties:
         results:
           type: array

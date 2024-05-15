@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List
 from pydantic import BaseModel
 from client.models.paging import Paging
 from client.models.prediction_job import PredictionJob
@@ -31,8 +31,8 @@ class ListJobsPaginatedResponse(BaseModel):
     """
     ListJobsPaginatedResponse
     """ # noqa: E501
-    results: Optional[List[PredictionJob]] = None
-    paging: Optional[Paging] = None
+    results: List[PredictionJob]
+    paging: Paging
     __properties: ClassVar[List[str]] = ["results", "paging"]
 
     model_config = {

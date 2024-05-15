@@ -33,8 +33,8 @@ type PredictionJobController struct {
 }
 
 type ListJobsPaginatedResponse struct {
-	Results []*models.PredictionJob `json:"results,omitempty"`
-	Paging  *pagination.Paging      `json:"paging,omitempty"`
+	Results []*models.PredictionJob `json:"results"`
+	Paging  *pagination.Paging      `json:"paging"`
 }
 
 // Create method creates a prediction job.

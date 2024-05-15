@@ -12,6 +12,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // checks if the ListJobsPaginatedResponse type satisfies the MappedNullable interface at compile time
@@ -19,16 +20,20 @@ var _ MappedNullable = &ListJobsPaginatedResponse{}
 
 // ListJobsPaginatedResponse struct for ListJobsPaginatedResponse
 type ListJobsPaginatedResponse struct {
-	Results []PredictionJob `json:"results,omitempty"`
-	Paging  *Paging         `json:"paging,omitempty"`
+	Results []PredictionJob `json:"results"`
+	Paging  Paging          `json:"paging"`
 }
+
+type _ListJobsPaginatedResponse ListJobsPaginatedResponse
 
 // NewListJobsPaginatedResponse instantiates a new ListJobsPaginatedResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewListJobsPaginatedResponse() *ListJobsPaginatedResponse {
+func NewListJobsPaginatedResponse(results []PredictionJob, paging Paging) *ListJobsPaginatedResponse {
 	this := ListJobsPaginatedResponse{}
+	this.Results = results
+	this.Paging = paging
 	return &this
 }
 
@@ -40,68 +45,52 @@ func NewListJobsPaginatedResponseWithDefaults() *ListJobsPaginatedResponse {
 	return &this
 }
 
-// GetResults returns the Results field value if set, zero value otherwise.
+// GetResults returns the Results field value
 func (o *ListJobsPaginatedResponse) GetResults() []PredictionJob {
-	if o == nil || IsNil(o.Results) {
+	if o == nil {
 		var ret []PredictionJob
 		return ret
 	}
+
 	return o.Results
 }
 
-// GetResultsOk returns a tuple with the Results field value if set, nil otherwise
+// GetResultsOk returns a tuple with the Results field value
 // and a boolean to check if the value has been set.
 func (o *ListJobsPaginatedResponse) GetResultsOk() ([]PredictionJob, bool) {
-	if o == nil || IsNil(o.Results) {
+	if o == nil {
 		return nil, false
 	}
 	return o.Results, true
 }
 
-// HasResults returns a boolean if a field has been set.
-func (o *ListJobsPaginatedResponse) HasResults() bool {
-	if o != nil && !IsNil(o.Results) {
-		return true
-	}
-
-	return false
-}
-
-// SetResults gets a reference to the given []PredictionJob and assigns it to the Results field.
+// SetResults sets field value
 func (o *ListJobsPaginatedResponse) SetResults(v []PredictionJob) {
 	o.Results = v
 }
 
-// GetPaging returns the Paging field value if set, zero value otherwise.
+// GetPaging returns the Paging field value
 func (o *ListJobsPaginatedResponse) GetPaging() Paging {
-	if o == nil || IsNil(o.Paging) {
+	if o == nil {
 		var ret Paging
 		return ret
 	}
-	return *o.Paging
+
+	return o.Paging
 }
 
-// GetPagingOk returns a tuple with the Paging field value if set, nil otherwise
+// GetPagingOk returns a tuple with the Paging field value
 // and a boolean to check if the value has been set.
 func (o *ListJobsPaginatedResponse) GetPagingOk() (*Paging, bool) {
-	if o == nil || IsNil(o.Paging) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Paging, true
+	return &o.Paging, true
 }
 
-// HasPaging returns a boolean if a field has been set.
-func (o *ListJobsPaginatedResponse) HasPaging() bool {
-	if o != nil && !IsNil(o.Paging) {
-		return true
-	}
-
-	return false
-}
-
-// SetPaging gets a reference to the given Paging and assigns it to the Paging field.
+// SetPaging sets field value
 func (o *ListJobsPaginatedResponse) SetPaging(v Paging) {
-	o.Paging = &v
+	o.Paging = v
 }
 
 func (o ListJobsPaginatedResponse) MarshalJSON() ([]byte, error) {
@@ -114,13 +103,45 @@ func (o ListJobsPaginatedResponse) MarshalJSON() ([]byte, error) {
 
 func (o ListJobsPaginatedResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Results) {
-		toSerialize["results"] = o.Results
-	}
-	if !IsNil(o.Paging) {
-		toSerialize["paging"] = o.Paging
-	}
+	toSerialize["results"] = o.Results
+	toSerialize["paging"] = o.Paging
 	return toSerialize, nil
+}
+
+func (o *ListJobsPaginatedResponse) UnmarshalJSON(bytes []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"results",
+		"paging",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &allProperties)
+
+	if err != nil {
+		return err
+	}
+
+	for _, requiredProperty := range requiredProperties {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varListJobsPaginatedResponse := _ListJobsPaginatedResponse{}
+
+	err = json.Unmarshal(bytes, &varListJobsPaginatedResponse)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ListJobsPaginatedResponse(varListJobsPaginatedResponse)
+
+	return err
 }
 
 type NullableListJobsPaginatedResponse struct {

@@ -311,19 +311,19 @@ func TestPredictionJobStorage_List(t *testing.T) {
 
 		jobs, err := predJobStore.List(&models.PredictionJob{
 			ProjectID: models.ID(p.ID),
-		})
+		}, "", nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 
 		jobs, err = predJobStore.List(&models.PredictionJob{
 			VersionModelID: m.ID,
-		})
+		}, "", nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 
 		jobs, err = predJobStore.List(&models.PredictionJob{
 			VersionID: v.ID,
-		})
+		}, "", nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 	})
