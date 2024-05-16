@@ -58,6 +58,7 @@ class PredictionJobsApi:
         version_id: StrictInt,
         page: Optional[StrictInt] = None,
         page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -82,6 +83,8 @@ class PredictionJobsApi:
         :type page: int
         :param page_size: Number of items on each page. It defaults to 50.
         :type page_size: int
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -109,6 +112,7 @@ class PredictionJobsApi:
             version_id=version_id,
             page=page,
             page_size=page_size,
+            search=search,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -138,6 +142,7 @@ class PredictionJobsApi:
         version_id: StrictInt,
         page: Optional[StrictInt] = None,
         page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -162,6 +167,8 @@ class PredictionJobsApi:
         :type page: int
         :param page_size: Number of items on each page. It defaults to 50.
         :type page_size: int
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -189,6 +196,7 @@ class PredictionJobsApi:
             version_id=version_id,
             page=page,
             page_size=page_size,
+            search=search,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -218,6 +226,7 @@ class PredictionJobsApi:
         version_id: StrictInt,
         page: Optional[StrictInt] = None,
         page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -242,6 +251,8 @@ class PredictionJobsApi:
         :type page: int
         :param page_size: Number of items on each page. It defaults to 50.
         :type page_size: int
+        :param search: Search job name for a partial match of the search text
+        :type search: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -269,6 +280,7 @@ class PredictionJobsApi:
             version_id=version_id,
             page=page,
             page_size=page_size,
+            search=search,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -293,6 +305,7 @@ class PredictionJobsApi:
         version_id,
         page,
         page_size,
+        search,
         _request_auth,
         _content_type,
         _headers,
@@ -325,6 +338,10 @@ class PredictionJobsApi:
         if page_size is not None:
             
             _query_params.append(('page_size', page_size))
+            
+        if search is not None:
+            
+            _query_params.append(('search', search))
             
         # process the header parameters
         # process the form parameters
@@ -2219,7 +2236,6 @@ class PredictionJobsApi:
         project_id: StrictInt,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
-        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2246,8 +2262,6 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
-        :param search: Search job name for a partial match of the search text
-        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2283,7 +2297,6 @@ class PredictionJobsApi:
             project_id=project_id,
             id=id,
             name=name,
-            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2316,7 +2329,6 @@ class PredictionJobsApi:
         project_id: StrictInt,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
-        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2343,8 +2355,6 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
-        :param search: Search job name for a partial match of the search text
-        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2380,7 +2390,6 @@ class PredictionJobsApi:
             project_id=project_id,
             id=id,
             name=name,
-            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2413,7 +2422,6 @@ class PredictionJobsApi:
         project_id: StrictInt,
         id: Optional[StrictInt] = None,
         name: Optional[StrictStr] = None,
-        search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         model_id: Optional[StrictInt] = None,
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
@@ -2440,8 +2448,6 @@ class PredictionJobsApi:
         :type id: int
         :param name:
         :type name: str
-        :param search: Search job name for a partial match of the search text
-        :type search: str
         :param model_id:
         :type model_id: int
         :param version_id:
@@ -2477,7 +2483,6 @@ class PredictionJobsApi:
             project_id=project_id,
             id=id,
             name=name,
-            search=search,
             model_id=model_id,
             version_id=version_id,
             status=status,
@@ -2505,7 +2510,6 @@ class PredictionJobsApi:
         project_id,
         id,
         name,
-        search,
         model_id,
         version_id,
         status,
@@ -2540,10 +2544,6 @@ class PredictionJobsApi:
         if name is not None:
             
             _query_params.append(('name', name))
-            
-        if search is not None:
-            
-            _query_params.append(('search', search))
             
         if model_id is not None:
             

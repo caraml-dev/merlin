@@ -308,11 +308,6 @@ paths:
           in: query
           schema:
             type: string
-        - name: search
-          description: Search job name for a partial match of the search text
-          in: query
-          schema:
-            type: string
         - name: model_id
           in: query
           schema:
@@ -1427,6 +1422,11 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: search
+          description: Search job name for a partial match of the search text
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: OK

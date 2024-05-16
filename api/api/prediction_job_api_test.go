@@ -402,7 +402,8 @@ func TestListByPage(t *testing.T) {
 				},
 			}
 
-			resp := ctl.ListByPage(&http.Request{}, tC.vars, nil)
+			request, _ := http.NewRequest(http.MethodGet, "http://localhost:80", nil)
+			resp := ctl.ListByPage(request, tC.vars, nil)
 			assertEqualResponses(t, tC.expected, resp)
 		})
 	}

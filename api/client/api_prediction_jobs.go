@@ -29,6 +29,7 @@ type ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest struct {
 	versionId  int32
 	page       *int32
 	pageSize   *int32
+	search     *string
 }
 
 func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) Page(page int32) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
@@ -39,6 +40,12 @@ func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) Page(page int32) 
 // Number of items on each page. It defaults to 50.
 func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) PageSize(pageSize int32) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
 	r.pageSize = &pageSize
+	return r
+}
+
+// Search job name for a partial match of the search text
+func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) Search(search string) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
+	r.search = &search
 	return r
 }
 
@@ -91,6 +98,9 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGetEx
 	}
 	if r.pageSize != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page_size", r.pageSize, "")
+	}
+	if r.search != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "search", r.search, "")
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -971,7 +981,6 @@ type ApiProjectsProjectIdJobsGetRequest struct {
 	projectId  int32
 	id         *int32
 	name       *string
-	search     *string
 	modelId    *int32
 	versionId  *int32
 	status     *string
@@ -985,12 +994,6 @@ func (r ApiProjectsProjectIdJobsGetRequest) Id(id int32) ApiProjectsProjectIdJob
 
 func (r ApiProjectsProjectIdJobsGetRequest) Name(name string) ApiProjectsProjectIdJobsGetRequest {
 	r.name = &name
-	return r
-}
-
-// Search job name for a partial match of the search text
-func (r ApiProjectsProjectIdJobsGetRequest) Search(search string) ApiProjectsProjectIdJobsGetRequest {
-	r.search = &search
 	return r
 }
 
@@ -1063,9 +1066,6 @@ func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGetExecute(r ApiProjects
 	}
 	if r.name != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "name", r.name, "")
-	}
-	if r.search != nil {
-		parameterAddToHeaderOrQuery(localVarQueryParams, "search", r.search, "")
 	}
 	if r.modelId != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "model_id", r.modelId, "")

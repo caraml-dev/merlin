@@ -112,11 +112,15 @@ func (c *PredictionJobController) ListByPage(r *http.Request, vars map[string]st
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
-	query := &service.ListPredictionJobQuery{
-		ModelID:   modelID,
-		VersionID: versionID,
+	var query service.ListPredictionJobQuery
+	err = decoder.Decode(&query, r.URL.Query())
+	if err != nil {
+		return BadRequest(fmt.Sprintf("Bad query %s", r.URL.Query()))
 	}
-	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query, true)
+	query.ModelID = modelID
+	query.VersionID = versionID
+
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, &query, true)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
