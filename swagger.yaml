@@ -382,7 +382,7 @@ paths:
           schema:
             type: string
         - name: page_size
-          description: Number of items on each page. It defaults to 50.
+          description: Number of items on each page. It defaults to 10.
           in: query
           schema:
             type: integer
@@ -1417,7 +1417,7 @@ paths:
             type: integer
             format: int32
         - name: page_size
-          description: Number of items on each page. It defaults to 50.
+          description: Number of items on each page. It defaults to 10.
           in: query
           schema:
             type: integer

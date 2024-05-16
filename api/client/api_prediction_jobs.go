@@ -37,7 +37,7 @@ func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) Page(page int32) 
 	return r
 }
 
-// Number of items on each page. It defaults to 50.
+// Number of items on each page. It defaults to 10.
 func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) PageSize(pageSize int32) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
 	r.pageSize = &pageSize
 	return r
@@ -833,7 +833,7 @@ func (r ApiProjectsProjectIdJobsByPageGetRequest) Error_(error_ string) ApiProje
 	return r
 }
 
-// Number of items on each page. It defaults to 50.
+// Number of items on each page. It defaults to 10.
 func (r ApiProjectsProjectIdJobsByPageGetRequest) PageSize(pageSize int32) ApiProjectsProjectIdJobsByPageGetRequest {
 	r.pageSize = &pageSize
 	return r

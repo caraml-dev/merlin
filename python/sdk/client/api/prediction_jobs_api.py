@@ -57,7 +57,7 @@ class PredictionJobsApi:
         model_id: StrictInt,
         version_id: StrictInt,
         page: Optional[StrictInt] = None,
-        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 10.")] = None,
         search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         _request_timeout: Union[
             None,
@@ -81,7 +81,7 @@ class PredictionJobsApi:
         :type version_id: int
         :param page:
         :type page: int
-        :param page_size: Number of items on each page. It defaults to 50.
+        :param page_size: Number of items on each page. It defaults to 10.
         :type page_size: int
         :param search: Search job name for a partial match of the search text
         :type search: str
@@ -141,7 +141,7 @@ class PredictionJobsApi:
         model_id: StrictInt,
         version_id: StrictInt,
         page: Optional[StrictInt] = None,
-        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 10.")] = None,
         search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         _request_timeout: Union[
             None,
@@ -165,7 +165,7 @@ class PredictionJobsApi:
         :type version_id: int
         :param page:
         :type page: int
-        :param page_size: Number of items on each page. It defaults to 50.
+        :param page_size: Number of items on each page. It defaults to 10.
         :type page_size: int
         :param search: Search job name for a partial match of the search text
         :type search: str
@@ -225,7 +225,7 @@ class PredictionJobsApi:
         model_id: StrictInt,
         version_id: StrictInt,
         page: Optional[StrictInt] = None,
-        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 10.")] = None,
         search: Annotated[Optional[StrictStr], Field(description="Search job name for a partial match of the search text")] = None,
         _request_timeout: Union[
             None,
@@ -249,7 +249,7 @@ class PredictionJobsApi:
         :type version_id: int
         :param page:
         :type page: int
-        :param page_size: Number of items on each page. It defaults to 50.
+        :param page_size: Number of items on each page. It defaults to 10.
         :type page_size: int
         :param search: Search job name for a partial match of the search text
         :type search: str
@@ -1827,7 +1827,7 @@ class PredictionJobsApi:
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
         error: Optional[StrictStr] = None,
-        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 10.")] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1862,7 +1862,7 @@ class PredictionJobsApi:
         :type status: str
         :param error:
         :type error: str
-        :param page_size: Number of items on each page. It defaults to 50.
+        :param page_size: Number of items on each page. It defaults to 10.
         :type page_size: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1931,7 +1931,7 @@ class PredictionJobsApi:
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
         error: Optional[StrictStr] = None,
-        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 10.")] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1966,7 +1966,7 @@ class PredictionJobsApi:
         :type status: str
         :param error:
         :type error: str
-        :param page_size: Number of items on each page. It defaults to 50.
+        :param page_size: Number of items on each page. It defaults to 10.
         :type page_size: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -2035,7 +2035,7 @@ class PredictionJobsApi:
         version_id: Optional[StrictInt] = None,
         status: Optional[StrictStr] = None,
         error: Optional[StrictStr] = None,
-        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 50.")] = None,
+        page_size: Annotated[Optional[StrictInt], Field(description="Number of items on each page. It defaults to 10.")] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2070,7 +2070,7 @@ class PredictionJobsApi:
         :type status: str
         :param error:
         :type error: str
-        :param page_size: Number of items on each page. It defaults to 50.
+        :param page_size: Number of items on each page. It defaults to 10.
         :type page_size: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
