@@ -1,4 +1,3 @@
-import json
 import logging
 
 from merlin.pyfunc import PyFuncOutput
@@ -6,8 +5,7 @@ from orjson import dumps, loads
 from prometheus_client import CollectorRegistry
 from prometheus_client.exposition import choose_encoder
 from sanic import Sanic
-from sanic import json as sanic_json
-from sanic import raw, text
+from sanic import raw, text, json
 from sanic.request import Request
 
 from pyfuncserver.config import Config
@@ -42,7 +40,7 @@ class HTTPServer:
             output_is_pyfunc_output = isinstance(response_json, PyFuncOutput)
             if output_is_pyfunc_output:
                 response_json = output.http_response
-            return sanic_json(response_json)
+            return json(response_json)
 
         @self.app.get("/")
         async def liveness_handler(request: Request):
@@ -51,7 +49,7 @@ class HTTPServer:
         @self.app.get(r"/v1/models/<model:([a-zA-Z0-9_-]+)>")
         async def readiness_handler(request: Request, model):
             model = self.get_model(model)
-            return sanic_json({"name": model.full_name, "ready": model.ready})
+            return json({"name": model.full_name, "ready": model.ready})
 
         @self.app.get("/metrics")
         async def metrics_handler(request: Request):
