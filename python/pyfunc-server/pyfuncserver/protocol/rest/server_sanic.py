@@ -1,6 +1,8 @@
+import json
 import logging
 
 from merlin.pyfunc import PyFuncOutput
+from orjson import dumps, loads
 from prometheus_client import CollectorRegistry
 from prometheus_client.exposition import choose_encoder
 from sanic import Sanic
@@ -34,12 +36,14 @@ class HTTPServer:
         @self.app.post(r"/v1/models/<model:([a-zA-Z0-9_-]+):predict>")
         async def predict_handler(request: Request, model):
             model = self.get_model(model)
-            output = model.predict(request.json, headers=request.headers)
+
+            parsed_body = self.vadlidate_and_parse(request.body)
+            output = model.predict(parsed_body, headers=request.headers)
             response_json = output
             output_is_pyfunc_output = isinstance(response_json, PyFuncOutput)
             if output_is_pyfunc_output:
                 response_json = output.http_response
-            return sanic_json(response_json)
+            return sanic_json(response_json, dumps=dumps)
 
         @self.app.get("/")
         async def liveness_handler(request: Request):
@@ -77,5 +81,13 @@ class HTTPServer:
             model.load()
         return model
 
+    def vadlidate_and_parse(self, request):
+        try:
+            body = loads(request)
+        except json.decoder.JSONDecodeError as e:
+            raise Exception("Unrecognized request format: %s" % e)
+        return body
+
     def start(self):
+        print("v9")
         self.app.run(host="0.0.0.0", port=self.http_port, workers=self.workers)
