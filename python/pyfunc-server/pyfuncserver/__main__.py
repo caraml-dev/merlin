@@ -13,11 +13,9 @@
 # limitations under the License.
 
 import argparse
-import asyncio
 import logging
 import traceback
 
-import uvloop
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.server import PyFuncServer
@@ -37,15 +35,9 @@ parser.add_argument(
 )
 args, _ = parser.parse_known_args()
 
-logging.getLogger("tornado.access").disabled = True
-
-
 def main():
     config = Config(args.model_dir)
     logging.basicConfig(level=config.log_level)
-
-    # use uvloop as the event loop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
     # load model
     model = PyFuncModel(config.model_manifest)
