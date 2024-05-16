@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	metav1cfg "k8s.io/client-go/applyconfigurations/meta/v1"
-	policyv1cfg "k8s.io/client-go/applyconfigurations/policy/v1"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
@@ -32,7 +31,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    *policyv1cfg.PodDisruptionBudgetSpecApplyConfiguration
+		want    *policyv1.PodDisruptionBudget
 		wantErr bool
 	}{
 		{
@@ -44,10 +43,21 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				MaxUnavailablePercentage: nil,
 				MinAvailablePercentage:   &defaultInt,
 			},
-			want: &policyv1cfg.PodDisruptionBudgetSpecApplyConfiguration{
-				MinAvailable: &defaultIntOrString,
-				Selector: &metav1cfg.LabelSelectorApplyConfiguration{
-					MatchLabels: defaultLabels,
+			want: &policyv1.PodDisruptionBudget{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "policy/v1",
+					Kind:       "PodDisruptionBudget",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "sklearn-sample-s-1-model-pdb",
+					Namespace: "pdb-test",
+					Labels:    defaultLabels,
+				},
+				Spec: policyv1.PodDisruptionBudgetSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: defaultLabels,
+					},
+					MinAvailable: &defaultIntOrString,
 				},
 			},
 			wantErr: false,
@@ -61,10 +71,21 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				MaxUnavailablePercentage: &defaultInt,
 				MinAvailablePercentage:   &defaultInt,
 			},
-			want: &policyv1cfg.PodDisruptionBudgetSpecApplyConfiguration{
-				MinAvailable: &defaultIntOrString,
-				Selector: &metav1cfg.LabelSelectorApplyConfiguration{
-					MatchLabels: defaultLabels,
+			want: &policyv1.PodDisruptionBudget{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "policy/v1",
+					Kind:       "PodDisruptionBudget",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "sklearn-sample-s-1-model-pdb",
+					Namespace: "pdb-test",
+					Labels:    defaultLabels,
+				},
+				Spec: policyv1.PodDisruptionBudgetSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: defaultLabels,
+					},
+					MinAvailable: &defaultIntOrString,
 				},
 			},
 			wantErr: false,

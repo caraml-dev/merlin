@@ -222,6 +222,6 @@ func (c *controller) deployVirtualService(ctx context.Context, vsCfg *VirtualSer
 		Patch(ctx, vsCfg.Name, types.ApplyPatchType, vsJSON, metav1.PatchOptions{FieldManager: "application/apply-patch", Force: &forceEnabled})
 }
 
-func (c *controller) deleteVirtualService(ctx context.Context, name, namespace string) error {
-	return c.istioClient.VirtualServices(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+func (c *controller) deleteVirtualService(ctx context.Context, vsCfg *VirtualService) error {
+	return c.istioClient.VirtualServices(vsCfg.Namespace).Delete(ctx, vsCfg.Name, metav1.DeleteOptions{})
 }

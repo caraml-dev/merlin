@@ -2,14 +2,15 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 
+	policyv1 "k8s.io/api/policy/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	metav1cfg "k8s.io/client-go/applyconfigurations/meta/v1"
-	policyv1cfg "k8s.io/client-go/applyconfigurations/policy/v1"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
@@ -29,7 +30,7 @@ func NewPodDisruptionBudget(modelService *models.Service, componentType string, 
 	labels["serving.kserve.io/inferenceservice"] = modelService.Name
 
 	return &PodDisruptionBudget{
-		Name:                     fmt.Sprintf("%s-%s-%s", modelService.Name, componentType, models.PDBComponentType),
+		Name:                     fmt.Sprintf("%s-%s-%s-%s", modelService.ModelName, modelService.ModelVersion, componentType, models.PDBComponentType),
 		Namespace:                modelService.Namespace,
 		Labels:                   labels,
 		MaxUnavailablePercentage: pdbConfig.MaxUnavailablePercentage,
@@ -37,14 +38,25 @@ func NewPodDisruptionBudget(modelService *models.Service, componentType string, 
 	}
 }
 
-func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1cfg.PodDisruptionBudgetSpecApplyConfiguration, error) {
+func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1.PodDisruptionBudget, error) {
 	if cfg.MaxUnavailablePercentage == nil && cfg.MinAvailablePercentage == nil {
 		return nil, fmt.Errorf("one of maxUnavailable and minAvailable must be specified")
 	}
 
-	pdbSpec := &policyv1cfg.PodDisruptionBudgetSpecApplyConfiguration{
-		Selector: &metav1cfg.LabelSelectorApplyConfiguration{
-			MatchLabels: cfg.Labels,
+	pdb := &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy/v1",
+			Kind:       "PodDisruptionBudget",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cfg.Name,
+			Namespace: cfg.Namespace,
+			Labels:    cfg.Labels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: cfg.Labels,
+			},
 		},
 	}
 
@@ -52,13 +64,13 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1cfg.PodDisruptionBudgetS
 	// https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget
 	if cfg.MinAvailablePercentage != nil {
 		minAvailable := intstr.FromString(fmt.Sprintf("%d%%", *cfg.MinAvailablePercentage))
-		pdbSpec.MinAvailable = &minAvailable
+		pdb.Spec.MinAvailable = &minAvailable
 	} else if cfg.MaxUnavailablePercentage != nil {
 		maxUnavailable := intstr.FromString(fmt.Sprintf("%d%%", *cfg.MaxUnavailablePercentage))
-		pdbSpec.MaxUnavailable = &maxUnavailable
+		pdb.Spec.MaxUnavailable = &maxUnavailable
 	}
 
-	return pdbSpec, nil
+	return pdb, nil
 }
 
 func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
@@ -113,11 +125,15 @@ func (c *controller) deployPodDisruptionBudget(ctx context.Context, pdb *PodDisr
 		return err
 	}
 
-	pdbCfg := policyv1cfg.PodDisruptionBudget(pdb.Name, pdb.Namespace)
-	pdbCfg.WithLabels(pdb.Labels)
-	pdbCfg.WithSpec(pdbSpec)
+	pdbJSON, err := json.Marshal(pdbSpec)
+	if err != nil {
+		return err
+	}
 
-	_, err = c.policyClient.PodDisruptionBudgets(pdb.Namespace).Apply(ctx, pdbCfg, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	forceEnabled := true
+
+	_, err = c.policyClient.PodDisruptionBudgets(pdb.Namespace).
+		Patch(ctx, pdb.Name, types.ApplyPatchType, pdbJSON, metav1.PatchOptions{FieldManager: "application/apply-patch", Force: &forceEnabled})
 	if err != nil {
 		return err
 	}
