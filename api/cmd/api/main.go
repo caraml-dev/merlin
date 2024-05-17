@@ -141,9 +141,9 @@ func main() {
 	registerQueueJob(dispatcher, dependencies.modelDeployment, dependencies.batchDeployment, dependencies.observabilityDeployment)
 	dispatcher.Start()
 
-	// if err := initCronJob(dependencies, db); err != nil {
-	// 	log.Panicf("Failed to initialize cron jobs: %s", err)
-	// }
+	if err := initCronJob(dependencies, db); err != nil {
+		log.Panicf("Failed to initialize cron jobs: %s", err)
+	}
 
 	router := mux.NewRouter()
 

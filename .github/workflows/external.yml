@@ -5,6 +5,9 @@ on:
       - main
   pull_request:
 
+env:
+  DOCKER_REGISTRY: ghcr.io
+
 jobs:
   publish-mlflow-docker:
     runs-on: ubuntu-latest
