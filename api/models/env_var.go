@@ -69,19 +69,21 @@ func (evs EnvVars) ToKubernetesEnvVars() []v1.EnvVar {
 	return kubeEnvVars
 }
 
-// MergeEnvVars merges two environment variables and return the merging result.
-// Both `left` and `right` EnvVars value will be not mutated.
-// `right` EnvVars has higher precedence.
-func MergeEnvVars(left, right EnvVars) EnvVars {
-	envIndexMap := make(map[string]int, len(left)+len(right))
-	for index, ev := range left {
-		envIndexMap[ev.Name] = index
-	}
-	for _, add := range right {
-		if index, exist := envIndexMap[add.Name]; exist {
-			left[index].Value = add.Value
-		} else {
-			left = append(left, add)
+// MergeEnvVars merges multiple sets of environment variables and return the merging result.
+// All the EnvVars passed as arguments will be not mutated.
+// EnvVars to the right have higher precedence.
+func MergeEnvVars(left EnvVars, rightEnvVars ...EnvVars) EnvVars {
+	for _, right := range rightEnvVars {
+		envIndexMap := make(map[string]int, len(left)+len(right))
+		for index, ev := range left {
+			envIndexMap[ev.Name] = index
+		}
+		for _, add := range right {
+			if index, exist := envIndexMap[add.Name]; exist {
+				left[index].Value = add.Value
+			} else {
+				left = append(left, add)
+			}
 		}
 	}
 	return left
