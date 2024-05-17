@@ -35,8 +35,8 @@ jobs:
           # If it's pull request the version string is prefixed by 0.0.0-
           [ ${{ github.event_name}} == "pull_request" ] && VERSION="0.0.0-${{ github.event.pull_request.head.sha }}"
 
-          echo ${VERSION}
-          echo "::set-output name=version::${VERSION}"
+          echo "${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
   test-batch-predictor:
     runs-on: ubuntu-latest
@@ -148,6 +148,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
       - uses: actions/checkout@v4
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
@@ -172,6 +173,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
       - uses: actions/cache@v4
         with:
           path: |
@@ -228,9 +230,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: "yarn"
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> "$GITHUB_OUTPUT"
       - name: Cache YARN
         uses: actions/cache@v4
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
@@ -360,6 +363,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
       - uses: actions/cache@v4
         with:
           path: |
@@ -392,6 +396,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
       - name: Build Inference Logger
         run: make build-inference-logger
       - name: Build Inference Logger Docker
