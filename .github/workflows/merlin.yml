@@ -51,13 +51,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-batch-predictor
@@ -83,13 +83,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-pyfunc-server
@@ -115,13 +115,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-python-sdk
@@ -145,15 +145,15 @@ jobs:
   lint-api:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
           # Ensure the same version as the one defined in Makefile
-          version: v1.56.2
+          version: v1.58.1
           working-directory: api
 
   test-api:
@@ -169,10 +169,10 @@ jobs:
           - 5432:5432
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
@@ -206,7 +206,7 @@ jobs:
         id: setup-python
         with:
           python-version: "3.10"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/requirements.txt') }}
@@ -225,14 +225,14 @@ jobs:
     steps:
       - name: Checkout to the target branch
         uses: actions/checkout@v4
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Cache YARN
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -240,7 +240,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Cache Node Modules
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ui/node_modules
           key: |
@@ -255,7 +255,7 @@ jobs:
       - name: Build UI static files
         run: make build-ui
       - name: Publish UI Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin-ui-dist
           path: ui/build/
@@ -279,7 +279,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download UI Dist
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: merlin-ui-dist
           path: ui/build
@@ -288,7 +288,7 @@ jobs:
       - name: Save API Docker
         run: docker image save --output merlin.${{ needs.create-version.outputs.version }}.tar merlin:${{ needs.create-version.outputs.version }}
       - name: Publish API Docker Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin.${{ needs.create-version.outputs.version }}.tar
           path: merlin.${{ needs.create-version.outputs.version }}.tar
@@ -316,7 +316,7 @@ jobs:
       - name: Save Batch Predictor Base Docker
         run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Batch Predictor Base Docker Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
           path: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
@@ -345,7 +345,7 @@ jobs:
       - name: Save Pyfunc Server Base Docker
         run: docker image save --output merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Pyfunc Server Base Docker Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
           path: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
@@ -357,10 +357,10 @@ jobs:
       - create-version
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
@@ -377,7 +377,7 @@ jobs:
       - name: Save Standard Transformer Docker
         run: docker image save --output merlin-transformer.${{ needs.create-version.outputs.version }}.tar merlin-transformer:${{ needs.create-version.outputs.version }}
       - name: Publish Standard Transformer Docker Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
           path: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
@@ -388,8 +388,8 @@ jobs:
     needs:
       - create-version
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Build Inference Logger
@@ -399,7 +399,7 @@ jobs:
       - name: Save Inference Logger Docker
         run: docker image save --output merlin-logger.${{ needs.create-version.outputs.version }}.tar merlin-logger:${{ needs.create-version.outputs.version }}
       - name: Publish Inference Logger Docker Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin-logger.${{ needs.create-version.outputs.version }}.tar
           path: merlin-logger.${{ needs.create-version.outputs.version }}.tar
@@ -423,7 +423,7 @@ jobs:
       - name: Save Observation Publisher Docker
         run: docker image save --output merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar ${{ env.DOCKER_IMAGE_TAG }}
       - name: Publish Observation Publisher Docker Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar
           path: merlin-observation-publisher.${{ needs.create-version.outputs.version }}.tar
@@ -450,13 +450,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.E2E_PYTHON_VERSION }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-3.10-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-3.10-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-3.10-pipenv-python-sdk
@@ -476,11 +476,11 @@ jobs:
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster
       - name: Download API Docker Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: merlin.${{ needs.create-version.outputs.version }}.tar
       - name: Download Standard Transformer Docker Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
       - name: Publish images to k3d registry
