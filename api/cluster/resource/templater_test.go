@@ -4482,3 +4482,39 @@ func createPyFuncPublisherEnvVars(svc *models.Service, pyfuncPublisher config.Py
 	}
 	return envVars
 }
+
+func sortInferenceServiceSpecEnvVars(isvc kservev1beta1.InferenceServiceSpec) {
+	// Sort env vars in predictor
+	if isvc.Predictor.SKLearn != nil {
+		sort.Slice(isvc.Predictor.SKLearn.Env, func(i, j int) bool {
+			return isvc.Predictor.SKLearn.Env[i].Name < isvc.Predictor.SKLearn.Env[j].Name
+		})
+	} else if isvc.Predictor.XGBoost != nil {
+		sort.Slice(isvc.Predictor.XGBoost.Env, func(i, j int) bool {
+			return isvc.Predictor.XGBoost.Env[i].Name < isvc.Predictor.XGBoost.Env[j].Name
+		})
+	} else if isvc.Predictor.Tensorflow != nil {
+		sort.Slice(isvc.Predictor.Tensorflow.Env, func(i, j int) bool {
+			return isvc.Predictor.Tensorflow.Env[i].Name < isvc.Predictor.Tensorflow.Env[j].Name
+		})
+	} else if isvc.Predictor.PyTorch != nil {
+		sort.Slice(isvc.Predictor.PyTorch.Env, func(i, j int) bool {
+			return isvc.Predictor.PyTorch.Env[i].Name < isvc.Predictor.PyTorch.Env[j].Name
+		})
+	} else if isvc.Predictor.PodSpec.Containers != nil {
+		for _, c := range isvc.Predictor.PodSpec.Containers {
+			sort.Slice(c.Env, func(i, j int) bool {
+				return c.Env[i].Name < c.Env[j].Name
+			})
+		}
+	}
+
+	// Sort env vars in transformer
+	if isvc.Transformer != nil && isvc.Transformer.PodSpec.Containers != nil {
+		for _, c := range isvc.Transformer.PodSpec.Containers {
+			sort.Slice(c.Env, func(i, j int) bool {
+				return c.Env[i].Name < c.Env[j].Name
+			})
+		}
+	}
+}
