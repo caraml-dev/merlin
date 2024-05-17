@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caraml-dev/merlin/client"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
@@ -360,9 +361,10 @@ type PyFuncPublisherConfig struct {
 // KServe inference services
 type InferenceServiceDefaults struct {
 	// TODO: Remove UserContainerCPUDefaultLimit when KServe finally allows default CPU limits to be removed
-	UserContainerCPUDefaultLimit          string  `json:"userContainerCPUDefaultLimit" default:"8"`
-	UserContainerCPULimitRequestFactor    float64 `json:"userContainerLimitCPURequestFactor" default:"0"`
-	UserContainerMemoryLimitRequestFactor float64 `json:"userContainerLimitMemoryRequestFactor" default:"2"`
+	UserContainerCPUDefaultLimit          string          `json:"userContainerCPUDefaultLimit" default:"8"`
+	UserContainerCPULimitRequestFactor    float64         `json:"userContainerLimitCPURequestFactor" default:"0"`
+	UserContainerMemoryLimitRequestFactor float64         `json:"userContainerLimitMemoryRequestFactor" default:"2"`
+	DefaultEnvVarsWithoutCPULimits        []client.EnvVar `json:"defaultEnvVarsWithoutCPULimits"`
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer

@@ -17,6 +17,7 @@ package config
 import (
 	"time"
 
+	"github.com/caraml-dev/merlin/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -55,6 +56,7 @@ type DeploymentConfig struct {
 	UserContainerCPUDefaultLimit          string
 	UserContainerCPULimitRequestFactor    float64
 	UserContainerMemoryLimitRequestFactor float64
+	DefaultEnvVarsWithoutCPULimits        []client.EnvVar
 }
 
 type ResourceRequests struct {

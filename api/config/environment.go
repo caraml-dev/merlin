@@ -189,5 +189,6 @@ func ParseDeploymentConfig(envCfg *EnvironmentConfig, cfg *Config) DeploymentCon
 		UserContainerCPUDefaultLimit:          cfg.InferenceServiceDefaults.UserContainerCPUDefaultLimit,
 		UserContainerCPULimitRequestFactor:    cfg.InferenceServiceDefaults.UserContainerCPULimitRequestFactor,
 		UserContainerMemoryLimitRequestFactor: cfg.InferenceServiceDefaults.UserContainerMemoryLimitRequestFactor,
+		DefaultEnvVarsWithoutCPULimits:        cfg.InferenceServiceDefaults.DefaultEnvVarsWithoutCPULimits,
 	}
 }

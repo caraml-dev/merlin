@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/caraml-dev/merlin/client"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/mitchellh/copystructure"
@@ -194,20 +195,29 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) (kservev1beta1.PredictorSpec, error) {
 	envVars := modelService.EnvVars
 
-	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
+	// Set resource limits to request * userContainerCPULimitRequestFactor or userContainerMemoryLimitRequestFactor
 	limits := map[corev1.ResourceName]resource.Quantity{}
-	if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
-		limits[corev1.ResourceCPU] = ScaleQuantity(
-			modelService.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
-		)
-	} else {
-		// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
-		var err error
-		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
-		if err != nil {
-			return kservev1beta1.PredictorSpec{}, err
+
+	// Set cpu resource limits automatically if they have not been set
+	if modelService.ResourceRequest.CPULimit.IsZero() {
+		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
+			limits[corev1.ResourceCPU] = ScaleQuantity(
+				modelService.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
+			)
+		} else {
+			// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
+			var err error
+			limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
+			if err != nil {
+				return kservev1beta1.PredictorSpec{}, err
+			}
+			// Set additional env vars to manage concurrency so model performance improves when no CPU limits are set
+			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
 		}
+	} else {
+		limits[corev1.ResourceCPU] = modelService.ResourceRequest.CPULimit
 	}
+
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
 		limits[corev1.ResourceMemory] = ScaleQuantity(
 			modelService.ResourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
@@ -329,7 +339,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		// 1. PyFunc default env
 		// 2. User environment variable
 		// 3. Default env variable that can be override by user environment
-		higherPriorityEnvVars := models.MergeEnvVars(modelService.EnvVars, pyfuncDefaultEnv)
+		higherPriorityEnvVars := models.MergeEnvVars(envVars, pyfuncDefaultEnv)
 		lowerPriorityEnvVars := models.EnvVars{}
 		if modelService.Protocol == protocol.UpiV1 {
 			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
@@ -364,7 +374,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		}
 
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector, tolerations)
+		predictorSpec = createCustomPredictorSpec(modelService, envVars, resources, nodeSelector, tolerations)
 	}
 
 	if len(nodeSelector) > 0 {
@@ -392,27 +402,35 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	modelService *models.Service,
 	transformer *models.Transformer,
 ) (*kservev1beta1.TransformerSpec, error) {
+	envVars := transformer.EnvVars
+
 	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
 	limits := map[corev1.ResourceName]resource.Quantity{}
-	if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
-		limits[corev1.ResourceCPU] = ScaleQuantity(
-			transformer.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
-		)
-	} else {
-		// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
-		var err error
-		limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
-		if err != nil {
-			return nil, err
+	// Set cpu resource limits automatically if they have not been set
+	if transformer.ResourceRequest.CPULimit.IsZero() {
+		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
+			limits[corev1.ResourceCPU] = ScaleQuantity(
+				transformer.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
+			)
+		} else {
+			// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
+			var err error
+			limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
+			if err != nil {
+				return nil, err
+			}
+			// Set additional env vars to manage concurrency so model performance improves when no CPU limits are set
+			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
 		}
+	} else {
+		limits[corev1.ResourceCPU] = transformer.ResourceRequest.CPULimit
 	}
+
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
 		limits[corev1.ResourceMemory] = ScaleQuantity(
 			transformer.ResourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
 		)
 	}
-
-	envVars := transformer.EnvVars
 
 	// Put in defaults if not provided by users (user's input is used)
 	if transformer.TransformerType == models.StandardTransformerType {
@@ -780,9 +798,13 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 	return defaultEnvVars
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string, tolerations []corev1.Toleration) kservev1beta1.PredictorSpec {
-	envVars := modelService.EnvVars
-
+func createCustomPredictorSpec(
+	modelService *models.Service,
+	envVars models.EnvVars,
+	resources corev1.ResourceRequirements,
+	nodeSelector map[string]string,
+	tolerations []corev1.Toleration,
+) kservev1beta1.PredictorSpec {
 	// Add default env var (Overwrite by user not allowed)
 	defaultEnvVar := createDefaultPredictorEnvVars(modelService)
 	envVars = models.MergeEnvVars(envVars, defaultEnvVar)
@@ -909,4 +931,12 @@ func (t *InferenceServiceTemplater) applyDefaults(service *models.Service) {
 			}
 		}
 	}
+}
+
+func ParseEnvVars(envVars []client.EnvVar) models.EnvVars {
+	var parsedEnvVars models.EnvVars
+	for _, envVar := range envVars {
+		parsedEnvVars = append(parsedEnvVars, models.EnvVar{Name: *envVar.Name, Value: *envVar.Value})
+	}
+	return parsedEnvVars
 }
