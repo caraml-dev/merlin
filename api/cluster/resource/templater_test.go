@@ -18,10 +18,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/caraml-dev/merlin/client"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +61,7 @@ var (
 			corev1.ResourceMemory: defaultModelResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU: resource.MustParse("8"),
+			corev1.ResourceCPU: resource.MustParse("10"),
 			corev1.ResourceMemory: ScaleQuantity(
 				defaultModelResourceRequests.MemoryRequest,
 				userContainerMemoryLimitRequestFactor,
@@ -80,7 +82,7 @@ var (
 			corev1.ResourceMemory: defaultTransformerResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse("8"),
+			corev1.ResourceCPU:    resource.MustParse("10"),
 			corev1.ResourceMemory: ScaleQuantity(defaultTransformerResourceRequests.MemoryRequest, 2),
 		},
 	}
@@ -92,14 +94,33 @@ var (
 		MemoryRequest: resource.MustParse("1Gi"),
 	}
 
+	userResourceRequestsWithCPULimits = &models.ResourceRequest{
+		MinReplica:    1,
+		MaxReplica:    10,
+		CPURequest:    resource.MustParse("1"),
+		MemoryRequest: resource.MustParse("1Gi"),
+		CPULimit:      resource.MustParse("8"),
+	}
+
 	expUserResourceRequests = corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    userResourceRequests.CPURequest,
 			corev1.ResourceMemory: userResourceRequests.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse("8"),
+			corev1.ResourceCPU:    resource.MustParse("10"),
 			corev1.ResourceMemory: ScaleQuantity(userResourceRequests.MemoryRequest, 2),
+		},
+	}
+
+	expUserResourceRequestsWithCPULimits = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    userResourceRequestsWithCPULimits.CPURequest,
+			corev1.ResourceMemory: userResourceRequestsWithCPULimits.MemoryRequest,
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    userResourceRequestsWithCPULimits.CPULimit,
+			corev1.ResourceMemory: ScaleQuantity(userResourceRequestsWithCPULimits.MemoryRequest, 2),
 		},
 	}
 
@@ -171,9 +192,23 @@ var (
 		SamplingRatioRate: 0.1,
 	}
 
-	userContainerCPUDefaultLimit          = "8"
+	userContainerCPUDefaultLimit          = "10"
 	userContainerCPULimitRequestFactor    = float64(0)
 	userContainerMemoryLimitRequestFactor = float64(2)
+
+	defaultWorkersEnvVarName       = "WORKERS"
+	defaultWorkersEnvVarValue      = "2"
+	defaultEnvVarsWithoutCPULimits = []client.EnvVar{
+		{
+			Name:  &defaultWorkersEnvVarName,
+			Value: &defaultWorkersEnvVarValue,
+		},
+	}
+
+	expDefaultEnvVarWithoutCPULimits = corev1.EnvVar{
+		Name:  defaultWorkersEnvVarName,
+		Value: defaultWorkersEnvVarValue,
+	}
 )
 
 func TestCreateInferenceServiceSpec(t *testing.T) {
@@ -311,7 +346,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -375,6 +410,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 									Env: []corev1.EnvVar{
+										expDefaultEnvVarWithoutCPULimits,
 										{
 											Name: "env1", Value: "env1Value",
 										},
@@ -436,7 +472,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -492,7 +528,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -545,7 +581,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -600,7 +636,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -655,7 +691,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -700,7 +736,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						"sample":                 "true",
 					},
 				},
-
 				Spec: kservev1beta1.InferenceServiceSpec{
 					Predictor: kservev1beta1.PredictorSpec{
 						PyTorch: &kservev1beta1.TorchServeSpec{
@@ -710,13 +745,73 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "pyfunc spec with cpu limits specified",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypePyFunc,
+				Options: &models.ModelOption{
+					PyFuncImageName: "gojek/project-model:1",
+				},
+				ResourceRequest: userResourceRequestsWithCPULimits,
+				Metadata:        modelSvc.Metadata,
+				Protocol:        protocol.HttpJson,
+			},
+			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						"prometheus.io/scrape":                                "true",
+						"prometheus.io/port":                                  "8080",
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/component":    models.ComponentModelVersion,
+						"gojek.com/environment":  testEnvironmentName,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"sample":                 "true",
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Image:         "gojek/project-model:1",
+									Env:           createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson).ToKubernetesEnvVars(),
+									Resources:     expUserResourceRequestsWithCPULimits,
+									LivenessProbe: probeConfig,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &userResourceRequestsWithCPULimits.MinReplica,
+							MaxReplicas: userResourceRequestsWithCPULimits.MaxReplica,
 						},
 					},
 				},
@@ -768,8 +863,12 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								{
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
-									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envOldDisableLivenessProbe, Value: "true"}},
-										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
+									Env: models.MergeEnvVars(models.EnvVars{
+										{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										{Name: envOldDisableLivenessProbe, Value: "true"},
+									},
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
+									).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 								},
 							},
@@ -848,9 +947,15 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Env:           models.MergeEnvVars(createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig), createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson)).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig),
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 								},
@@ -936,9 +1041,16 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Env:           models.MergeEnvVars(createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig), models.MergeEnvVars(models.EnvVars{{Name: envPublisherSamplingRatio, Value: "0.5"}}, createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson))).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(
+										createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig),
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+											{Name: envPublisherSamplingRatio, Value: "0.5"},
+										},
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 								},
@@ -996,9 +1108,15 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Env:           models.MergeEnvVars(createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig), createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig),
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 								},
@@ -1058,7 +1176,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								{
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
-									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+											{Name: envDisableLivenessProbe, Value: "true"},
+										},
 										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 								},
@@ -1114,7 +1236,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expUserResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1176,9 +1298,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gcr.io/custom-model:v0.1",
-									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gcr.io/custom-model:v0.1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createDefaultPredictorEnvVars(modelSvc),
+									).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 								},
 							},
@@ -1237,9 +1364,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gcr.io/custom-model:v0.1",
-									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gcr.io/custom-model:v0.1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createDefaultPredictorEnvVars(modelSvc),
+									).ToKubernetesEnvVars(),
 									Resources: expUserResourceRequests,
 									Command: []string{
 										"./run.sh",
@@ -1309,7 +1441,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1393,7 +1525,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1456,7 +1588,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1520,7 +1652,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expUserResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1583,7 +1715,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1668,7 +1800,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1723,7 +1855,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									Ports:         grpcServerlessContainerPorts,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -1779,11 +1911,17 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Resources:     expDefaultModelResourceRequests,
-									Ports:         grpcServerlessContainerPorts,
-									Env:           models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}, createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1)).ToKubernetesEnvVars(),
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Image:     "gojek/project-model:1",
+									Resources: expDefaultModelResourceRequests,
+									Ports:     grpcServerlessContainerPorts,
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+											{Name: envGRPCOptions, Value: "{}"},
+										},
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
+									).ToKubernetesEnvVars(),
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -1839,7 +1977,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									Ports:         grpcServerlessContainerPorts,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -1902,9 +2040,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gcr.io/custom-model:v0.1",
-									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gcr.io/custom-model:v0.1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createDefaultPredictorEnvVars(modelSvc),
+									).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 									Ports:     grpcServerlessContainerPorts,
 								},
@@ -1932,6 +2075,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+				DefaultEnvVarsWithoutCPULimits:        defaultEnvVarsWithoutCPULimits,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -1941,6 +2085,10 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			// Sort all env vars in both expected and actual inference service specs before comparing
+			sortInferenceServiceSpecEnvVars(tt.exp.Spec)
+			sortInferenceServiceSpecEnvVars(infSvcSpec.Spec)
 			assert.Equal(t, tt.exp, infSvcSpec)
 		})
 	}
@@ -2071,7 +2219,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2084,11 +2232,16 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          "transformer",
-									Image:         "ghcr.io/gojek/merlin-transformer-test",
-									Command:       []string{"python"},
-									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createDefaultTransformerEnvVars(modelSvc),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -2158,7 +2311,99 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+					Transformer: &kservev1beta1.TransformerSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createDefaultTransformerEnvVars(modelSvc),
+									).ToKubernetesEnvVars(),
+									Resources:     expUserResourceRequests,
+									LivenessProbe: transformerProbeConfig,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &userResourceRequests.MinReplica,
+							MaxReplicas: userResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "custom transformer with cpu limits specified",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     modelSvc.Metadata,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					Image:           "ghcr.io/gojek/merlin-transformer-test",
+					Command:         "python",
+					Args:            "main.py",
+					ResourceRequest: userResourceRequestsWithCPULimits,
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Transformer: &models.LoggerConfig{
+						Enabled: false,
+						Mode:    models.LogRequest,
+					},
+				},
+				Protocol: protocol.HttpJson,
+			},
+			deploymentScale: defaultDeploymentScale,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testTransformerScale),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/component":    models.ComponentModelVersion,
+						"gojek.com/environment":  testEnvironmentName,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"sample":                 "true",
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expDefaultModelResourceRequests,
+									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2176,7 +2421,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
 									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources:     expUserResourceRequests,
+									Resources:     expUserResourceRequestsWithCPULimits,
 									LivenessProbe: transformerProbeConfig,
 								},
 							},
@@ -2241,7 +2486,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 									Ports:         grpcServerlessContainerPorts,
 									LivenessProbe: probeConfigUPI,
 								},
@@ -2256,11 +2501,16 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          "transformer",
-									Image:         "ghcr.io/gojek/merlin-transformer-test",
-									Command:       []string{"python"},
-									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvcGRPC).ToKubernetesEnvVars(),
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+										},
+										createDefaultTransformerEnvVars(modelSvcGRPC),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfigUPI,
 									Ports:         grpcServerlessContainerPorts,
@@ -2334,7 +2584,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2350,6 +2600,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: models.MergeEnvVars(models.EnvVars{
+										{
+											Name:  defaultWorkersEnvVarName,
+											Value: defaultWorkersEnvVarValue,
+										},
 										{
 											Name:  transformerpkg.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
@@ -2438,7 +2692,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									Env:           []corev1.EnvVar{},
+									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
 									LivenessProbe: probeConfigUPI,
 									Ports:         grpcRawContainerPorts,
 								},
@@ -2456,6 +2710,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: models.MergeEnvVars(models.EnvVars{
+										{
+											Name:  defaultWorkersEnvVarName,
+											Value: defaultWorkersEnvVarValue,
+										},
 										{
 											Name:  transformerpkg.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
@@ -2552,9 +2810,21 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Env:           models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}, createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1)).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{
+												Name:  defaultWorkersEnvVarName,
+												Value: defaultWorkersEnvVarValue,
+											},
+											{
+												Name:  envGRPCOptions,
+												Value: "{}",
+											},
+										},
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfigUPI,
 									Ports:         grpcRawContainerPorts,
@@ -2573,6 +2843,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: models.MergeEnvVars(models.EnvVars{
+										{
+											Name:  defaultWorkersEnvVarName,
+											Value: defaultWorkersEnvVarValue,
+										},
 										{
 											Name:  transformerpkg.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
@@ -2678,9 +2952,15 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Env:           models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}, createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(
+										models.EnvVars{
+											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
+											{Name: envGRPCOptions, Value: "{}"},
+										},
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
+									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 								},
@@ -2698,6 +2978,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: models.MergeEnvVars(models.EnvVars{
+										{
+											Name:  defaultWorkersEnvVarName,
+											Value: defaultWorkersEnvVarValue,
+										},
 										{
 											Name:  transformerpkg.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
@@ -2752,6 +3036,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+				DefaultEnvVarsWithoutCPULimits:        defaultEnvVarsWithoutCPULimits,
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -2762,6 +3047,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
+
+			// Sort all env vars in both expected and actual inference service specs before comparing
+			sortInferenceServiceSpecEnvVars(tt.exp.Spec)
+			sortInferenceServiceSpecEnvVars(infSvcSpec.Spec)
 			assert.Equal(t, tt.exp, infSvcSpec)
 		})
 	}
@@ -4214,8 +4503,9 @@ func TestCreateTransformerSpec(t *testing.T) {
 	cpuRequest := resource.MustParse("1")
 	memoryRequest := resource.MustParse("1Gi")
 
-	cpuLimit := resource.MustParse("8")
+	cpuLimit := resource.MustParse("10")
 	memoryLimit := ScaleQuantity(memoryRequest, 2)
+	customCPULimit := resource.MustParse("8")
 
 	// Liveness probe config for the transformers
 	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, "/")
@@ -4311,6 +4601,81 @@ func TestCreateTransformerSpec(t *testing.T) {
 								},
 								Limits: corev1.ResourceList{
 									corev1.ResourceCPU:    cpuLimit,
+									corev1.ResourceMemory: memoryLimit,
+								},
+							},
+							LivenessProbe: transformerProbeConfig,
+						},
+					},
+				},
+				ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+					MinReplicas: &one,
+					MaxReplicas: one,
+				},
+			},
+		},
+		{
+			"standard transformer with cpu limits specified",
+			args{
+				&models.Service{
+					Name:         modelSvc.Name,
+					ModelName:    modelSvc.ModelName,
+					ModelVersion: modelSvc.ModelVersion,
+					Namespace:    modelSvc.Namespace,
+					Protocol:     protocol.HttpJson,
+				},
+				&models.Transformer{
+					TransformerType: models.StandardTransformerType,
+					Image:           standardTransformerConfig.ImageName,
+					Command:         "python",
+					Args:            "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CPURequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+						CPULimit:      customCPULimit,
+					},
+					EnvVars: models.EnvVars{
+						{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"}, // test user overwrite
+					},
+				},
+				&config.DeploymentConfig{
+					StandardTransformer:                   standardTransformerConfig,
+					UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+					UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+					UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+				},
+			},
+			&kservev1beta1.TransformerSpec{
+				PodSpec: kservev1beta1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:    "transformer",
+							Image:   standardTransformerConfig.ImageName,
+							Command: []string{"python"},
+							Args:    []string{"main.py"},
+							Env: models.MergeEnvVars(models.EnvVars{
+								{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
+								{
+									Name:  transformerpkg.FeastStorageConfigs,
+									Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
+								},
+								{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
+								{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
+								{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+								{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
+								{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"},
+								{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+								{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+							}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    cpuRequest,
+									corev1.ResourceMemory: memoryRequest,
+								},
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    customCPULimit,
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
