@@ -1,0 +1,2 @@
+DbConfig:
+  ConnMaxIdleTime: 30rr
