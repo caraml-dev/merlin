@@ -124,7 +124,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 	}
 }
 
-func TestCreatePodDisruptionBudgets(t *testing.T) {
+func Test_generatePDBSpecs(t *testing.T) {
 	err := models.InitKubernetesLabeller("gojek.com/", "dev")
 	assert.Nil(t, err)
 
@@ -343,7 +343,7 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			pdbs := createPodDisruptionBudgets(tt.modelService, tt.pdbConfig)
+			pdbs := generatePDBSpecs(tt.modelService, tt.pdbConfig)
 			assert.Equal(t, tt.expected, pdbs)
 		})
 	}

@@ -73,7 +73,7 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1.PodDisruptionBudget, er
 	return pdb, nil
 }
 
-func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
+func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
 	pdbs := []*PodDisruptionBudget{}
 
 	// Only create PDB if: ceil(minReplica * minAvailablePercent) < minReplica
