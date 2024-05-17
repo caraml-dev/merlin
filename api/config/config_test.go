@@ -318,14 +318,19 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 	}
 }
 
-func setupNewEnv(envMaps ...map[string]string) {
+func setupNewEnv(envMaps ...map[string]string) error {
 	os.Clearenv()
 
+	var err error
 	for _, envMap := range envMaps {
 		for key, val := range envMap {
-			os.Setenv(key, val)
+			err = os.Setenv(key, val)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func TestLoad(t *testing.T) {
@@ -619,7 +624,7 @@ func TestLoad(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			setupNewEnv(tt.env)
+			assert.NoError(t, setupNewEnv(tt.env))
 			var emptyCfg Config
 			got, err := Load(&emptyCfg, tt.filepaths...)
 			if (err != nil) != tt.wantErr {
