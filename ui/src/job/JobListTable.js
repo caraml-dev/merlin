@@ -52,7 +52,8 @@ const JobListTable = ({
   onPaginationChange,
   searchText,
   onSearchTextChange,
-  fetchJobs }) => {
+  fetchJobs,
+}) => {
   const pagination = {
     pageIndex: page.index,
     pageSize: page.size,

@@ -41,6 +41,11 @@ const Jobs = () => {
      done on the backend. */
   const [searchText, setSearchText] = useState("");
 
+  const onSearchTextChange = text => {
+    setPage({ ...page, index: 0 });
+    setSearchText(text);
+  }
+
   const [{ data, isLoaded, error }, fetchJobs] = useMerlinApi(
     `/projects/${projectId}/jobs-by-page?model_id=${modelId}&page=${page.index+1}&page_size=${page.size}&search=${searchText}`,
     { mock: mocks.jobList },
@@ -95,7 +100,7 @@ const Jobs = () => {
             totalItemCount={data?.paging?.total || 0}
             onPaginationChange={setPage}
             searchText={searchText}
-            onSearchTextChange={setSearchText}
+            onSearchTextChange={onSearchTextChange}
             fetchJobs={fetchJobs}
           />
         </EuiPanel>
