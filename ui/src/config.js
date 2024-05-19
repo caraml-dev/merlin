@@ -99,7 +99,7 @@ const config = {
   USE_MOCK_DATA: false,
   TIMEOUT: 20000,
   MERLIN_API: getEnv("REACT_APP_MERLIN_API"),
-  MLP_API: "https://console.d.ai.golabs.io/api", //getEnv("REACT_APP_MLP_API"),
+  MLP_API: getEnv("REACT_APP_MLP_API"),
   FEAST_CORE_API: getEnv("REACT_APP_FEAST_CORE_API"),
   OAUTH_CLIENT_ID: getEnv("REACT_APP_OAUTH_CLIENT_ID"),
 };

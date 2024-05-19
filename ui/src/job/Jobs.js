@@ -37,9 +37,12 @@ const Jobs = () => {
     size: appConfig.pagination.defaultPageSize,
   });
 
+  /* To capture the search text from the search bar so that the search can be
+     done on the backend. */
+  const [searchText, setSearchText] = useState("");
 
   const [{ data, isLoaded, error }, fetchJobs] = useMerlinApi(
-    `/projects/${projectId}/jobs-by-page?model_id=${modelId}&page=${page.index+1}&page_size=${page.size}`,
+    `/projects/${projectId}/jobs-by-page?model_id=${modelId}&page=${page.index+1}&page_size=${page.size}&search=${searchText}`,
     { mock: mocks.jobList },
     []
   );
@@ -91,6 +94,8 @@ const Jobs = () => {
             page={page}
             totalItemCount={data?.paging?.total || 0}
             onPaginationChange={setPage}
+            searchText={searchText}
+            onSearchTextChange={setSearchText}
             fetchJobs={fetchJobs}
           />
         </EuiPanel>

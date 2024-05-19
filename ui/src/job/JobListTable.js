@@ -50,6 +50,8 @@ const JobListTable = ({
   page,
   totalItemCount,
   onPaginationChange,
+  searchText,
+  onSearchTextChange,
   fetchJobs }) => {
   const pagination = {
     pageIndex: page.index,
@@ -275,6 +277,15 @@ const JobListTable = ({
     </EuiCallOut>
   ) : (
     <Fragment>
+      <EuiSearchBar
+        query={searchText}
+        box={{
+          placeholder: "Search Experiment name or description",
+        }}
+        onChange={(text) => {
+          onSearchTextChange(text.queryText);
+        }}
+      />
       <EuiBasicTable
         items={jobs}
         columns={columns}
