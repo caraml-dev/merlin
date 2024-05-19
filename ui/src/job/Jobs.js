@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   EuiButton,
   EuiPageTemplate,
@@ -24,6 +24,7 @@ import {
 import { useParams } from "react-router-dom";
 import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../hooks/useMerlinApi";
+import { appConfig } from "../config";
 import mocks from "../mocks";
 import JobListTable from "../job/JobListTable";
 
@@ -31,8 +32,14 @@ const Jobs = () => {
   const { projectId, modelId } = useParams();
   const createJobURL = `/merlin/projects/${projectId}/models/${modelId}/create-job`;
 
+  const [page, setPage] = useState({
+    index: 0,
+    size: appConfig.pagination.defaultPageSize,
+  });
+
+
   const [{ data, isLoaded, error }, fetchJobs] = useMerlinApi(
-    `/projects/${projectId}/jobs?model_id=${modelId}`,
+    `/projects/${projectId}/jobs-by-page?model_id=${modelId}&page=${page.index+1}&page_size=${page.size}`,
     { mock: mocks.jobList },
     []
   );
@@ -78,9 +85,12 @@ const Jobs = () => {
           <JobListTable
             projectId={projectId}
             modelId={modelId}
-            jobs={data}
+            jobs={data.results || []}
             isLoaded={isLoaded}
             error={error}
+            page={page}
+            totalItemCount={data?.paging?.total || 0}
+            onPaginationChange={setPage}
             fetchJobs={fetchJobs}
           />
         </EuiPanel>
