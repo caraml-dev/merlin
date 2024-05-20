@@ -109,7 +109,9 @@ export const AutoscalingPolicyFormGroup = ({
           Autoscaling Policy determines the condition for increasing or
           decreasing number of replicas.
         </Fragment>
-      }>
+      }
+      fullWidth
+    >
       <EuiFormRow
         label={
           <EuiToolTip content="Some metrics type might not be available depending on the selected deployment mode">
@@ -117,19 +119,23 @@ export const AutoscalingPolicyFormGroup = ({
               Metrics Type * <EuiIcon type="questionInCircle" color="subdued" />
             </span>
           </EuiToolTip>
-        }>
+        }
+        fullWidth
+      >
         <EuiSuperSelect
           options={filterMetricsOptions(allMetricsType, deploymentMode)}
           valueOfSelected={autoscalingPolicy.metrics_type}
           onChange={onMetricsTypeChange}
           hasDividers
+          fullWidth
         />
       </EuiFormRow>
-      <EuiFormRow label="Target">
+      <EuiFormRow label="Target" fullWidth>
         <EuiFieldNumber
           onChange={onTargetValueChange}
           min={1}
           value={autoscalingPolicy.target_value}
+          fullWidth
         />
       </EuiFormRow>
     </EuiDescribedFormGroup>

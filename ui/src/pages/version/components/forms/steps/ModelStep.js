@@ -12,6 +12,7 @@ import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
+import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -45,6 +46,11 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
           id="adv config"
           buttonContent="Advanced configurations">
             <EuiSpacer size="s" />
+            <CPULimitsFormGroup
+              resourcesConfig={data.resource_request}
+              onChangeHandler={onChange("resource_request")}
+              errors={get(errors, "resource_request")}
+            />
             <ImageBuilderSection
               imageBuilderResourceConfig={data.image_builder_resource_request}
               onChangeHandler={onChange("image_builder_resource_request")}
