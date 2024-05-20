@@ -1283,7 +1283,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     # Check that the deployment configs of v2 have remained the same as those used in v1
     assert endpoint.resource_request.cpu_request == "123m"
-    assert endpoint.resource_request.cpu_limit == "3"
+    assert endpoint.resource_request.cpu_limit == "2"
     assert endpoint.resource_request.memory_request == "234Mi"
     assert endpoint.env_vars == {"green": "TRUE"}
     assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
