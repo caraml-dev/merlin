@@ -1268,6 +1268,7 @@ class ModelVersion:
                 min_replica=resource_request.min_replica,
                 max_replica=resource_request.max_replica,
                 cpu_request=resource_request.cpu_request,
+                cpu_limit=resource_request.cpu_limit,
                 memory_request=resource_request.memory_request,
             )
             if (
@@ -1748,6 +1749,7 @@ class ModelVersion:
                     env.default_resource_request.min_replica,
                     env.default_resource_request.max_replica,
                     env.default_resource_request.cpu_request,
+                    env.default_resource_request.cpu_limit,
                     env.default_resource_request.memory_request,
                 )
 
@@ -1762,6 +1764,7 @@ class ModelVersion:
             min_replica=resource_request.min_replica,
             max_replica=resource_request.max_replica,
             cpu_request=resource_request.cpu_request,
+            cpu_limit=resource_request.cpu_limit,
             memory_request=resource_request.memory_request,
         )
 
@@ -1807,6 +1810,7 @@ class ModelVersion:
                 min_replica=resource_request.min_replica,
                 max_replica=resource_request.max_replica,
                 cpu_request=resource_request.cpu_request,
+                cpu_limit=resource_request.cpu_limit,
                 memory_request=resource_request.memory_request,
             )
 

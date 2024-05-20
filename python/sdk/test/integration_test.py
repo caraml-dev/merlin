@@ -1237,7 +1237,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
-        transformer = Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest"),
+        transformer=Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest"),
     )
 
     with open(os.path.join("test/transformer", "input.json"), "r") as f:
