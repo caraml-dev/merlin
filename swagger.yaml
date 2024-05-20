@@ -1995,6 +1995,8 @@ components:
           type: integer
         cpu_request:
           type: string
+        cpu_limit:
+          type: string
         memory_request:
           type: string
         gpu_name:
