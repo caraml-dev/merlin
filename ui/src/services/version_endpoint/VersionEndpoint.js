@@ -26,7 +26,7 @@ export class VersionEndpoint {
       min_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 2 : 0,
       max_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 4 : 2,
       cpu_request: "500m",
-      cpu_limit: "",
+      cpu_limit: "0",
       memory_request: "512Mi",
     };
 

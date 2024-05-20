@@ -21,6 +21,7 @@ import React from "react";
 export const ResourcesConfigTable = ({
   resourceRequest: {
     cpu_request,
+    cpu_limit,
     memory_request,
     min_replica,
     max_replica,
@@ -46,6 +47,13 @@ export const ResourcesConfigTable = ({
       description: max_replica,
     },
   ];
+
+  if (cpu_limit !== "0") {
+    items.push({
+      title: "CPU Limit",
+      description: cpu_limit,
+    });
+  }
 
   if (gpu_name !== undefined && gpu_name !== "") {
     items.push({
