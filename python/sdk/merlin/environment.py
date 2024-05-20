@@ -27,6 +27,7 @@ class Environment:
             self._default_resource_request = ResourceRequest(env.default_resource_request.min_replica,
                                                             env.default_resource_request.max_replica,
                                                             env.default_resource_request.cpu_request,
+                                                            env.default_resource_request.cpu_limit,
                                                             env.default_resource_request.memory_request)
 
     @property

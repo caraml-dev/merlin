@@ -64,6 +64,11 @@ def cli():
     help="The CPU resource requirement requests for this deployment. Example: 100m.",
 )
 @click.option(
+    "--cpu-limit",
+    required=False,
+    help="The maximum CPU resource this deployment can consume. Example: 100m.",
+)
+@click.option(
     "--memory-request",
     required=False,
     help="The memory resource requirement requests for this deployment. Example: 256Mi.",
@@ -78,6 +83,7 @@ def deploy(
     min_replica,
     max_replica,
     cpu_request,
+    cpu_limit,
     memory_request,
 ):
     merlin.set_url(url)
@@ -91,6 +97,8 @@ def deploy(
         resource_request.max_replica = int(max_replica)
     if cpu_request is not None:
         resource_request.cpu_request = cpu_request
+    if cpu_limit is not None:
+        resource_request.cpu_limit = cpu_limit
     if memory_request is not None:
         resource_request.memory_request = memory_request
 

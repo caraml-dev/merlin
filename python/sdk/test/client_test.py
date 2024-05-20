@@ -47,7 +47,7 @@ mlflow_tracking_url = "http://mlflow.api.merlin.dev"
 created_at = "2019-08-29T08:13:12.377Z"
 updated_at = "2019-08-29T08:13:12.377Z"
 
-default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
+default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", cpu_limit="2", memory_request="128Mi")
 env_1 = cl.Environment(
     id=1,
     name="dev",

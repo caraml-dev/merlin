@@ -78,6 +78,7 @@ class VersionEndpoint:
                     min_replica=transformer.resource_request.min_replica,
                     max_replica=transformer.resource_request.max_replica,
                     cpu_request=transformer.resource_request.cpu_request,
+                    cpu_limit=transformer.resource_request.cpu_limit,
                     memory_request=transformer.resource_request.memory_request
                 )
 

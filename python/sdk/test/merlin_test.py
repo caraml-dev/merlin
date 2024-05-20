@@ -24,7 +24,13 @@ from merlin.model import ModelVersion
 # get global mock responses that configured in conftest
 responses = pytest.responses
 
-default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
+default_resource_request = cl.ResourceRequest(
+    min_replica=1,
+    max_replica=1,
+    cpu_request="100m",
+    cpu_limit="0",
+    memory_request="128Mi",
+)
 env_1 = cl.Environment(
     id=1,
     name="dev",
