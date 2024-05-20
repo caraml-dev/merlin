@@ -504,7 +504,7 @@ def test_resource_request(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-        resource_request = ResourceRequest(1, 1, "100m", "256Mi")
+        resource_request = ResourceRequest(1, 1, "100m", "2", "256Mi")
         endpoint = merlin.deploy(
             v,
             environment_name=default_env.name,
@@ -560,7 +560,7 @@ def test_resource_request_with_gpu(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-        resource_request = ResourceRequest(1, 1, "100m", "256Mi", **gpu_config)
+        resource_request = ResourceRequest(1, 1, "100m", "2", "256Mi", **gpu_config)
         endpoint = merlin.deploy(
             v,
             environment_name=default_env.name,
@@ -1271,7 +1271,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
         transformer=Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
-                                resource_request=merlin.ResourceRequest(0, 1, "100m", "3", "250Mi")),
+                                resource_request=merlin.ResourceRequest(0, 1, "100m", "2", "250Mi")),
     )
 
     resp = requests.post(f"{new_endpoint.url}", json=req)
