@@ -19,8 +19,8 @@ import { Link } from "react-router-dom";
 import {
   EuiBadge,
   EuiCallOut,
+  EuiBasicTable,
   EuiButtonEmpty,
-  EuiInMemoryTable,
   EuiLoadingChart,
   EuiText,
   EuiTextAlign,
@@ -41,7 +41,25 @@ const moment = require("moment");
 const defaultTextSize = "s";
 const defaultIconSize = "xs";
 
-const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) => {
+const JobListTable = ({
+  projectId,
+  modelId,
+  jobs,
+  isLoaded,
+  error,
+  page,
+  totalItemCount,
+  onPaginationChange,
+  searchText,
+  onSearchTextChange,
+  fetchJobs,
+}) => {
+  const pagination = {
+    pageIndex: page.index,
+    pageSize: page.size,
+    showPerPageOptions: false,
+    totalItemCount,
+  };
   const healthColor = status => {
     switch (status) {
       case "running":
@@ -245,6 +263,8 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
     }
   };
 
+  const onTableChange = ({ page = {} }) => onPaginationChange(page);
+
   return !isLoaded ? (
     <EuiTextAlign textAlign="center">
       <EuiLoadingChart size="xl" mono />
@@ -258,12 +278,23 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
     </EuiCallOut>
   ) : (
     <Fragment>
-      <EuiInMemoryTable
+      <EuiSearchBar
+        query={searchText}
+        box={{
+          placeholder: "Search batch prediction job name",
+        }}
+        onChange={(text) => {
+          onSearchTextChange(text.queryText);
+        }}
+      />
+      <EuiBasicTable
         items={jobs}
         columns={columns}
         itemId="id"
         search={search}
         sorting={{ sort: { field: "created_at", direction: "desc" } }}
+        pagination={pagination}
+        onChange={onTableChange}
       />
       {isStopPredictionJobModalVisible && currentJob && (
         <StopPredictionJobModal
