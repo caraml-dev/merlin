@@ -150,6 +150,30 @@ with merlin.new_model_version() as v:
 
 ![Autoscaling Policy](../../../images/autoscaling_policy.png)
 
+## CPU Limits
+
+By default, Merlin determines the CPU limits of all model deployments using platform-level configured values. These CPU 
+limits can either be calculated as a factor of the user-defined CPU request value for each deployment (e.g. 2x of the 
+CPU request value) or as a constant value across all deployments.
+
+However, users can override this platform-level configured value by setting this value explicitly on the UI or on 
+the SDK.
+
+On the UI:
+
+![CPU Limits](../../../images/override_cpu_limits.png)
+
+On the SDK:
+
+```python
+merlin.deploy(
+    v,
+    environment_name=some_name,
+    resource_request=ResourceRequest(cpu_limit="2"),
+    deployment_mode=some_deployment_mode,
+)
+```
+
 ## Liveness Probe
 
 When deploying a model version, the model container will be built with a livenes probe by default. The liveness probe will periodically check that your model is still alive, and restart the pod automatically if it is deemed to be dead.
