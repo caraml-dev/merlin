@@ -128,7 +128,10 @@ export const AutoscalingPolicyFormGroup = ({
       <EuiFormRow label="Target">
         <EuiFieldNumber
           onChange={onTargetValueChange}
-          min={1}
+          // The min value is set as 0.005 because it's the smallest value, when rounded to 2 decimal places, gives
+          // 0.01, the smallest value accepted as an autoscaling target (concurrency).
+          min={0.005}
+          step={"any"}
           value={autoscalingPolicy.target_value}
         />
       </EuiFormRow>
