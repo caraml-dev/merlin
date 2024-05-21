@@ -281,7 +281,7 @@ const JobListTable = ({
       <EuiSearchBar
         query={searchText}
         box={{
-          placeholder: "Search Experiment name or description",
+          placeholder: "Search batch prediction job name",
         }}
         onChange={(text) => {
           onSearchTextChange(text.queryText);
