@@ -15,8 +15,7 @@ export const CPULimitsFormGroup = ({
       title={<p>CPU Limits</p>}
       description={
         <Fragment>
-          CPU limits are not set at the platform level. Use this field to limit the
-          amount of CPU that the model is able to consume.
+          Use this field to override the platform-level default CPU limit.
         </Fragment>
       }
       fullWidth
@@ -25,7 +24,8 @@ export const CPULimitsFormGroup = ({
         label={
           <FormLabelWithToolTip
             label="CPU Limits"
-            content="Specify the maximum amount of CPU available for your model"
+            content="Specify the maximum amount of CPU available for your model.
+            The value 0 correponds to not setting any CPU limit."
           />
         }
         isInvalid={!!errors.cpu_limit}
