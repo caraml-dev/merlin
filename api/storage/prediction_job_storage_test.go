@@ -145,7 +145,7 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 	})
 }
 
-func TestPredictionJobStorage_List(t *testing.T) {
+func TestPredictionJobStorage_List_And_Count(t *testing.T) {
 	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
 		predJobStore := NewPredictionJobStorage(db)
 		isDefaultPredictionJob := true
@@ -179,9 +179,11 @@ func TestPredictionJobStorage_List(t *testing.T) {
 		}
 		db.Create(&v)
 
+		time1 := time.Now()
+		name1 := fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time1)
 		job1 := &models.PredictionJob{
 			ID:   1,
-			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
+			Name: name1,
 			Metadata: models.Metadata{
 				Team:   "dsp",
 				Stream: "dsp",
@@ -241,9 +243,11 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			},
 		}
 
+		time2 := time1.Add(time.Second)
+		name2 := fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time2)
 		job2 := &models.PredictionJob{
 			ID:   2,
-			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
+			Name: name2,
 			Metadata: models.Metadata{
 				Team:   "dsp",
 				Stream: "dsp",
@@ -311,20 +315,49 @@ func TestPredictionJobStorage_List(t *testing.T) {
 
 		jobs, err := predJobStore.List(&models.PredictionJob{
 			ProjectID: models.ID(p.ID),
-		})
+		}, "", nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 
 		jobs, err = predJobStore.List(&models.PredictionJob{
 			VersionModelID: m.ID,
-		})
+		}, "", nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 
 		jobs, err = predJobStore.List(&models.PredictionJob{
 			VersionID: v.ID,
-		})
+		}, "", nil, nil)
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
+
+		// Test search
+		jobs, err = predJobStore.List(&models.PredictionJob{
+			VersionModelID: m.ID,
+		}, fmt.Sprintf("%s", time1), nil, nil)
+		assert.NoError(t, err)
+		assert.Len(t, jobs, 1)
+		assert.Equal(t, jobs[0].Name, name1)
+
+		// Test offset. Selects the less recently updated jobs.
+		intOne := 1
+		jobs, err = predJobStore.List(&models.PredictionJob{
+			VersionModelID: m.ID,
+		}, "", &intOne, nil)
+		assert.NoError(t, err)
+		assert.Len(t, jobs, 1)
+		assert.Equal(t, jobs[0].Name, name1)
+
+		// Test limit. Selects the most recently updated job.
+		jobs, err = predJobStore.List(&models.PredictionJob{
+			VersionModelID: m.ID,
+		}, "", nil, &intOne)
+		assert.NoError(t, err)
+		assert.Len(t, jobs, 1)
+		assert.Equal(t, jobs[0].Name, name2)
+
+		// Test Count
+		count := predJobStore.Count(&models.PredictionJob{VersionModelID: m.ID}, fmt.Sprintf("%s", time1))
+		assert.Equal(t, 1, count)
 	})
 }

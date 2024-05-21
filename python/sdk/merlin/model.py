@@ -1559,12 +1559,25 @@ class ModelVersion:
         :return: list of prediction jobs
         """
         job_client = client.PredictionJobsApi(self._api_client)
-        res = job_client.models_model_id_versions_version_id_jobs_get(
-            model_id=self.model.id, version_id=self.id
+
+        res = job_client.models_model_id_versions_version_id_jobs_by_page_get(
+            model_id=self.model.id, version_id=self.id, page=1
         )
         jobs = []
-        for j in res:
+        for j in res.results:
             jobs.append(PredictionJob(j, self._api_client))
+
+        # Paginated response. Parse the rest of the pages.
+        total_pages = res.paging.pages
+        page = 2
+        while page <= total_pages:
+            res = job_client.models_model_id_versions_version_id_jobs_by_page_get(
+                model_id=self.model.id, version_id=self.id, page=page
+            )
+            for j in res.results:
+                jobs.append(PredictionJob(j, self._api_client))
+            page += 1
+
         return jobs
 
     def start_server(

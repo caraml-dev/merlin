@@ -226,7 +226,9 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 
 		// Prediction Job API
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/jobs", nil, predictionJobController.ListAllInProject, "ListAllPredictionJobInProject"},
+		{http.MethodGet, "/projects/{project_id:[0-9]+}/jobs-by-page", nil, predictionJobController.ListAllInProjectByPage, "ListAllPredictionJobInProjectByPage"},
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs", nil, predictionJobController.List, "ListPredictionJob"},
+		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs-by-page", nil, predictionJobController.ListByPage, "ListPredictionJobByPage"},
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs/{job_id:[0-9]+}", nil, predictionJobController.Get, "GetPredictionJob"},
 		{http.MethodPut, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs/{job_id:[0-9]+}/stop", nil, predictionJobController.Stop, "StopPredictionJob"},
 		{http.MethodPost, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs", models.PredictionJob{}, predictionJobController.Create, "CreatePredictionJob"},

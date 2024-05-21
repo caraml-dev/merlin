@@ -35,9 +35,9 @@ func (r ApiProjectsProjectIdSecretsGetRequest) Execute() ([]Secret, *http.Respon
 /*
 ProjectsProjectIdSecretsGet List secret
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId
-	@return ApiProjectsProjectIdSecretsGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param projectId
+ @return ApiProjectsProjectIdSecretsGetRequest
 */
 func (a *SecretAPIService) ProjectsProjectIdSecretsGet(ctx context.Context, projectId int32) ApiProjectsProjectIdSecretsGetRequest {
 	return ApiProjectsProjectIdSecretsGetRequest{
@@ -48,8 +48,7 @@ func (a *SecretAPIService) ProjectsProjectIdSecretsGet(ctx context.Context, proj
 }
 
 // Execute executes the request
-//
-//	@return []Secret
+//  @return []Secret
 func (a *SecretAPIService) ProjectsProjectIdSecretsGetExecute(r ApiProjectsProjectIdSecretsGetRequest) ([]Secret, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -157,9 +156,9 @@ func (r ApiProjectsProjectIdSecretsPostRequest) Execute() (*Secret, *http.Respon
 /*
 ProjectsProjectIdSecretsPost Create secret
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId
-	@return ApiProjectsProjectIdSecretsPostRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param projectId
+ @return ApiProjectsProjectIdSecretsPostRequest
 */
 func (a *SecretAPIService) ProjectsProjectIdSecretsPost(ctx context.Context, projectId int32) ApiProjectsProjectIdSecretsPostRequest {
 	return ApiProjectsProjectIdSecretsPostRequest{
@@ -170,8 +169,7 @@ func (a *SecretAPIService) ProjectsProjectIdSecretsPost(ctx context.Context, pro
 }
 
 // Execute executes the request
-//
-//	@return Secret
+//  @return Secret
 func (a *SecretAPIService) ProjectsProjectIdSecretsPostExecute(r ApiProjectsProjectIdSecretsPostRequest) (*Secret, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
@@ -276,10 +274,10 @@ func (r ApiProjectsProjectIdSecretsSecretIdDeleteRequest) Execute() (*http.Respo
 /*
 ProjectsProjectIdSecretsSecretIdDelete Delete secret
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId
-	@param secretId
-	@return ApiProjectsProjectIdSecretsSecretIdDeleteRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param projectId
+ @param secretId
+ @return ApiProjectsProjectIdSecretsSecretIdDeleteRequest
 */
 func (a *SecretAPIService) ProjectsProjectIdSecretsSecretIdDelete(ctx context.Context, projectId int32, secretId int32) ApiProjectsProjectIdSecretsSecretIdDeleteRequest {
 	return ApiProjectsProjectIdSecretsSecretIdDeleteRequest{
@@ -390,10 +388,10 @@ func (r ApiProjectsProjectIdSecretsSecretIdPatchRequest) Execute() (*Secret, *ht
 /*
 ProjectsProjectIdSecretsSecretIdPatch Update secret
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId
-	@param secretId
-	@return ApiProjectsProjectIdSecretsSecretIdPatchRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param projectId
+ @param secretId
+ @return ApiProjectsProjectIdSecretsSecretIdPatchRequest
 */
 func (a *SecretAPIService) ProjectsProjectIdSecretsSecretIdPatch(ctx context.Context, projectId int32, secretId int32) ApiProjectsProjectIdSecretsSecretIdPatchRequest {
 	return ApiProjectsProjectIdSecretsSecretIdPatchRequest{
@@ -405,8 +403,7 @@ func (a *SecretAPIService) ProjectsProjectIdSecretsSecretIdPatch(ctx context.Con
 }
 
 // Execute executes the request
-//
-//	@return Secret
+//  @return Secret
 func (a *SecretAPIService) ProjectsProjectIdSecretsSecretIdPatchExecute(r ApiProjectsProjectIdSecretsSecretIdPatchRequest) (*Secret, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPatch

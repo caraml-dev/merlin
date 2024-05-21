@@ -21,6 +21,8 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/caraml-dev/mlp/api/pkg/pagination"
+
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 )
@@ -28,6 +30,11 @@ import (
 // PredictionJobController controls prediction job API.
 type PredictionJobController struct {
 	*AppContext
+}
+
+type ListJobsPaginatedResponse struct {
+	Results []*models.PredictionJob `json:"results"`
+	Paging  pagination.Paging       `json:"paging"`
 }
 
 // Create method creates a prediction job.
@@ -67,8 +74,8 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseID(vars["model_id"])
 	versionID, _ := models.ParseID(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -82,13 +89,46 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 		ModelID:   modelID,
 		VersionID: versionID,
 	}
-
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query, false)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
 
 	return Ok(jobs)
+}
+
+// ListInPage method lists all prediction jobs of a model and version ID, with pagination.
+func (c *PredictionJobController) ListByPage(r *http.Request, vars map[string]string, _ interface{}) *Response {
+	ctx := r.Context()
+
+	versionID, _ := models.ParseID(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+
+	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
+	}
+
+	var query service.ListPredictionJobQuery
+	err = decoder.Decode(&query, r.URL.Query())
+	if err != nil {
+		return BadRequest(fmt.Sprintf("Bad query %s", r.URL.Query()))
+	}
+	query.ModelID = modelID
+	query.VersionID = versionID
+
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, &query, true)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
+	}
+
+	return Ok(ListJobsPaginatedResponse{
+		Results: jobs,
+		Paging:  *paging,
+	})
 }
 
 // Get method gets a prediction job.
@@ -205,10 +245,38 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query, false)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
 
 	return Ok(jobs)
+}
+
+// ListAllInProject lists all prediction jobs of a project, with pagination
+func (c *PredictionJobController) ListAllInProjectByPage(r *http.Request, vars map[string]string, body interface{}) *Response {
+	ctx := r.Context()
+
+	var query service.ListPredictionJobQuery
+	err := decoder.Decode(&query, r.URL.Query())
+	if err != nil {
+		return BadRequest(fmt.Sprintf("Bad query %s", r.URL.Query()))
+	}
+
+	projectID, _ := models.ParseID(vars["project_id"])
+
+	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
+	if err != nil {
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
+	}
+
+	jobs, paging, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query, true)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
+	}
+
+	return Ok(ListJobsPaginatedResponse{
+		Results: jobs,
+		Paging:  *paging,
+	})
 }

@@ -941,12 +941,33 @@ class TestModelVersion:
     def test_list_prediction_job(self, version):
         responses.add(
             method="GET",
-            url="/v1/models/1/versions/1/jobs",
-            body=json.dumps(
-                [job_1.to_dict(), job_2.to_dict()], default=serialize_datetime
-            ),
+            url="/v1/models/1/versions/1/jobs-by-page?page=1",
+            body=json.dumps({
+                "results": [job_1.to_dict()],
+                "paging": {
+                    "page": 1,
+                    "pages": 2,
+                    "total": 2,
+                },
+            }, default=serialize_datetime),
             status=200,
             content_type="application/json",
+            match_querystring=True,
+        )
+        responses.add(
+            method="GET",
+            url="/v1/models/1/versions/1/jobs-by-page?page=2",
+            body=json.dumps({
+                "results": [job_2.to_dict()],
+                "paging": {
+                    "page": 2,
+                    "pages": 2,
+                    "total": 2,
+                },
+            }, default=serialize_datetime),
+            status=200,
+            content_type="application/json",
+            match_querystring=True,
         )
         jobs = version.list_prediction_job()
         assert len(jobs) == 2

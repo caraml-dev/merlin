@@ -36,10 +36,10 @@ func (r ApiModelsModelIdVersionsVersionIdImageGetRequest) Execute() (*VersionIma
 /*
 ModelsModelIdVersionsVersionIdImageGet Get the Docker image for given model version
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@return ApiModelsModelIdVersionsVersionIdImageGetRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @return ApiModelsModelIdVersionsVersionIdImageGetRequest
 */
 func (a *VersionImageAPIService) ModelsModelIdVersionsVersionIdImageGet(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdImageGetRequest {
 	return ApiModelsModelIdVersionsVersionIdImageGetRequest{
@@ -51,8 +51,7 @@ func (a *VersionImageAPIService) ModelsModelIdVersionsVersionIdImageGet(ctx cont
 }
 
 // Execute executes the request
-//
-//	@return VersionImage
+//  @return VersionImage
 func (a *VersionImageAPIService) ModelsModelIdVersionsVersionIdImageGetExecute(r ApiModelsModelIdVersionsVersionIdImageGetRequest) (*VersionImage, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -162,10 +161,10 @@ func (r ApiModelsModelIdVersionsVersionIdImagePutRequest) Execute() (*http.Respo
 /*
 ModelsModelIdVersionsVersionIdImagePut Build the Docker image for given model version
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param modelId
-	@param versionId
-	@return ApiModelsModelIdVersionsVersionIdImagePutRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @param modelId
+ @param versionId
+ @return ApiModelsModelIdVersionsVersionIdImagePutRequest
 */
 func (a *VersionImageAPIService) ModelsModelIdVersionsVersionIdImagePut(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdImagePutRequest {
 	return ApiModelsModelIdVersionsVersionIdImagePutRequest{

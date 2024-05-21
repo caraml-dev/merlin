@@ -32,6 +32,7 @@ from client.models.gpu_toleration import GPUToleration
 from client.models.image_building_job_state import ImageBuildingJobState
 from client.models.image_building_job_status import ImageBuildingJobStatus
 from client.models.label import Label
+from client.models.list_jobs_paginated_response import ListJobsPaginatedResponse
 from client.models.logger import Logger
 from client.models.logger_config import LoggerConfig
 from client.models.logger_mode import LoggerMode
@@ -48,6 +49,7 @@ from client.models.model_prediction_output import ModelPredictionOutput
 from client.models.model_prediction_output_class import ModelPredictionOutputClass
 from client.models.model_schema import ModelSchema
 from client.models.operation_tracing import OperationTracing
+from client.models.paging import Paging
 from client.models.pipeline_tracing import PipelineTracing
 from client.models.prediction_job import PredictionJob
 from client.models.prediction_job_config import PredictionJobConfig

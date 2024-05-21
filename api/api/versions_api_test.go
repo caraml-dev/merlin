@@ -1739,7 +1739,7 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return([]*models.PredictionJob{}, nil)
+				}, false).Return([]*models.PredictionJob{}, nil, nil)
 				return svc
 			},
 			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
@@ -2015,7 +2015,7 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return([]*models.PredictionJob{
+				}, false).Return([]*models.PredictionJob{
 					{
 						ID:              models.ID(1),
 						Name:            "prediction-job-1",
@@ -2025,7 +2025,7 @@ func TestDeleteVersion(t *testing.T) {
 						EnvironmentName: "dev",
 						Status:          models.JobRunning,
 					},
-				}, nil)
+				}, nil, nil)
 				return svc
 			},
 			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
@@ -2089,7 +2089,7 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return([]*models.PredictionJob{
+				}, false).Return([]*models.PredictionJob{
 					{
 						ID:              models.ID(1),
 						Name:            "prediction-job-1",
@@ -2099,7 +2099,7 @@ func TestDeleteVersion(t *testing.T) {
 						EnvironmentName: "dev",
 						Status:          models.JobFailed,
 					},
-				}, nil)
+				}, nil, nil)
 				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					nil, errors.New("failed to stop prediction job"))
 				return svc
@@ -2165,7 +2165,7 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return([]*models.PredictionJob{}, nil)
+				}, false).Return([]*models.PredictionJob{}, nil, nil)
 				return svc
 			},
 			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
@@ -2230,7 +2230,7 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
-				}).Return([]*models.PredictionJob{}, nil)
+				}, false).Return([]*models.PredictionJob{}, nil, nil)
 				return svc
 			},
 			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {

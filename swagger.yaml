@@ -290,9 +290,10 @@ paths:
       x-codegen-request-body-name: body
   "/projects/{project_id}/jobs":
     get:
+      deprecated: true
       tags:
         - prediction_jobs
-      summary: List all prediction jobs created using the model
+      summary: List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
       parameters:
         - name: project_id
           in: path
@@ -334,6 +335,67 @@ paths:
                   "$ref": "#/components/schemas/PredictionJob"
         "404":
           description: Project with given `project_id` not found
+          content: {}
+  "/projects/{project_id}/jobs-by-page":
+    get:
+      tags:
+        - prediction_jobs
+      summary: List all prediction jobs created using the model with pagination
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: id
+          in: query
+          schema:
+            type: integer
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: search
+          description: Search job name for a partial match of the search text
+          in: query
+          schema:
+            type: string
+        - name: model_id
+          in: query
+          schema:
+            type: integer
+        - name: version_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: error
+          in: query
+          schema:
+            type: string
+        - name: page_size
+          description: Number of items on each page. It defaults to 10.
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ListJobsPaginatedResponse"
+        "404":
+          description: Page not found
           content: {}
   "/models/{model_id}/versions":
     get:
@@ -1184,9 +1246,10 @@ paths:
       x-codegen-request-body-name: body
   "/models/{model_id}/versions/{version_id}/jobs":
     get:
+      deprecated: true
       tags:
         - prediction_jobs
-      summary: List all prediction jobs of a model version
+      summary: List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
       parameters:
         - name: model_id
           in: path
@@ -1331,6 +1394,48 @@ paths:
                 "$ref": "#/components/schemas/Container"
         "404":
           description: Version endpoint with given `endpoint_id` not found
+          content: {}
+  "/models/{model_id}/versions/{version_id}/jobs-by-page":
+    get:
+      tags:
+        - prediction_jobs
+      summary: List all prediction jobs of a model version with pagination
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: page_size
+          description: Number of items on each page. It defaults to 10.
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: search
+          description: Search job name for a partial match of the search text
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ListJobsPaginatedResponse"
+        "404":
+          description: Page not found
           content: {}
   "/standard_transformer/simulate":
     post:
@@ -2334,6 +2439,37 @@ components:
       enum:
         - HTTP_JSON
         - UPI_V1
+    Paging:
+      required:
+        - total
+        - page
+        - pages
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+          description: Total number of results matching the query criteria
+        page:
+          type: integer
+          format: int32
+          description: Number of the current page
+        pages:
+          type: integer
+          format: int32
+          description: Total number of pages
+    ListJobsPaginatedResponse:
+      type: object
+      required:
+        - results
+        - paging
+      properties:
+        results:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PredictionJob"
+        paging:
+          "$ref": "#/components/schemas/Paging"
   securitySchemes:
     Bearer:
       type: apiKey

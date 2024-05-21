@@ -220,7 +220,7 @@ func (c *VersionsController) getInactivePredictionJobsForDeletion(ctx context.Co
 		VersionID: version.ID,
 	}
 
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
+	jobs, _, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery, false)
 	if err != nil {
 		return nil, InternalServerError("Failed listing prediction job")
 	}

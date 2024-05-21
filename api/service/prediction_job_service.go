@@ -23,6 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	clock2 "k8s.io/utils/clock"
 
+	"github.com/caraml-dev/mlp/api/pkg/pagination"
+
 	"github.com/caraml-dev/merlin/batch"
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
@@ -33,11 +35,18 @@ import (
 	"github.com/caraml-dev/merlin/storage"
 )
 
+// Pagination config
+var (
+	MaxPageSize     int32 = 50
+	DefaultPageSize int32 = 10
+	DefaultPage     int32 = 1
+)
+
 type PredictionJobService interface {
 	// GetPredictionJob return prediction job with given ID
 	GetPredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
 	// ListPredictionJobs return all prediction job created in a project
-	ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error)
+	ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery, paginated bool) ([]*models.PredictionJob, *pagination.Paging, error)
 	// CreatePredictionJob creates and start a new prediction job from the given model version
 	CreatePredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error)
 	// ListContainers return all containers which used for the given model version
@@ -50,10 +59,13 @@ type PredictionJobService interface {
 type ListPredictionJobQuery struct {
 	ID        models.ID    `schema:"id"`
 	Name      string       `schema:"name"`
+	Search    string       `schema:"search"`
 	ModelID   models.ID    `schema:"model_id"`
 	VersionID models.ID    `schema:"version_id"`
 	Status    models.State `schema:"status"`
 	Error     string       `schema:"error"`
+	Page      *int32       `schema:"page"`
+	PageSize  *int32       `schema:"page_size"`
 }
 
 type predictionJobService struct {
@@ -63,10 +75,19 @@ type predictionJobService struct {
 	clock            clock2.Clock
 	environmentLabel string
 	producer         queue.Producer
+	paginator        pagination.Paginator
 }
 
 func NewPredictionJobService(batchControllers map[string]batch.Controller, imageBuilder imagebuilder.ImageBuilder, store storage.PredictionJobStorage, clock clock2.Clock, environmentLabel string, producer queue.Producer) PredictionJobService {
-	svc := predictionJobService{store: store, imageBuilder: imageBuilder, batchControllers: batchControllers, clock: clock, environmentLabel: environmentLabel, producer: producer}
+	svc := predictionJobService{
+		store:            store,
+		imageBuilder:     imageBuilder,
+		batchControllers: batchControllers,
+		clock:            clock,
+		environmentLabel: environmentLabel,
+		producer:         producer,
+		paginator:        pagination.NewPaginator(DefaultPage, DefaultPageSize, MaxPageSize),
+	}
 	return &svc
 }
 
@@ -76,7 +97,7 @@ func (p *predictionJobService) GetPredictionJob(ctx context.Context, _ *models.E
 }
 
 // ListPredictionJobs return all prediction job created from the given project filtered by the given query
-func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error) {
+func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery, paginated bool) ([]*models.PredictionJob, *pagination.Paging, error) {
 	predJobQuery := &models.PredictionJob{
 		ID:             query.ID,
 		Name:           query.Name,
@@ -87,7 +108,32 @@ func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project m
 		Error:          query.Error,
 	}
 
-	return p.store.List(predJobQuery)
+	if paginated {
+		err := p.paginator.ValidatePaginationParams(query.Page, query.PageSize)
+		if err != nil {
+			return nil, nil, err
+		}
+		pageOpts := p.paginator.NewPaginationOptions(query.Page, query.PageSize)
+		// Count total
+		count := p.store.Count(predJobQuery, query.Search)
+		// Format opts into paging response
+		pagingResponse := pagination.ToPaging(pageOpts, int(count))
+		if pagingResponse.Page > 1 && pagingResponse.Pages < pagingResponse.Page {
+			// Invalid query - total pages is less than the requested page
+			return nil, nil, fmt.Errorf("requested page number %d exceeds total pages: %d", pagingResponse.Page, pagingResponse.Pages)
+		}
+		// Get results for current page
+		offset := int((*pageOpts.Page - 1) * *pageOpts.PageSize)
+		limit := int(*pageOpts.PageSize)
+		results, err := p.store.List(predJobQuery, query.Search, &offset, &limit)
+		if err != nil {
+			return nil, nil, err
+		}
+		return results, pagingResponse, nil
+	}
+
+	results, err := p.store.List(predJobQuery, query.Search, nil, nil)
+	return results, nil, err
 }
 
 // CreatePredictionJob creates and start a new prediction job from the given model version
