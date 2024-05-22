@@ -106,5 +106,5 @@ class ResourceRequest:
         if self._min_replica > self._max_replica:
             raise Exception("Min replica must be less or equal to max replica")
 
-        if self._max_replica == 0:
+        if self._max_replica < 1:
             raise Exception("Max replica must be greater than 0")
