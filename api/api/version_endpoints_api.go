@@ -157,6 +157,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	validationRules := []requestValidator{
+		resourceRequestValidation(newEndpoint),
 		customModelValidation(model, version),
 		upiModelValidation(model, newEndpoint.Protocol),
 		newVersionEndpointValidation(version, env.Name),
@@ -218,6 +219,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	validationRules := []requestValidator{
+		resourceRequestValidation(newEndpoint),
 		customModelValidation(model, version),
 		updateRequestValidation(endpoint, newEndpoint),
 		modelObservabilityValidation(newEndpoint, model),
