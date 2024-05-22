@@ -1264,7 +1264,7 @@ class ModelVersion:
                     default_resource_request.min_replica
                 )
 
-            if target_resource_request.max_replica is None:
+            if target_resource_request.max_replica is None or target_resource_request.max_replica < 1:
                 target_resource_request.max_replica = (
                     default_resource_request.max_replica
                 )

@@ -28,6 +28,18 @@ def test_resource_request():
     ResourceRequest(cpu_request="100m", memory_request="128Mi")
 
     with pytest.raises(
+        TypeError,
+        match="'>' not supported between instances of 'int' and 'NoneType'",
+    ):
+        ResourceRequest(min_replica=1, cpu_request="100m", memory_request="128Mi")
+
+    with pytest.raises(
+        TypeError,
+        match="'>' not supported between instances of 'NoneType' and 'int'",
+    ):
+        ResourceRequest(max_replica=1, cpu_request="100m", memory_request="128Mi")
+
+    with pytest.raises(
         Exception, match="Min replica must be less or equal to max replica"
     ):
         ResourceRequest(
