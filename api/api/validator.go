@@ -44,9 +44,7 @@ var supportedObservabilityModelTypes = []string{
 	models.ModelTypeXgboost,
 }
 
-var (
-	ErrUnsupportedObservabilityModelType = errors.New("observability cannot be enabled not for this model type")
-)
+var ErrUnsupportedObservabilityModelType = errors.New("observability cannot be enabled not for this model type")
 
 func isModelSupportUPI(model *models.Model) bool {
 	_, isSupported := supportedUPIModelTypes[model.Type]
@@ -61,6 +59,24 @@ func validateRequest(validators ...requestValidator) error {
 		}
 	}
 	return nil
+}
+
+func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidator {
+	return newFuncValidate(func() error {
+		if endpoint.ResourceRequest == nil {
+			return nil
+		}
+
+		if endpoint.ResourceRequest.MinReplica > endpoint.ResourceRequest.MaxReplica {
+			return fmt.Errorf("min replica must be less or equal to max replica")
+		}
+
+		if endpoint.ResourceRequest.MaxReplica < 1 {
+			return fmt.Errorf("max replica must be greater than 0")
+		}
+
+		return nil
+	})
 }
 
 func customModelValidation(model *models.Model, version *models.Version) requestValidator {
@@ -111,7 +127,8 @@ func transformerValidation(
 	ctx context.Context,
 	endpoint *models.VersionEndpoint,
 	stdTransformerCfg config.StandardTransformerConfig,
-	feastCore core.CoreServiceClient) requestValidator {
+	feastCore core.CoreServiceClient,
+) requestValidator {
 	return newFuncValidate(func() error {
 		if endpoint.Transformer != nil && endpoint.Transformer.Enabled {
 			err := validateTransformer(ctx, endpoint, stdTransformerCfg, feastCore)
@@ -160,11 +177,9 @@ func deploymentModeValidation(prev *models.VersionEndpoint, new *models.VersionE
 }
 
 func modelObservabilityValidation(endpoint *models.VersionEndpoint, model *models.Model) requestValidator {
-
 	return newFuncValidate(func() error {
 		if endpoint.EnableModelObservability && !slices.Contains(supportedObservabilityModelTypes, model.Type) {
 			return fmt.Errorf("%s: %w", model.Type, ErrUnsupportedObservabilityModelType)
-
 		}
 		return nil
 	})
