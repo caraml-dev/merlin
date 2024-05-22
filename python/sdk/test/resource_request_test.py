@@ -18,10 +18,35 @@ from merlin.resource_request import ResourceRequest
 
 
 @pytest.mark.unit
-def test_resource_request_validate():
-    resource_request = ResourceRequest(1, 2, "100m", "128Mi")
-    resource_request.validate()
+def test_resource_request():
+    # Valid resource_request
+    ResourceRequest(
+        min_replica=1, max_replica=2, cpu_request="100m", memory_request="128Mi"
+    )
 
-    resource_request.min_replica = 10
-    with pytest.raises(Exception, match="Min replica must be less or equal to max replica"):
-        resource_request.validate()
+    # Valid resource_request even though min_replica and max_replica are None
+    ResourceRequest(cpu_request="100m", memory_request="128Mi")
+
+    with pytest.raises(
+        TypeError,
+        match="'>' not supported between instances of 'int' and 'NoneType'",
+    ):
+        ResourceRequest(min_replica=1, cpu_request="100m", memory_request="128Mi")
+
+    with pytest.raises(
+        TypeError,
+        match="'>' not supported between instances of 'NoneType' and 'int'",
+    ):
+        ResourceRequest(max_replica=1, cpu_request="100m", memory_request="128Mi")
+
+    with pytest.raises(
+        Exception, match="Min replica must be less or equal to max replica"
+    ):
+        ResourceRequest(
+            min_replica=100, max_replica=2, cpu_request="100m", memory_request="128Mi"
+        )
+
+    with pytest.raises(Exception, match="Max replica must be greater than 0"):
+        ResourceRequest(
+            min_replica=0, max_replica=0, cpu_request="100m", memory_request="128Mi"
+        )

@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+
 from typing import Optional
 
 import client
+
 
 class ResourceRequest:
     """
@@ -46,7 +48,7 @@ class ResourceRequest:
             cpu_request=response.cpu_request,
             memory_request=response.memory_request,
             gpu_request=response.gpu_request,
-            gpu_name=response.gpu_name
+            gpu_name=response.gpu_name,
         )
 
     @property
@@ -99,7 +101,10 @@ class ResourceRequest:
 
     def validate(self):
         if self._min_replica is None and self._max_replica is None:
-            return 
+            return
 
         if self._min_replica > self._max_replica:
             raise Exception("Min replica must be less or equal to max replica")
+
+        if self._max_replica < 1:
+            raise Exception("Max replica must be greater than 0")
