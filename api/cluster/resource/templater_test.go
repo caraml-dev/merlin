@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caraml-dev/merlin/client"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/stretchr/testify/assert"
@@ -196,16 +195,10 @@ var (
 	userContainerCPULimitRequestFactor    = float64(0)
 	userContainerMemoryLimitRequestFactor = float64(2)
 
-	defaultWorkersEnvVarName       = "WORKERS"
-	defaultWorkersEnvVarValue      = "2"
-	defaultEnvVarsWithoutCPULimits = []client.EnvVar{
-		{
-			Name:  &defaultWorkersEnvVarName,
-			Value: &defaultWorkersEnvVarValue,
-		},
-	}
+	defaultWorkersEnvVarName  = "WORKERS"
+	defaultWorkersEnvVarValue = "2"
 
-	expDefaultEnvVarWithoutCPULimits = corev1.EnvVar{
+	defaultEnvVarWithoutCPULimits = corev1.EnvVar{
 		Name:  defaultWorkersEnvVarName,
 		Value: defaultWorkersEnvVarValue,
 	}
@@ -346,7 +339,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -410,7 +403,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
 									Env: []corev1.EnvVar{
-										expDefaultEnvVarWithoutCPULimits,
+										defaultEnvVarWithoutCPULimits,
 										{
 											Name: "env1", Value: "env1Value",
 										},
@@ -472,7 +465,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -528,7 +521,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -581,7 +574,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -636,7 +629,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -691,7 +684,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -745,7 +738,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1236,7 +1229,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expUserResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1441,7 +1434,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1525,7 +1518,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1588,7 +1581,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1652,7 +1645,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expUserResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1715,7 +1708,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1800,7 +1793,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -1855,7 +1848,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									Ports:         grpcServerlessContainerPorts,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -1977,7 +1970,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									Ports:         grpcServerlessContainerPorts,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -2075,7 +2068,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
-				DefaultEnvVarsWithoutCPULimits:        defaultEnvVarsWithoutCPULimits,
+				DefaultEnvVarsWithoutCPULimits:        []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)
@@ -2219,7 +2212,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2311,7 +2304,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2403,7 +2396,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2486,7 +2479,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 									Ports:         grpcServerlessContainerPorts,
 									LivenessProbe: probeConfigUPI,
 								},
@@ -2584,7 +2577,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 								},
 							},
 						},
@@ -2692,7 +2685,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									Env:           []corev1.EnvVar{expDefaultEnvVarWithoutCPULimits},
+									Env:           []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 									LivenessProbe: probeConfigUPI,
 									Ports:         grpcRawContainerPorts,
 								},
@@ -3036,7 +3029,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
 				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
 				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
-				DefaultEnvVarsWithoutCPULimits:        defaultEnvVarsWithoutCPULimits,
+				DefaultEnvVarsWithoutCPULimits:        []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
 			}
 
 			tpl := NewInferenceServiceTemplater(*deployConfig)

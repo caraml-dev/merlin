@@ -20,7 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caraml-dev/merlin/client"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
@@ -338,9 +337,6 @@ func TestLoad(t *testing.T) {
 	twoMinutes := 2 * time.Minute
 	oneMinute := 1 * time.Minute
 
-	envVarNameFoo := "foo"
-	envVarValueBar := "bar"
-
 	tests := map[string]struct {
 		filepaths []string
 		env       map[string]string
@@ -589,10 +585,10 @@ func TestLoad(t *testing.T) {
 					UserContainerCPUDefaultLimit:          "100",
 					UserContainerCPULimitRequestFactor:    0,
 					UserContainerMemoryLimitRequestFactor: 2,
-					DefaultEnvVarsWithoutCPULimits: []client.EnvVar{
+					DefaultEnvVarsWithoutCPULimits: []v1.EnvVar{
 						{
-							Name:  &envVarNameFoo,
-							Value: &envVarValueBar,
+							Name:  "foo",
+							Value: "bar",
 						},
 					},
 				},

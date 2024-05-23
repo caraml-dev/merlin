@@ -21,7 +21,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/caraml-dev/merlin/client"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/mitchellh/copystructure"
@@ -933,10 +932,10 @@ func (t *InferenceServiceTemplater) applyDefaults(service *models.Service) {
 	}
 }
 
-func ParseEnvVars(envVars []client.EnvVar) models.EnvVars {
+func ParseEnvVars(envVars []corev1.EnvVar) models.EnvVars {
 	var parsedEnvVars models.EnvVars
 	for _, envVar := range envVars {
-		parsedEnvVars = append(parsedEnvVars, models.EnvVar{Name: *envVar.Name, Value: *envVar.Value})
+		parsedEnvVars = append(parsedEnvVars, models.EnvVar{Name: envVar.Name, Value: envVar.Value})
 	}
 	return parsedEnvVars
 }
