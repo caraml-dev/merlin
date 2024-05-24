@@ -30,7 +30,7 @@ type ResourceRequest struct {
 	// CPU request of inference service
 	CPURequest resource.Quantity `json:"cpu_request"`
 	// CPU limit of inference service
-	CPULimit resource.Quantity `json:"cpu_limit"`
+	CPULimit *resource.Quantity `json:"cpu_limit,omitempty"`
 	// Memory request of inference service
 	MemoryRequest resource.Quantity `json:"memory_request"`
 	// GPU name

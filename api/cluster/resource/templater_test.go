@@ -93,12 +93,13 @@ var (
 		MemoryRequest: resource.MustParse("1Gi"),
 	}
 
+	cpuLimit                          = resource.MustParse("8")
 	userResourceRequestsWithCPULimits = &models.ResourceRequest{
 		MinReplica:    1,
 		MaxReplica:    10,
 		CPURequest:    resource.MustParse("1"),
 		MemoryRequest: resource.MustParse("1Gi"),
-		CPULimit:      resource.MustParse("8"),
+		CPULimit:      &cpuLimit,
 	}
 
 	expUserResourceRequests = corev1.ResourceRequirements{
@@ -118,7 +119,7 @@ var (
 			corev1.ResourceMemory: userResourceRequestsWithCPULimits.MemoryRequest,
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    userResourceRequestsWithCPULimits.CPULimit,
+			corev1.ResourceCPU:    *userResourceRequestsWithCPULimits.CPULimit,
 			corev1.ResourceMemory: ScaleQuantity(userResourceRequestsWithCPULimits.MemoryRequest, 2),
 		},
 	}
@@ -4627,7 +4628,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 						MaxReplica:    1,
 						CPURequest:    cpuRequest,
 						MemoryRequest: memoryRequest,
-						CPULimit:      customCPULimit,
+						CPULimit:      &customCPULimit,
 					},
 					EnvVars: models.EnvVars{
 						{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"}, // test user overwrite

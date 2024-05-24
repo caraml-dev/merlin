@@ -198,7 +198,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	limits := map[corev1.ResourceName]resource.Quantity{}
 
 	// Set cpu resource limits automatically if they have not been set
-	if modelService.ResourceRequest.CPULimit.IsZero() {
+	if modelService.ResourceRequest.CPULimit == nil || modelService.ResourceRequest.CPULimit.IsZero() {
 		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
 			limits[corev1.ResourceCPU] = ScaleQuantity(
 				modelService.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
@@ -214,7 +214,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
 		}
 	} else {
-		limits[corev1.ResourceCPU] = modelService.ResourceRequest.CPULimit
+		limits[corev1.ResourceCPU] = *modelService.ResourceRequest.CPULimit
 	}
 
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
@@ -406,7 +406,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
 	limits := map[corev1.ResourceName]resource.Quantity{}
 	// Set cpu resource limits automatically if they have not been set
-	if transformer.ResourceRequest.CPULimit.IsZero() {
+	if transformer.ResourceRequest.CPULimit == nil || transformer.ResourceRequest.CPULimit.IsZero() {
 		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
 			limits[corev1.ResourceCPU] = ScaleQuantity(
 				transformer.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
@@ -422,7 +422,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
 		}
 	} else {
-		limits[corev1.ResourceCPU] = transformer.ResourceRequest.CPULimit
+		limits[corev1.ResourceCPU] = *transformer.ResourceRequest.CPULimit
 	}
 
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
