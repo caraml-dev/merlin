@@ -3,7 +3,8 @@ import {
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiFormRow, EuiTitle,
+  EuiFormRow,
+  EuiTitle,
 } from "@elastic/eui";
 
 

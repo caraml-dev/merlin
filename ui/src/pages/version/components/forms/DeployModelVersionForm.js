@@ -54,7 +54,6 @@ export const DeployModelVersionForm = ({
   }, [submissionResponse, onSuccess, model, version]);
 
   const onSubmit = () => {
-
     // versionEndpoint toJSON() is not invoked, binding that causes many issues
     if (versionEndpoint?.resource_request?.cpu_limit === "") {
       delete versionEndpoint.resource_request.cpu_limit;

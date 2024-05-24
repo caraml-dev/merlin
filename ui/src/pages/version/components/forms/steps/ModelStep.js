@@ -42,21 +42,21 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
           maxAllowedReplica={maxAllowedReplica}
           errors={get(errors, "resource_request")}
           child={
-          <EuiAccordion 
-          id="adv config"
-          buttonContent="Advanced configurations">
-            <EuiSpacer size="s" />
-            <CPULimitsFormGroup
-              resourcesConfig={data.resource_request}
-              onChangeHandler={onChange("resource_request")}
-              errors={get(errors, "resource_request")}
-            />
-            <ImageBuilderSection
-              imageBuilderResourceConfig={data.image_builder_resource_request}
-              onChangeHandler={onChange("image_builder_resource_request")}
-              errors={get(errors, "image_builder_resource_request")}
-            />
-          </EuiAccordion>
+            <EuiAccordion
+              id="adv config"
+              buttonContent="Advanced configurations">
+              <EuiSpacer size="s" />
+              <CPULimitsFormGroup
+                resourcesConfig={data.resource_request}
+                onChangeHandler={onChange("resource_request")}
+                errors={get(errors, "resource_request")}
+              />
+              <ImageBuilderSection
+                imageBuilderResourceConfig={data.image_builder_resource_request}
+                onChangeHandler={onChange("image_builder_resource_request")}
+                errors={get(errors, "image_builder_resource_request")}
+              />
+            </EuiAccordion>
           }
         />
       </EuiFlexItem>
