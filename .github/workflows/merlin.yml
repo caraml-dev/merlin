@@ -141,6 +141,7 @@ jobs:
           name: sdk-test-${{ matrix.python-version }}
           token: ${{ secrets.CODECOV_TOKEN }}
           working-directory: ./python/sdk
+          codecov_yml_path: ../../.github/workflows/codecov-config/codecov.yml
 
   lint-api:
     runs-on: ubuntu-latest
@@ -197,6 +198,7 @@ jobs:
           name: api-test
           token: ${{ secrets.CODECOV_TOKEN }}
           working-directory: ./api
+          codecov_yml_path: ../.github/workflows/codecov-config/codecov.yml
 
   test-observation-publisher:
     runs-on: ubuntu-latest
