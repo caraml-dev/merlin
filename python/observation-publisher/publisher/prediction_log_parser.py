@@ -36,7 +36,7 @@ class PredictionLogFeatureTable:
         assert isinstance(table_struct["data"], ListValue)
         rows = list_value_as_rows(table_struct["data"])
         return cls(
-            columns=columns,
+            columns=[col for col in columns if column_types.get(col) is not None],
             rows=[list_value_as_numpy_list(row, columns, column_types) for row in rows],
         )
 
@@ -80,11 +80,12 @@ class PredictionLogResultsTable:
             columns = prediction_columns(inference_schema)
         assert isinstance(table_struct["data"], ListValue)
         assert isinstance(table_struct["row_ids"], ListValue)
-        column_types = inference_schema.model_prediction_output.prediction_types()
+        
         rows = list_value_as_rows(table_struct["data"])
         row_ids = list_value_as_string_list(table_struct["row_ids"])
+        column_types = inference_schema.model_prediction_output.prediction_types()
         return cls(
-            columns=columns,
+            columns=[col for col in columns if column_types.get(col) is not None],
             rows=[list_value_as_numpy_list(row, columns, column_types) for row in rows],
             row_ids=row_ids,
         )
@@ -126,6 +127,7 @@ def list_value_as_string_list(list_value: ListValue) -> List[str]:
     for v in list_value.items():
         assert isinstance(v, str)
         string_list.append(v)
+
     return string_list
 
 
@@ -164,5 +166,5 @@ def list_value_as_numpy_list(
 
     return [
         convert_to_numpy_value(col_value, column_types.get(col_name))
-        for col_value, col_name in zip(column_values, column_names)
+        for col_value, col_name in zip(column_values, column_names) if column_types.get(col_name) is not None
     ]

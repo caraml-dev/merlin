@@ -10,20 +10,22 @@ from caraml.upi.v1.prediction_log_pb2 import PredictionLog
 from confluent_kafka import Consumer, KafkaException
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 from merlin.observability.inference import InferenceSchema, ObservationType
-
 from publisher.config import ObservationSource, ObservationSourceConfig
 from publisher.metric import MetricWriter
 from publisher.observation_sink import ObservationSink
-from publisher.prediction_log_parser import (PREDICTION_LOG_MODEL_VERSION_COLUMN,
-                                             PREDICTION_LOG_TIMESTAMP_COLUMN,
-                                             PredictionLogFeatureTable,
-                                             PredictionLogResultsTable)
+from publisher.prediction_log_parser import (
+    PREDICTION_LOG_MODEL_VERSION_COLUMN,
+    PREDICTION_LOG_TIMESTAMP_COLUMN,
+    PredictionLogFeatureTable,
+    PredictionLogResultsTable,
+)
 
 
 class PredictionLogConsumer(abc.ABC):
     """
     Abstract class for consuming prediction logs from a streaming source, then write to one or multiple sinks
     """
+
     def __init__(self, buffer_capacity: int, buffer_max_duration_seconds: int):
         self.buffer_capacity = buffer_capacity
         self.buffer_max_duration_seconds = buffer_max_duration_seconds
@@ -92,7 +94,8 @@ class PredictionLogConsumer(abc.ABC):
                     len(buffered_logs)
                 )
                 write_tasks = [
-                    Thread(target=sink.write, args=(df.copy(),)) for sink in observation_sinks
+                    Thread(target=sink.write, args=(df.copy(),))
+                    for sink in observation_sinks
                 ]
                 for task in write_tasks:
                     task.start()
