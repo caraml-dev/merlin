@@ -192,29 +192,9 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 }
 
 func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) (kservev1beta1.PredictorSpec, error) {
-	envVars := modelService.EnvVars
-
-	// Set resource limits to request * userContainerCPULimitRequestFactor or userContainerMemoryLimitRequestFactor
-	limits := map[corev1.ResourceName]resource.Quantity{}
-
-	// Set cpu resource limits automatically if they have not been set
-	if modelService.ResourceRequest.CPULimit == nil || modelService.ResourceRequest.CPULimit.IsZero() {
-		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
-			limits[corev1.ResourceCPU] = ScaleQuantity(
-				modelService.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
-			)
-		} else {
-			// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
-			var err error
-			limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
-			if err != nil {
-				return kservev1beta1.PredictorSpec{}, err
-			}
-			// Set additional env vars to manage concurrency so model performance improves when no CPU limits are set
-			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
-		}
-	} else {
-		limits[corev1.ResourceCPU] = *modelService.ResourceRequest.CPULimit
+	limits, envVars, err := t.getResourceLimitsAndEnvVars(modelService.ResourceRequest, modelService.EnvVars)
+	if err != nil {
+		return kservev1beta1.PredictorSpec{}, err
 	}
 
 	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
@@ -401,34 +381,9 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	modelService *models.Service,
 	transformer *models.Transformer,
 ) (*kservev1beta1.TransformerSpec, error) {
-	envVars := transformer.EnvVars
-
-	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
-	limits := map[corev1.ResourceName]resource.Quantity{}
-	// Set cpu resource limits automatically if they have not been set
-	if transformer.ResourceRequest.CPULimit == nil || transformer.ResourceRequest.CPULimit.IsZero() {
-		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
-			limits[corev1.ResourceCPU] = ScaleQuantity(
-				transformer.ResourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
-			)
-		} else {
-			// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
-			var err error
-			limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
-			if err != nil {
-				return nil, err
-			}
-			// Set additional env vars to manage concurrency so model performance improves when no CPU limits are set
-			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
-		}
-	} else {
-		limits[corev1.ResourceCPU] = *transformer.ResourceRequest.CPULimit
-	}
-
-	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
-		limits[corev1.ResourceMemory] = ScaleQuantity(
-			transformer.ResourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
-		)
+	limits, envVars, err := t.getResourceLimitsAndEnvVars(transformer.ResourceRequest, transformer.EnvVars)
+	if err != nil {
+		return nil, err
 	}
 
 	// Put in defaults if not provided by users (user's input is used)
@@ -930,6 +885,40 @@ func (t *InferenceServiceTemplater) applyDefaults(service *models.Service) {
 			}
 		}
 	}
+}
+
+func (t *InferenceServiceTemplater) getResourceLimitsAndEnvVars(
+	resourceRequest *models.ResourceRequest,
+	envVars models.EnvVars,
+) (map[corev1.ResourceName]resource.Quantity, models.EnvVars, error) {
+	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
+	limits := map[corev1.ResourceName]resource.Quantity{}
+	// Set cpu resource limits automatically if they have not been set
+	if resourceRequest.CPULimit == nil || resourceRequest.CPULimit.IsZero() {
+		if t.deploymentConfig.UserContainerCPULimitRequestFactor != 0 {
+			limits[corev1.ResourceCPU] = ScaleQuantity(
+				resourceRequest.CPURequest, t.deploymentConfig.UserContainerCPULimitRequestFactor,
+			)
+		} else {
+			// TODO: Remove this else-block when KServe finally allows default CPU limits to be removed
+			var err error
+			limits[corev1.ResourceCPU], err = resource.ParseQuantity(t.deploymentConfig.UserContainerCPUDefaultLimit)
+			if err != nil {
+				return nil, nil, err
+			}
+			// Set additional env vars to manage concurrency so model performance improves when no CPU limits are set
+			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
+		}
+	} else {
+		limits[corev1.ResourceCPU] = *resourceRequest.CPULimit
+	}
+
+	if t.deploymentConfig.UserContainerMemoryLimitRequestFactor != 0 {
+		limits[corev1.ResourceMemory] = ScaleQuantity(
+			resourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
+		)
+	}
+	return limits, envVars, nil
 }
 
 func ParseEnvVars(envVars []corev1.EnvVar) models.EnvVars {
