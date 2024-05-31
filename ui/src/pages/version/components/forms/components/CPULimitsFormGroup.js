@@ -15,7 +15,7 @@ export const CPULimitsFormGroup = ({
       title={<p>CPU Limit</p>}
       description={
         <Fragment>
-          Use this field to override the platform-level default CPU limit.
+          Overrides the platform-level default CPU limit.
         </Fragment>
       }
       fullWidth
