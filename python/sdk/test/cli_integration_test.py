@@ -40,6 +40,7 @@ def deployment_info():
         'min_replica': '1',
         'max_replica': '1',
         'cpu_request': '100m',
+        'cpu_limit': '2',
         'memory_request': '128Mi',
     }
     return info
@@ -136,6 +137,7 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
             '--min-replica', deployment_info['min_replica'],
             '--max-replica', deployment_info['max_replica'],
             '--cpu-request', deployment_info['cpu_request'],
+            '--cpu-limit', deployment_info['cpu_limit'],
             '--memory-request', deployment_info['memory_request'],
             ]
         )

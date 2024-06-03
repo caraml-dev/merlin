@@ -4,13 +4,14 @@ import {
   get,
   useOnChangeHandler,
 } from "@caraml-dev/ui-lib";
-import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
+import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
 import React, { useContext } from "react";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
+import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
 
 export const TransformerStep = ({ maxAllowedReplica }) => {
   const {
@@ -40,6 +41,18 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
               onChangeHandler={onChange("transformer.resource_request")}
               maxAllowedReplica={maxAllowedReplica}
               errors={get(errors, "transformer.resource_request")}
+              child={
+                <EuiAccordion
+                  id="adv config"
+                  buttonContent="Advanced configurations">
+                  <EuiSpacer size="s" />
+                  <CPULimitsFormGroup
+                    resourcesConfig={transformer.resource_request}
+                    onChangeHandler={onChange("transformer.resource_request")}
+                    errors={get(errors, "transformer.resource_request")}
+                  />
+                </EuiAccordion>
+              }
             />
           </EuiFlexItem>
           {protocol !== PROTOCOL.UPI_V1 && (

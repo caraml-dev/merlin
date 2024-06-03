@@ -58,7 +58,7 @@ var (
 			"nvidia.com/gpu":      resource.MustParse("1"),
 		},
 		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse("8"),
+			corev1.ResourceCPU:    resource.MustParse("10"),
 			corev1.ResourceMemory: ScaleQuantity(defaultModelResourceRequests.MemoryRequest, 2),
 			"nvidia.com/gpu":      resource.MustParse("1"),
 		},

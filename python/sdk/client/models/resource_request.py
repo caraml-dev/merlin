@@ -32,10 +32,11 @@ class ResourceRequest(BaseModel):
     min_replica: Optional[StrictInt] = None
     max_replica: Optional[StrictInt] = None
     cpu_request: Optional[StrictStr] = None
+    cpu_limit: Optional[StrictStr] = None
     memory_request: Optional[StrictStr] = None
     gpu_name: Optional[StrictStr] = None
     gpu_request: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["min_replica", "max_replica", "cpu_request", "memory_request", "gpu_name", "gpu_request"]
+    __properties: ClassVar[List[str]] = ["min_replica", "max_replica", "cpu_request", "cpu_limit", "memory_request", "gpu_name", "gpu_request"]
 
     model_config = {
         "populate_by_name": True,
@@ -88,6 +89,7 @@ class ResourceRequest(BaseModel):
             "min_replica": obj.get("min_replica"),
             "max_replica": obj.get("max_replica"),
             "cpu_request": obj.get("cpu_request"),
+            "cpu_limit": obj.get("cpu_limit"),
             "memory_request": obj.get("memory_request"),
             "gpu_name": obj.get("gpu_name"),
             "gpu_request": obj.get("gpu_request")
