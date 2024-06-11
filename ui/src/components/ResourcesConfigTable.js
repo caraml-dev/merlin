@@ -64,9 +64,9 @@ export const ResourcesConfigTable = ({
   return (
     <EuiDescriptionList
       compressed
-      textStyle="reverse"
       type="responsiveColumn"
       listItems={items}
+      columnWidths={[1, 1]}
     />
   );
 };

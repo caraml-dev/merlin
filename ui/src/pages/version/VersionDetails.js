@@ -20,17 +20,19 @@ import {
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiLoadingContent,
   EuiPageTemplate,
+  EuiSkeletonText,
   EuiSpacer,
   EuiText,
 } from "@elastic/eui";
 import React, { Fragment, useEffect, useState } from "react";
 import { Link, Route, Routes, useParams } from "react-router-dom";
 import { ContainerLogsView } from "../../components/logs/ContainerLogsView";
-import config from "../../config";
+import { ConfigSection, ConfigSectionPanel } from "../../components/section";
+import config, { appConfig } from "../../config";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
+import JobsTable from "../job/components/JobsTable";
 import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
 import { EndpointDetails } from "./EndpointDetails";
 import { HistoryDetails } from "./HistoryDetails";
@@ -52,14 +54,33 @@ const VersionDetails = () => {
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
-    {}
+    {},
   );
 
   const [{ data: version, isLoaded: versionLoaded }] = useMerlinApi(
     `/models/${modelId}/versions/${versionId}`,
     { mock: mocks.versionList[0] },
-    {}
+    {},
   );
+
+  const [jobPage, setJobPage] = useState({
+    index: 0,
+    size: appConfig.pagination.defaultPageSize,
+  });
+
+  const [searchJobText, setSearchJobText] = useState(versionId);
+
+  const [{ data: jobs, isLoaded: jobsLoaded, error: jobsError }, fetchJobs] =
+    useMerlinApi(
+      `/projects/${projectId}/jobs-by-page?model_id=${modelId}&version_id=${versionId}&page=${jobPage.index + 1}&page_size=${jobPage.size}&search=${searchJobText}`,
+      { mock: mocks.jobList },
+      [],
+    );
+
+  const onSearchJobTextChange = (text) => {
+    setJobPage({ ...jobPage, index: 0 });
+    setSearchJobText(text);
+  };
 
   const [endpoint, setEndpoint] = useState();
   const [environments, setEnvironments] = useState([]);
@@ -70,12 +91,12 @@ const VersionDetails = () => {
       if (version.endpoints && version.endpoints.length > 0) {
         setIsDeployed(true);
         setEnvironments(
-          version.endpoints.map((endpoint) => endpoint.environment)
+          version.endpoints.map((endpoint) => endpoint.environment),
         );
 
         if (endpointId) {
           setEndpoint(
-            version.endpoints.find((endpoint) => endpoint.id === endpointId)
+            version.endpoints.find((endpoint) => endpoint.id === endpointId),
           );
         }
       }
@@ -98,7 +119,7 @@ const VersionDetails = () => {
         {
           text: `Model Version ${version.id}`,
           href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`,
-        }
+        },
       );
     }
 
@@ -117,7 +138,7 @@ const VersionDetails = () => {
       {!modelLoaded && !versionLoaded ? (
         <EuiFlexGroup direction="row">
           <EuiFlexItem grow={true}>
-            <EuiLoadingContent lines={3} />
+            <EuiSkeletonText lines={3} />
           </EuiFlexItem>
         </EuiFlexGroup>
       ) : (
@@ -164,6 +185,27 @@ const VersionDetails = () => {
                   <EuiSpacer size="m" />
                 </Fragment>
               )}
+
+            {model.type === "pyfunc_v2" && (
+              <Fragment>
+                <EuiSpacer size="m" />
+                <ConfigSection title="Batch Prediction Jobs">
+                  <ConfigSectionPanel>
+                    <JobsTable
+                      projectId={projectId}
+                      modelId={modelId}
+                      jobs={jobs.results || []}
+                      isLoaded={jobsLoaded}
+                      error={jobsError}
+                      page={jobPage}
+                      totalItemCount={jobs?.paging?.total || 0}
+                      onPaginationChange={setJobPage}
+                      fetchJobs={fetchJobs}
+                    />
+                  </ConfigSectionPanel>
+                </ConfigSection>
+              </Fragment>
+            )}
 
             {!(section === "deploy" || section === "redeploy") &&
               endpoint &&
@@ -244,6 +286,7 @@ const VersionDetails = () => {
           </EuiPageTemplate.Section>
         </Fragment>
       )}
+      <EuiSpacer size="xxl" />
     </EuiPageTemplate>
   );
 };

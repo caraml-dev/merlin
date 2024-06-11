@@ -14,35 +14,29 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from "react";
-import {
-  EuiPageTemplate,
-  EuiPanel,
-  EuiSpacer
-} from "@elastic/eui";
-import VersionListTable from "./VersionListTable";
 import { get, replaceBreadcrumbs, useToggle } from "@caraml-dev/ui-lib";
-import { useMerlinApi } from "../hooks/useMerlinApi";
-import mocks from "../mocks";
+import { EuiButton, EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { CursorPagination } from "../components/CursorPagination";
 import {
   ServeVersionEndpointModal,
-  UndeployVersionEndpointModal
+  UndeployVersionEndpointModal,
 } from "../components/modals";
-import { CursorPagination } from "../components/CursorPagination";
-import { useParams } from "react-router-dom";
+import { useMerlinApi } from "../hooks/useMerlinApi";
+import mocks from "../mocks";
+import VersionListTable from "./VersionListTable";
 
 const Versions = ({ ...props }) => {
   const { projectId, modelId } = useParams();
-  const [
-    isUndeployEndpointModalVisible,
-    toggleUndeployEndpointModal
-  ] = useToggle();
+  const [isUndeployEndpointModalVisible, toggleUndeployEndpointModal] =
+    useToggle();
   const [isServeEndpointModalVisible, toggleServeEndpointModal] = useToggle();
 
   const [activeVersionEndpoint, setActiveVersionEndpoint] = useState(null);
   const [activeVersion, setActiveVersion] = useState(null);
   const [activeModel, setActiveModel] = useState(
-    get(props, "location.state.activeModel")
+    get(props, "location.state.activeModel"),
   );
 
   /**
@@ -58,9 +52,9 @@ const Versions = ({ ...props }) => {
     {
       mock: mocks.versionList,
       query: { limit: limit, search: searchQuery, cursor: selectedCursor },
-      method: "GET"
+      method: "GET",
     },
-    []
+    [],
   );
 
   const [environments] = useMerlinApi(`/environments`, {}, []);
@@ -68,21 +62,23 @@ const Versions = ({ ...props }) => {
   const [models, fetchModels] = useMerlinApi(
     `/projects/${projectId}/models`,
     { mock: mocks.modelList },
-    []
+    [],
   );
+
+  const listJobURL = `/merlin/projects/${projectId}/models/${modelId}/versions/all/jobs`;
 
   useEffect(() => {
     if (activeModel) {
       replaceBreadcrumbs([
         {
           text: "Models",
-          href: `/merlin/projects/${projectId}/models`
+          href: `/merlin/projects/${projectId}/models`,
         },
         {
           text: activeModel.name,
-          href: `/merlin/projects/${projectId}/models/${activeModel.id}`
+          href: `/merlin/projects/${projectId}/models/${activeModel.id}`,
         },
-        { text: "Versions" }
+        { text: "Versions" },
       ]);
     } else {
       fetchModels();
@@ -90,7 +86,7 @@ const Versions = ({ ...props }) => {
   }, [activeModel, projectId, fetchModels]);
 
   useEffect(() => {
-    const found = models.data.filter(m => m.id.toString() === modelId);
+    const found = models.data.filter((m) => m.id.toString() === modelId);
 
     if (found.length > 0) {
       setActiveModel(found[0]);
@@ -104,8 +100,13 @@ const Versions = ({ ...props }) => {
         bottomBorder={false}
         iconType={"machineLearningApp"}
         pageTitle={activeModel ? activeModel.name : ""}
+        rightSideItems={[
+          activeModel && activeModel.type === "pyfunc_v2" && (
+            <EuiButton href={listJobURL}>View Batch Jobs</EuiButton>
+          ),
+        ]}
       />
-      
+
       <EuiSpacer size="l" />
       <EuiPageTemplate.Section color={"transparent"}>
         <EuiPanel>

@@ -4,53 +4,38 @@
   "private": true,
   "homepage": "/merlin",
   "dependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/plugin-syntax-flow": "^7.14.5",
-    "@babel/plugin-transform-react-jsx": "^7.14.9",
-    "@babel/runtime": "7.19.0",
-    "@caraml-dev/ui-lib": "^1.7.5-build.5-59f13e1",
-    "@elastic/datemath": "5.0.3",
-    "@elastic/eui": "64.0.0",
-    "@emotion/cache": "11.10.3",
-    "@emotion/react": "^11.9.0",
-    "@monaco-editor/react": "4.4.5",
-    "@sentry/browser": "5.15.5",
-    "@types/react": "^17.0.0",
+    "@caraml-dev/ui-lib": "^1.12.1-build.15-4f7955c",
+    "@elastic/datemath": "^5.0.3",
+    "@elastic/eui": "^94.5.2",
+    "@emotion/css": "^11.11.2",
+    "@emotion/react": "^11.11.4",
+    "@monaco-editor/react": "^4.6.0",
+    "@sentry/browser": "^8.7.0",
     "dagre": "^0.8.5",
     "dagre-d3-react": "^0.2.4",
-    "eslint": "^8.1.0",
     "js-yaml": "^4.1.0",
-    "levenary": "1.1.1",
-    "moment": "2.29.4",
-    "monaco-editor": "0.34.0",
-    "node-sass": "^7.0.3",
-    "object-assign-deep": "0.4.0",
+    "moment": "^2.30.1",
+    "object-assign-deep": "^0.4.0",
     "proper-url-join": "^2.1.1",
-    "react": "^17.0.2",
-    "react-collapsed": "^3.0.1",
-    "react-dom": "^17.0.2",
+    "react": "^18.3.1",
+    "react-collapsed": "^4.1.2",
+    "react-dom": "^18.3.1",
     "react-ellipsis-text": "^1.2.1",
-    "react-flow-renderer": "10.3.17",
-    "react-lazylog": "git+https://github.com/gojekfarm/react-lazylog.git#e3a7f026983df0dc59d25843fe87ce7e37e24e82",
-    "react-router-dom": "^6.3.0",
-    "react-scripts": "^5.0.1",
-    "use-query-params": "^2.1.0",
-    "yup": "^0.29.1"
+    "react-flow-renderer": "^10.3.17",
+    "react-lazylog": "^4.5.3",
+    "react-router-dom": "^6.23.1",
+    "use-query-params": "^2.2.1",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
-    "@types/react-dom": "^17.0.0",
-    "eslint-plugin-flowtype": "^8.0.3",
-    "husky": "^8.0.1",
-    "lint-staged": "^13.0.3",
-    "prettier": "^2.7.1",
+    "eslint": "^9.3.0",
+    "eslint-config-react-app": "^7.0.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.5",
+    "prettier": "^3.2.5",
     "prop-types": "^15.8.1",
-    "typescript": "4.5.3"
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
-      "prettier --jsx-bracket-same-line --write",
-      "git add"
-    ]
+    "react-scripts": "^5.0.1",
+    "sass": "^1.77.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -64,6 +49,12 @@
   "proxy": "http://localhost:8080",
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --jsx-bracket-same-line --write",
+      "git add"
+    ]
   },
   "husky": {
     "hooks": {

@@ -1,8 +1,8 @@
-@import "@elastic/eui/src/themes/amsterdam/colors_light";
-@import "@elastic/eui/src/themes/amsterdam/globals";
+// @import "@elastic/eui/src/themes/amsterdam/colors_light";
+// @import "@elastic/eui/src/themes/amsterdam/globals";
 
-// The `SelectDockerImageComboBox.scss` got overwritten. So we need to re-declare it again.
-// https://github.com/caraml-dev/mlp/blob/main/ui/packages/lib/src/components/form/docker_image_combo_box/SelectDockerImageComboBox.scss
-.euiComboBox--dockerImage .euiFormControlLayout {
-  height: $euiFormControlHeight !important;
-}
+// // The `SelectDockerImageComboBox.scss` got overwritten. So we need to re-declare it again.
+// // https://github.com/caraml-dev/mlp/blob/main/ui/packages/lib/src/components/form/docker_image_combo_box/SelectDockerImageComboBox.scss
+// .euiComboBox--dockerImage .euiFormControlLayout {
+//   height: $euiFormControlHeight !important;
+// }

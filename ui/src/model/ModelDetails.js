@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { EuiLoadingContent, EuiPageTemplate, EuiSpacer } from "@elastic/eui";
+import { EuiPageTemplate, EuiSkeletonText, EuiSpacer } from "@elastic/eui";
 import React from "react";
 import { Route, Routes, useParams } from "react-router-dom";
 import { featureToggleConfig } from "../config";
@@ -24,7 +24,7 @@ import { ModelAlert } from "./alert/ModelAlert";
 
 const LoadingContent = () => (
   <EuiPageTemplate.Section>
-    <EuiLoadingContent lines={3} />
+    <EuiSkeletonText lines={3} />
   </EuiPageTemplate.Section>
 );
 
@@ -34,7 +34,7 @@ export const ModelDetails = () => {
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
-    []
+    [],
   );
 
   const breadcrumbs = [

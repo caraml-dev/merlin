@@ -4,8 +4,8 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiLink,
-  EuiLoadingContent,
   EuiPanel,
+  EuiSkeletonText,
   EuiSpacer,
   EuiText,
   EuiTextColor,
@@ -38,7 +38,7 @@ export const ContainerLogsView = ({
   const [{ data: project, isLoaded: projectLoaded }] = useMerlinApi(
     `/projects/${projectId}`,
     { mock: mocks.project },
-    []
+    [],
   );
 
   const [params, setParams] = useState({
@@ -66,7 +66,7 @@ export const ContainerLogsView = ({
       if (containersLoaded && params.component_type === "") {
         if (
           containers.find(
-            (container) => container.component_type === "image_builder"
+            (container) => container.component_type === "image_builder",
           )
         ) {
           setParams({ ...params, component_type: "image_builder" });
@@ -77,14 +77,14 @@ export const ContainerLogsView = ({
           setParams({ ...params, component_type: "model" });
         } else if (
           containers.find(
-            (container) => container.component_type === "transformer"
+            (container) => container.component_type === "transformer",
           )
         ) {
           setParams({ ...params, component_type: "transformer" });
         }
         if (
           containers.find(
-            (container) => container.component_type === "batch_job_driver"
+            (container) => container.component_type === "batch_job_driver",
           )
         ) {
           setParams({ ...params, component_type: "batch_job_driver" });
@@ -92,7 +92,7 @@ export const ContainerLogsView = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [containers, containersLoaded]
+    [containers, containersLoaded],
   );
 
   const [componentTypes, setComponentTypes] = useState();
@@ -102,7 +102,7 @@ export const ContainerLogsView = ({
         .sort(
           (a, b) =>
             componentOrder.indexOf(a.component_type) -
-            componentOrder.indexOf(b.component_type)
+            componentOrder.indexOf(b.component_type),
         )
         .map((container) => container.component_type);
       if (
@@ -130,12 +130,18 @@ export const ContainerLogsView = ({
           job_name: project.name + "-" + model.name + "-" + versionId,
           start_time: model.updated_at,
         };
-        setStackdriverUrls({...stackdriverUrls, "image_builder":createStackdriverUrl(stackdriverQuery, "image_builder")});
+        setStackdriverUrls({
+          ...stackdriverUrls,
+          image_builder: createStackdriverUrl(
+            stackdriverQuery,
+            "image_builder",
+          ),
+        });
 
         // update active container
         if (params.component_type !== "") {
           const activeContainers = containers.filter(
-            (container) => container.component_type === params.component_type
+            (container) => container.component_type === params.component_type,
           );
 
           if (activeContainers && activeContainers.length > 0) {
@@ -159,7 +165,7 @@ export const ContainerLogsView = ({
 
             const pods = [
               ...new Set(
-                activeContainers.map((container) => `"${container.pod_name}"`)
+                activeContainers.map((container) => `"${container.pod_name}"`),
               ),
             ];
             let stackdriverQuery = {
@@ -169,15 +175,21 @@ export const ContainerLogsView = ({
               pod_name: pods.join(" OR "),
               start_time: model.updated_at,
             };
-            if (params.component_type !== "image_builder"){
-              setStackdriverUrls({...stackdriverUrls, [params.component_type]: createStackdriverUrl(stackdriverQuery,params.component_type)});
+            if (params.component_type !== "image_builder") {
+              setStackdriverUrls({
+                ...stackdriverUrls,
+                [params.component_type]: createStackdriverUrl(
+                  stackdriverQuery,
+                  params.component_type,
+                ),
+              });
             }
           }
         }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [params, containers, project, projectLoaded, model, versionId, jobId]
+    [params, containers, project, projectLoaded, model, versionId, jobId],
   );
 
   return (
@@ -187,34 +199,47 @@ export const ContainerLogsView = ({
           <EuiTextColor color="success">&nbsp; Logs</EuiTextColor>
         </span>
       </EuiTitle>
-      {
-        Object.keys(stackdriverUrls).length !== 0 &&
-        (
-          <Fragment>
-            <EuiSpacer size="s"/>
-            <EuiPanel>
-              <EuiFlexGroup direction="row" alignItems="center">
-                <EuiFlexItem style={{marginTop:0, marginBottom:0}} grow={false}>
-                  <EuiText  style={{ fontSize: '14px', fontWeight:"bold"}}>Stackdriver Logs</EuiText>
+      {Object.keys(stackdriverUrls).length !== 0 && (
+        <Fragment>
+          <EuiSpacer size="s" />
+          <EuiPanel>
+            <EuiFlexGroup direction="row" alignItems="center">
+              <EuiFlexItem
+                style={{ marginTop: 0, marginBottom: 0 }}
+                grow={false}
+              >
+                <EuiText style={{ fontSize: "14px", fontWeight: "bold" }}>
+                  Stackdriver Logs
+                </EuiText>
+              </EuiFlexItem>
+              {Object.entries(stackdriverUrls).map(([component, url]) => (
+                <EuiFlexItem
+                  style={{
+                    marginTop: 0,
+                    marginBottom: 0,
+                    paddingLeft: "10px",
+                    textTransform: "capitalize",
+                  }}
+                  key={component}
+                  grow={false}
+                >
+                  <EuiText size="xs">
+                    <EuiLink href={url} target="_blank" external>
+                      {component.replace(new RegExp("_", "g"), " ")}
+                    </EuiLink>
+                  </EuiText>
                 </EuiFlexItem>
-                {Object.entries(stackdriverUrls).map(([component,url])=> (
-                  <EuiFlexItem style={{marginTop:0, marginBottom:0, paddingLeft:"10px", textTransform: "capitalize"}} key={component} grow={false}>
-                    <EuiText size="xs" >
-                      <EuiLink href={url} target="_blank" external>{component.replace(new RegExp("_", "g"), " ")}</EuiLink>
-                    </EuiText>
-                  </EuiFlexItem>
-                ))}
-              </EuiFlexGroup>
-            </EuiPanel>
-          </Fragment>
-        )
-      }
+              ))}
+            </EuiFlexGroup>
+          </EuiPanel>
+        </Fragment>
+      )}
       <EuiSpacer size="s" />
       <EuiPanel>
         {!containerHaveBeenLoaded &&
         componentTypes &&
         componentTypes.length === 0 ? (
-          <EuiLoadingContent lines={4} />
+          <EuiSkeletonText lines={4} />
         ) : logUrl ? (
           <EuiFlexGroup direction="column" gutterSize="none">
             <EuiFlexItem grow={false}>

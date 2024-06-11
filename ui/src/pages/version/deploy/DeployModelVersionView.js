@@ -1,12 +1,12 @@
-import React, { Fragment, useEffect } from "react";
+import { FormContextProvider, replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import {
-  EuiLoadingContent,
   EuiPageTemplate,
   EuiPanel,
-  EuiSpacer
+  EuiSkeletonText,
+  EuiSpacer,
 } from "@elastic/eui";
+import React, { Fragment, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FormContextProvider, replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 import { Version } from "../../../services/version/Version";
@@ -20,13 +20,13 @@ const DeployModelVersionView = () => {
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
-    {}
+    {},
   );
 
   const [{ data: version, isLoaded: versionLoaded }] = useMerlinApi(
     `/models/${modelId}/versions/${versionId}`,
     { mock: mocks.versionList[0] },
-    {}
+    {},
   );
 
   useEffect(() => {
@@ -35,13 +35,13 @@ const DeployModelVersionView = () => {
         { text: `Models`, href: `/merlin/projects/${model.project_id}/models` },
         {
           text: `${model.name}`,
-          href: `/merlin/projects/${model.project_id}/models/${model.id}`
+          href: `/merlin/projects/${model.project_id}/models/${model.id}`,
         },
         {
           text: `Version ${version.id}`,
-          href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`
+          href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`,
         },
-        { text: `Deploy` }
+        { text: `Deploy` },
       ]);
     }
   }, [model, version]);
@@ -50,7 +50,7 @@ const DeployModelVersionView = () => {
     `/models/${model.id}/versions/${version.id}/endpoint`,
     { method: "POST" },
     {},
-    false
+    false,
   );
 
   return (
@@ -68,7 +68,7 @@ const DeployModelVersionView = () => {
           </Fragment>
         }
       />
-      
+
       <EuiSpacer size="l" />
       <EuiPageTemplate.Section color={"transparent"}>
         <EuiPanel color={"transparent"}>
@@ -78,14 +78,14 @@ const DeployModelVersionView = () => {
                 model={model}
                 version={Version.fromJson(version)}
                 onCancel={() => window.history.back()}
-                onSuccess={redirectUrl => navigate(redirectUrl)}
+                onSuccess={(redirectUrl) => navigate(redirectUrl)}
                 submissionResponse={submissionResponse}
                 submitForm={submitForm}
                 actionTitle="Deploy"
               />
             </FormContextProvider>
           ) : (
-            <EuiLoadingContent lines={3} />
+            <EuiSkeletonText lines={3} />
           )}
         </EuiPanel>
       </EuiPageTemplate.Section>

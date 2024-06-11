@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
+import CreateJobPage from "./job/CreateJobPage";
+import JobPage from "./job/JobPage";
+import ListJobsPage from "./job/ListJobsPage";
+import RecreateJobPage from "./job/RecreateJobPage";
 import TransformerTools from "./tools/TransformerTools";
+import VersionDetails from "./version/VersionDetails";
 import DeployModelVersionView from "./version/deploy/DeployModelVersionView";
 import RedeployModelVersionView from "./version/redeploy/RedeployModelVersionView";
-import VersionDetails from "./version/VersionDetails";
 
-export { TransformerTools };
-export { DeployModelVersionView };
-export { RedeployModelVersionView };
-export { VersionDetails };
+export {
+  CreateJobPage,
+  DeployModelVersionView,
+  JobPage,
+  ListJobsPage,
+  RecreateJobPage,
+  RedeployModelVersionView,
+  TransformerTools,
+  VersionDetails,
+};

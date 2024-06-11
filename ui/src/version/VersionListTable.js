@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState, Fragment } from "react";
+import { DateFromNow, useToggle } from "@caraml-dev/ui-lib";
 import {
   EuiBadge,
+  EuiBadgeGroup,
   EuiButtonEmpty,
   EuiButtonIcon,
   EuiCallOut,
@@ -29,21 +30,22 @@ import {
   EuiInMemoryTable,
   EuiLink,
   EuiLoadingChart,
+  EuiSearchBar,
   EuiText,
   EuiTextAlign,
   EuiToolTip,
-  EuiBadgeGroup,
-  EuiSearchBar,
 } from "@elastic/eui";
-import { DateFromNow, useToggle } from "@caraml-dev/ui-lib";
 import PropTypes from "prop-types";
-
-import VersionEndpointActions from "./VersionEndpointActions";
-import { Link, useNavigate } from "react-router-dom";
+import React, { Fragment, useEffect, useState } from "react";
+import { useCollapse } from "react-collapsed";
 import EllipsisText from "react-ellipsis-text";
-import useCollapse from "react-collapsed";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  DeleteModelVersionModal,
+  DeleteModelVersionPyFuncV2Modal,
+} from "../components/modals";
 import { versionEndpointUrl } from "../utils/versionEndpointUrl";
-import { DeleteModelVersionPyFuncV2Modal, DeleteModelVersionModal } from "../components/modals";
+import VersionEndpointActions from "./VersionEndpointActions";
 const moment = require("moment");
 
 const defaultTextSize = "s";
@@ -86,7 +88,7 @@ const CollapsibleLabelsPanel = ({
                 <EllipsisText text={key} length={maxLabelLength} />:
                 <EllipsisText text={val} length={maxLabelLength} />
               </EuiBadge>
-            )
+            ),
         )}
       {
         // Toggle collapse button
@@ -117,10 +119,14 @@ const VersionListTable = ({
   ...props
 }) => {
   const navigate = useNavigate();
-  const [ isDeleteModelVersionPyFuncV2ModalVisible, toggleDeleteModelVersionPyFuncV2Modal ] = useToggle()
-  const [ isDeleteModelVersionModalVisible, toggleDeleteModelVersionModal ] = useToggle()
-  const [ modelForModal, setModelForModal ] = useState({});
-  const [ versionForModal, setVersionForModal ] = useState({});
+  const [
+    isDeleteModelVersionPyFuncV2ModalVisible,
+    toggleDeleteModelVersionPyFuncV2Modal,
+  ] = useToggle();
+  const [isDeleteModelVersionModalVisible, toggleDeleteModelVersionModal] =
+    useToggle();
+  const [modelForModal, setModelForModal] = useState({});
+  const [versionForModal, setVersionForModal] = useState({});
 
   const healthColor = (status) => {
     switch (status) {
@@ -148,7 +154,7 @@ const VersionListTable = ({
       version.endpoints &&
       version.endpoints.length !== 0 &&
       version.endpoints.find(
-        (versionEndpoint) => !isTerminatedEndpoint(versionEndpoint)
+        (versionEndpoint) => !isTerminatedEndpoint(versionEndpoint),
       )
     );
   };
@@ -179,7 +185,7 @@ const VersionListTable = ({
 
               rows[version.id] = version.endpoints
                 .sort((a, b) =>
-                  a.environment_name > b.environment_name ? 1 : -1
+                  a.environment_name > b.environment_name ? 1 : -1,
                 )
                 .map((versionEndpoint, index) => (
                   <div key={`${versionEndpoint.id}-version-endpoint`}>
@@ -192,7 +198,7 @@ const VersionListTable = ({
                           <EuiLink
                             onClick={() =>
                               navigate(
-                                `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${versionEndpoint.id}/details`
+                                `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${versionEndpoint.id}/details`,
                               )
                             }
                           >
@@ -234,7 +240,7 @@ const VersionListTable = ({
                           <EuiCopy
                             textToCopy={`${versionEndpointUrl(
                               versionEndpoint.url,
-                              versionEndpoint.protocol
+                              versionEndpoint.protocol,
                             )}`}
                             beforeMessage="Click to copy URL to clipboard"
                           >
@@ -307,7 +313,7 @@ const VersionListTable = ({
       versions,
       expandedRowState.versionIdToExpandedRowMap,
       activeModel,
-    ]
+    ],
   );
 
   const toggleDetails = (version) => {
@@ -328,14 +334,14 @@ const VersionListTable = ({
   };
 
   const handleDeleteModelVersion = (model, version) => {
-    setModelForModal(model)
-    setVersionForModal(version)
-    if (model.type === "pyfunc_v2"){
-      toggleDeleteModelVersionPyFuncV2Modal()
+    setModelForModal(model);
+    setVersionForModal(version);
+    if (model.type === "pyfunc_v2") {
+      toggleDeleteModelVersionPyFuncV2Modal();
     } else {
-      toggleDeleteModelVersionModal()
+      toggleDeleteModelVersionModal();
     }
-  }
+  };
 
   const columns = [
     {
@@ -349,7 +355,7 @@ const VersionListTable = ({
       width: "10%",
       render: (name, version) => {
         const servingEndpoint = version.endpoints.find(
-          (endpoint) => endpoint.status === "serving"
+          (endpoint) => endpoint.status === "serving",
         );
         const versionPageUrl = `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/details`;
         return (
@@ -426,7 +432,7 @@ const VersionListTable = ({
                       <EuiLink
                         onClick={() =>
                           navigate(
-                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`,
                           )
                         }
                       >
@@ -442,7 +448,7 @@ const VersionListTable = ({
                       <EuiLink
                         onClick={() =>
                           navigate(
-                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}/details`,
                           )
                         }
                       >
@@ -519,9 +525,7 @@ const VersionListTable = ({
                     state={{ model: activeModel, version: version }}
                   >
                     <EuiButtonEmpty iconType="importAction" size="xs">
-                      <EuiText size="xs">
-                        Deploy
-                      </EuiText>
+                      <EuiText size="xs">Deploy</EuiText>
                     </EuiButtonEmpty>
                   </Link>
                 </EuiToolTip>
@@ -559,11 +563,15 @@ const VersionListTable = ({
             </EuiFlexItem>
 
             <EuiFlexItem grow={false}>
-                <EuiButtonEmpty color={"danger"} iconType="trash" size="xs" onClick={() => handleDeleteModelVersion(activeModel, version)}>
-                  <EuiText size="xs">Delete</EuiText>
-                </EuiButtonEmpty>
+              <EuiButtonEmpty
+                color={"danger"}
+                iconType="trash"
+                size="xs"
+                onClick={() => handleDeleteModelVersion(activeModel, version)}
+              >
+                <EuiText size="xs">Delete</EuiText>
+              </EuiButtonEmpty>
             </EuiFlexItem>
-
           </EuiFlexGroup>
         ),
     },
@@ -608,7 +616,7 @@ const VersionListTable = ({
         onClick: () => toggleDetails(item),
       };
     }
-    return undefined
+    return undefined;
   };
 
   // Query for the search bar
@@ -673,37 +681,37 @@ const VersionListTable = ({
       <p>{error.message}</p>
     </EuiCallOut>
   ) : activeModel ? (
-     <div>
-       {isDeleteModelVersionPyFuncV2ModalVisible && (
-          <DeleteModelVersionPyFuncV2Modal 
-            closeModal={() => toggleDeleteModelVersionPyFuncV2Modal()}
-            model={modelForModal}
-            version={versionForModal}
-            callback={fetchVersions}
-          /> 
-       )}
-       {isDeleteModelVersionModalVisible && (
+    <div>
+      {isDeleteModelVersionPyFuncV2ModalVisible && (
+        <DeleteModelVersionPyFuncV2Modal
+          closeModal={() => toggleDeleteModelVersionPyFuncV2Modal()}
+          model={modelForModal}
+          version={versionForModal}
+          callback={fetchVersions}
+        />
+      )}
+      {isDeleteModelVersionModalVisible && (
         <DeleteModelVersionModal
           closeModal={() => toggleDeleteModelVersionModal()}
           model={modelForModal}
           version={versionForModal}
           callback={fetchVersions}
-         />
-       )}
-       <EuiInMemoryTable
-         items={versionData}
-         columns={columns}
-         loading={!isLoaded}
-         itemId="id"
-         itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
-         isExpandable={true}
-         hasActions={true}
-         message={loadingView}
-         search={search}
-         sorting={{ sort: { field: "Version", direction: "desc" } }}
-         cellProps={cellProps}
-       />
-     </div>
+        />
+      )}
+      <EuiInMemoryTable
+        items={versionData}
+        columns={columns}
+        loading={!isLoaded}
+        itemId="id"
+        itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
+        isExpandable={true}
+        hasActions={true}
+        message={loadingView}
+        search={search}
+        sorting={{ sort: { field: "Version", direction: "desc" } }}
+        cellProps={cellProps}
+      />
+    </div>
   ) : (
     <EuiTextAlign textAlign="center">
       <EuiLoadingChart size="xl" mono />

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import React from "react";
-import PropTypes from "prop-types";
 import { EuiDescriptionList } from "@elastic/eui";
+import PropTypes from "prop-types";
+import React from "react";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 
 /**
@@ -75,6 +75,7 @@ export const DeploymentConfigPanel = ({ endpoint }) => {
           compressed
           type="responsiveColumn"
           listItems={deploymentConfig}
+          columnWidths={[1, 4]}
         ></EuiDescriptionList>
       </ConfigSectionPanel>
     </ConfigSection>
