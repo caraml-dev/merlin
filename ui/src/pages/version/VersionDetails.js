@@ -68,19 +68,12 @@ const VersionDetails = () => {
     size: appConfig.pagination.defaultPageSize,
   });
 
-  const [searchJobText, setSearchJobText] = useState(versionId);
-
   const [{ data: jobs, isLoaded: jobsLoaded, error: jobsError }, fetchJobs] =
     useMerlinApi(
-      `/projects/${projectId}/jobs-by-page?model_id=${modelId}&version_id=${versionId}&page=${jobPage.index + 1}&page_size=${jobPage.size}&search=${searchJobText}`,
+      `/projects/${projectId}/jobs-by-page?model_id=${modelId}&version_id=${versionId}&page=${jobPage.index + 1}&page_size=${jobPage.size}`,
       { mock: mocks.jobList },
       [],
     );
-
-  const onSearchJobTextChange = (text) => {
-    setJobPage({ ...jobPage, index: 0 });
-    setSearchJobText(text);
-  };
 
   const [endpoint, setEndpoint] = useState();
   const [environments, setEnvironments] = useState([]);

@@ -54,7 +54,7 @@ export const JobDetailTabNavigation = ({
     }
 
     setTabs(tabs);
-  }, [job]);
+  }, [project, job]);
 
   return (
     <TabNavigation

@@ -25,7 +25,7 @@ import React, { useEffect, useState } from "react";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 
-const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
+const StopPredictionJobModal = ({ job, closeModal }) => {
   const [{ isLoading, isLoaded }, stopRunningJob] = useMerlinApi(
     `/models/${job.model_id}/versions/${job.version_id}/jobs/${job.id}/stop`,
     { method: "PUT", addToast: true, mock: mocks.noBody },
@@ -38,9 +38,8 @@ const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
   useEffect(() => {
     if (isLoaded) {
       closeModal();
-      fetchJobs();
     }
-  }, [isLoaded, closeModal, fetchJobs]);
+  }, [isLoaded, closeModal]);
 
   return (
     <EuiOverlayMask>

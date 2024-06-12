@@ -95,7 +95,7 @@ export const JobForm = ({ isNewJob = true }) => {
         text: isNewJob ? "Start Batch Job" : "Recreate Batch Job",
       },
     ]);
-  }, [projectId, model, versionId, modelId, job.id]);
+  }, [projectId, model, versionId, modelId, job.id, isNewJob]);
 
   // Job related hooks
   useEffect(() => {
