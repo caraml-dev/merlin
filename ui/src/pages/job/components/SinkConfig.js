@@ -31,12 +31,12 @@ const BQSinkConfig = ({ job }) => {
       description: (
         <a
           href={getBigQueryDashboardUrl(
-            job.config.job_config.bigquerySource.table,
+            job.config.job_config.bigquerySink.table,
           )}
           target="_blank"
           rel="noopener noreferrer"
         >
-          {job.config.job_config.bigquerySource.table}
+          {job.config.job_config.bigquerySink.table}
         </a>
       ),
     },
