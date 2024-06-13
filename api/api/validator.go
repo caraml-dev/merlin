@@ -33,14 +33,12 @@ func (fv *funcValidate) validate() error {
 }
 
 var supportedUPIModelTypes = map[string]bool{
-	models.ModelTypePyFunc:   true,
-	models.ModelTypeCustom:   true,
-	models.ModelTypePyFuncV3: true,
+	models.ModelTypePyFunc: true,
+	models.ModelTypeCustom: true,
 }
 
 var supportedObservabilityModelTypes = []string{
 	models.ModelTypePyFunc,
-	models.ModelTypePyFuncV3,
 	models.ModelTypeXgboost,
 }
 

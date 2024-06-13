@@ -33,7 +33,6 @@ def validate_model_dir(model_type, model_dir):
     if (
         model_type == ModelType.PYFUNC
         or model_type == ModelType.PYFUNC_V2
-        or model_type == ModelType.PYFUNC_V3
         or model_type == ModelType.CUSTOM
     ):
         return

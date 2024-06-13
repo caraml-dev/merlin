@@ -27,7 +27,7 @@ type versionImageService struct {
 
 func (s *versionImageService) getImageBuilder(modelType string) (imagebuilder.ImageBuilder, error) {
 	switch modelType {
-	case models.ModelTypePyFunc, models.ModelTypePyFuncV3:
+	case models.ModelTypePyFunc:
 		return s.webserviceBuilder, nil
 	case models.ModelTypePyFuncV2:
 		return s.predJobBuilder, nil

@@ -23,20 +23,13 @@ from sys import version_info
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import client
 import docker
 import pyprind
-from docker import APIClient
-from docker.models.containers import Container
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
-from mlflow.tracking.client import MlflowClient
-
-import client
-import mlflow
 from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
                     SecretApi, VersionApi, VersionImageApi)
-from merlin import pyfunc
+from docker import APIClient
+from docker.models.containers import Container
 from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
                                 SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
                                 AutoscalingPolicy)
@@ -59,6 +52,13 @@ from merlin.util import (autostr, download_files_from_gcs,
                          valid_name_check)
 from merlin.validation import validate_model_dir
 from merlin.version_image import VersionImage
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
+from mlflow.tracking.client import MlflowClient
+
+import mlflow
+from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
 # This allows users to do following import statement
@@ -283,7 +283,6 @@ class ModelType(Enum):
     ONNX = "onnx"
     PYFUNC = "pyfunc"
     PYFUNC_V2 = "pyfunc_v2"
-    PYFUNC_V3 = "pyfunc_v3"
     CUSTOM = "custom"
 
 
@@ -980,7 +979,6 @@ class ModelVersion:
         if (
             self._model.type != ModelType.PYFUNC
             and self._model.type != ModelType.PYFUNC_V2
-            and self._model.type != ModelType.PYFUNC_V3
         ):
             raise ValueError(
                 "log_pyfunc_model is only for PyFunc, PyFuncV2 and PyFuncV3 model"
@@ -1030,7 +1028,6 @@ class ModelVersion:
         if (
             self._model.type == ModelType.PYFUNC
             or self._model.type == ModelType.PYFUNC_V2
-            or self._model.type == ModelType.PYFUNC_V3
         ):
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
@@ -1265,7 +1262,10 @@ class ModelVersion:
                     default_resource_request.min_replica
                 )
 
-            if target_resource_request.max_replica is None or target_resource_request.max_replica < 1:
+            if (
+                target_resource_request.max_replica is None
+                or target_resource_request.max_replica < 1
+            ):
                 target_resource_request.max_replica = (
                     default_resource_request.max_replica
                 )

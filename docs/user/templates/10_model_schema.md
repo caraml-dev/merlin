@@ -73,7 +73,8 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
             "featureC": ValueType.STRING,
             "featureD": ValueType.BOOLEAN
         },
-        prediction_id_column="prediction_id",
+        session_id_column="session_id",
+        row_id_column="row_id",
         model_prediction_output=BinaryClassificationOutput(
             prediction_score_column="score",
             actual_label_column="target",

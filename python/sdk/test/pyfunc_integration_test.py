@@ -243,7 +243,7 @@ def test_pyfunc_model_observability(
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pyfunc-mlobs", ModelType.PYFUNC_V3)
+    merlin.set_model("pyfunc-mlobs", ModelType.PYFUNC)
 
     model_schema = ModelSchema(
         spec=InferenceSchema(

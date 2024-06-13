@@ -199,27 +199,6 @@ func TestDeployEndpoint(t *testing.T) {
 			wantDeployError: false,
 		},
 		{
-			name: "success: empty pyfunc_v3 model",
-			args: args{
-				env,
-				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFuncV3},
-				&models.Version{ID: 1},
-				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
-				},
-			},
-			expectedEndpoint: &models.VersionEndpoint{
-				DeploymentMode:    deployment.ServerlessDeploymentMode,
-				AutoscalingPolicy: autoscaling.DefaultServerlessAutoscalingPolicy,
-				ResourceRequest:   env.DefaultResourceRequest,
-				Namespace:         project.Name,
-				URL:               "",
-				Status:            models.EndpointPending,
-				Protocol:          protocol.HttpJson,
-			},
-			wantDeployError: false,
-		},
-		{
 			name: "success: empty custom model",
 			args: args{
 				env,
@@ -769,28 +748,6 @@ func TestDeployEndpoint(t *testing.T) {
 			args: args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
-				&models.Version{ID: 1},
-				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
-					Protocol:        protocol.UpiV1,
-				},
-			},
-			expectedEndpoint: &models.VersionEndpoint{
-				DeploymentMode:    deployment.ServerlessDeploymentMode,
-				AutoscalingPolicy: autoscaling.DefaultServerlessAutoscalingPolicy,
-				ResourceRequest:   env.DefaultResourceRequest,
-				Namespace:         project.Name,
-				URL:               "",
-				Status:            models.EndpointPending,
-				Protocol:          protocol.UpiV1,
-			},
-			wantDeployError: false,
-		},
-		{
-			name: "success: pyfunc_v3 upi v1 model",
-			args: args{
-				env,
-				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFuncV3},
 				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,

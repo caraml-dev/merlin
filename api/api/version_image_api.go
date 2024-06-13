@@ -79,7 +79,7 @@ func (c *VersionImageController) BuildImage(r *http.Request, vars map[string]str
 
 func (c *VersionImageController) validateModelType(modelType string) error {
 	switch modelType {
-	case models.ModelTypePyFunc, models.ModelTypePyFuncV2, models.ModelTypePyFuncV3:
+	case models.ModelTypePyFunc, models.ModelTypePyFuncV2:
 		return nil
 	default:
 		return fmt.Errorf("model type %s is not supported", modelType)

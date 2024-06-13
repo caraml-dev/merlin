@@ -309,7 +309,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 				},
 			},
 		}
-	case models.ModelTypePyFunc, models.ModelTypePyFuncV3:
+	case models.ModelTypePyFunc:
 		pyfuncDefaultEnv, err := createPyFuncDefaultEnvVars(modelService)
 		if err != nil {
 			return kservev1beta1.PredictorSpec{}, err
@@ -487,7 +487,7 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	// Add keepalive configuration for predictor
 	// only pyfunc config that enforced by merlin
 	keepAliveModelCfg := standardTransformerCfg.ModelClientKeepAlive
-	if modelService.Protocol == protocol.UpiV1 && (modelService.Type == models.ModelTypePyFunc || modelService.Type == models.ModelTypePyFuncV3) {
+	if modelService.Protocol == protocol.UpiV1 && modelService.Type == models.ModelTypePyFunc {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String()})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String()})
@@ -579,7 +579,7 @@ func (t *InferenceServiceTemplater) createAnnotations(modelService *models.Servi
 		annotations[knserving.QueueSidecarResourcePercentageAnnotationKey] = config.QueueResourcePercentage
 	}
 
-	if modelService.Type == models.ModelTypePyFunc || modelService.Type == models.ModelTypePyFuncV3 {
+	if modelService.Type == models.ModelTypePyFunc {
 		annotations[annotationPrometheusScrapeFlag] = "true"
 		annotations[annotationPrometheusScrapePort] = fmt.Sprint(defaultHTTPPort)
 	}

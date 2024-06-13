@@ -876,40 +876,24 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "pyfunc_v3 spec with model observability enabled",
+			name: "pyfunc spec with model observability enabled",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,
 				ModelVersion: modelSvc.ModelVersion,
 				Namespace:    project.Name,
 				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypePyFuncV3,
+				Type:         models.ModelTypePyFunc,
 				Options: &models.ModelOption{
 					PyFuncImageName: "gojek/project-model:1",
 				},
 				Metadata:                  modelSvc.Metadata,
 				Protocol:                  protocol.HttpJson,
 				EnabledModelObservability: true,
-				ModelSchema: &models.ModelSchema{
-					ID:      models.ID(1),
-					ModelID: models.ID(1),
-					Spec: &models.SchemaSpec{
-						SessionIDColumn: "session_id",
-						RowIDColumn:     "row_id",
-						TagColumns:      []string{"tags"},
-						FeatureTypes: map[string]models.ValueType{
-							"featureA": models.Float64,
-							"featureB": models.Int64,
-							"featureC": models.String,
-							"featureD": models.Boolean,
-						},
-						FeatureOrders: []string{"featureA", "featureB", "featureC", "featureD"},
-						ModelPredictionOutput: &models.ModelPredictionOutput{
-							RankingOutput: &models.RankingOutput{
-								RankScoreColumn:      "score",
-								RelevanceScoreColumn: "relevance_score",
-							},
-						},
+				EnvVars: models.EnvVars{
+					{
+						Name:  envPublisherSamplingRatio,
+						Value: "0.5",
 					},
 				},
 			},
@@ -947,8 +931,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 										models.EnvVars{
 											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
 										},
-										createPyFuncPublisherEnvVars(modelSvcWithSchema, pyfuncPublisherConfig),
-										createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson),
+										createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig),
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
 									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
@@ -964,14 +948,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "pyfunc_v3 spec with model observability enabled, overwrite the sampling ratio",
+			name: "pyfunc spec with model observability enabled, overwrite the sampling ratio",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,
 				ModelVersion: modelSvc.ModelVersion,
 				Namespace:    project.Name,
 				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypePyFuncV3,
+				Type:         models.ModelTypePyFunc,
 				Options: &models.ModelOption{
 					PyFuncImageName: "gojek/project-model:1",
 				},
@@ -1044,72 +1028,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 											{Name: envPublisherSamplingRatio, Value: "0.5"},
 										},
 										createPyFuncDefaultEnvVarsWithProtocol(modelSvcWithSchema, protocol.HttpJson),
-									).ToKubernetesEnvVars(),
-									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &defaultModelResourceRequests.MinReplica,
-							MaxReplicas: defaultModelResourceRequests.MaxReplica,
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "pyfunc spec with model observability enabled",
-			modelSvc: &models.Service{
-				Name:         modelSvc.Name,
-				ModelName:    modelSvc.ModelName,
-				ModelVersion: modelSvc.ModelVersion,
-				Namespace:    project.Name,
-				ArtifactURI:  modelSvc.ArtifactURI,
-				Type:         models.ModelTypePyFunc,
-				Options: &models.ModelOption{
-					PyFuncImageName: "gojek/project-model:1",
-				},
-				Metadata:                  modelSvc.Metadata,
-				Protocol:                  protocol.HttpJson,
-				EnabledModelObservability: true,
-			},
-			resourcePercentage: queueResourcePercentage,
-			deploymentScale:    defaultDeploymentScale,
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      modelSvc.Name,
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						"prometheus.io/scrape":                                "true",
-						"prometheus.io/port":                                  "8080",
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          modelSvc.Metadata.App,
-						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  testEnvironmentName,
-						"gojek.com/orchestrator": testOrchestratorName,
-						"gojek.com/stream":       modelSvc.Metadata.Stream,
-						"gojek.com/team":         modelSvc.Metadata.Team,
-						"sample":                 "true",
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						PodSpec: kservev1beta1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:  kserveconstant.InferenceServiceContainerName,
-									Image: "gojek/project-model:1",
-									Env: models.MergeEnvVars(
-										models.EnvVars{
-											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
-										},
-										createPyFuncPublisherEnvVars(modelSvc, pyfuncPublisherConfig),
-										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson),
 									).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,

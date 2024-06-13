@@ -1,12 +1,11 @@
 import os
 import shutil
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
 
 import docker
 import grpc
-import mlflow
 import numpy
 import pandas
 from caraml.upi.v1 import upi_pb2
@@ -15,6 +14,8 @@ from merlin.docker.docker import copy_pyfunc_dockerfile, wait_build_complete
 from merlin.protocol import Protocol
 from merlin.version import VERSION
 from mlflow.pyfunc import PythonModel
+
+import mlflow
 
 PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
 PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
@@ -140,15 +141,24 @@ class Values:
 
 @dataclass
 class ModelInput:
-    # unique identifier of each prediction
-    prediction_ids: List[str]
     # features data for model prediction, the length of data of features must be the same as `prediction_ids` length
     features: Union[Values, pandas.DataFrame]
+    # unique identifier of each prediction
+    # will be deprecate soon
+    prediction_ids: Optional[List[str]] = None
     # entities data is additional data that are not used for prediction, but this data is used to retrieved another features.
     # The length of data of entities must be the same as `prediction_ids` length
     entities: Optional[Union[Values, pandas.DataFrame]] = None
     # session id is identifier for the request
     session_id: str = ""
+    # unique identifier for each row in a prediction
+    row_ids: List[str] = field(default_factory=lambda: [])
+
+    def _get_row_ids(self) -> List[str]:
+        row_ids = self.row_ids
+        if len(row_ids) == 0 and self.prediction_ids is not None:
+            row_ids = self.prediction_ids
+        return row_ids
 
     def features_dict(self) -> Optional[dict]:
         if self.features is None:
@@ -161,7 +171,7 @@ class ModelInput:
             )
 
         result = val.to_dict()
-        result["row_ids"] = self.prediction_ids
+        result["row_ids"] = self._get_row_ids()
         return result
 
     def entities_dict(self) -> Optional[dict]:
@@ -173,7 +183,7 @@ class ModelInput:
                 self.entities.columns.values.tolist(), self.entities.values.tolist()
             )
         result = val.to_dict()
-        result["row_ids"] = self.prediction_ids
+        result["row_ids"] = self._get_row_ids()
         return result
 
 
@@ -184,7 +194,10 @@ class ModelOutput:
     # length of the data must be the same as predicion_ids
     predictions: Values
     # unique identifier of each prediction
-    prediction_ids: List[str]
+    # will be deprecate and use `row_ids` instead
+    prediction_ids: Optional[List[str]] = None
+    # unique identifier for each row in a prediction
+    row_ids: List[str] = field(default_factory=lambda: [])
 
     def predictions_dict(self) -> dict:
         if self.predictions is None:
@@ -198,7 +211,11 @@ class ModelOutput:
             )
 
         result = predictions.to_dict()
-        result["row_ids"] = self.prediction_ids
+        row_ids = self.row_ids
+        if len(row_ids) == 0 and self.prediction_ids is not None:
+            row_ids = self.prediction_ids
+
+        result["row_ids"] = row_ids
         return result
 
 
