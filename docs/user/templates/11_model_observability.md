@@ -33,17 +33,17 @@ Beside changes in signature, you can see some of those methods returning new typ
 
 | Field | Type | Description|
 |-------|------|------------|
-| `prediction_ids` | List[str] | Unique identifier for each row in prediction |
-| `features` | Union[Values, pandas.DataFrame] | Features value that is used by the model to generate prediction. Length of features should be the same with `prediction_ids` | 
+| `row_ids` | List[str] | Unique identifier for each row in prediction |
+| `features` | Union[Values, pandas.DataFrame] | Features value that is used by the model to generate prediction. Length of features should be the same with `row_ids` | 
 | `entities` | Optional[Union[Values, pandas.DataFrame]] | Additional data that are not used for prediction, but this data is used to retrieved another features, e.g `driver_id`, we can retrieve features associated with certain `driver_id`|
-| `session_id` | str | Identifier for the request. This value will be used together with `prediction_ids` as prediction identifier in model observability system  |
+| `session_id` | str | Identifier for the request. This value will be used together with `row_ids` as prediction identifier in model observability system  |
 
 `ModelInput` data is essential for model observability since it contains features values and identifier of prediction. Features values are used to calculate feature drift, and identifier is used as join key between features, prediction data with ground truth data. On the other hand, `ModelOutput` is the class that represent raw model prediction output, not the final output of PyFunc model. `ModelOutput` class contains following fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `prediction` | Values | `predictions` contains prediction output from ml_predict, it may contains multiple columns e.g for multiclass classification or for binary classification that contains prediction score and label |
-| `prediction_ids` | List[str] | Unique identifier for each row in prediction output |
+| `row_ids` | List[str] | Unique identifier for each row in prediction output |
 
 Same like `ModelInput`, `ModelOutput` is also essential for model observability, it can be used to calculate prediction drift but more importantly it can calculate performance metrics.
 
@@ -61,7 +61,7 @@ There is not much change on the deployment part, users just needs to set `enable
 * featureC that has string type
 * featureD that has float type
 
-The model type is ranking with prediction group id information is located in `session_id` column, prediction id in `prediction_id` column, rank score in `score` column and `relevance_score_column` in `relevance_score`. Below is the snipped of the python code
+The model type is ranking with prediction group id information is located in `session_id` column, row id in `row_id` column, rank score in `score` column and `relevance_score_column` in `relevance_score`. Below is the snipped of the python code
 
 ```python
 class ModelObservabilityModel(PyFuncV3Model):
@@ -69,13 +69,13 @@ class ModelObservabilityModel(PyFuncV3Model):
     def preprocess(self, request: dict, **kwargs) -> ModelInput:
         return ModelInput(
             session_id="session_id",
-            prediction_ids=["prediction_1", "prediction_2"],
+            row_ids=["prediction_1", "prediction_2"],
             features=pd.DataFrame([[0.7, 200, "ID", True], [0.99, 250, "SG", False]], columns=["featureA", "featureB", "featureC", "featureD"]),
         )
 
     def infer(self, model_input: ModelInput) -> ModelOutput:
         return ModelOutput(
-            prediction_ids=model_input.prediction_ids,
+            row_ids=model_input.row_ids,
             predictions=Values(columns=["score"], data=[[0.5], [0.9]]),
         )
     def postprocess(self, model_output: ModelOutput, request: dict) -> dict:
@@ -90,7 +90,7 @@ model_schema = ModelSchema(spec=InferenceSchema(
             "featureD": ValueType.BOOLEAN
         },
         session_id_column="session_id",
-        row_id_column="prediction_id",
+        row_id_column="row_id",
         model_prediction_output=RankingOutput(
             rank_score_column="score",
             prediction_group_id_column="session_id",
