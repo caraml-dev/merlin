@@ -1,0 +1,9 @@
+Environment: dev
+Port: 8080
+LoggerDestinationURL: kafka:logger.destination:6668
+MLObsLoggerDestinationURL:
+Sentry: mlobs:kafka.destination:6668
+  DSN: ""
+  Enabled: false
+  Labels:
+    foo: bar

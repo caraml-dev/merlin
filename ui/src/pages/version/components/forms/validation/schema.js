@@ -10,6 +10,9 @@ const resourceRequestSchema = (maxAllowedReplica) => yup.object().shape({
   cpu_request: yup
     .string()
     .matches(cpuRequestRegex, 'Valid CPU value is required, e.g "2" or "500m"'),
+  cpu_limit: yup
+    .string()
+    .matches(cpuRequestRegex, { message: 'Valid CPU value is required, e.g "2" or "500m"', excludeEmptyString: true }),
   memory_request: yup
     .string()
     .matches(memRequestRegex, "Valid RAM value is required, e.g. 512Mi"),

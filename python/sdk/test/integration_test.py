@@ -504,7 +504,7 @@ def test_resource_request(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-        resource_request = ResourceRequest(1, 1, "100m", "256Mi")
+        resource_request = ResourceRequest(1, 1, "100m", "2", "256Mi")
         endpoint = merlin.deploy(
             v,
             environment_name=default_env.name,
@@ -560,7 +560,7 @@ def test_resource_request_with_gpu(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-        resource_request = ResourceRequest(1, 1, "100m", "256Mi", **gpu_config)
+        resource_request = ResourceRequest(1, 1, "100m", "2", "256Mi", **gpu_config)
         endpoint = merlin.deploy(
             v,
             environment_name=default_env.name,
@@ -1231,13 +1231,13 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     # Deploy using raw_deployment with CPU autoscaling policy
     endpoint = merlin.deploy(
         v1,
-        resource_request=merlin.ResourceRequest(1, 1, "123m", "234Mi"),
+        resource_request=merlin.ResourceRequest(1, 1, "123m", "2", "234Mi"),
         env_vars={"green": "TRUE"},
         autoscaling_policy=merlin.AutoscalingPolicy(
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=50
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
-        transformer = Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest"),
+        transformer=Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest"),
     )
 
     with open(os.path.join("test/transformer", "input.json"), "r") as f:
@@ -1249,6 +1249,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     # Check the deployment configs of v1
     assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.cpu_limit == "2"
     assert endpoint.resource_request.memory_request == "234Mi"
     assert endpoint.env_vars == {"green": "TRUE"}
     assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
@@ -1269,8 +1270,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
             metrics_type=merlin.MetricsType.CPU_UTILIZATION, target_value=90
         ),
         deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
-        transformer = Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
-                                  resource_request=merlin.ResourceRequest(0, 1, "100m", "250Mi")),
+        transformer=Transformer(image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
+                                resource_request=merlin.ResourceRequest(0, 1, "100m", "2", "250Mi")),
     )
 
     resp = requests.post(f"{new_endpoint.url}", json=req)
@@ -1282,6 +1283,7 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
 
     # Check that the deployment configs of v2 have remained the same as those used in v1
     assert endpoint.resource_request.cpu_request == "123m"
+    assert endpoint.resource_request.cpu_limit == "2"
     assert endpoint.resource_request.memory_request == "234Mi"
     assert endpoint.env_vars == {"green": "TRUE"}
     assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT

@@ -55,6 +55,7 @@ type DeploymentConfig struct {
 	UserContainerCPUDefaultLimit          string
 	UserContainerCPULimitRequestFactor    float64
 	UserContainerMemoryLimitRequestFactor float64
+	DefaultEnvVarsWithoutCPULimits        []corev1.EnvVar
 }
 
 type ResourceRequests struct {

@@ -28,6 +28,7 @@ class ResourceRequest:
         min_replica: Optional[int] = None,
         max_replica: Optional[int] = None,
         cpu_request: Optional[str] = None,
+        cpu_limit: Optional[str] = None,
         memory_request: Optional[str] = None,
         gpu_request: Optional[str] = None,
         gpu_name: Optional[str] = None,
@@ -35,6 +36,7 @@ class ResourceRequest:
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
+        self._cpu_limit = cpu_limit
         self._memory_request = memory_request
         self._gpu_request = gpu_request
         self._gpu_name = gpu_name
@@ -46,6 +48,7 @@ class ResourceRequest:
             min_replica=response.min_replica,
             max_replica=response.max_replica,
             cpu_request=response.cpu_request,
+            cpu_limit=response.cpu_limit,
             memory_request=response.memory_request,
             gpu_request=response.gpu_request,
             gpu_name=response.gpu_name,
@@ -74,6 +77,14 @@ class ResourceRequest:
     @cpu_request.setter
     def cpu_request(self, cpu_request):
         self._cpu_request = cpu_request
+
+    @property
+    def cpu_limit(self) -> Optional[str]:
+        return self._cpu_limit
+
+    @cpu_limit.setter
+    def cpu_limit(self, cpu_limit):
+        self._cpu_limit = cpu_limit
 
     @property
     def memory_request(self) -> Optional[str]:

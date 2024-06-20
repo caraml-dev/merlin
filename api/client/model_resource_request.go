@@ -22,6 +22,7 @@ type ResourceRequest struct {
 	MinReplica    *int32  `json:"min_replica,omitempty"`
 	MaxReplica    *int32  `json:"max_replica,omitempty"`
 	CpuRequest    *string `json:"cpu_request,omitempty"`
+	CpuLimit      *string `json:"cpu_limit,omitempty"`
 	MemoryRequest *string `json:"memory_request,omitempty"`
 	GpuName       *string `json:"gpu_name,omitempty"`
 	GpuRequest    *string `json:"gpu_request,omitempty"`
@@ -140,6 +141,38 @@ func (o *ResourceRequest) SetCpuRequest(v string) {
 	o.CpuRequest = &v
 }
 
+// GetCpuLimit returns the CpuLimit field value if set, zero value otherwise.
+func (o *ResourceRequest) GetCpuLimit() string {
+	if o == nil || IsNil(o.CpuLimit) {
+		var ret string
+		return ret
+	}
+	return *o.CpuLimit
+}
+
+// GetCpuLimitOk returns a tuple with the CpuLimit field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ResourceRequest) GetCpuLimitOk() (*string, bool) {
+	if o == nil || IsNil(o.CpuLimit) {
+		return nil, false
+	}
+	return o.CpuLimit, true
+}
+
+// HasCpuLimit returns a boolean if a field has been set.
+func (o *ResourceRequest) HasCpuLimit() bool {
+	if o != nil && !IsNil(o.CpuLimit) {
+		return true
+	}
+
+	return false
+}
+
+// SetCpuLimit gets a reference to the given string and assigns it to the CpuLimit field.
+func (o *ResourceRequest) SetCpuLimit(v string) {
+	o.CpuLimit = &v
+}
+
 // GetMemoryRequest returns the MemoryRequest field value if set, zero value otherwise.
 func (o *ResourceRequest) GetMemoryRequest() string {
 	if o == nil || IsNil(o.MemoryRequest) {
@@ -254,6 +287,9 @@ func (o ResourceRequest) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.CpuRequest) {
 		toSerialize["cpu_request"] = o.CpuRequest
+	}
+	if !IsNil(o.CpuLimit) {
+		toSerialize["cpu_limit"] = o.CpuLimit
 	}
 	if !IsNil(o.MemoryRequest) {
 		toSerialize["memory_request"] = o.MemoryRequest

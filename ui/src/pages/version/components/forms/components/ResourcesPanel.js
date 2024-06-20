@@ -140,6 +140,7 @@ export const ResourcesPanel = ({
                 onChange={(e) => onChange("cpu_request")(e.target.value)}
                 isInvalid={!!errors.cpu_request}
                 name="cpu"
+                fullWidth
               />
             </EuiFormRow>
           </EuiFlexItem>
@@ -162,6 +163,7 @@ export const ResourcesPanel = ({
                 onChange={(e) => onChange("memory_request")(e.target.value)}
                 isInvalid={!!errors.memory_request}
                 name="memory"
+                fullWidth
               />
             </EuiFormRow>
           </EuiFlexItem>

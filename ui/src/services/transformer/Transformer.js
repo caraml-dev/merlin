@@ -22,6 +22,7 @@ export class Transformer {
       min_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 2 : 0,
       max_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 4 : 2,
       cpu_request: "500m",
+      cpu_limit: "",
       memory_request: "512Mi"
     };
 
@@ -88,6 +89,9 @@ export class Transformer {
     delete obj["type_on_ui"];
     if (obj.config) {
       delete obj["config"];
+    }
+    if (obj.resource_request?.cpu_limit === "") {
+      delete obj.resource_request.cpu_limit;
     }
 
     return obj;

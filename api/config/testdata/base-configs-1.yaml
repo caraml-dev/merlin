@@ -1,0 +1,151 @@
+Environment: dev
+Port: 8080
+LoggerDestinationURL: kafka:logger.destination:6668
+MLObsLoggerDestinationURL: mlobs:kafka.destination:6668
+Sentry:
+  DSN: ""
+  Enabled: false
+  Labels:
+    foo: bar
+NewRelic:
+  Enabled: true
+  AppName: merlin-test
+  IgnoreStatusCodes:
+    - 400
+    - 401
+    - 402
+NumOfQueueWorkers: 2
+SwaggerPath: swaggerpath.com
+DeploymentLabelPrefix: caraml.com/
+PyfuncGRPCOptions: "{}"
+DbConfig:
+  Host: localhost
+  Port: 5432
+  User: merlin
+  Password: merlin
+  Database: merlin
+ClusterConfig:
+  EnvironmentConfigPath: /app/cluster-env/environments.yaml
+  InClusterConfig: false
+ImageBuilderConfig:
+  ClusterName: test-cluster
+  GcpProject: test-project
+  ArtifactServiceType: gcs
+  BaseImage:
+    ImageName: ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.0.0
+    DockerfilePath: pyfunc-server/docker/Dockerfile
+    BuildContextURI: git://github.com/caraml-dev/merlin.git#refs/tags/v0.0.0
+    BuildContextSubPath: python
+  PredictionJobBaseImage:
+    ImageName: ghcr.io/caraml-dev/merlin/merlin-pyspark-base:0.0.0
+    DockerfilePath: batch-predictor/docker/app.Dockerfile
+    BuildContextURI: git://github.com/caraml-dev/merlin.git#refs/tags/v0.0.0
+    BuildContextSubPath: python
+    MainAppPath: /home/spark/merlin-spark-app/main.py
+  BuildNamespace: caraml
+  DockerRegistry: test-docker.pkg.dev/test/caraml-registry
+  BuildTimeout: 30m
+  KanikoImage: gcr.io/kaniko-project/executor:v1.21.0
+  KanikoServiceAccount: kaniko-merlin
+  KanikoAdditionalArgs:
+    - --test=true
+    - --no-logs=false
+  DefaultResources:
+    Requests:
+      CPU: "1"
+      Memory: 4Gi
+    Limits:
+      CPU: "1"
+      Memory: 4Gi
+  Retention: 48h
+  Tolerations:
+    - Key: purpose.caraml.com/batch
+      Value: "true"
+      Operator: Equal
+      Effect: NoSchedule
+  NodeSelectors:
+    purpose.caraml.com/batch: "true"
+  MaximumRetry: 3
+  K8sConfig:
+    name: dev-server
+    cluster:
+      server: https://127.0.0.1
+      certificate-authority-data: c29tZV9zdHJpbmc=
+    user:
+      exec:
+        apiVersion: some_api_version
+        command: some_command
+        interactiveMode: IfAvailable
+        provideClusterInfo: true
+  SafeToEvict: false
+  SupportedPythonVersions:
+    - 3.8.*
+    - 3.9.*
+    - 3.10.*
+BatchConfig:
+  Tolerations:
+    - Effect: NoSchedule
+      Key: purpose.caraml.com/batch
+      Operator: Equal
+      Value: "true"
+  NodeSelectors:
+    purpose.caraml.com/batch: "true"
+AuthorizationConfig:
+  AuthorizationEnabled: true
+  KetoRemoteRead: http://mlp-keto-read:80
+  KetoRemoteWrite: http://mlp-keto-write:80
+  Caching:
+    Enabled: true
+    KeyExpirySeconds: 600
+    CacheCleanUpIntervalSeconds: 750
+MlpAPIConfig:
+  APIHost: http://mlp.caraml.svc.local:8080
+FeatureToggleConfig:
+  MonitoringConfig:
+    MonitoringEnabled: true
+    MonitoringBaseURL: https://test.io/merlin-overview-dashboard
+    MonitoringJobBaseURL: https://test.io/batch-predictions-dashboard
+  AlertConfig:
+    AlertEnabled: true
+    GitlabConfig:
+      BaseURL: https://test.io/
+      DashboardRepository: dashboards/merlin
+      DashboardBranch: master
+      AlertRepository: alerts/merlin
+      AlertBranch: master
+    WardenConfig:
+      APIHost: https://test.io/
+  ModelDeletionConfig:
+    Enabled: false
+ReactAppConfig:
+  DocURL:
+    - Label: Merlin User Guide
+      Href: https://guide.io
+    - Label: Merlin Examples
+      Href: https://examples.io
+  DockerRegistries: docker.io
+  Environment: dev
+  FeastCoreURL: https://feastcore.io
+  HomePage: /merlin
+  MerlinURL: https://test.io/api/merlin/v1
+  MlpURL: /api
+  OauthClientID: abc.apps.clientid.com
+  UPIDocumentation: https://github.com/caraml-dev/universal-prediction-interface/blob/main/docs/api_markdown/caraml/upi/v1/index.md
+MlflowConfig:
+  TrackingURL: https://mlflow.io
+  ArtifactServiceType: gcs
+PyFuncPublisherConfig:
+  Kafka:
+    Brokers: kafka:broker.destination:6668
+    Acks: 0
+    MaxMessageSizeBytes: "1048588"
+    LingerMS: 500
+    AdditionalConfig: '{}'
+  SamplingRatioRate: 0.01
+InferenceServiceDefaults:
+  UserContainerCPUDefaultLimit: 100
+  UserContainerCPULimitRequestFactor: 0
+  UserContainerMemoryLimitRequestFactor: 2
+  DefaultEnvVarsWithoutCPULimits:
+    - Name: foo
+      Value: bar

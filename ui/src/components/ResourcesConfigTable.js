@@ -21,6 +21,7 @@ import React from "react";
 export const ResourcesConfigTable = ({
   resourceRequest: {
     cpu_request,
+    cpu_limit,
     memory_request,
     min_replica,
     max_replica,
@@ -33,6 +34,12 @@ export const ResourcesConfigTable = ({
       title: "CPU Request",
       description: cpu_request,
     },
+    ...(cpu_limit !== undefined && cpu_limit !== "0" && cpu_limit !== "") ? [
+      {
+        title: "CPU Limit",
+        description: cpu_limit,
+      }
+    ] : [],
     {
       title: "Memory Request",
       description: memory_request,
