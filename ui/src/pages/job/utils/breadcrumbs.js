@@ -14,7 +14,7 @@ export function generateBreadcrumbs(
     });
   }
 
-  if (modelId && model.name) {
+  if (modelId && model && model.name) {
     breadcrumbs.push({
       text: model.name,
       href: `/merlin/projects/${projectId}/models/${modelId}`,

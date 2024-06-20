@@ -44,12 +44,12 @@ export const JobFormSink = () => {
   const [isValidTable, setValidTable] = useState(
     job.config.job_config.bigquerySink.table
       ? validateBigqueryTable(job.config.job_config.bigquerySink.table)
-      : true,
+      : true
   );
   const [isValidColumn, setValidColumn] = useState(
     job.config.job_config.bigquerySink.resultColumn
       ? validateBigqueryColumn(job.config.job_config.bigquerySink.resultColumn)
-      : true,
+      : true
   );
 
   const sinkTypeOptions = [
@@ -57,12 +57,6 @@ export const JobFormSink = () => {
       value: "bigquery",
       inputDisplay: "Google BigQuery",
       dropdownDisplay: <strong>Google BigQuery</strong>,
-    },
-    {
-      value: "gcs",
-      inputDisplay: "Google Cloud Storage",
-      dropdownDisplay: <strong>Google Cloud Storage (coming soon)</strong>,
-      disabled: true,
     },
   ];
 
@@ -385,7 +379,7 @@ export const JobFormSink = () => {
                     !isNaN(sanitizedValue) &&
                       setBigquerySinkOptions(
                         "partitionExpirationMs",
-                        sanitizedValue,
+                        sanitizedValue
                       );
                   }}
                   aria-label="Data Sink Partition Expiration"
@@ -416,7 +410,7 @@ export const JobFormSink = () => {
                   onChange={(e) =>
                     setBigquerySinkOptions(
                       "allowFieldAddition",
-                      e.target.checked,
+                      e.target.checked
                     )
                   }
                 />
@@ -442,7 +436,7 @@ export const JobFormSink = () => {
                   onChange={(e) =>
                     setBigquerySinkOptions(
                       "allowFieldRelaxation",
-                      e.target.checked,
+                      e.target.checked
                     )
                   }
                 />

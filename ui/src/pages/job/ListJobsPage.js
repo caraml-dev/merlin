@@ -61,7 +61,6 @@ const ListJobPage = () => {
       if (p.includes("status:")) {
         setSearchStatus(p.split("status:")[1]);
       } else if (p !== "") {
-        console.log("search text", p);
         setSearchText(p);
       }
     });
@@ -70,18 +69,18 @@ const ListJobPage = () => {
   const [{ data, isLoaded, error }, fetchJobs] = useMerlinApi(
     `/projects/${projectId}/jobs-by-page?model_id=${modelId}&page=${page.index + 1}&page_size=${page.size}&search=${searchText}&status=${searchStatus}`,
     { mock: mocks.jobList },
-    [],
+    []
   );
 
   const [{ data: model }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
-    [],
+    []
   );
 
   useEffect(() => {
     replaceBreadcrumbs(
-      generateBreadcrumbs(projectId, modelId, model, null, null),
+      generateBreadcrumbs(projectId, modelId, model, null, null)
     );
   }, [projectId, modelId, model]);
 

@@ -45,7 +45,7 @@ export const JobFormSource = () => {
   const [isValidTable, setValidTable] = useState(
     job.config.job_config.bigquerySource.table
       ? validateBigqueryTable(job.config.job_config.bigquerySource.table)
-      : true,
+      : true
   );
 
   const sourceTypeOptions = [
@@ -53,12 +53,6 @@ export const JobFormSource = () => {
       value: "bigquery",
       inputDisplay: "Google BigQuery",
       dropdownDisplay: <strong>Google BigQuery</strong>,
-    },
-    {
-      value: "gcs",
-      inputDisplay: "Google Cloud Storage",
-      dropdownDisplay: <strong>Google Cloud Storage (coming soon)</strong>,
-      disabled: true,
     },
   ];
 
@@ -241,7 +235,7 @@ export const JobFormSource = () => {
                     !isNaN(sanitizedValue) &&
                       setBigquerySourceOptions(
                         "maxParallelism",
-                        sanitizedValue,
+                        sanitizedValue
                       );
                   }}
                   aria-label="Data Source Max Parallelism"
@@ -292,7 +286,7 @@ export const JobFormSource = () => {
                   onChange={(e) =>
                     setBigquerySourceOptions(
                       "optimizedEmptyProjection",
-                      e.target.checked,
+                      e.target.checked
                     )
                   }
                 />
@@ -322,7 +316,7 @@ export const JobFormSource = () => {
                       onChange={(e) =>
                         setBigquerySourceOptions(
                           "viewMaterializationProject",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       aria-label="Data Source View Materalization Project ID"
@@ -346,7 +340,7 @@ export const JobFormSource = () => {
                       onChange={(e) =>
                         setBigquerySourceOptions(
                           "viewMaterializationDataset",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       aria-label="Data Source View Materalization Dataset"

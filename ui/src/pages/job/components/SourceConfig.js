@@ -1,12 +1,9 @@
-import { EuiCodeBlock, EuiDescriptionList, EuiFieldSearch } from "@elastic/eui";
-import React, { Fragment, useState } from "react";
+import { EuiCodeBlock, EuiDescriptionList } from "@elastic/eui";
+import React, { Fragment } from "react";
 import { ConfigSectionPanelTitle } from "../../../components/section";
 import { getBigQueryDashboardUrl } from "../utils/bigquery";
-import { SourceFeatures } from "./SourceFeatures";
 
 const BQSourceConfig = ({ job }) => {
-  const [searchFeature, setSearchFeature] = useState("");
-
   const items = [
     { title: "Source Type", description: "BigQuery" },
     {
@@ -14,7 +11,7 @@ const BQSourceConfig = ({ job }) => {
       description: (
         <a
           href={getBigQueryDashboardUrl(
-            job.config.job_config.bigquerySource.table,
+            job.config.job_config.bigquerySource.table
           )}
           target="_blank"
           rel="noopener noreferrer"
@@ -24,28 +21,33 @@ const BQSourceConfig = ({ job }) => {
       ),
     },
     {
+      title: "Features",
+      description: (
+        <div className="eui-yScrollWithShadows" style={{ maxHeight: 310 }}>
+          {job.config.job_config.bigquerySource.features &&
+            job.config.job_config.bigquerySource.features
+              .sort((a, b) => (a > b ? 1 : -1))
+              .map((feature) => (
+                <>
+                  {feature}
+                  <br />
+                </>
+              ))}
+        </div>
+      ),
+    },
+    {
       title: "Options",
       description: job.config.job_config.bigquerySource.options ? (
         <EuiCodeBlock paddingSize="s">
           {JSON.stringify(
             job.config.job_config.bigquerySource.options,
             undefined,
-            2,
+            2
           )}
         </EuiCodeBlock>
       ) : (
         "-"
-      ),
-    },
-    {
-      title: "Features",
-      description: (
-        <EuiFieldSearch
-          compressed
-          isClearable={false}
-          onChange={(e) => setSearchFeature(e.target.value)}
-          placeholder="Search feature name"
-        />
       ),
     },
   ];
@@ -60,17 +62,11 @@ const BQSourceConfig = ({ job }) => {
         type="responsiveColumn"
         listItems={items}
       />
-
-      <SourceFeatures
-        features={job.config.job_config.bigquerySource.features}
-        searchFeature={searchFeature}
-      />
     </Fragment>
   );
 };
 
 const SourceConfig = ({ job }) => {
-  // TODO: when GCS is introduced we need to make condition to return the correct component
   return <BQSourceConfig job={job} />;
 };
 

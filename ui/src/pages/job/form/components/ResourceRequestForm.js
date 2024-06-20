@@ -41,49 +41,49 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
     `/environments`,
     { mock: mocks.environmentList },
     [],
-    true,
+    true
   );
 
   useEffect(
     () => {
       if (environments) {
         const defaultEnv = environments.find(
-          (e) => e.is_prediction_job_enabled && e.is_default_prediction_job,
+          (e) => e.is_prediction_job_enabled && e.is_default_prediction_job
         );
         if (Object.keys(resourceRequest).length === 0 && defaultEnv) {
           setDefaultResource(
-            defaultEnv.default_prediction_job_resource_request,
+            defaultEnv.default_prediction_job_resource_request
           );
 
           onChange(
             "driver_cpu_request",
             defaultEnv.default_prediction_job_resource_request
-              .driver_cpu_request,
+              .driver_cpu_request
           );
           onChange(
             "driver_memory_request",
             defaultEnv.default_prediction_job_resource_request
-              .driver_memory_request,
+              .driver_memory_request
           );
           onChange(
             "executor_cpu_request",
             defaultEnv.default_prediction_job_resource_request
-              .executor_cpu_request,
+              .executor_cpu_request
           );
           onChange(
             "executor_memory_request",
             defaultEnv.default_prediction_job_resource_request
-              .executor_memory_request,
+              .executor_memory_request
           );
           onChange(
             "executor_replica",
-            defaultEnv.default_prediction_job_resource_request.executor_replica,
+            defaultEnv.default_prediction_job_resource_request.executor_replica
           );
         }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [resourceRequest, environments],
+    [resourceRequest, environments]
   );
 
   return (
@@ -92,7 +92,7 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
         <EuiFlexItem>
           <EuiFormRow
             label="Driver CPU Request"
-            helpText="Number of cores to use for the driver process."
+            helpText="Number of cores for the driver process."
           >
             <EuiFieldText
               value={
@@ -109,7 +109,7 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
         <EuiFlexItem>
           <EuiFormRow
             label="Driver Memory Request"
-            helpText="Amount of memory to use for the driver process."
+            helpText="Amount of memory for the driver process."
           >
             <EuiFieldText
               value={
@@ -132,7 +132,7 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
         <EuiFlexItem>
           <EuiFormRow
             label="Executor CPU Request"
-            helpText="The number of cores to use on each executor."
+            helpText="Number of cores for each executor process."
           >
             <EuiFieldText
               value={
@@ -149,7 +149,7 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
         <EuiFlexItem>
           <EuiFormRow
             label="Executor Memory Request"
-            helpText="Amount of memory to use per executor process."
+            helpText="Amount of memory for each executor process."
           >
             <EuiFieldText
               value={
@@ -172,7 +172,7 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
         <EuiFlexItem>
           <EuiFormRow
             label="Executor Replica"
-            helpText="The number of executor replica."
+            helpText="Number of executor replica."
           >
             <EuiFieldNumber
               value={

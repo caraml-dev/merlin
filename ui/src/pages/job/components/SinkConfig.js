@@ -31,7 +31,7 @@ const BQSinkConfig = ({ job }) => {
       description: (
         <a
           href={getBigQueryDashboardUrl(
-            job.config.job_config.bigquerySink.table,
+            job.config.job_config.bigquerySink.table
           )}
           target="_blank"
           rel="noopener noreferrer"
@@ -63,7 +63,7 @@ const BQSinkConfig = ({ job }) => {
           {JSON.stringify(
             job.config.job_config.bigquerySink.options,
             undefined,
-            2,
+            2
           )}
         </EuiCodeBlock>
       ) : (
@@ -87,7 +87,6 @@ const BQSinkConfig = ({ job }) => {
 };
 
 const SinkConfig = ({ job }) => {
-  // TODO: when GCS is introduced we need to make condition to return the correct component
   return <BQSinkConfig job={job} />;
 };
 

@@ -1,3 +1,5 @@
+import { EuiHealth, EuiText } from "@elastic/eui";
+
 export const jobStatuses = [
   {
     name: "completed",
@@ -28,3 +30,13 @@ export const jobStatuses = [
     color: "danger",
   },
 ];
+
+export const JobStatusHealth = ({ status, size }) => {
+  const jobStatus = jobStatuses.find((js) => js.name === status);
+
+  return (
+    <EuiHealth color={jobStatus.color}>
+      <EuiText size={size || "s"}>{status}</EuiText>
+    </EuiHealth>
+  );
+};

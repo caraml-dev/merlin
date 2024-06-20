@@ -15,51 +15,54 @@ const JobConfig = ({ job }) => {
     <EuiFlexGroup direction="column" gutterSize="l">
       <EuiFlexItem>
         <ConfigSection title="Data Configuration">
-          <ConfigSectionPanel>
-            <EuiFlexGroup gutterSize="xl">
-              <EuiFlexItem>
+          <EuiFlexGroup gutterSize="xl">
+            <EuiFlexItem>
+              <ConfigSectionPanel>
                 <SourceConfig job={job} />
-              </EuiFlexItem>
-
-              <EuiFlexItem>
+              </ConfigSectionPanel>
+            </EuiFlexItem>
+            <EuiFlexItem>
+              <ConfigSectionPanel>
                 <SinkConfig job={job} />
-              </EuiFlexItem>
-            </EuiFlexGroup>
-          </ConfigSectionPanel>
+              </ConfigSectionPanel>
+            </EuiFlexItem>
+          </EuiFlexGroup>
         </ConfigSection>
       </EuiFlexItem>
 
       <EuiFlexItem>
         <ConfigSection title="Runtime Configuration">
-          <ConfigSectionPanel>
-            <EuiFlexGroup gutterSize="xl">
-              <EuiFlexItem>
+          <EuiFlexGroup gutterSize="xl">
+            <EuiFlexItem>
+              <ConfigSectionPanel>
                 <ConfigSectionPanelTitle title="Environment Variables" />
                 <EnvVarsConfigTable
                   variables={job.config.env_vars ? job.config.env_vars : []}
                 />
-              </EuiFlexItem>
+              </ConfigSectionPanel>
+            </EuiFlexItem>
 
-              <EuiFlexItem>
+            <EuiFlexItem>
+              <ConfigSectionPanel>
                 <ConfigSectionPanelTitle title="Resource Requests" />
                 <ResourcesConfigTable
                   resourceRequest={job.config.resource_request}
                 />
-              </EuiFlexItem>
-            </EuiFlexGroup>
-          </ConfigSectionPanel>
+              </ConfigSectionPanel>
+            </EuiFlexItem>
+          </EuiFlexGroup>
         </ConfigSection>
       </EuiFlexItem>
 
       <EuiFlexItem>
         <ConfigSection title="Other Configuration">
-          <ConfigSectionPanel>
-            <EuiFlexGroup gutterSize="xl">
-              <EuiFlexItem>
+          <EuiFlexGroup gutterSize="xl">
+            <EuiFlexItem>
+              <ConfigSectionPanel>
                 <OtherConfig job={job} />
-              </EuiFlexItem>
-            </EuiFlexGroup>
-          </ConfigSectionPanel>
+              </ConfigSectionPanel>
+            </EuiFlexItem>
+          </EuiFlexGroup>
         </ConfigSection>
       </EuiFlexItem>
     </EuiFlexGroup>

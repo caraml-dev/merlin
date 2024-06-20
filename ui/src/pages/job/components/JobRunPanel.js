@@ -1,44 +1,15 @@
 import { DateFromNow, HorizontalDescriptionList } from "@caraml-dev/ui-lib";
-import { EuiHealth, EuiText } from "@elastic/eui";
 import React from "react";
 import { Link } from "react-router-dom";
 import { ConfigSection, ConfigSectionPanel } from "../../../components/section";
 import { JobActions } from "./JobActions";
-
-const JobStatus = ({ status, size }) => {
-  const healthColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "gray";
-      case "running":
-        return "#fea27f";
-      case "terminating":
-        return "default";
-      case "terminated":
-        return "default";
-      case "completed":
-        return "success";
-      case "failed":
-        return "danger";
-      case "failed_submission":
-        return "danger";
-      default:
-        return "subdued";
-    }
-  };
-
-  return (
-    <EuiHealth color={healthColor(status)}>
-      <EuiText size={size || "s"}>{status}</EuiText>
-    </EuiHealth>
-  );
-};
+import { JobStatusHealth } from "./JobStatus";
 
 export const JobRunPanel = ({ project, model, version, job }) => {
   const items = [
     {
       title: "Job Status",
-      description: <JobStatus status={job.status} />,
+      description: <JobStatusHealth status={job.status} />,
     },
     {
       title: "Job Error Message",
