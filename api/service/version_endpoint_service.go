@@ -302,7 +302,7 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 	}
 
 	containers := make([]*models.Container, 0)
-	if model.IsPyFuncModelService() {
+	if model.Type == models.ModelTypePyFunc {
 		imgBuilderContainers, err := k.imageBuilder.GetContainers(ctx, model.Project, model, version)
 		if err != nil {
 			return nil, err
