@@ -16,12 +16,9 @@ import warnings
 from sys import version_info
 from typing import Any, Dict, List, Optional
 
+import client
 import urllib3
 from caraml_auth.id_token_credentials import get_default_id_token_credentials
-from google.auth.transport.requests import Request
-from google.auth.transport.urllib3 import AuthorizedHttp
-
-import client
 from client import (
     ApiClient,
     Configuration,
@@ -33,6 +30,8 @@ from client import (
     StandardTransformerSimulationRequest,
     VersionApi,
 )
+from google.auth.transport.requests import Request
+from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
@@ -61,7 +60,7 @@ class MerlinClient:
             # See: https://github.com/googleapis/google-auth-library-python/issues/1211
             credentials.refresh(Request())
             authorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
-            self._api_client.rest_client.pool_manager = authorized_http
+            self._api_client.rest_client.pool_manager = authorized_http  # type: ignore
 
         python_version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"  # capture user's python version
         self._api_client.user_agent = f"merlin-sdk/{VERSION} python/{python_version}"

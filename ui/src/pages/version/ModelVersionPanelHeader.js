@@ -14,32 +14,32 @@
  * limitations under the License.
  */
 
-import React from "react";
-import PropTypes from "prop-types";
 import {
+  EuiBadge,
   EuiDescriptionList,
   EuiFlexGroup,
   EuiFlexItem,
   EuiLink,
-  EuiBadge
 } from "@elastic/eui";
-import { ConfigSection, ConfigSectionPanel } from "../../components/section";
-import { CopyableUrl } from "../../components/CopyableUrl";
+import PropTypes from "prop-types";
+import React from "react";
 import EllipsisText from "react-ellipsis-text";
+import { CopyableUrl } from "../../components/CopyableUrl";
+import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 
 export const ModelVersionPanelHeader = ({ model, version }) => {
   const items = [
     {
       title: "Model Name",
-      description: model.name
+      description: <strong>{model.name}</strong>,
     },
     {
       title: "Model Type",
-      description: model.type
+      description: <strong>{model.type}</strong>,
     },
     {
       title: "Model Version",
-      description: version.id
+      description: <strong>{version.id}</strong>,
     },
     {
       title: "MLflow Run",
@@ -47,11 +47,11 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
         <EuiLink href={version.mlflow_url} target="_blank">
           {version.mlflow_url}
         </EuiLink>
-      )
+      ),
     },
     {
       title: "Artifact URI",
-      description: <CopyableUrl text={version.artifact_uri} />
+      description: <CopyableUrl text={version.artifact_uri} />,
     },
     {
       title: "Labels",
@@ -62,8 +62,8 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
               <EllipsisText text={val} length={16} />
             </EuiBadge>
           ))
-        : "-"
-    }
+        : "-",
+    },
   ];
 
   return (
@@ -73,11 +73,9 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
           <EuiFlexItem>
             <EuiDescriptionList
               compressed
-              textStyle="reverse"
+              columnWidths={[1, 4]}
               type="responsiveColumn"
               listItems={items}
-              titleProps={{ style: { width: "20%" } }}
-              descriptionProps={{ style: { width: "80%" } }}
             />
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -88,5 +86,5 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
 
 ModelVersionPanelHeader.propTypes = {
   model: PropTypes.object.isRequired,
-  version: PropTypes.object.isRequired
+  version: PropTypes.object.isRequired,
 };

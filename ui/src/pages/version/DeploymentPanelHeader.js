@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import React from "react";
-import PropTypes from "prop-types";
-import { EuiText } from "@elastic/eui";
 import { DateFromNow } from "@caraml-dev/ui-lib";
-import { ConfigSection, ConfigSectionPanel } from "../../components/section";
+import { EuiText } from "@elastic/eui";
+import PropTypes from "prop-types";
+import React from "react";
 import { CopyableUrl } from "../../components/CopyableUrl";
 import { DeploymentStatus } from "../../components/DeploymentStatus";
 import { HorizontalDescriptionList } from "../../components/HorizontalDescriptionList";
+import { ConfigSection, ConfigSectionPanel } from "../../components/section";
+import { versionEndpointUrl } from "../../utils/versionEndpointUrl";
 import { DeploymentActions } from "./DeploymentActions";
 import { EnvironmentDropdown } from "./EnvironmentDropdown";
-import { versionEndpointUrl } from "../../utils/versionEndpointUrl";
 
 export const DeploymentPanelHeader = ({
   model,

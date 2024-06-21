@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-import React from "react";
-import PropTypes from "prop-types";
 import { EuiCopy, EuiIcon, EuiLink, EuiText } from "@elastic/eui";
+import PropTypes from "prop-types";
+import React from "react";
 
 export const CopyableUrl = ({ text, iconSize }) => {
   return text ? (
     <EuiCopy textToCopy={text} beforeMessage="Click to copy URL to clipboard">
-      {copy => (
+      {(copy) => (
         <EuiLink
-          onClick={e => {
+          onClick={(e) => {
             e.stopPropagation();
             copy();
           }}
-          color="text">
+          color="text"
+        >
           <EuiText size="s">
             <EuiIcon
               type={"copyClipboard"}
@@ -46,5 +47,5 @@ export const CopyableUrl = ({ text, iconSize }) => {
 
 CopyableUrl.propTypes = {
   text: PropTypes.string.isRequired,
-  iconSize: PropTypes.oneOf(["xs", "s", "m", "l", "xl"])
+  iconSize: PropTypes.oneOf(["xs", "s", "m", "l", "xl"]),
 };

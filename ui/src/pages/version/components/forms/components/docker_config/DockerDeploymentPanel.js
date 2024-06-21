@@ -1,29 +1,27 @@
-import React, { useContext } from "react";
+import {
+  FormLabelWithToolTip,
+  SelectDockerImageComboBox,
+  useOnChangeHandler,
+} from "@caraml-dev/ui-lib";
 import {
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
   EuiForm,
   EuiFormRow,
-  EuiSpacer
+  EuiSpacer,
 } from "@elastic/eui";
-import {
-  FormLabelWithToolTip,
-  SelectDockerImageComboBox,
-  useOnChangeHandler
-} from "@caraml-dev/ui-lib";
+import React, { useContext } from "react";
 import { appConfig } from "../../../../../../config";
 import DockerRegistriesContext from "../../../../../../providers/docker/context";
 import { Panel } from "../Panel";
-
-import "./DockerDeploymentPanel.scss";
 
 const imageOptions = [];
 
 export const DockerDeploymentPanel = ({
   values: { image, command, args },
   onChangeHandler,
-  errors = {}
+  errors = {},
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const registries = useContext(DockerRegistriesContext);
@@ -36,7 +34,8 @@ export const DockerDeploymentPanel = ({
           isInvalid={!!errors.image}
           error={errors.image}
           fullWidth
-          display="row">
+          display="row"
+        >
           <SelectDockerImageComboBox
             fullWidth
             value={image || `${appConfig.defaultDockerRegistry}/`}
@@ -61,11 +60,12 @@ export const DockerDeploymentPanel = ({
               }
               isInvalid={!!errors.command}
               error={errors.command}
-              fullWidth>
+              fullWidth
+            >
               <EuiFieldText
                 fullWidth
                 value={command || ""}
-                onChange={e => onChange("command")(e.target.value)}
+                onChange={(e) => onChange("command")(e.target.value)}
                 isInvalid={!!errors.command}
                 name="command"
               />
@@ -82,11 +82,12 @@ export const DockerDeploymentPanel = ({
               }
               isInvalid={!!errors.args}
               error={errors.args}
-              fullWidth>
+              fullWidth
+            >
               <EuiFieldText
                 fullWidth
                 value={args || ""}
-                onChange={e => onChange("args")(e.target.value)}
+                onChange={(e) => onChange("args")(e.target.value)}
                 isInvalid={!!errors.args}
                 name="args"
               />

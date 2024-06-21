@@ -1,18 +1,18 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-
-import config from "./config";
 import Home from "./Home";
-import Models from "./model/Models";
+import config from "./config";
 import { ModelDetails } from "./model/ModelDetails";
+import Models from "./model/Models";
 import Versions from "./version/Versions";
-import { CreateJobView } from "./job/CreateJobView";
-import JobDetails from "./job/JobDetails";
-import Jobs from "./job/Jobs";
 
 // The new UI architecture will have all UI pages inside of `pages` folder
 import {
+  CreateJobPage,
   DeployModelVersionView,
+  JobPage,
+  ListJobsPage,
+  RecreateJobPage,
   RedeployModelVersionView,
   TransformerTools,
   VersionDetails,
@@ -34,22 +34,61 @@ const AppRoutes = () => {
             <Route path=":modelId/*" element={<ModelDetails />} />
             {/* VERSIONS */}
             <Route path=":modelId/versions/*" element={<Versions />} />
-            <Route path=":modelId/versions/:versionId/*" element={<VersionDetails />} />
-            <Route path=":modelId/versions/:versionId/deploy" element={<DeployModelVersionView />} />
+            <Route
+              path=":modelId/versions/:versionId/*"
+              element={<VersionDetails />}
+            />
+            <Route
+              path=":modelId/versions/:versionId/deploy"
+              element={<DeployModelVersionView />}
+            />
             {/* VERSIONS ENDPOINTS */}
             <Route path=":modelId/versions/:versionId/endpoints">
-              <Route index={true} path=":endpointId/*" element={<VersionDetails />} />
-              <Route path=":endpointId/redeploy" element={<RedeployModelVersionView />} />
+              <Route
+                index={true}
+                path=":endpointId/*"
+                element={<VersionDetails />}
+              />
+              <Route
+                path=":endpointId/redeploy"
+                element={<RedeployModelVersionView />}
+              />
             </Route>
             {/* BATCH JOBS */}
-            <Route path=":modelId/versions/:versionId/jobs" element={<Jobs />} />
-            <Route path=":modelId/versions/:versionId/jobs/:jobId/*" element={<JobDetails />} />
-            <Route path=":modelId/create-job" element={<CreateJobView />} />
-            <Route path=":modelId/versions/:versionId/create-job" element={<CreateJobView />} />
+            <Route
+              path=":modelId/versions/:versionId/jobs"
+              element={<ListJobsPage />}
+            />
+            <Route
+              path=":modelId/versions/:versionId/jobs/:jobId/*"
+              element={<JobPage />}
+            />
+            <Route
+              path=":modelId/versions/:versionId/jobs/:jobId/recreate"
+              element={<RecreateJobPage />}
+            />
+            <Route path=":modelId/create-job" element={<CreateJobPage />} />
+            <Route
+              path=":modelId/versions/:versionId/create-job"
+              element={<CreateJobPage />}
+            />
+            <Route
+              path=":modelId/versions/:versionId/recreate"
+              element={<CreateJobPage />}
+            />
             {/* REDIRECTS */}
-            <Route path=":modelId" element={<Navigate to="versions" replace={true} />} />
-            <Route path=":modelId/versions/:versionId" element={<Navigate to="details" replace={true} />} />
-            <Route path=":modelId/versions/:versionId/endpoints/:endpointId" element={<Navigate to="details" replace={true} />} />
+            <Route
+              path=":modelId"
+              element={<Navigate to="versions" replace={true} />}
+            />
+            <Route
+              path=":modelId/versions/:versionId"
+              element={<Navigate to="details" replace={true} />}
+            />
+            <Route
+              path=":modelId/versions/:versionId/endpoints/:endpointId"
+              element={<Navigate to="details" replace={true} />}
+            />
           </Route>
         </Route>
       </Route>

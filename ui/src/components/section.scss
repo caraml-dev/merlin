@@ -26,6 +26,9 @@
 
 .euiPanel--configSection {
   .euiDescriptionList {
+    column-gap: 0px !important;
+    row-gap: 0px !important;
+
     > * {
       @include euiTextTruncate;
 
