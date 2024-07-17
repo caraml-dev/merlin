@@ -853,6 +853,35 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			}(),
 		},
 		{
+			name: "deployment not exist but secret is exist treated as no deployment",
+			data: workerData,
+			kubeClient: func() kubernetes.Interface {
+				clientSet := fake.NewSimpleClientset()
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
+				prependGetSecretReactor(t, secretAPI, secret, nil)
+
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
+				preprendGetDeploymentReactor(t, deploymentAPI, nil, nil)
+				return clientSet
+			}(),
+			expectedManifest: nil,
+		},
+		{
+			name: "deployment is exist but secret is not, treated as not deployment manifest",
+			data: workerData,
+			kubeClient: func() kubernetes.Interface {
+				clientSet := fake.NewSimpleClientset()
+				secretAPI := clientSet.CoreV1().Secrets(namespace).(*fakecorev1.FakeSecrets)
+				prependGetSecretReactor(t, secretAPI, nil, nil)
+
+				updatedDeployment := changeDeploymentStatus(depl, ready, workerData.Revision)
+				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
+				preprendGetDeploymentReactor(t, deploymentAPI, updatedDeployment, nil)
+				return clientSet
+			}(),
+			expectedManifest: nil,
+		},
+		{
 			name: "failed get manifest; error fetching secret",
 			data: workerData,
 			kubeClient: func() kubernetes.Interface {
