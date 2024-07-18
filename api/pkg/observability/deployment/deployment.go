@@ -102,8 +102,17 @@ func (c *deployer) GetDeployedManifest(ctx context.Context, data *models.WorkerD
 	if err != nil {
 		return nil, err
 	}
-	if depl == nil && secret == nil {
-		return nil, err
+
+	if depl == nil {
+		if secret != nil {
+			log.Warnf("deployment %s is not exist but secret name exist %s", deploymentName, secretName)
+		}
+		return nil, nil
+	}
+
+	if secret == nil {
+		log.Warnf("deployment %s exist without associated secret", deploymentName)
+		return nil, nil
 	}
 
 	isDeploymentRolledOut, err := deploymentRolledOut(depl, data.Revision, false)
