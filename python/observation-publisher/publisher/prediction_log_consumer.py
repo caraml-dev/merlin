@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from caraml.upi.v1.prediction_log_pb2 import PredictionLog
-from confluent_kafka import Consumer, KafkaException
+from confluent_kafka import Consumer, KafkaException, TopicPartition
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 from merlin.observability.inference import InferenceSchema, ObservationType
 from publisher.config import ObservationSource, ObservationSourceConfig
@@ -143,6 +143,38 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         self._batch_size = config.batch_size
         self._consumer.subscribe([config.topic])
         self._poll_timeout = config.poll_timeout_seconds
+
+    def _calculate_lag(consumer: Consumer, topic: str) -> Tuple[List[int], List[int]]:
+        cluster_metadata = consumer.list_topics(topic=topic)
+        topic_metadata = cluster_metadata.topics.get(topic)
+        partition_ids = list(topic_metadata.partitions.keys())
+
+        topic_partitions = [
+            TopicPartition(topic=topic, partition=partition_id)
+            for partition_id in partition_ids
+        ]
+
+        committed_offsets = consumer.committed(topic_partitions)
+        committed_offsets_per_partitions = {}
+
+        for topic_partition in committed_offsets:
+            key = f"{topic_partition.topic}_{topic_partition.partition}"
+            committed_offsets_per_partitions[key] = topic_partition.offset
+
+        diff = []
+        partitions = []
+        for topic_partition in topic_partitions:
+            _, high = consumer.get_watermark_offsets(topic_partition)
+            committed_offset_key = (
+                f"{topic_partition.topic}_{topic_partition.partition}"
+            )
+            commited_offset = committed_offsets_per_partitions.get(
+                committed_offset_key, 0
+            )
+            diff.append(high - commited_offset)
+            partitions.append(topic_partition.partition)
+
+        return diff, partitions
 
     def poll_new_logs(self) -> List[PredictionLog]:
         messages = self._consumer.consume(self._batch_size, timeout=self._poll_timeout)
