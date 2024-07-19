@@ -1,4 +1,5 @@
 import abc
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from threading import Thread
@@ -104,6 +105,9 @@ class PredictionLogConsumer(abc.ABC):
                 self.commit()
                 buffered_logs = []
                 buffer_start_time = datetime.now()
+        except Exception:
+            MetricWriter().increment_total_error_process_prediction_logs()
+            raise
         finally:
             self.close()
 
@@ -141,20 +145,35 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
 
         self._consumer = Consumer(consumer_config)
         self._batch_size = config.batch_size
+        self._topic = config.topic
         self._consumer.subscribe([config.topic])
         self._poll_timeout = config.poll_timeout_seconds
 
-    def _calculate_lag(consumer: Consumer, topic: str) -> Tuple[List[int], List[int]]:
-        cluster_metadata = consumer.list_topics(topic=topic)
-        topic_metadata = cluster_metadata.topics.get(topic)
+        background_job_thread = Thread(
+            target=self._emit_metrics, args=[self._consumer, config.topic]
+        )
+        background_job_thread.setDaemon(True)
+        background_job_thread.start()
+
+    def _emit_metrics(self):
+        lags, partitions = self._calculate_lag()
+        for lag, partition in zip(lags, partitions):
+            MetricWriter().update_kafka_lag(total_lag=lag, partition=partition)
+
+        # please reconfirm what is the acceptable interval
+        time.sleep(10)
+
+    def _calculate_lag(self) -> Tuple[List[int], List[int]]:
+        cluster_metadata = self._consumer.list_topics(topic=self.topic)
+        topic_metadata = cluster_metadata.topics.get(self.topic)
         partition_ids = list(topic_metadata.partitions.keys())
 
         topic_partitions = [
-            TopicPartition(topic=topic, partition=partition_id)
+            TopicPartition(topic=self._topic, partition=partition_id)
             for partition_id in partition_ids
         ]
 
-        committed_offsets = consumer.committed(topic_partitions)
+        committed_offsets = self._consumer.committed(topic_partitions)
         committed_offsets_per_partitions = {}
 
         for topic_partition in committed_offsets:
@@ -164,7 +183,7 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         diff = []
         partitions = []
         for topic_partition in topic_partitions:
-            _, high = consumer.get_watermark_offsets(topic_partition)
+            _, high = self._consumer.get_watermark_offsets(topic_partition)
             committed_offset_key = (
                 f"{topic_partition.topic}_{topic_partition.partition}"
             )

@@ -23,6 +23,16 @@ class MetricWriter(object):
                 "The total number of prediction logs processed by the publisher",
                 ["model_id", "model_version"],
             )
+            self.total_error_process_prediction_logs_counter = Counter(
+                "total_error_process_prediction_logs",
+                "The total number of prediction logs encounter error during procesing",
+                ["model_id", "model_version"],
+            )
+            self.kafka_consumer_lag_gauge = Gauge(
+                "kafka_consumer_lag",
+                "The number of unprocess message in kafka",
+                ["model_id", "model_version", "partition"],
+            )
             self._initialized = True
 
     def __new__(cls):
@@ -59,3 +69,25 @@ class MetricWriter(object):
         self.total_prediction_logs_processed_counter.labels(
             model_id=self.model_id, model_version=self.model_version
         ).inc(value)
+
+    def increment_total_error_process_prediction_logs(self):
+        """
+        Increments the total_error_process_prediction_logs counter by value.
+        :return:
+        """
+        self.total_error_process_prediction_logs_counter.labels(
+            model_id=self.model_id, model_version=self.model_version
+        ).inc()
+
+    def update_kafka_lag(self, total_lag: int, partition: int):
+        """
+        Update the kafka_consumer_lag gauge with the given value
+        :param total_lag:
+        :param partition:
+        :return:
+        """
+        self.kafka_consumer_lag_gauge.labels(
+            model_id=self.model_id,
+            model_version=self.model_version,
+            partition=partition,
+        ).set(total_lag)

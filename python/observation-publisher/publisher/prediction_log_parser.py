@@ -161,7 +161,7 @@ def list_value_as_numpy_list(
     """
     column_values: List[int | str | float | bool | None] = []
     for v in list_value.items():
-        assert isinstance(v, (int, str, float, bool, NoneType))
+        assert isinstance(v, (int, str, float, bool, NoneType)), f"type of value is {type(v)}"
         column_values.append(v)
 
     return [
