@@ -20,8 +20,6 @@ import { EuiDescriptionList, EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 
 export const HorizontalDescriptionList = ({
   listItems,
-  titleProps,
-  descriptionProps,
   ...props
 }) => (
   <EuiFlexGroup
@@ -31,8 +29,6 @@ export const HorizontalDescriptionList = ({
     {listItems.map((item, idx) => (
       <EuiFlexItem {...item.flexProps} key={idx}>
         <EuiDescriptionList
-          titleProps={titleProps}
-          descriptionProps={descriptionProps}
           listItems={[item]}
         />
       </EuiFlexItem>
@@ -42,6 +38,4 @@ export const HorizontalDescriptionList = ({
 
 HorizontalDescriptionList.propTypes = {
   listItems: PropTypes.array.isRequired,
-  titleProps: PropTypes.object,
-  descriptionProps: PropTypes.object
 };

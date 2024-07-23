@@ -46,8 +46,7 @@ export const ContainerConfigTable = ({ config: { image, command, args } }) => {
       textStyle="reverse"
       type="responsiveColumn"
       listItems={items}
-      titleProps={{ style: { width: "30%" } }}
-      descriptionProps={{ style: { width: "70%" } }}
+      columnWidths={[1, 4]}
     />
   );
 };
