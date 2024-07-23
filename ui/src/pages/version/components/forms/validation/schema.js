@@ -21,7 +21,7 @@ const resourceRequestSchema = (maxAllowedReplica) => yup.object().shape({
     .typeError("GPU value is required")
     .when("gpu_resource_type", {
       is: (v) => v !== undefined && v !== "None",
-      then: yup.string().required("GPU value is required"),
+      then: (_) => yup.string().required("GPU value is required"),
     }),
   min_replica: yup
     .number()
@@ -39,7 +39,7 @@ const resourceRequestSchema = (maxAllowedReplica) => yup.object().shape({
       // eslint-disable-next-line no-template-curly-in-string
       "Max Replicas value has exceeded allowed number of replicas: ${max}"
     )
-    .when("min_replica", (minReplica, schema) =>
+    .when("min_replica", ([minReplica], schema) =>
       minReplica === 0
         ? schema.positive("Max Replica should be positive")
         : schema
@@ -101,7 +101,7 @@ const feastFeaturesSchema = yup.object().shape({
 export const feastInputSchema = yup.object().shape({
   tableName: yup.string().when("isTableNameEditable", {
     is: true,
-    then: yup.string().required("Table name is required"),
+    then: (_) => yup.string().required("Table name is required"),
   }),
   project: yup.string().required("Project name is required"),
   source: yup.string().required("Source is required"),
@@ -142,7 +142,7 @@ const tablesInputSchema = yup.object().shape({
   }),
   columns: yup
     .array()
-    .when("baseTable.fromTable.tableName", (tableName, schema) => {
+    .when("baseTable.fromTable.tableName", ([tableName], schema) => {
       return tableName !== undefined ? yup.array(variableInputSchema) : schema;
     }),
 });
@@ -172,14 +172,14 @@ const tableTransformationStep = yup.object().shape({
     .of(yup.string())
     .when("operation", {
       is: (v) => v !== undefined && v === "dropColumns",
-      then: yup.array().required("List of columns to be deleted is required"),
+      then: (_) => yup.array().required("List of columns to be deleted is required"),
     }),
   selectColumns: yup
     .array()
     .of(yup.string())
     .when("operation", {
       is: (v) => v !== undefined && v === "selectColumns",
-      then: yup.array().required("List of columns to be selected is required"),
+      then: (_) => yup.array().required("List of columns to be selected is required"),
     }),
 });
 
@@ -208,7 +208,7 @@ const transformationPipelineSchema = yup.object().shape({
         .when("how", {
           is: (v) =>
             v !== undefined && v !== "" && v !== "CROSS" && v !== "CONCAT",
-          then: yup.array().required("On Columns is required"),
+          then: (_) => yup.array().required("On Columns is required"),
         }),
     }),
 });
