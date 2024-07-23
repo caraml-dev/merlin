@@ -2,6 +2,7 @@ import * as yup from "yup";
 
 const cpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)$|^(\d{2,5}m)$/,
   memRequestRegex = /^\d+(Ei?|Pi?|Ti?|Gi?|Mi?|Ki?)?$/,
+  gpuRequestRegex= /^\d+$/,
   envVariableNameRegex = /^[a-z0-9_]*$/i,
   dockerImageRegex =
     /^([a-z0-9]+(?:[._-][a-z0-9]+)*(?::\d{2,5})?\/)?([a-z0-9]+(?:[._-][a-z0-9]+)*\/)*([a-z0-9]+(?:[._-][a-z0-9]+)*)(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)?$/i;
@@ -19,9 +20,9 @@ const resourceRequestSchema = (maxAllowedReplica) => yup.object().shape({
   gpu_request: yup
     .string()
     .typeError("GPU value is required")
-    .when("gpu_resource_type", {
-      is: (v) => v !== undefined && v !== "None",
-      then: (_) => yup.string().required("GPU value is required"),
+    .when("gpu_name", {
+      is: (v) => v !== undefined,
+      then: (_) => yup.string().matches(gpuRequestRegex, { message:'Valid GPU value is required'}).required("GPU value is required"),
     }),
   min_replica: yup
     .number()
