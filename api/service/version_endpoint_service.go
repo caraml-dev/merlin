@@ -231,8 +231,8 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 
 	// override env vars
 	// Configure environment variables for Pyfunc model
-	if len(right.EnvVars) > 0 {
-		left.EnvVars = models.MergeEnvVars(left.EnvVars, right.EnvVars)
+	if right.EnvVars != nil {
+		left.EnvVars = right.EnvVars
 	}
 
 	// override protocol
