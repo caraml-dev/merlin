@@ -669,6 +669,12 @@ func TestDeployEndpoint(t *testing.T) {
 								CPURequest:    resource.MustParse("1"),
 								MemoryRequest: resource.MustParse("1Gi"),
 							},
+							EnvVars: models.EnvVars{
+								{
+									Name:  "TF_MODEL_NAME",
+									Value: "saved_model.pb",
+								},
+							},
 							Logger: &models.Logger{
 								Model: &models.LoggerConfig{
 									Enabled: true,
@@ -697,6 +703,12 @@ func TestDeployEndpoint(t *testing.T) {
 						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
+					EnvVars: models.EnvVars{
+						{
+							Name:  "NUM_OF_ITERATION",
+							Value: "1",
+						},
+					},
 					Logger: &models.Logger{
 						Model: &models.LoggerConfig{
 							Enabled: true,
@@ -722,6 +734,12 @@ func TestDeployEndpoint(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				EnvVars: models.EnvVars{
+					{
+						Name:  "NUM_OF_ITERATION",
+						Value: "1",
+					},
 				},
 				Logger: &models.Logger{
 					DestinationURL: loggerDestinationURL,
