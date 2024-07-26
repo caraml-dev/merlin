@@ -353,7 +353,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 }
 
 func TestController_DeployInferenceService(t *testing.T) {
-	defaultMaxUnavailablePDB := 20
+	minAvailablePercentage := 80
 	deployTimeout := 2 * tickDurationSecond * time.Second
 
 	model := &models.Model{
@@ -729,8 +729,8 @@ func TestController_DeployInferenceService(t *testing.T) {
 				DefaultModelResourceRequests:       &config.ResourceRequests{},
 				DefaultTransformerResourceRequests: &config.ResourceRequests{},
 				PodDisruptionBudget: config.PodDisruptionBudgetConfig{
-					Enabled:                  true,
-					MaxUnavailablePercentage: &defaultMaxUnavailablePDB,
+					Enabled:                true,
+					MinAvailablePercentage: &minAvailablePercentage,
 				},
 				StandardTransformer: config.StandardTransformerConfig{
 					ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",

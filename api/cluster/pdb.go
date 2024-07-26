@@ -24,6 +24,13 @@ type PodDisruptionBudget struct {
 	MinAvailablePercentage   *int
 }
 
+var (
+	pdbComponents = []string{
+		models.PredictorComponentType,
+		models.TransformerComponentType,
+	}
+)
+
 func NewPodDisruptionBudget(modelService *models.Service, componentType string, pdbConfig config.PodDisruptionBudgetConfig) *PodDisruptionBudget {
 	labels := modelService.Metadata.ToLabel()
 	labels["component"] = componentType
@@ -91,6 +98,7 @@ func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisrupti
 	} else if pdbConfig.MaxUnavailablePercentage != nil {
 		maxUnavailablePercent = float64(*pdbConfig.MaxUnavailablePercentage) / 100.0
 	} else {
+		// PDB config is not set properly, we can't apply it.
 		return pdbs
 	}
 
@@ -111,6 +119,35 @@ func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisrupti
 	}
 
 	return pdbs
+}
+
+func getUnusedPodDisruptionBudgets(modelService *models.Service, pdbs []*PodDisruptionBudget) []*PodDisruptionBudget {
+	unusedPdbs := []*PodDisruptionBudget{}
+
+	if len(pdbs) == len(pdbComponents) {
+		return unusedPdbs
+	}
+
+	defaultPDBSNames := []string{}
+	for _, componentType := range pdbComponents {
+		defaultPDBSNames = append(defaultPDBSNames, fmt.Sprintf("%s-%s-%s-%s", modelService.ModelName, modelService.ModelVersion, componentType, models.PDBComponentType))
+	}
+
+	newPDBSNames := make(map[string]bool)
+	for _, pdb := range pdbs {
+		newPDBSNames[pdb.Name] = true
+	}
+
+	for _, name := range defaultPDBSNames {
+		if !newPDBSNames[name] {
+			unusedPdbs = append(unusedPdbs, &PodDisruptionBudget{
+				Name:      name,
+				Namespace: modelService.Namespace,
+			})
+		}
+	}
+
+	return unusedPdbs
 }
 
 func (c *controller) deployPodDisruptionBudgets(ctx context.Context, pdbs []*PodDisruptionBudget) error {
