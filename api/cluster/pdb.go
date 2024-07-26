@@ -76,33 +76,36 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1.PodDisruptionBudget, er
 func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
 	pdbs := []*PodDisruptionBudget{}
 
-	// Only create PDB if: ceil(minReplica * minAvailablePercent) < minReplica
-	// If not, the replicas may be unable to be removed.
-	// Note that we only care about minReplica here because, for active replicas > minReplica,
-	// the condition will be satisfied if it was satisfied for the minReplica case.
+	// Only create PDB if: ceil(minReplica * minAvailablePercent) < minReplica OR
+	// maxUnavailablePercent > 0. If not, the replicas may be unable to be removed.
+	// Note that we only care about minReplica for minAvailablePercent because,
+	// for active replicas > minReplica, the condition will be satisfied if it was
+	// satisfied for the minReplica case.
 
-	var minAvailablePercent float64
+	// If there was no valid PDB to be created, check the existing PDB in current deployment
+	// and if there's any existing PDB, remove it.
+
+	var minAvailablePercent, maxUnavailablePercent float64
 	if pdbConfig.MinAvailablePercentage != nil {
 		minAvailablePercent = float64(*pdbConfig.MinAvailablePercentage) / 100.0
 	} else if pdbConfig.MaxUnavailablePercentage != nil {
-		minAvailablePercent = float64(100-*pdbConfig.MaxUnavailablePercentage) / 100.0
+		maxUnavailablePercent = float64(*pdbConfig.MaxUnavailablePercentage) / 100.0
 	} else {
-		// PDB config is not set properly, we can't apply it.
 		return pdbs
 	}
 
-	if modelService.ResourceRequest != nil &&
-		math.Ceil(float64(modelService.ResourceRequest.MinReplica)*
-			minAvailablePercent) < float64(modelService.ResourceRequest.MinReplica) {
+	if (modelService.ResourceRequest != nil) &&
+		(maxUnavailablePercent > 0 || (pdbConfig.MinAvailablePercentage != nil &&
+			math.Ceil(float64(modelService.ResourceRequest.MinReplica)*
+				minAvailablePercent) < float64(modelService.ResourceRequest.MinReplica))) {
 		predictorPdb := NewPodDisruptionBudget(modelService, models.PredictorComponentType, pdbConfig)
 		pdbs = append(pdbs, predictorPdb)
 	}
 
-	if modelService.Transformer != nil &&
-		modelService.Transformer.Enabled &&
-		modelService.Transformer.ResourceRequest != nil &&
-		math.Ceil(float64(modelService.Transformer.ResourceRequest.MinReplica)*
-			minAvailablePercent) < float64(modelService.Transformer.ResourceRequest.MinReplica) {
+	if (modelService.Transformer != nil && modelService.Transformer.Enabled && modelService.Transformer.ResourceRequest != nil) &&
+		(maxUnavailablePercent > 0 || (pdbConfig.MinAvailablePercentage != nil &&
+			math.Ceil(float64(modelService.Transformer.ResourceRequest.MinReplica)*
+				minAvailablePercent) < float64(modelService.Transformer.ResourceRequest.MinReplica))) {
 		transformerPdb := NewPodDisruptionBudget(modelService, models.TransformerComponentType, pdbConfig)
 		pdbs = append(pdbs, transformerPdb)
 	}

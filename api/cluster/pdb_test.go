@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -128,7 +129,7 @@ func Test_generatePDBSpecs(t *testing.T) {
 	err := models.InitKubernetesLabeller("gojek.com/", "dev")
 	assert.Nil(t, err)
 
-	twenty, eighty := 20, 80
+	ten, twenty := 10, 20
 
 	defaultMetadata := models.Metadata{
 		App:       "mymodel",
@@ -292,19 +293,19 @@ func Test_generatePDBSpecs(t *testing.T) {
 				ModelVersion: "1",
 				Namespace:    "mynamespace",
 				ResourceRequest: &models.ResourceRequest{
-					MinReplica: 5,
+					MinReplica: 4,
 				},
 				Transformer: &models.Transformer{
 					Enabled: true,
 					ResourceRequest: &models.ResourceRequest{
-						MinReplica: 3,
+						MinReplica: 2,
 					},
 				},
 				Metadata: defaultMetadata,
 			},
 			pdbConfig: config.PodDisruptionBudgetConfig{
 				Enabled:                  true,
-				MaxUnavailablePercentage: &eighty,
+				MaxUnavailablePercentage: &ten,
 			},
 			expected: []*PodDisruptionBudget{
 				{
@@ -320,7 +321,7 @@ func Test_generatePDBSpecs(t *testing.T) {
 						"component":                          "predictor",
 						"serving.kserve.io/inferenceservice": "mymodel-1",
 					},
-					MaxUnavailablePercentage: &eighty,
+					MaxUnavailablePercentage: &ten,
 				},
 				{
 					Name:      "mymodel-1-transformer-pdb",
@@ -335,7 +336,7 @@ func Test_generatePDBSpecs(t *testing.T) {
 						"component":                          "transformer",
 						"serving.kserve.io/inferenceservice": "mymodel-1",
 					},
-					MaxUnavailablePercentage: &eighty,
+					MaxUnavailablePercentage: &ten,
 				},
 			},
 		},
@@ -344,6 +345,74 @@ func Test_generatePDBSpecs(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			pdbs := generatePDBSpecs(tt.modelService, tt.pdbConfig)
+			assert.Equal(t, tt.expected, pdbs)
+		})
+	}
+}
+
+func Test_getStalePodDisruptionBudgets(t *testing.T) {
+	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	assert.Nil(t, err)
+
+	defaultModel := &models.Service{
+		ModelName:    "mymodel",
+		ModelVersion: "version-1",
+		Namespace:    "mynamespace",
+	}
+
+	tests := map[string]struct {
+		modelService *models.Service
+		newPdbs      []*PodDisruptionBudget
+		expected     []*PodDisruptionBudget
+	}{
+		"none to delete": {
+			modelService: defaultModel,
+			newPdbs: []*PodDisruptionBudget{
+				{
+					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.PredictorComponentType, models.PDBComponentType),
+					Namespace: defaultModel.Namespace,
+				},
+				{
+					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.TransformerComponentType, models.PDBComponentType),
+					Namespace: defaultModel.Namespace,
+				},
+			},
+			expected: []*PodDisruptionBudget{},
+		},
+		"delete tranformer": {
+			modelService: defaultModel,
+			newPdbs: []*PodDisruptionBudget{
+				{
+					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.PredictorComponentType, models.PDBComponentType),
+					Namespace: defaultModel.Namespace,
+				},
+			},
+			expected: []*PodDisruptionBudget{
+				{
+					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.TransformerComponentType, models.PDBComponentType),
+					Namespace: defaultModel.Namespace,
+				},
+			},
+		},
+		"delete predictor & transformer": {
+			modelService: defaultModel,
+			newPdbs:      []*PodDisruptionBudget{},
+			expected: []*PodDisruptionBudget{
+				&PodDisruptionBudget{
+					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.PredictorComponentType, models.PDBComponentType),
+					Namespace: defaultModel.Namespace,
+				},
+				&PodDisruptionBudget{
+					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.TransformerComponentType, models.PDBComponentType),
+					Namespace: defaultModel.Namespace,
+				},
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			pdbs := getStalePodDisruptionBudgets(tt.modelService, tt.newPdbs)
 			assert.Equal(t, tt.expected, pdbs)
 		})
 	}
