@@ -105,9 +105,6 @@ class PredictionLogConsumer(abc.ABC):
                 self.commit()
                 buffered_logs = []
                 buffer_start_time = datetime.now()
-        except Exception:
-            MetricWriter().increment_total_error_process_prediction_logs()
-            raise
         finally:
             self.close()
 
@@ -149,9 +146,7 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         self._consumer.subscribe([config.topic])
         self._poll_timeout = config.poll_timeout_seconds
 
-        background_job_thread = Thread(
-            target=self._emit_metrics, args=[self._consumer, config.topic]
-        )
+        background_job_thread = Thread(target=self._emit_metrics)
         background_job_thread.setDaemon(True)
         background_job_thread.start()
 
@@ -161,7 +156,7 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
             MetricWriter().update_kafka_lag(total_lag=lag, partition=partition)
 
         # please reconfirm what is the acceptable interval
-        time.sleep(10)
+        time.sleep(60)
 
     def _calculate_lag(self) -> Tuple[List[int], List[int]]:
         cluster_metadata = self._consumer.list_topics(topic=self.topic)

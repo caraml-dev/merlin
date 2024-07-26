@@ -16,22 +16,18 @@ class MetricWriter(object):
             self.last_processed_timestamp_gauge = Gauge(
                 "last_processed_timestamp",
                 "The timestamp of the last prediction log processed by the publisher",
-                ["model_id", "model_version"],
+                ["model_id", "model_version", "merlin_project"],
             )
             self.total_prediction_logs_processed_counter = Counter(
                 "total_prediction_logs_processed",
                 "The total number of prediction logs processed by the publisher",
-                ["model_id", "model_version"],
+                ["model_id", "model_version", "merlin_project"],
             )
-            self.total_error_process_prediction_logs_counter = Counter(
-                "total_error_process_prediction_logs",
-                "The total number of prediction logs encounter error during procesing",
-                ["model_id", "model_version"],
-            )
+
             self.kafka_consumer_lag_gauge = Gauge(
                 "kafka_consumer_lag",
                 "The number of unprocess message in kafka",
-                ["model_id", "model_version", "partition"],
+                ["model_id", "model_version", "merlin_project", "partition"],
             )
             self._initialized = True
 
@@ -41,7 +37,7 @@ class MetricWriter(object):
             cls._instance._initialized = False
         return cls._instance
 
-    def setup(self, model_id: str, model_version: str):
+    def setup(self, model_id: str, model_version: str, merlin_project: str):
         """
         Needs to be run before sending metrics, so that the singleton instance has the correct properties value.
         :param model_id:
@@ -50,6 +46,7 @@ class MetricWriter(object):
         """
         self.model_id = model_id
         self.model_version = model_version
+        self.merlin_project = merlin_project
 
     def update_last_processed_timestamp(self, last_processed_timestamp: Timestamp):
         """
@@ -58,7 +55,9 @@ class MetricWriter(object):
         :return:
         """
         self.last_processed_timestamp_gauge.labels(
-            model_id=self.model_id, model_version=self.model_version
+            model_id=self.model_id,
+            model_version=self.model_version,
+            merlin_project=self.merlin_project,
         ).set(last_processed_timestamp.timestamp())
 
     def increment_total_prediction_logs_processed(self, value: int):
@@ -67,17 +66,10 @@ class MetricWriter(object):
         :return:
         """
         self.total_prediction_logs_processed_counter.labels(
-            model_id=self.model_id, model_version=self.model_version
+            model_id=self.model_id,
+            model_version=self.model_version,
+            merlin_project=self.merlin_project,
         ).inc(value)
-
-    def increment_total_error_process_prediction_logs(self):
-        """
-        Increments the total_error_process_prediction_logs counter by value.
-        :return:
-        """
-        self.total_error_process_prediction_logs_counter.labels(
-            model_id=self.model_id, model_version=self.model_version
-        ).inc()
 
     def update_kafka_lag(self, total_lag: int, partition: int):
         """
@@ -90,4 +82,5 @@ class MetricWriter(object):
             model_id=self.model_id,
             model_version=self.model_version,
             partition=partition,
+            merlin_project=self.merlin_project,
         ).set(total_lag)

@@ -104,6 +104,13 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 									ReadOnly:  true,
 								},
 							},
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "prom-metric",
+									ContainerPort: 8000,
+									Protocol:      corev1.ProtocolTCP,
+								},
+							},
 						},
 					},
 					Volumes: []corev1.Volume{
