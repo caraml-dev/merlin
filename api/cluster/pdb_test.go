@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -293,12 +292,12 @@ func Test_generatePDBSpecs(t *testing.T) {
 				ModelVersion: "1",
 				Namespace:    "mynamespace",
 				ResourceRequest: &models.ResourceRequest{
-					MinReplica: 4,
+					MinReplica: 5,
 				},
 				Transformer: &models.Transformer{
 					Enabled: true,
 					ResourceRequest: &models.ResourceRequest{
-						MinReplica: 2,
+						MinReplica: 3,
 					},
 				},
 				Metadata: defaultMetadata,
@@ -356,54 +355,72 @@ func Test_getUnusedPodDisruptionBudgets(t *testing.T) {
 
 	defaultModel := &models.Service{
 		ModelName:    "mymodel",
-		ModelVersion: "version-1",
+		ModelVersion: "1",
 		Namespace:    "mynamespace",
 	}
+
+	predictorPdbName := "mymodel-1-predictor-pdb"
+	transformerPdbName := "mymodel-1-transformer-pdb"
 
 	tests := map[string]struct {
 		modelService *models.Service
 		newPdbs      []*PodDisruptionBudget
 		expected     []*PodDisruptionBudget
 	}{
-		"none to delete": {
+		"no unused pdb": {
 			modelService: defaultModel,
 			newPdbs: []*PodDisruptionBudget{
 				{
-					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.PredictorComponentType, models.PDBComponentType),
+					Name:      predictorPdbName,
 					Namespace: defaultModel.Namespace,
 				},
 				{
-					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.TransformerComponentType, models.PDBComponentType),
+					Name:      transformerPdbName,
 					Namespace: defaultModel.Namespace,
 				},
 			},
 			expected: []*PodDisruptionBudget{},
 		},
-		"delete tranformer": {
+		"unused pdb: predictor": {
 			modelService: defaultModel,
 			newPdbs: []*PodDisruptionBudget{
 				{
-					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.PredictorComponentType, models.PDBComponentType),
+					Name:      transformerPdbName,
 					Namespace: defaultModel.Namespace,
 				},
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.TransformerComponentType, models.PDBComponentType),
+					Name:      predictorPdbName,
 					Namespace: defaultModel.Namespace,
 				},
 			},
 		},
-		"delete predictor & transformer": {
+		"unused pdb: transformer": {
+			modelService: defaultModel,
+			newPdbs: []*PodDisruptionBudget{
+				{
+					Name:      predictorPdbName,
+					Namespace: defaultModel.Namespace,
+				},
+			},
+			expected: []*PodDisruptionBudget{
+				{
+					Name:      transformerPdbName,
+					Namespace: defaultModel.Namespace,
+				},
+			},
+		},
+		"unused pdb: predictor & transformer": {
 			modelService: defaultModel,
 			newPdbs:      []*PodDisruptionBudget{},
 			expected: []*PodDisruptionBudget{
-				&PodDisruptionBudget{
-					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.PredictorComponentType, models.PDBComponentType),
+				{
+					Name:      predictorPdbName,
 					Namespace: defaultModel.Namespace,
 				},
-				&PodDisruptionBudget{
-					Name:      fmt.Sprintf("%s-%s-%s-%s", defaultModel.ModelName, defaultModel.ModelVersion, models.TransformerComponentType, models.PDBComponentType),
+				{
+					Name:      transformerPdbName,
 					Namespace: defaultModel.Namespace,
 				},
 			},

@@ -89,9 +89,6 @@ func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisrupti
 	// for active replicas > minReplica, the condition will be satisfied if it was
 	// satisfied for the minReplica case.
 
-	// If there was no valid PDB to be created, check the existing PDB in current deployment
-	// and if there's any existing PDB, remove it.
-
 	var minAvailablePercent, maxUnavailablePercent float64
 	if pdbConfig.MinAvailablePercentage != nil {
 		minAvailablePercent = float64(*pdbConfig.MinAvailablePercentage) / 100.0

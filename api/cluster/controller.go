@@ -258,9 +258,9 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			return nil, errors.Wrapf(err, fmt.Sprintf("%v", ErrUnableToCreatePDB))
 		}
 
-		stalePdbs := getUnusedPodDisruptionBudgets(modelService, pdbs)
-		if err := c.deletePodDisruptionBudgets(ctx, stalePdbs); err != nil {
-			log.Warnf("unable to delete stale pdb: %v", err)
+		unusedPdbs := getUnusedPodDisruptionBudgets(modelService, pdbs)
+		if err := c.deletePodDisruptionBudgets(ctx, unusedPdbs); err != nil {
+			log.Warnf("unable to delete unused pdb: %v", err)
 		}
 	}
 
