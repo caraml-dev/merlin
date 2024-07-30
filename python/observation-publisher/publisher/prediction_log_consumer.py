@@ -151,12 +151,12 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         background_job_thread.start()
 
     def _emit_metrics(self):
-        lags, partitions = self._calculate_lag()
-        for lag, partition in zip(lags, partitions):
-            MetricWriter().update_kafka_lag(total_lag=lag, partition=partition)
+        while True:
+            lags, partitions = self._calculate_lag()
+            for lag, partition in zip(lags, partitions):
+                MetricWriter().update_kafka_lag(total_lag=lag, partition=partition)
 
-        # please reconfirm what is the acceptable interval
-        time.sleep(60)
+            time.sleep(60)
 
     def _calculate_lag(self) -> Tuple[List[int], List[int]]:
         cluster_metadata = self._consumer.list_topics(topic=self.topic)
