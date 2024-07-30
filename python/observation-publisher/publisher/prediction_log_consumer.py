@@ -159,8 +159,8 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
             time.sleep(60)
 
     def _calculate_lag(self) -> Tuple[List[int], List[int]]:
-        cluster_metadata = self._consumer.list_topics(topic=self.topic)
-        topic_metadata = cluster_metadata.topics.get(self.topic)
+        cluster_metadata = self._consumer.list_topics(topic=self._topic)
+        topic_metadata = cluster_metadata.topics.get(self._topic)
         partition_ids = list(topic_metadata.partitions.keys())
 
         topic_partitions = [
