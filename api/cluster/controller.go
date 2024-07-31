@@ -260,7 +260,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 
 		unusedPdbs := getUnusedPodDisruptionBudgets(modelService, pdbs)
 		if err := c.deletePodDisruptionBudgets(ctx, unusedPdbs); err != nil {
-			log.Warnf("unable to delete unused pdb: %v", err)
+			log.Warnf("unable to delete model name %s, version %s unused pdb: %v", modelService.ModelName, modelService.ModelVersion, err)
 		}
 	}
 
