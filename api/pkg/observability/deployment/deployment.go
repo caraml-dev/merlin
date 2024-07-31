@@ -316,7 +316,7 @@ func (c *deployer) applyDeployment(ctx context.Context, data *models.WorkerData,
 	deploymentV1 := appV1.Deployments(c.targetNamespace())
 
 	applyDeploymentFunc := func(data *models.WorkerData, secretName string, isExistingDeployment bool) (*appsv1.Deployment, error) {
-		deployment, err := c.createDeploymentSpec(ctx, data, secretName)
+		deployment, err := c.createDeploymentSpec(data, secretName)
 		if err != nil {
 			return nil, err
 		}
@@ -342,7 +342,7 @@ func (c *deployer) getLabels(data *models.WorkerData) map[string]string {
 	return labels
 }
 
-func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.WorkerData, secretName string) (*appsv1.Deployment, error) {
+func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName string) (*appsv1.Deployment, error) {
 	labels := c.getLabels(data)
 
 	cfgVolName := "config-volume"
@@ -394,6 +394,13 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 									ReadOnly:  true,
 								},
 							},
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "prom-metric",
+									ContainerPort: 8000,
+									Protocol:      corev1.ProtocolTCP,
+								},
+							},
 						},
 					},
 					Volumes: []corev1.Volume{
@@ -401,7 +408,7 @@ func (c *deployer) createDeploymentSpec(ctx context.Context, data *models.Worker
 							Name: cfgVolName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: c.getSecretName(data),
+									SecretName: secretName,
 								},
 							},
 						},

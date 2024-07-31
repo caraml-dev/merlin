@@ -92,7 +92,7 @@ class PredictionLogResultsTable:
 
 
 def convert_to_numpy_value(
-    col_value: Optional[int | str | float | bool], value_type: Optional[ValueType]
+    col_value: Optional[int | str | float | bool], value_type: Optional[ValueType], col_name: str
 ) -> np.int64 | np.float64 | np.bool_ | np.str_:
     if value_type is None:
         if isinstance(col_value, (int, float)):
@@ -104,16 +104,16 @@ def convert_to_numpy_value(
 
     match value_type:
         case ValueType.INT64:
-            assert isinstance(col_value, (int, float))
+            assert isinstance(col_value, (int, float)), f"type of value for column {col_name} should be int or float, current value: {col_value} and type: {type(col_value)}"
             return np.int64(col_value)
         case ValueType.FLOAT64:
-            assert isinstance(col_value, (int, float, NoneType))
+            assert isinstance(col_value, (int, float, NoneType)), f"type of value for column {col_name} should be int or float or None, current value: {col_value} and type: {type(col_value)}"
             return np.float64(col_value)
         case ValueType.BOOLEAN:
-            assert isinstance(col_value, bool)
+            assert isinstance(col_value, bool), f"type of value for column {col_name} should be boolean, current value: {col_value} and type: {type(col_value)}"
             return np.bool_(col_value)
         case ValueType.STRING:
-            assert isinstance(col_value, str)
+            assert isinstance(col_value, str),f"type of value for column {col_name} should be string, current value: {col_value} and type: {type(col_value)}"
             return np.str_(col_value)
         case _:
             raise ValueError(f"Unknown value type: {value_type}")
@@ -165,6 +165,6 @@ def list_value_as_numpy_list(
         column_values.append(v)
 
     return [
-        convert_to_numpy_value(col_value, column_types.get(col_name))
+        convert_to_numpy_value(col_value=col_value, value_type=column_types.get(col_name), col_name=col_name)
         for col_value, col_name in zip(column_values, column_names) if column_types.get(col_name) is not None
     ]

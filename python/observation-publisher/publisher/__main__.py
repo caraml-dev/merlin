@@ -2,7 +2,6 @@ import hydra
 from merlin.observability.inference import InferenceSchema
 from omegaconf import OmegaConf
 from prometheus_client import start_http_server
-
 from publisher.config import PublisherConfig
 from publisher.metric import MetricWriter
 from publisher.observation_sink import new_observation_sink
@@ -17,7 +16,9 @@ def start_consumer(cfg: PublisherConfig) -> None:
 
     start_http_server(cfg.environment.prometheus_port)
     MetricWriter().setup(
-        model_id=cfg.environment.model_id, model_version=cfg.environment.model_version
+        model_id=cfg.environment.model_id,
+        model_version=cfg.environment.model_version,
+        merlin_project=cfg.environment.project,
     )
     prediction_log_consumer = new_consumer(cfg.environment.observation_source)
     inference_schema = InferenceSchema.from_dict(
