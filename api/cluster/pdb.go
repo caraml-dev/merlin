@@ -37,7 +37,7 @@ func NewPodDisruptionBudget(modelService *models.Service, componentType string, 
 	labels["serving.kserve.io/inferenceservice"] = modelService.Name
 
 	return &PodDisruptionBudget{
-		Name:                     fmt.Sprintf("%s-%s-%s-%s", modelService.ModelName, modelService.ModelVersion, componentType, models.PDBComponentType),
+		Name:                     buildPDBName(modelService, componentType),
 		Namespace:                modelService.Namespace,
 		Labels:                   labels,
 		MaxUnavailablePercentage: pdbConfig.MaxUnavailablePercentage,
@@ -80,42 +80,51 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1.PodDisruptionBudget, er
 	return pdb, nil
 }
 
+func buildPDBName(modelService *models.Service, componentType string) string {
+	return fmt.Sprintf("%s-%s-%s-%s", modelService.ModelName, modelService.ModelVersion, componentType, models.PDBComponentType)
+}
+
 func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
 	pdbs := []*PodDisruptionBudget{}
 
-	// Only create PDB if: ceil(minReplica * minAvailablePercent) < minReplica OR
-	// maxUnavailablePercent > 0. If not, the replicas may be unable to be removed.
-	// Note that we only care about minReplica for minAvailablePercent because,
-	// for active replicas > minReplica, the condition will be satisfied if it was
-	// satisfied for the minReplica case.
-
-	var minAvailablePercent, maxUnavailablePercent float64
-	if pdbConfig.MinAvailablePercentage != nil {
-		minAvailablePercent = float64(*pdbConfig.MinAvailablePercentage) / 100.0
-	} else if pdbConfig.MaxUnavailablePercentage != nil {
-		maxUnavailablePercent = float64(*pdbConfig.MaxUnavailablePercentage) / 100.0
-	} else {
-		// PDB config is not set properly, we can't apply it.
+	// PDB config is not set properly, we can't apply it.
+	if pdbConfig.MinAvailablePercentage == nil && pdbConfig.MaxUnavailablePercentage == nil {
 		return pdbs
 	}
 
 	if (modelService.ResourceRequest != nil) &&
-		(maxUnavailablePercent > 0 || (pdbConfig.MinAvailablePercentage != nil &&
-			math.Ceil(float64(modelService.ResourceRequest.MinReplica)*
-				minAvailablePercent) < float64(modelService.ResourceRequest.MinReplica))) {
+		doesPDBAllowDisruption(pdbConfig, modelService.ResourceRequest.MinReplica) {
 		predictorPdb := NewPodDisruptionBudget(modelService, models.PredictorComponentType, pdbConfig)
 		pdbs = append(pdbs, predictorPdb)
 	}
 
 	if (modelService.Transformer != nil && modelService.Transformer.Enabled && modelService.Transformer.ResourceRequest != nil) &&
-		(maxUnavailablePercent > 0 || (pdbConfig.MinAvailablePercentage != nil &&
-			math.Ceil(float64(modelService.Transformer.ResourceRequest.MinReplica)*
-				minAvailablePercent) < float64(modelService.Transformer.ResourceRequest.MinReplica))) {
+		doesPDBAllowDisruption(pdbConfig, modelService.Transformer.ResourceRequest.MinReplica) {
 		transformerPdb := NewPodDisruptionBudget(modelService, models.TransformerComponentType, pdbConfig)
 		pdbs = append(pdbs, transformerPdb)
 	}
 
 	return pdbs
+}
+
+// doesPDBAllowDisruption determine if pdb config & minReplica will allow
+// any disruption, this to avoid the replicas may be unable to be removed. rule:
+// ceil(minReplica * minAvailablePercent) < minReplica || maxUnavailablePercent > 0.
+// Note that we only care about minReplica for minAvailablePercent because, for
+// active replicas > minReplica, the condition will be satisfied if it was
+// satisfied for the minReplica case.
+func doesPDBAllowDisruption(pdbConfig config.PodDisruptionBudgetConfig, minReplica int) bool {
+	if pdbConfig.MinAvailablePercentage != nil &&
+		math.Ceil(float64(minReplica)*(float64(*pdbConfig.MinAvailablePercentage)/100.0)) < float64(minReplica) {
+		return true
+
+	}
+
+	if pdbConfig.MaxUnavailablePercentage != nil && *pdbConfig.MaxUnavailablePercentage > 0 {
+		return true
+	}
+
+	return false
 }
 
 func getUnusedPodDisruptionBudgets(modelService *models.Service, pdbs []*PodDisruptionBudget) []*PodDisruptionBudget {
@@ -127,7 +136,7 @@ func getUnusedPodDisruptionBudgets(modelService *models.Service, pdbs []*PodDisr
 
 	defaultPDBSNames := []string{}
 	for _, componentType := range pdbComponents {
-		defaultPDBSNames = append(defaultPDBSNames, fmt.Sprintf("%s-%s-%s-%s", modelService.ModelName, modelService.ModelVersion, componentType, models.PDBComponentType))
+		defaultPDBSNames = append(defaultPDBSNames, buildPDBName(modelService, componentType))
 	}
 
 	newPDBSNames := make(map[string]bool)
@@ -136,12 +145,14 @@ func getUnusedPodDisruptionBudgets(modelService *models.Service, pdbs []*PodDisr
 	}
 
 	for _, name := range defaultPDBSNames {
-		if !newPDBSNames[name] {
-			unusedPdbs = append(unusedPdbs, &PodDisruptionBudget{
-				Name:      name,
-				Namespace: modelService.Namespace,
-			})
+		if newPDBSNames[name] {
+			continue
 		}
+
+		unusedPdbs = append(unusedPdbs, &PodDisruptionBudget{
+			Name:      name,
+			Namespace: modelService.Namespace,
+		})
 	}
 
 	return unusedPdbs
