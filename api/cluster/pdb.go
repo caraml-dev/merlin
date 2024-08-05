@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 
 	policyv1 "k8s.io/api/policy/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -16,30 +17,30 @@ import (
 	"github.com/caraml-dev/merlin/models"
 )
 
+const (
+	componentLabel      = "component"
+	modelVersionIDLabel = "model-version-id"
+	kserveIsvcLabel     = "serving.kserve.io/inferenceservice"
+)
+
 type PodDisruptionBudget struct {
 	Name                     string
 	Namespace                string
 	Labels                   map[string]string
+	Selectors                map[string]string
 	MaxUnavailablePercentage *int
 	MinAvailablePercentage   *int
 }
 
-var (
-	pdbComponents = []string{
-		models.PredictorComponentType,
-		models.TransformerComponentType,
-	}
-)
-
 func NewPodDisruptionBudget(modelService *models.Service, componentType string, pdbConfig config.PodDisruptionBudgetConfig) *PodDisruptionBudget {
-	labels := modelService.Metadata.ToLabel()
-	labels["component"] = componentType
-	labels["serving.kserve.io/inferenceservice"] = modelService.Name
+	labels := buildPDBSelector(modelService, componentType)
+	labels[modelVersionIDLabel] = modelService.ModelVersion
 
 	return &PodDisruptionBudget{
 		Name:                     buildPDBName(modelService, componentType),
 		Namespace:                modelService.Namespace,
 		Labels:                   labels,
+		Selectors:                buildPDBSelector(modelService, componentType),
 		MaxUnavailablePercentage: pdbConfig.MaxUnavailablePercentage,
 		MinAvailablePercentage:   pdbConfig.MinAvailablePercentage,
 	}
@@ -62,7 +63,7 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1.PodDisruptionBudget, er
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: cfg.Labels,
+				MatchLabels: cfg.Selectors,
 			},
 		},
 	}
@@ -81,7 +82,15 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1.PodDisruptionBudget, er
 }
 
 func buildPDBName(modelService *models.Service, componentType string) string {
-	return fmt.Sprintf("%s-%s-%s-%s", modelService.ModelName, modelService.ModelVersion, componentType, models.PDBComponentType)
+	return fmt.Sprintf("%s-%s-%s", modelService.Name, componentType, models.PDBComponentType)
+}
+
+func buildPDBSelector(modelService *models.Service, componentType string) map[string]string {
+	labelSelectors := modelService.Metadata.ToLabel()
+	labelSelectors[componentLabel] = componentType
+	labelSelectors[kserveIsvcLabel] = modelService.Name
+
+	return labelSelectors
 }
 
 func generatePDBSpecs(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
@@ -117,7 +126,6 @@ func doesPDBAllowDisruption(pdbConfig config.PodDisruptionBudgetConfig, minRepli
 	if pdbConfig.MinAvailablePercentage != nil &&
 		math.Ceil(float64(minReplica)*(float64(*pdbConfig.MinAvailablePercentage)/100.0)) < float64(minReplica) {
 		return true
-
 	}
 
 	if pdbConfig.MaxUnavailablePercentage != nil && *pdbConfig.MaxUnavailablePercentage > 0 {
@@ -125,37 +133,6 @@ func doesPDBAllowDisruption(pdbConfig config.PodDisruptionBudgetConfig, minRepli
 	}
 
 	return false
-}
-
-func getUnusedPodDisruptionBudgets(modelService *models.Service, pdbs []*PodDisruptionBudget) []*PodDisruptionBudget {
-	unusedPdbs := []*PodDisruptionBudget{}
-
-	if len(pdbs) == len(pdbComponents) {
-		return unusedPdbs
-	}
-
-	defaultPDBSNames := []string{}
-	for _, componentType := range pdbComponents {
-		defaultPDBSNames = append(defaultPDBSNames, buildPDBName(modelService, componentType))
-	}
-
-	newPDBSNames := make(map[string]bool)
-	for _, pdb := range pdbs {
-		newPDBSNames[pdb.Name] = true
-	}
-
-	for _, name := range defaultPDBSNames {
-		if newPDBSNames[name] {
-			continue
-		}
-
-		unusedPdbs = append(unusedPdbs, &PodDisruptionBudget{
-			Name:      name,
-			Namespace: modelService.Namespace,
-		})
-	}
-
-	return unusedPdbs
 }
 
 func (c *controller) deployPodDisruptionBudgets(ctx context.Context, pdbs []*PodDisruptionBudget) error {
@@ -204,4 +181,33 @@ func (c *controller) deletePodDisruptionBudget(ctx context.Context, pdb *PodDisr
 		return err
 	}
 	return nil
+}
+
+func (c *controller) getUnusedPodDisruptionBudgets(ctx context.Context, modelService *models.Service) ([]*PodDisruptionBudget, error) {
+	pdbs := []*PodDisruptionBudget{}
+
+	labels := modelService.Metadata.ToLabel()
+
+	labelSelectors := []string{}
+	for key, val := range labels {
+		labelSelectors = append(labelSelectors, fmt.Sprintf("%s=%s", key, val))
+	}
+	labelSelectors = append(labelSelectors, fmt.Sprintf("%s=%s", modelVersionIDLabel, modelService.ModelVersion))
+	labelSelectors = append(labelSelectors, fmt.Sprintf("%s!=%s", kserveIsvcLabel, modelService.Name))
+
+	list, err := c.policyClient.PodDisruptionBudgets(modelService.Namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: strings.Join(labelSelectors, ","),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range list.Items {
+		pdbs = append(pdbs, &PodDisruptionBudget{
+			Name:      item.Name,
+			Namespace: modelService.Namespace,
+		})
+	}
+
+	return pdbs, nil
 }

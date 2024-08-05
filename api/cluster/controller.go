@@ -257,11 +257,6 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			log.Errorf("unable to create pdb: %v", err)
 			return nil, errors.Wrapf(err, fmt.Sprintf("%v", ErrUnableToCreatePDB))
 		}
-
-		unusedPdbs := getUnusedPodDisruptionBudgets(modelService, pdbs)
-		if err := c.deletePodDisruptionBudgets(ctx, unusedPdbs); err != nil {
-			log.Warnf("unable to delete model name %s, version %s unused pdb: %v", modelService.ModelName, modelService.ModelVersion, err)
-		}
 	}
 
 	s, err = c.waitInferenceServiceReady(s)
@@ -293,11 +288,20 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		inferenceURL = vsCfg.getInferenceURL(vs)
 	}
 
-	// Delete previous inference service
+	// Delete previous inference service and pdb
 	if modelService.CurrentIsvcName != "" {
 		if err := c.deleteInferenceService(ctx, modelService.CurrentIsvcName, modelService.Namespace); err != nil {
 			log.Errorf("unable to delete prevision revision %s with error %v", modelService.CurrentIsvcName, err)
 			return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToDeletePreviousInferenceService, modelService.CurrentIsvcName))
+		}
+
+		unusedPdbs, err := c.getUnusedPodDisruptionBudgets(ctx, modelService)
+		if err != nil {
+			log.Warnf("unable to get model name %s, version %s unused pdb: %v", modelService.ModelName, modelService.ModelVersion, err)
+		} else {
+			if err := c.deletePodDisruptionBudgets(ctx, unusedPdbs); err != nil {
+				log.Warnf("unable to delete model name %s, version %s unused pdb: %v", modelService.ModelName, modelService.ModelVersion, err)
+			}
 		}
 	}
 

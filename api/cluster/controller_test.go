@@ -758,6 +758,223 @@ func TestController_DeployInferenceService(t *testing.T) {
 	}
 }
 
+func TestController_DeployInferenceService_PodDisruptionBudgetsRemoval(t *testing.T) {
+	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	assert.Nil(t, err)
+
+	minAvailablePercentage := 80
+
+	model := &models.Model{
+		Name: "my-model",
+	}
+	project := mlp.Project{
+		Name: "my-project",
+	}
+	version := &models.Version{
+		ID: 1,
+	}
+	revisionID := models.ID(5)
+
+	isvcName := models.CreateInferenceServiceName(model.Name, version.ID.String(), revisionID.String())
+	statusReady := createServiceReadyStatus(isvcName, project.Name, baseUrl)
+	statusReady.Components = make(map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec)
+	pdb := &policyv1.PodDisruptionBudget{}
+	vs := fakeVirtualService(model.Name, version.ID.String())
+
+	metadata := models.Metadata{
+		App:       "mymodel",
+		Component: models.ComponentModelVersion,
+		Stream:    "mystream",
+		Team:      "myteam",
+	}
+	modelSvc := &models.Service{
+		Name:            isvcName,
+		ModelName:       model.Name,
+		ModelVersion:    version.ID.String(),
+		RevisionID:      revisionID,
+		Namespace:       project.Name,
+		Metadata:        metadata,
+		CurrentIsvcName: isvcName,
+	}
+
+	defaultMatchLabel := map[string]string{
+		"gojek.com/app":                      "mymodel",
+		"gojek.com/component":                "model-version",
+		"gojek.com/environment":              "dev",
+		"gojek.com/orchestrator":             "merlin",
+		"gojek.com/stream":                   "mystream",
+		"gojek.com/team":                     "myteam",
+		"serving.kserve.io/inferenceservice": "mymodel-1-r4",
+		"model-version-id":                   "1",
+	}
+
+	tests := []struct {
+		name             string
+		modelService     *models.Service
+		existingPdbs     *policyv1.PodDisruptionBudgetList
+		createPdbResult  *pdbReactor
+		deletedPdbResult *pdbReactor
+		wantPdbs         []string
+	}{
+		{
+			name:         "success: remove pdbs",
+			modelService: modelSvc,
+			existingPdbs: &policyv1.PodDisruptionBudgetList{
+				Items: []policyv1.PodDisruptionBudget{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "my-model-1-r4-predictor-pdb",
+							Labels:    defaultMatchLabel,
+							Namespace: modelSvc.Namespace,
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "my-model-1-r4-transformer-pdb",
+							Labels:    defaultMatchLabel,
+							Namespace: modelSvc.Namespace,
+						},
+					},
+				},
+			},
+			createPdbResult:  &pdbReactor{pdb, nil},
+			deletedPdbResult: &pdbReactor{err: nil},
+			wantPdbs: []string{
+				"my-model-1-r4-predictor-pdb",
+				"my-model-1-r4-transformer-pdb",
+			},
+		},
+		{
+			name:         "success: only remove pdb with same labels",
+			modelService: modelSvc,
+			existingPdbs: &policyv1.PodDisruptionBudgetList{
+				Items: []policyv1.PodDisruptionBudget{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "my-model-1-r4-predictor-pdb",
+							Labels:    defaultMatchLabel,
+							Namespace: modelSvc.Namespace,
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "my-model-2-r4-predictor-pdb",
+							Labels: map[string]string{
+								"gojek.com/app":                      "mymodel",
+								"gojek.com/component":                "model-version",
+								"gojek.com/environment":              "dev",
+								"gojek.com/orchestrator":             "merlin",
+								"gojek.com/stream":                   "mystream",
+								"gojek.com/team":                     "myteam",
+								"component":                          "predictor",
+								"serving.kserve.io/inferenceservice": "mymodel-2-r4",
+								"model-version-id":                   "2",
+							},
+							Namespace: modelSvc.Namespace,
+						},
+					},
+				},
+			},
+			createPdbResult:  &pdbReactor{pdb, nil},
+			deletedPdbResult: &pdbReactor{err: nil},
+			wantPdbs: []string{
+				"my-model-1-r4-predictor-pdb",
+			},
+		},
+		{
+			name:         "success: no pdb found or to delete",
+			modelService: modelSvc,
+			existingPdbs: &policyv1.PodDisruptionBudgetList{
+				Items: []policyv1.PodDisruptionBudget{},
+			},
+			createPdbResult:  &pdbReactor{pdb, nil},
+			deletedPdbResult: &pdbReactor{err: nil},
+			wantPdbs:         []string{},
+		},
+		{
+			name:         "fail deleting pdb should not return error",
+			modelService: modelSvc,
+			existingPdbs: &policyv1.PodDisruptionBudgetList{
+				Items: []policyv1.PodDisruptionBudget{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "my-model-1-r4-predictor-pdb",
+							Labels:    defaultMatchLabel,
+							Namespace: modelSvc.Namespace,
+						},
+					},
+				},
+			},
+			createPdbResult:  &pdbReactor{pdb, nil},
+			deletedPdbResult: &pdbReactor{err: ErrUnableToDeletePDB},
+			wantPdbs:         []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset()
+
+			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
+			isvcWatchReactor := newIsvcWatchReactor(&kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+				Status:     statusReady,
+			})
+			kfClient.WatchReactionChain = []ktesting.WatchReactor{isvcWatchReactor}
+
+			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &kservev1beta1.InferenceService{Status: statusReady}, nil
+			})
+
+			v1Client := fake.NewSimpleClientset().CoreV1()
+
+			policyV1Client := fake.NewSimpleClientset(tt.existingPdbs).PolicyV1().(*fakepolicyv1.FakePolicyV1)
+			policyV1Client.Fake.PrependReactor(patchMethod, pdbResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tt.createPdbResult.pdb, tt.createPdbResult.err
+			})
+
+			deletedPdbNames := []string{}
+			policyV1Client.Fake.PrependReactor(deleteMethod, pdbResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				deletedPdbNames = append(deletedPdbNames, action.(ktesting.DeleteAction).GetName())
+				return true, nil, tt.deletedPdbResult.err
+			})
+
+			istioClient := fakeistio.NewSimpleClientset().NetworkingV1beta1().(*fakeistionetworking.FakeNetworkingV1beta1)
+			istioClient.PrependReactor(patchMethod, virtualServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, vs, nil
+			})
+
+			deployConfig := config.DeploymentConfig{
+				DeploymentTimeout:                  2 * tickDurationSecond * time.Second,
+				NamespaceTimeout:                   2 * tickDurationSecond * time.Second,
+				DefaultModelResourceRequests:       &config.ResourceRequests{},
+				DefaultTransformerResourceRequests: &config.ResourceRequests{},
+				MaxAllowedReplica:                  4,
+				PodDisruptionBudget: config.PodDisruptionBudgetConfig{
+					Enabled:                true,
+					MinAvailablePercentage: &minAvailablePercentage,
+				},
+				StandardTransformer:                   config.StandardTransformerConfig{},
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+			}
+
+			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
+			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
+
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater)
+			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
+
+			if tt.deletedPdbResult.err == nil {
+				assert.ElementsMatch(t, deletedPdbNames, tt.wantPdbs)
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, iSvc)
+		})
+	}
+}
+
 func TestGetCurrentDeploymentScale(t *testing.T) {
 	testNamespace := "test-namespace"
 	var testDesiredReplicas int32 = 5
