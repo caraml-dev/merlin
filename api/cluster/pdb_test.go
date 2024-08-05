@@ -13,6 +13,62 @@ import (
 	"github.com/caraml-dev/merlin/models"
 )
 
+func Test_NewPodDisruptionBudget(t *testing.T) {
+	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	assert.Nil(t, err)
+
+	twenty := 20
+
+	defaultMetadata := models.Metadata{
+		App:       "mymodel",
+		Component: models.ComponentModelVersion,
+		Stream:    "mystream",
+		Team:      "myteam",
+	}
+	modelService := &models.Service{
+		Name:         "model-1-r1",
+		ModelName:    "model",
+		ModelVersion: "1",
+		RevisionID:   1,
+		Namespace:    "pdb-test",
+		Metadata:     defaultMetadata,
+	}
+	pdbConfig := config.PodDisruptionBudgetConfig{
+		Enabled:                true,
+		MinAvailablePercentage: &twenty,
+	}
+	componentType := models.PredictorComponentType
+
+	t.Run("new pod disruption budget", func(t *testing.T) {
+		pdb := NewPodDisruptionBudget(modelService, componentType, pdbConfig)
+		assert.Equal(t, pdb, &PodDisruptionBudget{
+			Name:      "model-1-r1-predictor-pdb",
+			Namespace: "pdb-test",
+			Labels: map[string]string{
+				"gojek.com/app":                      "mymodel",
+				"gojek.com/component":                "model-version",
+				"gojek.com/environment":              "dev",
+				"gojek.com/orchestrator":             "merlin",
+				"gojek.com/stream":                   "mystream",
+				"gojek.com/team":                     "myteam",
+				"component":                          "predictor",
+				"model-version-id":                   "1",
+				"serving.kserve.io/inferenceservice": "model-1-r1",
+			},
+			Selectors: map[string]string{
+				"gojek.com/app":                      "mymodel",
+				"gojek.com/component":                "model-version",
+				"gojek.com/environment":              "dev",
+				"gojek.com/orchestrator":             "merlin",
+				"gojek.com/stream":                   "mystream",
+				"gojek.com/team":                     "myteam",
+				"component":                          "predictor",
+				"serving.kserve.io/inferenceservice": "model-1-r1",
+			},
+			MinAvailablePercentage: &twenty,
+		})
+	})
+}
 func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 	defaultInt := 20
 	defaultIntOrString := intstr.FromString("20%")
