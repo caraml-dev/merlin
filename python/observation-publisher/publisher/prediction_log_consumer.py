@@ -146,50 +146,6 @@ class KafkaPredictionLogConsumer(PredictionLogConsumer):
         self._consumer.subscribe([config.topic])
         self._poll_timeout = config.poll_timeout_seconds
 
-        background_job_thread = Thread(target=self._emit_metrics)
-        background_job_thread.setDaemon(True)
-        background_job_thread.start()
-
-    def _emit_metrics(self):
-        while True:
-            lags, partitions = self._calculate_lag()
-            for lag, partition in zip(lags, partitions):
-                MetricWriter().update_kafka_lag(total_lag=lag, partition=partition)
-
-            time.sleep(60)
-
-    def _calculate_lag(self) -> Tuple[List[int], List[int]]:
-        cluster_metadata = self._consumer.list_topics(topic=self._topic)
-        topic_metadata = cluster_metadata.topics.get(self._topic)
-        partition_ids = list(topic_metadata.partitions.keys())
-
-        topic_partitions = [
-            TopicPartition(topic=self._topic, partition=partition_id)
-            for partition_id in partition_ids
-        ]
-
-        committed_offsets = self._consumer.committed(topic_partitions)
-        committed_offsets_per_partitions = {}
-
-        for topic_partition in committed_offsets:
-            key = f"{topic_partition.topic}_{topic_partition.partition}"
-            committed_offsets_per_partitions[key] = topic_partition.offset
-
-        diff = []
-        partitions = []
-        for topic_partition in topic_partitions:
-            _, high = self._consumer.get_watermark_offsets(topic_partition)
-            committed_offset_key = (
-                f"{topic_partition.topic}_{topic_partition.partition}"
-            )
-            commited_offset = committed_offsets_per_partitions.get(
-                committed_offset_key, 0
-            )
-            diff.append(high - commited_offset)
-            partitions.append(topic_partition.partition)
-
-        return diff, partitions
-
     def poll_new_logs(self) -> List[PredictionLog]:
         messages = self._consumer.consume(self._batch_size, timeout=self._poll_timeout)
         errors = [msg.error() for msg in messages if msg.error() is not None]
