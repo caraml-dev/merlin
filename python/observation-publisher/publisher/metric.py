@@ -23,12 +23,6 @@ class MetricWriter(object):
                 "The total number of prediction logs processed by the publisher",
                 ["model_id", "model_version", "merlin_project"],
             )
-
-            self.kafka_consumer_lag_gauge = Gauge(
-                "kafka_consumer_lag",
-                "The number of unprocess message in kafka",
-                ["model_id", "model_version", "merlin_project", "partition"],
-            )
             self._initialized = True
 
     def __new__(cls):
@@ -70,17 +64,3 @@ class MetricWriter(object):
             model_version=self.model_version,
             merlin_project=self.merlin_project,
         ).inc(value)
-
-    def update_kafka_lag(self, total_lag: int, partition: int):
-        """
-        Update the kafka_consumer_lag gauge with the given value
-        :param total_lag:
-        :param partition:
-        :return:
-        """
-        self.kafka_consumer_lag_gauge.labels(
-            model_id=self.model_id,
-            model_version=self.model_version,
-            partition=partition,
-            merlin_project=self.merlin_project,
-        ).set(total_lag)
