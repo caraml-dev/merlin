@@ -13,10 +13,70 @@ import (
 	"github.com/caraml-dev/merlin/models"
 )
 
+func Test_NewPodDisruptionBudget(t *testing.T) {
+	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	assert.Nil(t, err)
+
+	twenty := 20
+
+	defaultMetadata := models.Metadata{
+		App:       "mymodel",
+		Component: models.ComponentModelVersion,
+		Stream:    "mystream",
+		Team:      "myteam",
+	}
+	modelService := &models.Service{
+		Name:         "model-1-r1",
+		ModelName:    "model",
+		ModelVersion: "1",
+		RevisionID:   1,
+		Namespace:    "pdb-test",
+		Metadata:     defaultMetadata,
+	}
+	pdbConfig := config.PodDisruptionBudgetConfig{
+		Enabled:                true,
+		MinAvailablePercentage: &twenty,
+	}
+	componentType := models.PredictorComponentType
+
+	t.Run("new pod disruption budget", func(t *testing.T) {
+		pdb := NewPodDisruptionBudget(modelService, componentType, pdbConfig)
+		assert.Equal(t, pdb, &PodDisruptionBudget{
+			Name:      "model-1-r1-predictor-pdb",
+			Namespace: "pdb-test",
+			Labels: map[string]string{
+				"gojek.com/app":                      "mymodel",
+				"gojek.com/component":                "model-version",
+				"gojek.com/environment":              "dev",
+				"gojek.com/orchestrator":             "merlin",
+				"gojek.com/stream":                   "mystream",
+				"gojek.com/team":                     "myteam",
+				"component":                          "predictor",
+				"model-version-id":                   "1",
+				"serving.kserve.io/inferenceservice": "model-1-r1",
+			},
+			Selectors: map[string]string{
+				"gojek.com/app":                      "mymodel",
+				"gojek.com/component":                "model-version",
+				"gojek.com/environment":              "dev",
+				"gojek.com/orchestrator":             "merlin",
+				"gojek.com/stream":                   "mystream",
+				"gojek.com/team":                     "myteam",
+				"component":                          "predictor",
+				"serving.kserve.io/inferenceservice": "model-1-r1",
+			},
+			MinAvailablePercentage: &twenty,
+		})
+	})
+}
 func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 	defaultInt := 20
 	defaultIntOrString := intstr.FromString("20%")
 	defaultLabels := map[string]string{
+		"gojek.com/app":    "sklearn-sample-s",
+		"model-version-id": "1",
+	}
+	defaultSelectors := map[string]string{
 		"gojek.com/app": "sklearn-sample-s",
 	}
 
@@ -24,6 +84,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 		Name                     string
 		Namespace                string
 		Labels                   map[string]string
+		Selectors                map[string]string
 		MaxUnavailablePercentage *int
 		MinAvailablePercentage   *int
 		Selector                 *metav1.LabelSelector
@@ -40,6 +101,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				Name:                     "sklearn-sample-s-1-model-pdb",
 				Namespace:                "pdb-test",
 				Labels:                   defaultLabels,
+				Selectors:                defaultSelectors,
 				MaxUnavailablePercentage: nil,
 				MinAvailablePercentage:   &defaultInt,
 			},
@@ -55,7 +117,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				},
 				Spec: policyv1.PodDisruptionBudgetSpec{
 					Selector: &metav1.LabelSelector{
-						MatchLabels: defaultLabels,
+						MatchLabels: defaultSelectors,
 					},
 					MinAvailable: &defaultIntOrString,
 				},
@@ -68,6 +130,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				Name:                     "sklearn-sample-s-1-model-pdb",
 				Namespace:                "pdb-test",
 				Labels:                   defaultLabels,
+				Selectors:                defaultSelectors,
 				MaxUnavailablePercentage: &defaultInt,
 				MinAvailablePercentage:   &defaultInt,
 			},
@@ -83,7 +146,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				},
 				Spec: policyv1.PodDisruptionBudgetSpec{
 					Selector: &metav1.LabelSelector{
-						MatchLabels: defaultLabels,
+						MatchLabels: defaultSelectors,
 					},
 					MinAvailable: &defaultIntOrString,
 				},
@@ -96,6 +159,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				Name:                     "sklearn-sample-s-1-model-pdb",
 				Namespace:                "pdb-test",
 				Labels:                   map[string]string{},
+				Selectors:                map[string]string{},
 				MaxUnavailablePercentage: nil,
 				MinAvailablePercentage:   nil,
 			},
@@ -109,6 +173,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 				Name:                     tt.fields.Name,
 				Namespace:                tt.fields.Namespace,
 				Labels:                   tt.fields.Labels,
+				Selectors:                tt.fields.Selectors,
 				MaxUnavailablePercentage: tt.fields.MaxUnavailablePercentage,
 				MinAvailablePercentage:   tt.fields.MinAvailablePercentage,
 			}
@@ -128,13 +193,45 @@ func Test_generatePDBSpecs(t *testing.T) {
 	err := models.InitKubernetesLabeller("gojek.com/", "dev")
 	assert.Nil(t, err)
 
-	twenty, eighty := 20, 80
+	ten, twenty := 10, 20
 
 	defaultMetadata := models.Metadata{
 		App:       "mymodel",
 		Component: models.ComponentModelVersion,
 		Stream:    "mystream",
 		Team:      "myteam",
+	}
+
+	defaultTransformerSelectors := map[string]string{
+		"gojek.com/app":                      "mymodel",
+		"gojek.com/component":                "model-version",
+		"gojek.com/environment":              "dev",
+		"gojek.com/orchestrator":             "merlin",
+		"gojek.com/stream":                   "mystream",
+		"gojek.com/team":                     "myteam",
+		"component":                          "transformer",
+		"serving.kserve.io/inferenceservice": "mymodel-1",
+	}
+
+	defaultPredictorSelectors := map[string]string{
+		"gojek.com/app":                      "mymodel",
+		"gojek.com/component":                "model-version",
+		"gojek.com/environment":              "dev",
+		"gojek.com/orchestrator":             "merlin",
+		"gojek.com/stream":                   "mystream",
+		"gojek.com/team":                     "myteam",
+		"component":                          "predictor",
+		"serving.kserve.io/inferenceservice": "mymodel-1",
+	}
+
+	defaultTransformerLabels := map[string]string{"model-version-id": "1"}
+	for k, v := range defaultTransformerSelectors {
+		defaultTransformerLabels[k] = v
+	}
+
+	defaultPredictorLabels := map[string]string{"model-version-id": "1"}
+	for k, v := range defaultPredictorSelectors {
+		defaultPredictorLabels[k] = v
 	}
 
 	tests := map[string]struct {
@@ -176,18 +273,10 @@ func Test_generatePDBSpecs(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:      "mymodel-1-transformer-pdb",
-					Namespace: "mynamespace",
-					Labels: map[string]string{
-						"gojek.com/app":                      "mymodel",
-						"gojek.com/component":                "model-version",
-						"gojek.com/environment":              "dev",
-						"gojek.com/orchestrator":             "merlin",
-						"gojek.com/stream":                   "mystream",
-						"gojek.com/team":                     "myteam",
-						"component":                          "transformer",
-						"serving.kserve.io/inferenceservice": "mymodel-1",
-					},
+					Name:                   "mymodel-1-transformer-pdb",
+					Namespace:              "mynamespace",
+					Labels:                 defaultTransformerLabels,
+					Selectors:              defaultTransformerSelectors,
 					MinAvailablePercentage: &twenty,
 				},
 			},
@@ -215,18 +304,10 @@ func Test_generatePDBSpecs(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:      "mymodel-1-predictor-pdb",
-					Namespace: "mynamespace",
-					Labels: map[string]string{
-						"gojek.com/app":                      "mymodel",
-						"gojek.com/component":                "model-version",
-						"gojek.com/environment":              "dev",
-						"gojek.com/orchestrator":             "merlin",
-						"gojek.com/stream":                   "mystream",
-						"gojek.com/team":                     "myteam",
-						"component":                          "predictor",
-						"serving.kserve.io/inferenceservice": "mymodel-1",
-					},
+					Name:                   "mymodel-1-predictor-pdb",
+					Namespace:              "mynamespace",
+					Labels:                 defaultPredictorLabels,
+					Selectors:              defaultPredictorSelectors,
 					MinAvailablePercentage: &twenty,
 				},
 			},
@@ -254,33 +335,17 @@ func Test_generatePDBSpecs(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:      "mymodel-1-predictor-pdb",
-					Namespace: "mynamespace",
-					Labels: map[string]string{
-						"gojek.com/app":                      "mymodel",
-						"gojek.com/component":                "model-version",
-						"gojek.com/environment":              "dev",
-						"gojek.com/orchestrator":             "merlin",
-						"gojek.com/stream":                   "mystream",
-						"gojek.com/team":                     "myteam",
-						"component":                          "predictor",
-						"serving.kserve.io/inferenceservice": "mymodel-1",
-					},
+					Name:                   "mymodel-1-predictor-pdb",
+					Namespace:              "mynamespace",
+					Labels:                 defaultPredictorLabels,
+					Selectors:              defaultPredictorSelectors,
 					MinAvailablePercentage: &twenty,
 				},
 				{
-					Name:      "mymodel-1-transformer-pdb",
-					Namespace: "mynamespace",
-					Labels: map[string]string{
-						"gojek.com/app":                      "mymodel",
-						"gojek.com/component":                "model-version",
-						"gojek.com/environment":              "dev",
-						"gojek.com/orchestrator":             "merlin",
-						"gojek.com/stream":                   "mystream",
-						"gojek.com/team":                     "myteam",
-						"component":                          "transformer",
-						"serving.kserve.io/inferenceservice": "mymodel-1",
-					},
+					Name:                   "mymodel-1-transformer-pdb",
+					Namespace:              "mynamespace",
+					Labels:                 defaultTransformerLabels,
+					Selectors:              defaultTransformerSelectors,
 					MinAvailablePercentage: &twenty,
 				},
 			},
@@ -304,38 +369,22 @@ func Test_generatePDBSpecs(t *testing.T) {
 			},
 			pdbConfig: config.PodDisruptionBudgetConfig{
 				Enabled:                  true,
-				MaxUnavailablePercentage: &eighty,
+				MaxUnavailablePercentage: &ten,
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:      "mymodel-1-predictor-pdb",
-					Namespace: "mynamespace",
-					Labels: map[string]string{
-						"gojek.com/app":                      "mymodel",
-						"gojek.com/component":                "model-version",
-						"gojek.com/environment":              "dev",
-						"gojek.com/orchestrator":             "merlin",
-						"gojek.com/stream":                   "mystream",
-						"gojek.com/team":                     "myteam",
-						"component":                          "predictor",
-						"serving.kserve.io/inferenceservice": "mymodel-1",
-					},
-					MaxUnavailablePercentage: &eighty,
+					Name:                     "mymodel-1-predictor-pdb",
+					Namespace:                "mynamespace",
+					Labels:                   defaultPredictorLabels,
+					Selectors:                defaultPredictorSelectors,
+					MaxUnavailablePercentage: &ten,
 				},
 				{
-					Name:      "mymodel-1-transformer-pdb",
-					Namespace: "mynamespace",
-					Labels: map[string]string{
-						"gojek.com/app":                      "mymodel",
-						"gojek.com/component":                "model-version",
-						"gojek.com/environment":              "dev",
-						"gojek.com/orchestrator":             "merlin",
-						"gojek.com/stream":                   "mystream",
-						"gojek.com/team":                     "myteam",
-						"component":                          "transformer",
-						"serving.kserve.io/inferenceservice": "mymodel-1",
-					},
-					MaxUnavailablePercentage: &eighty,
+					Name:                     "mymodel-1-transformer-pdb",
+					Namespace:                "mynamespace",
+					Labels:                   defaultTransformerLabels,
+					Selectors:                defaultTransformerSelectors,
+					MaxUnavailablePercentage: &ten,
 				},
 			},
 		},
