@@ -149,3 +149,15 @@ InferenceServiceDefaults:
   DefaultEnvVarsWithoutCPULimits:
     - Name: foo
       Value: bar
+WebhooksConfig:
+  Enabled: true
+  Config:
+    On-Model-Deployed:
+      - URL: http://127.0.0.1:8000/sync-webhook
+        Method: POST
+        FinalResponse: true
+        Name: sync-webhook
+      - URL: http://127.0.0.1:8000/async-webhook
+        Method: POST
+        Name: async-webhook
+        Async: true

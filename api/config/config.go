@@ -24,6 +24,7 @@ import (
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
+	"github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/ory/viper"
@@ -70,6 +71,7 @@ type Config struct {
 	PyFuncPublisherConfig     PyFuncPublisherConfig
 	InferenceServiceDefaults  InferenceServiceDefaults
 	ObservabilityPublisher    ObservabilityPublisher
+	WebhooksConfig            webhooks.Config
 }
 
 // UIConfig stores the configuration for the UI.

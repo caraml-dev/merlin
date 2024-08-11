@@ -25,6 +25,7 @@ import (
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
+	"github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -597,6 +598,25 @@ func TestLoad(t *testing.T) {
 						AdditionalConsumerConfig: map[string]string{},
 					},
 					DeploymentTimeout: 30 * time.Minute,
+				},
+				WebhooksConfig: webhooks.Config{
+					Enabled: true,
+					Config: map[webhooks.EventType][]webhooks.WebhookConfig{
+						"on-model-deployed": []webhooks.WebhookConfig{
+							{
+								Name:          "sync-webhook",
+								URL:           "http://127.0.0.1:8000/sync-webhook",
+								Method:        "POST",
+								FinalResponse: true,
+							},
+							{
+								Name:   "async-webhook",
+								URL:    "http://127.0.0.1:8000/async-webhook",
+								Method: "POST",
+								Async:  true,
+							},
+						},
+					},
 				},
 			},
 		},

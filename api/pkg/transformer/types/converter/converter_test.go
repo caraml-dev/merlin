@@ -1882,7 +1882,7 @@ func TestToFloat64List(t *testing.T) {
 		{
 			name: "from []float32",
 			args: args{
-				val: []float32{float32(3.14), float32(math.NaN())},
+				val: []float32{float32(3.14), float32(4.56), float32(math.NaN())},
 			},
 			want:    []float64{3.14, 4.56},
 			wantErr: false,

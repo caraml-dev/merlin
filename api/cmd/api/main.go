@@ -27,8 +27,8 @@ import (
 	"time"
 
 	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
-
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
+	"github.com/caraml-dev/mlp/api/pkg/webhooks"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
@@ -49,6 +49,7 @@ import (
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/caraml-dev/merlin/warden"
+	wh "github.com/caraml-dev/merlin/webhooks"
 	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 )
@@ -267,6 +268,11 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		log.Panicf("invalid deployment label prefix (%s): %s", cfg.DeploymentLabelPrefix, err)
 	}
 
+	webhookManager, err := webhooks.InitializeWebhooks(&cfg.WebhooksConfig, wh.WebhookEvents)
+	if err != nil {
+		log.Panicf("failed to initialize webhooks: %s", err)
+	}
+
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 
 	observabilityPublisherStorage := storage.NewObservabilityPublisherStorage(db)
@@ -274,8 +280,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	versionStorage := storage.NewVersionStorage(db)
 	observabilityEvent := event.NewEventProducer(dispatcher, observabilityPublisherStorage, versionStorage)
 	clusterControllers := initClusterControllers(cfg)
-	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db, observabilityEvent)
-	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher)
+	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db, observabilityEvent, webhookManager)
+	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher, webhookManager)
 	modelEndpointService := initModelEndpointService(cfg, db, observabilityEvent)
 
 	batchControllers := initBatchControllers(cfg, db, mlpAPIClient)

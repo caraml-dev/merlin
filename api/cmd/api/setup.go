@@ -10,6 +10,7 @@ import (
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
 	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	"github.com/caraml-dev/mlp/api/pkg/auth"
+	"github.com/caraml-dev/mlp/api/pkg/webhooks"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"google.golang.org/grpc"
@@ -421,7 +422,7 @@ func initPredictionJobService(cfg *config.Config, controllers map[string]batch.C
 	return service.NewPredictionJobService(controllers, builder, predictionJobStorage, clock.RealClock{}, cfg.Environment, producer)
 }
 
-func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, observabilityEvent event.EventProducer) *work.ModelServiceDeployment {
+func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, observabilityEvent event.EventProducer, webhookManager webhooks.WebhookManager) *work.ModelServiceDeployment {
 	return &work.ModelServiceDeployment{
 		ClusterControllers:         controllers,
 		ImageBuilder:               builder,
@@ -430,6 +431,7 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 		LoggerDestinationURL:       cfg.LoggerDestinationURL,
 		MLObsLoggerDestinationURL:  cfg.MLObsLoggerDestinationURL,
 		ObservabilityEventProducer: observabilityEvent,
+		WebhookManager:             webhookManager,
 	}
 }
 
@@ -502,7 +504,7 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 	return controllers
 }
 
-func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, feastCoreClient core.CoreServiceClient, producer queue.Producer) service.EndpointsService {
+func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, feastCoreClient core.CoreServiceClient, producer queue.Producer, webhookManager webhooks.WebhookManager) service.EndpointsService {
 	return service.NewEndpointService(service.EndpointServiceParams{
 		ClusterControllers:        controllers,
 		ImageBuilder:              builder,
@@ -514,6 +516,7 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 		JobProducer:               producer,
 		FeastCoreClient:           feastCoreClient,
 		StandardTransformerConfig: cfg.StandardTransformerConfig,
+		WebhookManager:            webhookManager,
 	})
 }
 

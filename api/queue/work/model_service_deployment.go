@@ -15,6 +15,8 @@ import (
 	"github.com/caraml-dev/merlin/pkg/observability/event"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage"
+	wh "github.com/caraml-dev/merlin/webhooks"
+	"github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/prometheus/client_golang/prometheus"
 	"gorm.io/gorm"
 )
@@ -42,6 +44,7 @@ type ModelServiceDeployment struct {
 	LoggerDestinationURL       string
 	MLObsLoggerDestinationURL  string
 	ObservabilityEventProducer event.EventProducer
+	WebhookManager             webhooks.WebhookManager
 }
 
 type EndpointJob struct {
@@ -205,6 +208,18 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	if model.ObservabilitySupported {
 		if err := depl.ObservabilityEventProducer.VersionEndpointChangeEvent(endpoint, model); err != nil {
 			log.Errorf("error publishing event for observability deployment for model: %s, version: %s with error: %w", model.Name, version.ID, err)
+		}
+	}
+
+	// calling webhooks if there's any webhooks configured
+	if depl.WebhookManager != nil && depl.WebhookManager.IsEventConfigured(wh.OnModelVersionDeployed) {
+		body := wh.BuildRequest(wh.OnModelVersionDeployed, &wh.VersionEndpointData{
+			VersionEndpoint: endpoint,
+		})
+
+		err = depl.WebhookManager.InvokeWebhooks(ctx, wh.OnModelVersionDeployed, body, webhooks.NoOpCallback, webhooks.NoOpErrorHandler)
+		if err != nil {
+			log.Warnf("unable to invoke webhook for event type: %s, model: %s, version: %s, error: %v", wh.OnModelVersionDeployed, model.Name, version.ID, err)
 		}
 	}
 
