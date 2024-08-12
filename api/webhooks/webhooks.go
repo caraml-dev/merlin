@@ -18,19 +18,7 @@ var WebhookEvents = []webhooks.EventType{
 	OnModelVersionUndeployed,
 }
 
-type Request struct {
-	EventType webhooks.EventType `json:"event_type"`
-
-	Data interface{} `json:"data"`
-}
-
-type VersionEndpointData struct {
+type VersionEndpointRequest struct {
+	EventType       webhooks.EventType      `json:"event_type"`
 	VersionEndpoint *models.VersionEndpoint `json:"version_endpoint"`
-}
-
-func BuildRequest(eventType webhooks.EventType, d interface{}) *Request {
-	return &Request{
-		EventType: eventType,
-		Data:      d,
-	}
 }

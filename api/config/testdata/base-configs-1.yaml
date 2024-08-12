@@ -156,8 +156,8 @@ WebhooksConfig:
       - URL: http://127.0.0.1:8000/sync-webhook
         Method: POST
         FinalResponse: true
-        Name: sync-webhook
+        Name: sync-webhooks
       - URL: http://127.0.0.1:8000/async-webhook
         Method: POST
-        Name: async-webhook
+        Name: async-webhooks
         Async: true

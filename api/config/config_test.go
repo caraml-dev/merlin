@@ -604,13 +604,13 @@ func TestLoad(t *testing.T) {
 					Config: map[webhooks.EventType][]webhooks.WebhookConfig{
 						"on-model-deployed": []webhooks.WebhookConfig{
 							{
-								Name:          "sync-webhook",
+								Name:          "sync-webhooks",
 								URL:           "http://127.0.0.1:8000/sync-webhook",
 								Method:        "POST",
 								FinalResponse: true,
 							},
 							{
-								Name:   "async-webhook",
+								Name:   "async-webhooks",
 								URL:    "http://127.0.0.1:8000/async-webhook",
 								Method: "POST",
 								Async:  true,

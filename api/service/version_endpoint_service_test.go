@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caraml-dev/mlp/api/pkg/webhooks"
+	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/google/uuid"
@@ -48,7 +48,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	queueMock "github.com/caraml-dev/merlin/queue/mocks"
 	"github.com/caraml-dev/merlin/storage/mocks"
-	wh "github.com/caraml-dev/merlin/webhooks"
+	webhooks "github.com/caraml-dev/merlin/webhooks"
 )
 
 var (
@@ -803,7 +803,7 @@ func TestDeployEndpoint(t *testing.T) {
 			wantDeployError: false,
 		},
 		{
-			name: "success: new endpoint with existing webhook",
+			name: "success: new endpoint with existing webhookManager",
 			args: args{
 				env,
 				model,
@@ -837,11 +837,11 @@ func TestDeployEndpoint(t *testing.T) {
 			imgBuilder := &imageBuilderMock.ImageBuilder{}
 			mockStorage := &mocks.VersionEndpointStorage{}
 			mockDeploymentStorage := &mocks.DeploymentStorage{}
-			mockWebhook := webhooks.NewMockWebhookManager(t)
+			mockWebhook := webhookManager.NewMockWebhookManager(t)
 
 			mockStorage.On("Save", mock.Anything).Return(nil)
 			mockDeploymentStorage.On("Save", mock.Anything).Return(nil, nil)
-			mockWebhook.On("IsEventConfigured", wh.OnModelVersionPredeployment).Return(tt.args.isWebhookExist)
+			mockWebhook.On("IsEventConfigured", webhooks.OnModelVersionPredeployment).Return(tt.args.isWebhookExist)
 			if tt.args.isWebhookExist {
 				mockWebhook.On("InvokeWebhooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			}
@@ -2388,7 +2388,7 @@ func assertElementMatchFeatureTableMetadata(t *testing.T, expectation []*spec.Fe
 
 func TestUndeployEndpoint(t *testing.T) {
 	type webhooksArgs struct {
-		event             webhooks.EventType
+		event             webhookManager.EventType
 		isEventConfigured bool
 		err               error
 	}
@@ -2424,7 +2424,7 @@ func TestUndeployEndpoint(t *testing.T) {
 		wantUndeployError bool
 	}{
 		{
-			name: "success: without webhook",
+			name: "success: without webhookManager",
 			args: args{
 				&models.VersionEndpoint{
 					ID:        id,
@@ -2432,7 +2432,7 @@ func TestUndeployEndpoint(t *testing.T) {
 					Status:    models.EndpointRunning,
 				},
 				&webhooksArgs{
-					event:             wh.OnModelVersionUndeployed,
+					event:             webhooks.OnModelVersionUndeployed,
 					isEventConfigured: false,
 					err:               nil,
 				},
@@ -2445,7 +2445,7 @@ func TestUndeployEndpoint(t *testing.T) {
 			wantUndeployError: false,
 		},
 		{
-			name: "success: with webhook",
+			name: "success: with webhookManager",
 			args: args{
 				&models.VersionEndpoint{
 					ID:        id,
@@ -2453,7 +2453,7 @@ func TestUndeployEndpoint(t *testing.T) {
 					Status:    models.EndpointRunning,
 				},
 				&webhooksArgs{
-					event:             wh.OnModelVersionUndeployed,
+					event:             webhooks.OnModelVersionUndeployed,
 					isEventConfigured: true,
 				},
 			},
@@ -2472,7 +2472,7 @@ func TestUndeployEndpoint(t *testing.T) {
 					Status:    models.EndpointRunning,
 				},
 				&webhooksArgs{
-					event:             wh.OnModelVersionUndeployed,
+					event:             webhooks.OnModelVersionUndeployed,
 					isEventConfigured: false,
 				},
 			},
@@ -2492,7 +2492,7 @@ func TestUndeployEndpoint(t *testing.T) {
 			imgBuilder := &imageBuilderMock.ImageBuilder{}
 			mockStorage := &mocks.VersionEndpointStorage{}
 			mockDeploymentStorage := &mocks.DeploymentStorage{}
-			mockWebhook := webhooks.NewMockWebhookManager(t)
+			mockWebhook := webhookManager.NewMockWebhookManager(t)
 
 			envController.On("Delete", mock.Anything, mock.Anything).Return(nil, nil)
 			mockStorage.On("Save", mock.Anything).Return(nil)

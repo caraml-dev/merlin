@@ -191,7 +191,7 @@ func TestExecuteDeployment(t *testing.T) {
 			}(),
 		},
 		{
-			name:    "Success: with calling webhook",
+			name:    "Success: with calling webhooks",
 			model:   model,
 			version: version,
 			endpoint: &models.VersionEndpoint{
