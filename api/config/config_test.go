@@ -602,7 +602,7 @@ func TestLoad(t *testing.T) {
 				WebhooksConfig: webhooks.Config{
 					Enabled: true,
 					Config: map[webhooks.EventType][]webhooks.WebhookConfig{
-						"on-model-deployed": []webhooks.WebhookConfig{
+						"on-model-deployed": {
 							{
 								Name:          "sync-webhooks",
 								URL:           "http://127.0.0.1:8000/sync-webhook",
