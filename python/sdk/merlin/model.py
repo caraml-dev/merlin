@@ -426,11 +426,11 @@ class Model:
 
         return f"labels:{','.join(all_search_kv_pair)}"
 
-    def _get_next_cursor_from_headers(self, headers: dict) -> str:
+    def _get_next_cursor_from_headers(self, headers: Dict[str, str]) -> str:
         next_cursor_key = "next-cursor"
         for key in headers:
             if key.lower() == next_cursor_key:
-                return headers.get(key)
+                return headers[key]
 
         return ""
 
