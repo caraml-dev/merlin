@@ -26,13 +26,22 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import client
 import docker
 import pyprind
-from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
-                    SecretApi, VersionApi, VersionImageApi)
+from client import (
+    EndpointApi,
+    EnvironmentApi,
+    ModelEndpointsApi,
+    ModelsApi,
+    SecretApi,
+    VersionApi,
+    VersionImageApi,
+)
 from docker import APIClient
 from docker.models.containers import Container
-from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-                                AutoscalingPolicy)
+from merlin.autoscaling import (
+    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+    AutoscalingPolicy,
+)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
@@ -47,9 +56,13 @@ from merlin.pyfunc import run_pyfunc_local_server
 from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (autostr, download_files_from_gcs,
-                         extract_optional_value_with_default, guess_mlp_ui_url,
-                         valid_name_check)
+from merlin.util import (
+    autostr,
+    download_files_from_gcs,
+    extract_optional_value_with_default,
+    guess_mlp_ui_url,
+    valid_name_check,
+)
 from merlin.validation import validate_model_dir
 from merlin.version_image import VersionImage
 from mlflow.entities import Run, RunData
@@ -413,6 +426,14 @@ class Model:
 
         return f"labels:{','.join(all_search_kv_pair)}"
 
+    def _get_next_cursor_from_headers(self, headers: Dict[str, str]) -> str:
+        next_cursor_key = "next-cursor"
+        for key in headers:
+            if key.lower() == next_cursor_key:
+                return headers[key]
+
+        return ""
+
     def _list_version_pagination(
         self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search=""
     ) -> Tuple[List["ModelVersion"], str]:
@@ -432,7 +453,7 @@ class Model:
         versions = version_api_response.data
         headers = extract_optional_value_with_default(version_api_response.headers, {})
 
-        next_cursor = headers.get("Next-Cursor") or ""
+        next_cursor = self._get_next_cursor_from_headers(headers)
         result = []
         for v in versions:
             result.append(ModelVersion(v, self, self._api_client))
