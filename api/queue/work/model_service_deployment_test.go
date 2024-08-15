@@ -14,7 +14,8 @@ import (
 	eventMock "github.com/caraml-dev/merlin/pkg/observability/event/mocks"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage/mocks"
-	"github.com/caraml-dev/mlp/api/pkg/webhooks"
+	webhook "github.com/caraml-dev/merlin/webhooks"
+	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
@@ -73,7 +74,7 @@ func TestExecuteDeployment(t *testing.T) {
 		storage           func() *mocks.VersionEndpointStorage
 		controller        func() *clusterMock.Controller
 		imageBuilder      func() *imageBuilderMock.ImageBuilder
-		webhookManager    func() webhooks.WebhookManager
+		webhookManager    func() webhookManager.WebhookManager
 		eventProducer     *eventMock.EventProducer
 	}{
 		{
@@ -119,8 +120,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -169,8 +170,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -233,11 +234,12 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
-				webhookManager.On("IsEventConfigured", mock.Anything).Return(true)
-				webhookManager.On("InvokeWebhooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-				return webhookManager
+			webhookManager: func() webhookManager.WebhookManager {
+				manager := webhookManager.NewMockWebhookManager(t)
+
+				manager.On("IsEventConfigured", mock.Anything).Return(true)
+				manager.On("InvokeWebhooks", mock.Anything, webhook.OnModelVersionDeployed, mock.IsType(&webhook.VersionEndpointRequest{}), mock.Anything, mock.Anything).Return(nil)
+				return manager
 			},
 		},
 		{
@@ -284,8 +286,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -356,8 +358,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -413,8 +415,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -462,8 +464,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -513,8 +515,8 @@ func TestExecuteDeployment(t *testing.T) {
 					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -564,8 +566,8 @@ func TestExecuteDeployment(t *testing.T) {
 					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -627,8 +629,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				webhookManager := webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
 				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
 				return webhookManager
 			},
@@ -670,8 +672,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				return webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				return webhookManager.NewMockWebhookManager(t)
 			},
 		},
 		{
@@ -710,8 +712,8 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder.On("BuildImage", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
 				return mockImgBuilder
 			},
-			webhookManager: func() webhooks.WebhookManager {
-				return webhooks.NewMockWebhookManager(t)
+			webhookManager: func() webhookManager.WebhookManager {
+				return webhookManager.NewMockWebhookManager(t)
 			},
 		},
 	}

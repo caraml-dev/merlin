@@ -147,7 +147,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 
 		err := k.webhookManager.InvokeWebhooks(ctx, webhooks.OnModelVersionPredeployment, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
 		if err != nil {
-			log.Errorf("unable to invoke webhooks for event type: %s, model: %s, version: %s, error: %v", webhooks.OnModelVersionDeployed, model.Name, version.ID, err)
+			log.Errorf("unable to invoke webhooks for event type: %s, model: %s, version: %s, error: %v", webhooks.OnModelVersionPredeployment, model.Name, version.ID, err)
 			return nil, err
 		}
 	}
@@ -310,7 +310,7 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 
 		err = k.webhookManager.InvokeWebhooks(ctx, webhooks.OnModelVersionUndeployed, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
 		if err != nil {
-			log.Warnf("unable to invoke webhooks for event type: %s, model: %s, version: %s, error: %v", webhooks.OnModelVersionDeployed, model.Name, version.ID, err)
+			log.Warnf("unable to invoke webhooks for event type: %s, model: %s, version: %s, error: %v", webhooks.OnModelVersionUndeployed, model.Name, version.ID, err)
 		}
 	}
 
