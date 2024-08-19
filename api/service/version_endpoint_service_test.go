@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/google/uuid"
@@ -47,6 +48,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	queueMock "github.com/caraml-dev/merlin/queue/mocks"
 	"github.com/caraml-dev/merlin/storage/mocks"
+	webhooks "github.com/caraml-dev/merlin/webhooks"
 )
 
 var (
@@ -56,10 +58,11 @@ var (
 
 func TestDeployEndpoint(t *testing.T) {
 	type args struct {
-		environment *models.Environment
-		model       *models.Model
-		version     *models.Version
-		endpoint    *models.VersionEndpoint
+		environment    *models.Environment
+		model          *models.Model
+		version        *models.Version
+		endpoint       *models.VersionEndpoint
+		isWebhookExist bool
 	}
 
 	env := &models.Environment{
@@ -79,13 +82,12 @@ func TestDeployEndpoint(t *testing.T) {
 	model := &models.Model{Name: "model", Project: project}
 	version := &models.Version{ID: 1}
 
-	// iSvcName := fmt.Sprintf("%s-%d-0", model.Name, version.ID)
-
 	tests := []struct {
 		name             string
 		args             args
 		expectedEndpoint *models.VersionEndpoint
-		wantDeployError  bool
+
+		wantDeployError bool
 	}{
 		{
 			name: "success: new endpoint default resource request",
@@ -94,6 +96,7 @@ func TestDeployEndpoint(t *testing.T) {
 				model,
 				version,
 				&models.VersionEndpoint{},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -120,6 +123,7 @@ func TestDeployEndpoint(t *testing.T) {
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -144,6 +148,7 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 				&models.Version{ID: 1},
 				&models.VersionEndpoint{},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -165,6 +170,7 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -186,6 +192,7 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -223,6 +230,7 @@ func TestDeployEndpoint(t *testing.T) {
 					},
 					Protocol: protocol.HttpJson,
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -252,6 +260,7 @@ func TestDeployEndpoint(t *testing.T) {
 				model,
 				version,
 				&models.VersionEndpoint{},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{},
 			wantDeployError:  true,
@@ -269,6 +278,7 @@ func TestDeployEndpoint(t *testing.T) {
 						ResourceRequest: env.DefaultResourceRequest,
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -311,6 +321,7 @@ func TestDeployEndpoint(t *testing.T) {
 					},
 					Protocol: protocol.HttpJson,
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -359,6 +370,7 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -403,6 +415,7 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -451,6 +464,7 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -504,6 +518,7 @@ func TestDeployEndpoint(t *testing.T) {
 					},
 					DeploymentMode: deployment.RawDeploymentMode,
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				Namespace: project.Name,
@@ -561,6 +576,7 @@ func TestDeployEndpoint(t *testing.T) {
 						TargetValue: 100,
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				Namespace: project.Name,
@@ -621,6 +637,7 @@ func TestDeployEndpoint(t *testing.T) {
 						TargetValue: 100,
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				Namespace: project.Name,
@@ -725,6 +742,7 @@ func TestDeployEndpoint(t *testing.T) {
 						TargetValue: 10,
 					},
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				Namespace: project.Name,
@@ -771,6 +789,7 @@ func TestDeployEndpoint(t *testing.T) {
 					ResourceRequest: env.DefaultResourceRequest,
 					Protocol:        protocol.UpiV1,
 				},
+				false,
 			},
 			expectedEndpoint: &models.VersionEndpoint{
 				DeploymentMode:    deployment.ServerlessDeploymentMode,
@@ -780,6 +799,26 @@ func TestDeployEndpoint(t *testing.T) {
 				URL:               "",
 				Status:            models.EndpointPending,
 				Protocol:          protocol.UpiV1,
+			},
+			wantDeployError: false,
+		},
+		{
+			name: "success: new endpoint with existing webhookManager",
+			args: args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{},
+				true,
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				DeploymentMode:    deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy: autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:   env.DefaultResourceRequest,
+				Namespace:         project.Name,
+				URL:               "",
+				Status:            models.EndpointPending,
+				Protocol:          protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -798,8 +837,15 @@ func TestDeployEndpoint(t *testing.T) {
 			imgBuilder := &imageBuilderMock.ImageBuilder{}
 			mockStorage := &mocks.VersionEndpointStorage{}
 			mockDeploymentStorage := &mocks.DeploymentStorage{}
+			mockWebhook := webhookManager.NewMockWebhookManager(t)
+
 			mockStorage.On("Save", mock.Anything).Return(nil)
 			mockDeploymentStorage.On("Save", mock.Anything).Return(nil, nil)
+			mockWebhook.On("IsEventConfigured", webhooks.OnModelVersionPredeployment).Return(tt.args.isWebhookExist)
+			if tt.args.isWebhookExist {
+				mockWebhook.On("InvokeWebhooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			}
+
 			mockCfg := &config.Config{
 				Environment: "dev",
 				FeatureToggleConfig: config.FeatureToggleConfig{
@@ -820,6 +866,7 @@ func TestDeployEndpoint(t *testing.T) {
 				MonitoringConfig:     mockCfg.FeatureToggleConfig.MonitoringConfig,
 				LoggerDestinationURL: loggerDestinationURL,
 				JobProducer:          mockQueueProducer,
+				WebhookManager:       mockWebhook,
 			})
 			actualEndpoint, err := endpointSvc.DeployEndpoint(context.Background(), tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
 			if tt.wantDeployError {
@@ -850,6 +897,10 @@ func TestDeployEndpoint(t *testing.T) {
 
 			if tt.args.endpoint.Transformer != nil {
 				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, actualEndpoint.Transformer.Enabled)
+			}
+
+			if tt.args.isWebhookExist {
+				mockWebhook.AssertNumberOfCalls(t, "InvokeWebhooks", 1)
 			}
 		})
 	}
@@ -2333,4 +2384,170 @@ func assertElementMatchFeatureTableMetadata(t *testing.T, expectation []*spec.Fe
 		}
 	}
 	assert.True(t, len(expectation) == numOfMatchElements)
+}
+
+func TestUndeployEndpoint(t *testing.T) {
+	type webhooksArgs struct {
+		event             webhookManager.EventType
+		isEventConfigured bool
+		err               error
+	}
+
+	type args struct {
+		endpoint *models.VersionEndpoint
+		webhooks *webhooksArgs
+	}
+
+	id := uuid.New()
+
+	env := &models.Environment{
+		Name:       "env1",
+		Cluster:    "cluster1",
+		IsDefault:  &isDefaultTrue,
+		Region:     "id",
+		GcpProject: "project",
+		DefaultResourceRequest: &models.ResourceRequest{
+			MinReplica:    0,
+			MaxReplica:    1,
+			CPURequest:    resource.MustParse("1"),
+			MemoryRequest: resource.MustParse("1Gi"),
+		},
+	}
+	project := mlp.Project{Name: "project"}
+	model := &models.Model{Name: "model", Project: project}
+	version := &models.Version{ID: 1}
+
+	tests := []struct {
+		name              string
+		args              args
+		expectedEndpoint  *models.VersionEndpoint
+		wantUndeployError bool
+	}{
+		{
+			name: "success: without webhookManager",
+			args: args{
+				&models.VersionEndpoint{
+					ID:        id,
+					Namespace: project.Name,
+					Status:    models.EndpointRunning,
+				},
+				&webhooksArgs{
+					event:             webhooks.OnModelVersionUndeployed,
+					isEventConfigured: false,
+					err:               nil,
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				ID:        id,
+				Namespace: project.Name,
+				Status:    models.EndpointTerminated,
+			},
+			wantUndeployError: false,
+		},
+		{
+			name: "success: with webhookManager",
+			args: args{
+				&models.VersionEndpoint{
+					ID:        id,
+					Namespace: project.Name,
+					Status:    models.EndpointRunning,
+				},
+				&webhooksArgs{
+					event:             webhooks.OnModelVersionUndeployed,
+					isEventConfigured: true,
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				ID:        id,
+				Namespace: project.Name,
+				Status:    models.EndpointTerminated,
+			},
+		},
+		{
+			name: "fail: to undeploy",
+			args: args{
+				&models.VersionEndpoint{
+					ID:        id,
+					Namespace: project.Name,
+					Status:    models.EndpointRunning,
+				},
+				&webhooksArgs{
+					event:             webhooks.OnModelVersionUndeployed,
+					isEventConfigured: false,
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				ID:        id,
+				Namespace: project.Name,
+				Status:    models.EndpointTerminated,
+			},
+			wantUndeployError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			envController := &clusterMock.Controller{}
+			mockQueueProducer := &queueMock.Producer{}
+			imgBuilder := &imageBuilderMock.ImageBuilder{}
+			mockStorage := &mocks.VersionEndpointStorage{}
+			mockDeploymentStorage := &mocks.DeploymentStorage{}
+			mockWebhook := webhookManager.NewMockWebhookManager(t)
+
+			envController.On("Delete", mock.Anything, mock.Anything).Return(nil, nil)
+			mockStorage.On("Save", mock.Anything).Return(nil)
+			if tt.wantUndeployError {
+				mockDeploymentStorage.On("Undeploy", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("Failed to undeploy"))
+			} else {
+				mockDeploymentStorage.On("Undeploy", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				mockWebhook.On("IsEventConfigured", mock.Anything).Return(tt.args.webhooks.isEventConfigured)
+			}
+			if tt.args.webhooks.isEventConfigured {
+				mockWebhook.On("InvokeWebhooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			}
+
+			mockCfg := &config.Config{
+				Environment: "dev",
+				FeatureToggleConfig: config.FeatureToggleConfig{
+					MonitoringConfig: config.MonitoringConfig{
+						MonitoringEnabled: false,
+					},
+				},
+			}
+
+			controllers := map[string]cluster.Controller{env.Name: envController}
+
+			endpointSvc := NewEndpointService(EndpointServiceParams{
+				ClusterControllers:   controllers,
+				ImageBuilder:         imgBuilder,
+				Storage:              mockStorage,
+				DeploymentStorage:    mockDeploymentStorage,
+				Environment:          mockCfg.Environment,
+				MonitoringConfig:     mockCfg.FeatureToggleConfig.MonitoringConfig,
+				LoggerDestinationURL: loggerDestinationURL,
+				JobProducer:          mockQueueProducer,
+				WebhookManager:       mockWebhook,
+			})
+
+			actualEndpoint, err := endpointSvc.UndeployEndpoint(context.Background(), env, model, version, tt.args.endpoint)
+
+			envController.AssertNumberOfCalls(t, "Delete", 1)
+			mockStorage.AssertNumberOfCalls(t, "Save", 1)
+			mockDeploymentStorage.AssertNumberOfCalls(t, "Undeploy", 1)
+
+			if tt.args.webhooks.isEventConfigured {
+				mockWebhook.AssertNumberOfCalls(t, "InvokeWebhooks", 1)
+			}
+
+			if tt.wantUndeployError {
+				assert.Error(t, err)
+				return
+			}
+
+			mockWebhook.AssertNumberOfCalls(t, "IsEventConfigured", 1)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedEndpoint, actualEndpoint)
+		})
+	}
 }

@@ -14,6 +14,8 @@ import (
 	eventMock "github.com/caraml-dev/merlin/pkg/observability/event/mocks"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage/mocks"
+	webhook "github.com/caraml-dev/merlin/webhooks"
+	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
@@ -72,6 +74,7 @@ func TestExecuteDeployment(t *testing.T) {
 		storage           func() *mocks.VersionEndpointStorage
 		controller        func() *clusterMock.Controller
 		imageBuilder      func() *imageBuilderMock.ImageBuilder
+		webhookManager    func() webhookManager.WebhookManager
 		eventProducer     *eventMock.EventProducer
 	}{
 		{
@@ -116,6 +119,11 @@ func TestExecuteDeployment(t *testing.T) {
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
+			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
 			},
 		},
 		{
@@ -162,6 +170,11 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
+			},
 			eventProducer: func() *eventMock.EventProducer {
 				producer := &eventMock.EventProducer{}
 				producer.On("VersionEndpointChangeEvent", &models.VersionEndpoint{
@@ -177,6 +190,57 @@ func TestExecuteDeployment(t *testing.T) {
 				}, &models.Model{Name: "model", Project: project, ObservabilitySupported: true}).Return(nil)
 				return producer
 			}(),
+		},
+		{
+			name:    "Success: with calling webhooks",
+			model:   model,
+			version: version,
+			endpoint: &models.VersionEndpoint{
+				EnvironmentName: env.Name,
+				ResourceRequest: env.DefaultResourceRequest,
+				VersionID:       version.ID,
+				Namespace:       project.Name,
+			},
+			deploymentStorage: func() *mocks.DeploymentStorage {
+				mockStorage := createDefaultMockDeploymentStorage()
+				mockStorage.On("OnDeploymentSuccess", mock.Anything).Return(nil)
+				return mockStorage
+			},
+			storage: func() *mocks.VersionEndpointStorage {
+				mockStorage := &mocks.VersionEndpointStorage{}
+				mockStorage.On("Save", mock.Anything).Return(nil)
+				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
+					Environment:     env,
+					EnvironmentName: env.Name,
+					ResourceRequest: env.DefaultResourceRequest,
+					VersionID:       version.ID,
+					Namespace:       project.Name,
+				}, nil)
+				return mockStorage
+			},
+			controller: func() *clusterMock.Controller {
+				ctrl := &clusterMock.Controller{}
+				ctrl.On("Deploy", mock.Anything, mock.Anything).
+					Return(&models.Service{
+						Name:        iSvcName,
+						Namespace:   project.Name,
+						ServiceName: svcName,
+						URL:         url,
+						Metadata:    svcMetadata,
+					}, nil)
+				return ctrl
+			},
+			imageBuilder: func() *imageBuilderMock.ImageBuilder {
+				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
+				return mockImgBuilder
+			},
+			webhookManager: func() webhookManager.WebhookManager {
+				manager := webhookManager.NewMockWebhookManager(t)
+
+				manager.On("IsEventConfigured", mock.Anything).Return(true)
+				manager.On("InvokeWebhooks", mock.Anything, webhook.OnModelVersionDeployed, mock.IsType(&webhook.VersionEndpointRequest{}), mock.Anything, mock.Anything).Return(nil)
+				return manager
+			},
 		},
 		{
 			name:    "Success eventhough error when produce event",
@@ -221,6 +285,11 @@ func TestExecuteDeployment(t *testing.T) {
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
+			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
 			},
 			eventProducer: func() *eventMock.EventProducer {
 				producer := &eventMock.EventProducer{}
@@ -289,6 +358,11 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
+			},
 		},
 		{
 			name:    "Success: Latest deployment entry in storage not in pending state",
@@ -341,6 +415,11 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
+			},
 		},
 		{
 			name:    "Success: Pytorch Model",
@@ -384,6 +463,11 @@ func TestExecuteDeployment(t *testing.T) {
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
+			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
 			},
 		},
 		{
@@ -431,6 +515,11 @@ func TestExecuteDeployment(t *testing.T) {
 					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
+			},
 		},
 		{
 			name:    "Success: pytorch model with transformer",
@@ -476,6 +565,11 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
+			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
 			},
 		},
 		{
@@ -535,6 +629,11 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				webhookManager := webhookManager.NewMockWebhookManager(t)
+				webhookManager.On("IsEventConfigured", mock.Anything).Return(false)
+				return webhookManager
+			},
 		},
 		{
 			name:      "Failed: deployment failed",
@@ -573,6 +672,9 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				return webhookManager.NewMockWebhookManager(t)
+			},
 		},
 		{
 			name:      "Failed: image builder failed",
@@ -610,6 +712,9 @@ func TestExecuteDeployment(t *testing.T) {
 				mockImgBuilder.On("BuildImage", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
 				return mockImgBuilder
 			},
+			webhookManager: func() webhookManager.WebhookManager {
+				return webhookManager.NewMockWebhookManager(t)
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -619,6 +724,7 @@ func TestExecuteDeployment(t *testing.T) {
 			imgBuilder := tt.imageBuilder()
 			mockStorage := tt.storage()
 			mockDeploymentStorage := tt.deploymentStorage()
+			mockWebhook := tt.webhookManager()
 			job := &queue.Job{
 				Name: "job",
 				Arguments: queue.Arguments{
@@ -637,6 +743,7 @@ func TestExecuteDeployment(t *testing.T) {
 				DeploymentStorage:          mockDeploymentStorage,
 				LoggerDestinationURL:       loggerDestinationURL,
 				ObservabilityEventProducer: tt.eventProducer,
+				WebhookManager:             mockWebhook,
 			}
 
 			err := svc.Deploy(job)
