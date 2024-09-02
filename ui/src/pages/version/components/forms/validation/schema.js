@@ -67,6 +67,21 @@ const environmentVariableSchema = yup.object().shape({
   value: yup.string(),
 });
 
+const stringValueSchema = (name, key) => yup.mixed().test(
+  `value input schema`,
+  `${name} must be a \`string\` but the final value was $\{value}`,
+  (value, { createError }) => {
+    try {
+      if (typeof value == "object" && key in value) {
+        return yup.string().required(`${name} is required`).validateSync(value[key])
+      }
+      return yup.string().required(`${name} is required`).validateSync(value)
+    } catch (e) {
+      return createError({ message: e.message })
+    }
+  }
+)
+
 export const versionEndpointSchema = (maxAllowedReplica) => yup.object().shape({
   environment_name: yup.string().required("Environment is required"),
   resource_request: resourceRequestSchema(maxAllowedReplica),
@@ -92,7 +107,7 @@ const feastEntitiesSchema = yup.object().shape({
   name: yup.string().required("Entity Name is required"),
   valueType: yup.string().required("Entity Value Type is required"),
   fieldType: yup.string().required("Input Type is required"),
-  field: yup.string().required("Input Value is required"),
+  field: stringValueSchema("Input Value", "jsonPath"),
 });
 
 const feastFeaturesSchema = yup.object().shape({
@@ -113,7 +128,7 @@ export const feastInputSchema = yup.object().shape({
 const variableInputSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
   type: yup.string().required("Type is required"),
-  value: yup.string().required("Value is required"),
+  value: stringValueSchema("Value", "jsonPath"),
 });
 
 const tablesInputSchema = yup.object().shape({
