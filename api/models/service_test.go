@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
@@ -49,11 +50,11 @@ func TestGetValidInferenceURL(t *testing.T) {
 }
 
 func Test_mergeProjectVersionLabels(t *testing.T) {
-	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
-		_ = InitKubernetesLabeller("", "")
+		_ = labeller.InitKubernetesLabeller("", "", "")
 	}()
 
 	type args struct {

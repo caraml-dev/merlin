@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/stretchr/testify/assert"
 	v12 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -134,11 +135,11 @@ var (
 )
 
 func TestCreateSparkApplicationResource(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
-		_ = models.InitKubernetesLabeller("", "")
+		_ = labeller.InitKubernetesLabeller("", "", "")
 	}()
 
 	tests := []struct {

@@ -26,6 +26,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
 	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
@@ -41,7 +42,6 @@ import (
 	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/log"
 	mlflow "github.com/caraml-dev/merlin/mlflow"
-	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/gitlab"
 	"github.com/caraml-dev/merlin/pkg/observability/event"
 	"github.com/caraml-dev/merlin/queue"
@@ -264,7 +264,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience, cfg.StandardTransformerConfig.EnableAuth)
 
-	if err := models.InitKubernetesLabeller(cfg.DeploymentLabelPrefix, cfg.Environment); err != nil {
+	if err := labeller.InitKubernetesLabeller(cfg.DeploymentLabelPrefix, cfg.NamespaceLabelPrefix, cfg.Environment); err != nil {
 		log.Panicf("invalid deployment label prefix (%s): %s", cfg.DeploymentLabelPrefix, err)
 	}
 

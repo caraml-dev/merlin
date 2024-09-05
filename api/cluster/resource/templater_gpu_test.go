@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/stretchr/testify/assert"
@@ -66,11 +67,11 @@ var (
 )
 
 func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
-		_ = models.InitKubernetesLabeller("", "")
+		_ = labeller.InitKubernetesLabeller("", "", "")
 	}()
 
 	project := mlp.Project{

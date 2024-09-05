@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/caraml-dev/merlin/istio"
 	istioCliMock "github.com/caraml-dev/merlin/istio/mocks"
 	"github.com/caraml-dev/merlin/models"
@@ -458,11 +459,11 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 }
 
 func TestModelEndpointService_createVirtualService(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
-		_ = models.InitKubernetesLabeller("", "")
+		_ = labeller.InitKubernetesLabeller("", "", "")
 	}()
 
 	type fields struct {

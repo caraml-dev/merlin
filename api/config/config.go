@@ -54,6 +54,7 @@ type Config struct {
 	NumOfQueueWorkers         int    `validate:"required" default:"2"`
 	SwaggerPath               string `validate:"required" default:"./swagger.yaml"`
 
+	NamespaceLabelPrefix  string `validate:"required" default:"caraml.dev/"`
 	DeploymentLabelPrefix string `validate:"required" default:"gojek.com/"`
 	PyfuncGRPCOptions     string `validate:"required" default:"{}"`
 

@@ -17,8 +17,10 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,6 +61,9 @@ func (k *namespaceCreator) CreateNamespace(ctx context.Context, namespace string
 	return k.Namespaces().Create(ctx, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: namespace,
+			Labels: map[string]string{
+				labeller.GetNamespaceLabel(labeller.LabelManaged): strconv.FormatBool(true),
+			},
 		},
 	}, metav1.CreateOptions{})
 }

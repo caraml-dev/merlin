@@ -18,21 +18,13 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"regexp"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/utils"
 )
 
 const (
-	labelAppName          = "app"
-	labelComponent        = "component"
-	labelEnvironment      = "environment"
-	LabelOrchestratorName = "orchestrator"
-	labelStreamName       = "stream"
-	labelTeamName         = "team"
-
 	// orchestratorValue is the value of the orchestrator (which is Merlin)
 	orchestratorValue = "merlin"
 
@@ -41,36 +33,6 @@ const (
 	ComponentModelEndpoint = "model-endpoint"
 	ComponentModelVersion  = "model-version"
 )
-
-var reservedKeys = map[string]bool{
-	labelAppName:          true,
-	labelComponent:        true,
-	labelEnvironment:      true,
-	LabelOrchestratorName: true,
-	labelStreamName:       true,
-	labelTeamName:         true,
-}
-
-var (
-	prefix           string
-	environment      string
-	validPrefixRegex = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?(/)$")
-)
-
-// InitKubernetesLabeller builds a new KubernetesLabeller Singleton
-func InitKubernetesLabeller(p, e string) error {
-	if len(p) > 253 {
-		return fmt.Errorf("length of prefix is greater than 253 characters")
-	}
-
-	if isValidPrefix := validPrefixRegex.MatchString(p); !isValidPrefix {
-		return fmt.Errorf("name violates kubernetes label's prefix constraint")
-	}
-
-	prefix = p
-	environment = e
-	return nil
-}
 
 type Metadata struct {
 	App       string
@@ -95,17 +57,17 @@ func (metadata *Metadata) Scan(value interface{}) error {
 
 func (metadata *Metadata) ToLabel() map[string]string {
 	labels := map[string]string{
-		prefix + labelAppName:          metadata.App,
-		prefix + labelComponent:        metadata.Component,
-		prefix + labelEnvironment:      environment,
-		prefix + LabelOrchestratorName: orchestratorValue,
-		prefix + labelStreamName:       metadata.Stream,
-		prefix + labelTeamName:         metadata.Team,
+		labeller.GetLabelName(labeller.LabelAppName):          metadata.App,
+		labeller.GetLabelName(labeller.LabelComponent):        metadata.Component,
+		labeller.GetLabelName(labeller.LabelEnvironment):      labeller.GetEnvironment(),
+		labeller.GetLabelName(labeller.LabelOrchestratorName): orchestratorValue,
+		labeller.GetLabelName(labeller.LabelStreamName):       metadata.Stream,
+		labeller.GetLabelName(labeller.LabelTeamName):         metadata.Team,
 	}
 
 	for _, label := range metadata.Labels {
 		// skip label that is trying to override reserved key
-		if _, usingReservedKeys := reservedKeys[prefix+label.Key]; usingReservedKeys {
+		if labeller.IsReservedKey(labeller.GetPrefix() + label.Key) {
 			continue
 		}
 
