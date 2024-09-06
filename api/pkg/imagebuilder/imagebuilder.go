@@ -402,20 +402,25 @@ func getGCPSubDomains() []string {
 // https://github.com/google/go-containerregistry/blob/master/cmd/crane/README.md
 // https://github.com/google/go-containerregistry/blob/master/pkg/v1/google/README.md
 func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) {
-	var keychain authn.Keychain
-	keychain = authn.DefaultKeychain
+	// The DefaultKeychain will use credentials as described in the Docker config file whose location is specified by
+	// the DOCKER_CONFIG environment variable, if set.
+	keychains := []authn.Keychain{
+		authn.DefaultKeychain,
+	}
 	for _, domain := range getGCPSubDomains() {
 		if strings.Contains(c.config.DockerRegistry, domain) {
-			keychain = google.Keychain
+			keychains = append(keychains, google.Keychain)
 		}
 	}
+
+	multiKeychain := authn.NewMultiKeychain(keychains...)
 
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
 		return false, fmt.Errorf("unable to parse docker repository %s: %w", imageName, err)
 	}
 
-	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
+	tags, err := remote.List(repo, remote.WithAuthFromKeychain(multiKeychain))
 	if err != nil {
 		var terr *transport.Error
 		if errors.As(err, &terr) {
