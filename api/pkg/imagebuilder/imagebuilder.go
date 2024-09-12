@@ -15,16 +15,17 @@
 package imagebuilder
 
 import (
+	"cloud.google.com/go/storage"
 	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -108,6 +109,9 @@ const (
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
 
+	dockerCredentialSecretVolume = "docker-registry-credentials"
+	dockerCredentialConfigPath   = "/kaniko/.docker"
+
 	baseImageEnvKey            = "BASE_IMAGE"
 	modelDependenciesUrlEnvKey = "MODEL_DEPENDENCIES_URL"
 	modelArtifactsUrlEnvKey    = "MODEL_ARTIFACTS_URL"
@@ -159,7 +163,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 		return "", err
 	}
 
-	condaEnvUrl := fmt.Sprintf("gs://%s/%s/model/conda.yaml", artifactURL.Bucket, artifactURL.Object)
+	condaEnvUrl := fmt.Sprintf("%s://%s/%s/model/conda.yaml", c.artifactService.GetURLScheme(), artifactURL.Bucket, artifactURL.Object)
 
 	condaEnv, err := c.artifactService.ReadArtifact(ctx, condaEnvUrl)
 	if err != nil {
@@ -170,7 +174,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 	hash.Write([]byte(condaEnv))
 	hashEnv := hash.Sum(nil)
 
-	hashedDependenciesUrl := fmt.Sprintf("gs://%s%s/%x", artifactURL.Bucket, modelDependenciesPath, hashEnv)
+	hashedDependenciesUrl := fmt.Sprintf("%s://%s%s/%x", c.artifactService.GetURLScheme(), artifactURL.Bucket, modelDependenciesPath, hashEnv)
 
 	_, err = c.artifactService.ReadArtifact(ctx, hashedDependenciesUrl)
 	if err == nil {
@@ -620,11 +624,24 @@ func (c *imageBuilder) createKanikoJobSpec(
 		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=%s=%s", baseImageEnvKey, baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", "MLFLOW_ARTIFACT_STORAGE_TYPE", c.artifactService.GetType()),
 		fmt.Sprintf("--build-arg=%s=%s", modelDependenciesUrlEnvKey, modelDependenciesUrl),
 		fmt.Sprintf("--build-arg=%s=%s/model", modelArtifactsUrlEnvKey, version.ArtifactURI),
 		fmt.Sprintf("--destination=%s", imageRef),
 	}
 
+	if artifactType := c.artifactService.GetType(); artifactType == "gcs" {
+		//kanikoArgs = append(kanikoArgs, fmt.Sprintf("--build-arg=%s=%s", "", modelDependenciesUrl))
+	} else if c.artifactService.GetType() == "s3" {
+		kanikoArgs = append(
+			kanikoArgs,
+			// TODO: To refactor env var values into configs?
+			fmt.Sprintf("--build-arg=%s=%s", "AWS_ACCESS_KEY_ID", os.Getenv("AWS_ACCESS_KEY_ID")),
+			fmt.Sprintf("--build-arg=%s=%s", "AWS_SECRET_ACCESS_KEY", os.Getenv("AWS_SECRET_ACCESS_KEY")),
+			fmt.Sprintf("--build-arg=%s=%s", "AWS_DEFAULT_REGION", os.Getenv("AWS_DEFAULT_REGION")),
+			fmt.Sprintf("--build-arg=%s=%s", "AWS_ENDPOINT_URL", os.Getenv("AWS_ENDPOINT_URL")),
+		)
+	}
 	if c.config.BaseImage.BuildContextSubPath != "" {
 		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.BaseImage.BuildContextSubPath))
 	}
@@ -632,36 +649,51 @@ func (c *imageBuilder) createKanikoJobSpec(
 	kanikoArgs = append(kanikoArgs, c.config.KanikoAdditionalArgs...)
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
-	var volume []v1.Volume
-	var volumeMount []v1.VolumeMount
+	var volumes []v1.Volume
+	var volumeMounts []v1.VolumeMount
 	var envVar []v1.EnvVar
 
-	// If kaniko service account is not set, use kaniko secret
-	if c.config.KanikoServiceAccount == "" {
-		kanikoArgs = append(kanikoArgs,
-			fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
-		volume = []v1.Volume{
-			{
-				Name: kanikoSecretName,
-				VolumeSource: v1.VolumeSource{
-					Secret: &v1.SecretVolumeSource{
-						SecretName: kanikoSecretName,
+	// Configure additional authentication requirements for specific image registries
+	if c.config.KanikoPushRegistryType == "gcr" {
+		if c.config.KanikoServiceAccount == "" {
+			kanikoArgs = append(kanikoArgs,
+				fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
+			volumes = []v1.Volume{
+				{
+					Name: kanikoSecretName,
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: kanikoSecretName,
+						},
 					},
 				},
-			},
+			}
+			volumeMounts = []v1.VolumeMount{
+				{
+					Name:      kanikoSecretName,
+					MountPath: "/secret",
+				},
+			}
+			envVar = []v1.EnvVar{
+				{
+					Name:  gacEnvKey,
+					Value: saFilePath,
+				},
+			}
 		}
-		volumeMount = []v1.VolumeMount{
-			{
-				Name:      kanikoSecretName,
-				MountPath: "/secret",
+	} else if c.config.KanikoPushRegistryType == "docker" {
+		volumes = append(volumes, v1.Volume{
+			Name: kanikoSecretName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: c.config.KanikoDockerCredentialSecretName,
+				},
 			},
-		}
-		envVar = []v1.EnvVar{
-			{
-				Name:  gacEnvKey,
-				Value: saFilePath,
-			},
-		}
+		})
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      kanikoSecretName,
+			MountPath: dockerCredentialConfigPath,
+		})
 	}
 
 	var resourceRequirements RequestLimitResources
@@ -718,13 +750,13 @@ func (c *imageBuilder) createKanikoJobSpec(
 							Name:                     containerName,
 							Image:                    c.config.KanikoImage,
 							Args:                     kanikoArgs,
-							VolumeMounts:             volumeMount,
+							VolumeMounts:             volumeMounts,
 							Env:                      envVar,
 							Resources:                resourceRequirements.Build(),
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
-					Volumes:      volume,
+					Volumes:      volumes,
 					Tolerations:  c.config.Tolerations,
 					NodeSelector: c.config.NodeSelectors,
 				},
