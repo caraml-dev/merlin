@@ -16,6 +16,9 @@ FROM condaforge/miniforge3:23.11.0-0
 
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
+# Install aws CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install
+
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
 ENV GRPC_HEALTH_PROBE_VERSION=v0.4.4

@@ -13,16 +13,38 @@
 # limitations under the License.
 
 ARG BASE_IMAGE
+
 FROM ${BASE_IMAGE}
 
+ARG MLFLOW_ARTIFACT_STORAGE_TYPE
+
 ARG GOOGLE_APPLICATION_CREDENTIALS
-RUN if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; \
-    then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} > gcloud-auth.txt; \
-    else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
+
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_DEFAULT_REGION
+ARG AWS_ENDPOINT_URL
+
+RUN if [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "gcs" ]]; then  \
+        if [ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then \
+            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} > gcloud-auth.txt; \
+        else echo "GOOGLE_APPLICATION_CREDENTIALS is not set. Skipping gcloud auth command." > gcloud-auth.txt; \
+        fi \
+    elif [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "s3" ]]; then \
+       echo "S3 credentials used" \
+    else \
+       echo "No credentials are used" \
     fi
 
 # Download and install user model dependencies
 ARG MODEL_DEPENDENCIES_URL
+RUN if [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "gcs" ]]; then  \
+        gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml \
+    elif [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "s3" ]]; then \
+        aws s3api get-object --bucket ${MODEL_DEPENDENCIES_S3_BUCKET} --key ${MODEL_DEPENDENCIES_URL}/conda.yaml conda.yaml \
+    else \
+        echo "No credentials are used" \
+    fi
 RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
 
 ARG MERLIN_DEP_CONSTRAINT
