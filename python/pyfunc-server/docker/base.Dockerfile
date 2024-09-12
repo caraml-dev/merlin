@@ -14,6 +14,8 @@
 
 FROM condaforge/miniforge3:23.11.0-0
 
+RUN apt-get install unzip
+
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
 # Install aws CLI
