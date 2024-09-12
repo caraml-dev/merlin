@@ -22,6 +22,7 @@ var reservedKeys = map[string]bool{
 	LabelOrchestratorName: true,
 	LabelStreamName:       true,
 	LabelTeamName:         true,
+	LabelManaged:          true,
 }
 
 var (
