@@ -247,6 +247,24 @@ require (
 
 require (
 	github.com/avast/retry-go/v4 v4.6.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.30.6-0.20240906182417-827d25db0048 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.17.8 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.21 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.17 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.17 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.24 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.23 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.19 // indirect
+	github.com/aws/smithy-go v1.20.4 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231113174909-778a5567bc1e // indirect
@@ -255,6 +273,7 @@ require (
 
 replace (
 	github.com/caraml-dev/merlin-pyspark-app => ../python/batch-predictor
+	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240911060740-6b280fe7b5e9
 	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
