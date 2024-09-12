@@ -45,7 +45,6 @@ RUN if [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "gcs" ]]; then  \
     else \
         echo "No credentials are used" \
     fi
-RUN gsutil cp ${MODEL_DEPENDENCIES_URL} conda.yaml
 
 ARG MERLIN_DEP_CONSTRAINT
 RUN process_conda_env.sh conda.yaml "merlin-pyfunc-server" "${MERLIN_DEP_CONSTRAINT}"
@@ -53,7 +52,13 @@ RUN conda env create --name merlin-model --file conda.yaml
 
 # Download and dry-run user model artifacts and code
 ARG MODEL_ARTIFACTS_URL
-RUN gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .
+RUN if [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "gcs" ]]; then  \
+        gsutil -m cp -r ${MODEL_ARTIFACTS_URL} . \
+    elif [[ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" == "s3" ]]; then \
+        aws s3 cp ${MODEL_ARTIFACTS_URL} . --recursive \
+    else \
+        echo "No credentials are used" \
+    fi
 RUN /bin/bash -c ". activate merlin-model && merlin-pyfunc-server --model_dir model --dry_run"
 
 CMD ["run.sh"]
