@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/caraml-dev/merlin/cluster"
 	"github.com/caraml-dev/merlin/log"
-	"github.com/caraml-dev/merlin/models"
 )
 
 var (
@@ -72,7 +72,7 @@ func (j *Janitor) CleanJobs() {
 }
 
 func (j *Janitor) getExpiredJobs(ctx context.Context) ([]batchv1.Job, error) {
-	jobs, err := j.cc.ListJobs(ctx, j.cfg.BuildNamespace, models.LabelOrchestratorName+"=merlin")
+	jobs, err := j.cc.ListJobs(ctx, j.cfg.BuildNamespace, labeller.LabelOrchestratorName+"=merlin")
 	if err != nil {
 		return nil, err
 	}

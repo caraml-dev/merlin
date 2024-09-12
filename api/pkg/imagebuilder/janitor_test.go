@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	batchv1 "k8s.io/api/batch/v1"
@@ -14,7 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/caraml-dev/merlin/cluster/mocks"
-	"github.com/caraml-dev/merlin/models"
 )
 
 var (
@@ -121,7 +121,7 @@ func TestJanitor_CleanJobs(t *testing.T) {
 
 	totalDelete := 0
 
-	mc.On("ListJobs", context.Background(), namespace, models.LabelOrchestratorName+"=merlin").
+	mc.On("ListJobs", context.Background(), namespace, labeller.LabelOrchestratorName+"=merlin").
 		Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1, completedJob2, activeJob1, failedJob1}}, nil)
 
 	mc.On("DeleteJob", context.Background(), namespace, completedJob1.Name, mock.Anything).
@@ -156,7 +156,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", context.Background(), namespace, models.LabelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labeller.LabelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{}, nil)
 			},
 			want:    []batchv1.Job{},
@@ -168,7 +168,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", context.Background(), namespace, models.LabelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labeller.LabelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1}}, nil)
 			},
 			want:    []batchv1.Job{completedJob1},
@@ -180,7 +180,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", context.Background(), namespace, models.LabelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labeller.LabelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1, activeJob1}}, nil)
 			},
 			want:    []batchv1.Job{completedJob1},
@@ -192,7 +192,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", context.Background(), namespace, models.LabelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labeller.LabelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1, activeJob1, failedJob1}}, nil)
 			},
 			want:    []batchv1.Job{completedJob1},

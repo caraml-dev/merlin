@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/stretchr/testify/assert"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +15,7 @@ import (
 )
 
 func Test_NewPodDisruptionBudget(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", "dev")
 	assert.Nil(t, err)
 
 	twenty := 20
@@ -190,7 +191,7 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 }
 
 func Test_generatePDBSpecs(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", "dev")
 	assert.Nil(t, err)
 
 	ten, twenty := 10, 20

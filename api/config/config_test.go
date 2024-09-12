@@ -366,6 +366,7 @@ func TestLoad(t *testing.T) {
 				},
 				NumOfQueueWorkers:     2,
 				SwaggerPath:           "swaggerpath.com",
+				NamespaceLabelPrefix:  "caraml.dev/",
 				DeploymentLabelPrefix: "caraml.com/",
 				PyfuncGRPCOptions:     "{}",
 				DbConfig: DatabaseConfig{

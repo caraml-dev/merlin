@@ -3,6 +3,7 @@ package models
 import (
 	"testing"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,11 +14,11 @@ const (
 )
 
 func TestToLabel(t *testing.T) {
-	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
-		_ = InitKubernetesLabeller("", "")
+		_ = labeller.InitKubernetesLabeller("", "", "")
 	}()
 
 	testCases := []struct {
@@ -131,60 +132,6 @@ func TestToLabel(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			gotLabels := tC.metadata.ToLabel()
 			assert.Equal(t, tC.expectedLabels, gotLabels)
-		})
-	}
-}
-
-func TestInitKubernetesLabeller(t *testing.T) {
-	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
-	assert.NoError(t, err)
-
-	defer func() {
-		_ = InitKubernetesLabeller("", "")
-	}()
-
-	tests := []struct {
-		prefix  string
-		wantErr bool
-	}{
-		{
-			"gojek.com/",
-			false,
-		},
-		{
-			"model.caraml.dev/",
-			false,
-		},
-		{
-			"goto/gojek",
-			true,
-		},
-		{
-			"gojek",
-			true,
-		},
-		{
-			"gojek.com/caraml",
-			true,
-		},
-		{
-			"gojek//",
-			true,
-		},
-		{
-			"gojek.com//",
-			true,
-		},
-		{
-			"//gojek.com",
-			true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.prefix, func(t *testing.T) {
-			if err := InitKubernetesLabeller(tt.prefix, testEnvironmentName); (err != nil) != tt.wantErr {
-				t.Errorf("InitKubernetesLabeller() error = %v, wantErr %v", err, tt.wantErr)
-			}
 		})
 	}
 }

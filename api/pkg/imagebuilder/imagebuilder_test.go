@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	cfg "github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
@@ -253,11 +254,11 @@ func (w *podWatchReactor) React(action ktesting.Action) (handled bool, ret watch
 }
 
 func TestBuildImage(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
-		_ = models.InitKubernetesLabeller("", "")
+		_ = labeller.InitKubernetesLabeller("", "", "")
 	}()
 
 	hash := sha256.New()

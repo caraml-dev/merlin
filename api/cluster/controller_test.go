@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caraml-dev/merlin/cluster/labeller"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	fakekserve "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	fakekservev1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
@@ -759,7 +760,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 }
 
 func TestController_DeployInferenceService_PodDisruptionBudgetsRemoval(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", "dev")
 	assert.Nil(t, err)
 
 	minAvailablePercentage := 80
