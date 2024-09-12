@@ -15,7 +15,6 @@
 package imagebuilder
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -26,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/google/go-containerregistry/pkg/authn"
