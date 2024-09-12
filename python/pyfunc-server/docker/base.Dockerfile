@@ -14,12 +14,12 @@
 
 FROM condaforge/miniforge3:23.11.0-0
 
-RUN apt-get install unzip
+RUN apt-get update && apt-get install unzip
 
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
 # Install aws CLI
-RUN wget -qO- https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip && unzip awscli-exe-linux-x86_64.zip && sudo ./aws/install
+RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip && unzip awscli-exe-linux-x86_64.zip && ./aws/install
 
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
