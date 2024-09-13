@@ -56,7 +56,7 @@ ARG MODEL_ARTIFACTS_URL
 RUN if [ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" = "gcs" ]; then  \
         gsutil -m cp -r ${MODEL_ARTIFACTS_URL} .; \
     elif [ "${MLFLOW_ARTIFACT_STORAGE_TYPE}" = "s3" ]; then \
-        aws s3 cp ${MODEL_ARTIFACTS_URL} . --recursive; \
+        aws s3 cp ${MODEL_ARTIFACTS_URL} model --recursive; \
     else \
         echo "No credentials are used"; \
     fi
