@@ -19,13 +19,14 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/caraml-dev/mlp/api/pkg/artifact"
 	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -34,7 +35,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -171,7 +171,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 	}
 
 	hash := sha256.New()
-	hash.Write([]byte(condaEnv))
+	hash.Write(condaEnv)
 	hashEnv := hash.Sum(nil)
 
 	hashedDependenciesUrl := fmt.Sprintf("%s://%s%s/%x", c.artifactService.GetURLScheme(), artifactURL.Bucket, modelDependenciesPath, hashEnv)
@@ -181,7 +181,8 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 		return hashedDependenciesUrl, nil
 	}
 
-	if !errors.Is(err, storage.ErrObjectNotExist) {
+	var nsk *types.NoSuchKey
+	if !errors.As(err, &nsk) {
 		return "", err
 	}
 
