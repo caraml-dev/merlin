@@ -9,6 +9,7 @@ require (
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/antihax/optional v1.0.0
 	github.com/antonmedv/expr v1.12.5
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
@@ -260,7 +261,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.19 // indirect
@@ -269,11 +269,12 @@ require (
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231113174909-778a5567bc1e // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+
 )
 
 replace (
 	github.com/caraml-dev/merlin-pyspark-app => ../python/batch-predictor
-	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240911060740-6b280fe7b5e9
+	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240912080549-b0402448c404
 	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
