@@ -23,6 +23,8 @@ ENV PATH /opt/conda/bin:$PATH
 ENV SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
 ENV SPARK_BQ_CONNECTOR_VERSION=0.27.0
 
+RUN apt-get update && apt-get install unzip
+
 # Setup dependencies for Google Cloud Storage access.
 RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
 ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar \
