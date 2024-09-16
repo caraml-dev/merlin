@@ -19,8 +19,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"net/http"
 	"os"
 	"sort"
@@ -35,6 +33,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -181,8 +180,7 @@ func (c *imageBuilder) getHashedModelDependenciesUrl(ctx context.Context, versio
 		return hashedDependenciesUrl, nil
 	}
 
-	var nsk *types.NoSuchKey
-	if !errors.As(err, &nsk) {
+	if !errors.Is(err, artifact.ErrObjectNotExist) {
 		return "", err
 	}
 
