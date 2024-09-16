@@ -274,7 +274,7 @@ require (
 
 replace (
 	github.com/caraml-dev/merlin-pyspark-app => ../python/batch-predictor
-	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240912080549-b0402448c404
+	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240916072420-232c6a0805a5
 	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
