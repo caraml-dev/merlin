@@ -59,6 +59,9 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf - -C /
 
+# Install aws CLI
+RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip && unzip awscli-exe-linux-x86_64.zip && ./aws/install
+
 # Configure non-root user
 ENV USER spark
 ENV UID 185
