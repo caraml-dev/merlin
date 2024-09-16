@@ -25,7 +25,6 @@ import (
 	"testing"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/caraml-dev/merlin/cluster/labeller"
 	cfg "github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
@@ -2050,7 +2049,7 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 				artifactServiceMock.On("GetURLScheme").Return("gs")
 				artifactServiceMock.On("GetURLScheme").Return("gs")
 				artifactServiceMock.On("ReadArtifact", mock.Anything, fmt.Sprintf("gs%s", testCondaEnvUrlSuffix)).Return([]byte(testCondaEnvContent), nil)
-				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return(nil, storage.ErrObjectNotExist)
+				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return(nil, artifact.ErrObjectNotExist)
 				artifactServiceMock.On("WriteArtifact", mock.Anything, modelDependenciesURL, []byte(testCondaEnvContent)).Return(nil)
 			},
 			want:    modelDependenciesURL,
