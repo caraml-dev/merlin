@@ -4,12 +4,10 @@ go 1.22
 
 require (
 	cloud.google.com/go/bigtable v1.11.0
-	cloud.google.com/go/storage v1.39.0
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20221025152940-c261df66a006
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/antihax/optional v1.0.0
 	github.com/antonmedv/expr v1.12.5
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
@@ -247,6 +245,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/storage v1.39.0 // indirect
 	github.com/avast/retry-go/v4 v4.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.30.6-0.20240906182417-827d25db0048 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.4 // indirect
@@ -261,6 +260,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.19 // indirect
@@ -274,7 +274,7 @@ require (
 
 replace (
 	github.com/caraml-dev/merlin-pyspark-app => ../python/batch-predictor
-	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240916072420-232c6a0805a5
+	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240917090435-d94d92572eac
 	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
