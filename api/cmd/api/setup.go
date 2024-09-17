@@ -114,6 +114,11 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		log.Panicf("invalid artifact service type %s", cfg.ImageBuilderConfig.ArtifactServiceType)
 	}
 
+	if cfg.ImageBuilderConfig.KanikoPushRegistryType != "gcs" &&
+		cfg.ImageBuilderConfig.KanikoPushRegistryType != "docker" {
+		log.Panicf("invalid kaniko push registry type %s", cfg.ImageBuilderConfig.KanikoPushRegistryType)
+	}
+
 	if err != nil {
 		log.Panicf("%s,failed initializing mlflow artifact service", err.Error())
 	}

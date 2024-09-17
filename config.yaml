@@ -51,6 +51,7 @@ ImageBuilderConfig:
         command: gke-gcloud-auth-plugin
         interactiveMode: IfAvailable
         provideClusterInfo: true
+  KanikoPushRegistryType: docker
   KanikoAdditionalArgs:
     - "--cache=true"
     - "--compressed-caching=false"
