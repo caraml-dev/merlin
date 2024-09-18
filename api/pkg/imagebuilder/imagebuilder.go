@@ -108,12 +108,12 @@ const (
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
 
-	dockerCredentialSecretVolume = "docker-registry-credentials"
-	dockerCredentialConfigPath   = "/kaniko/.docker"
+	dockerCredentialConfigPath = "/kaniko/.docker"
 
-	baseImageEnvKey            = "BASE_IMAGE"
-	modelDependenciesUrlEnvKey = "MODEL_DEPENDENCIES_URL"
-	modelArtifactsUrlEnvKey    = "MODEL_ARTIFACTS_URL"
+	baseImageEnvKey             = "BASE_IMAGE"
+	modelArtifactStorageTypeKey = "MLFLOW_ARTIFACT_STORAGE_TYPE"
+	modelDependenciesUrlEnvKey  = "MODEL_DEPENDENCIES_URL"
+	modelArtifactsUrlEnvKey     = "MODEL_ARTIFACTS_URL"
 
 	modelDependenciesPath = "/merlin/model_dependencies"
 )
@@ -407,16 +407,16 @@ func getGCPSubDomains() []string {
 func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) {
 	// The DefaultKeychain will use credentials as described in the Docker config file whose location is specified by
 	// the DOCKER_CONFIG environment variable, if set.
-	keychains := []authn.Keychain{
-		authn.DefaultKeychain,
-	}
+	var keychain authn.Keychain
+	keychain = authn.DefaultKeychain
+
 	for _, domain := range getGCPSubDomains() {
 		if strings.Contains(c.config.DockerRegistry, domain) {
-			keychains = append(keychains, google.Keychain)
+			keychain = google.Keychain
 		}
 	}
 
-	multiKeychain := authn.NewMultiKeychain(keychains...)
+	multiKeychain := authn.NewMultiKeychain(keychain)
 
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
@@ -623,18 +623,15 @@ func (c *imageBuilder) createKanikoJobSpec(
 		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=%s=%s", baseImageEnvKey, baseImageTag.ImageName),
-		fmt.Sprintf("--build-arg=%s=%s", "MLFLOW_ARTIFACT_STORAGE_TYPE", c.artifactService.GetType()),
+		fmt.Sprintf("--build-arg=%s=%s", modelArtifactStorageTypeKey, c.artifactService.GetType()),
 		fmt.Sprintf("--build-arg=%s=%s", modelDependenciesUrlEnvKey, modelDependenciesUrl),
 		fmt.Sprintf("--build-arg=%s=%s/model", modelArtifactsUrlEnvKey, version.ArtifactURI),
 		fmt.Sprintf("--destination=%s", imageRef),
 	}
 
-	if artifactType := c.artifactService.GetType(); artifactType == "gcs" {
-		//kanikoArgs = append(kanikoArgs, fmt.Sprintf("--build-arg=%s=%s", "", modelDependenciesUrl))
-	} else if c.artifactService.GetType() == "s3" {
+	if c.artifactService.GetType() == "s3" {
 		kanikoArgs = append(
 			kanikoArgs,
-			// TODO: To refactor env var values into configs?
 			fmt.Sprintf("--build-arg=%s=%s", "AWS_ACCESS_KEY_ID", os.Getenv("AWS_ACCESS_KEY_ID")),
 			fmt.Sprintf("--build-arg=%s=%s", "AWS_SECRET_ACCESS_KEY", os.Getenv("AWS_SECRET_ACCESS_KEY")),
 			fmt.Sprintf("--build-arg=%s=%s", "AWS_DEFAULT_REGION", os.Getenv("AWS_DEFAULT_REGION")),
@@ -681,18 +678,22 @@ func (c *imageBuilder) createKanikoJobSpec(
 			}
 		}
 	} else if c.config.KanikoPushRegistryType == "docker" {
-		volumes = append(volumes, v1.Volume{
-			Name: kanikoSecretName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: c.config.KanikoDockerCredentialSecretName,
+		volumes = []v1.Volume{
+			{
+				Name: kanikoSecretName,
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: c.config.KanikoDockerCredentialSecretName,
+					},
 				},
 			},
-		})
-		volumeMounts = append(volumeMounts, v1.VolumeMount{
-			Name:      kanikoSecretName,
-			MountPath: dockerCredentialConfigPath,
-		})
+		}
+		volumeMounts = []v1.VolumeMount{
+			{
+				Name:      kanikoSecretName,
+				MountPath: dockerCredentialConfigPath,
+			},
+		}
 	}
 
 	var resourceRequirements RequestLimitResources
