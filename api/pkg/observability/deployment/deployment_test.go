@@ -49,10 +49,10 @@ const (
 	timeoutError deploymentStatus = "timeout_error"
 
 	namespace          = "caraml-observability"
-	serviceAccountName = "caraml-observability-sa"
+	serviceAccountName = "caraml-observability-sa-secret"
 )
 
-func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList, imageName string) *appsv1.Deployment {
+func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList, imageName string, serviceAccountSecretName string) *appsv1.Deployment {
 	labels := data.Metadata.ToLabel()
 	labels[appLabelKey] = data.Metadata.App
 	numReplicas := int32(2)
@@ -80,7 +80,6 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 					},
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: serviceAccountName,
 					Containers: []corev1.Container{
 						{
 							Name:  "worker",
@@ -103,12 +102,23 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 									MountPath: "/mlobs/observation-publisher/conf/environment",
 									ReadOnly:  true,
 								},
+								{
+									Name:      "iam-secret",
+									MountPath: fmt.Sprintf("/iam/%s", serviceAccountSecretName),
+									ReadOnly:  true,
+								},
 							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "prom-metric",
 									ContainerPort: 8000,
 									Protocol:      corev1.ProtocolTCP,
+								},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+									Value: fmt.Sprintf("/iam/%s/service-account.json", serviceAccountSecretName),
 								},
 							},
 						},
@@ -119,6 +129,14 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
 									SecretName: fmt.Sprintf("%s-%s-config", data.Project, data.ModelName),
+								},
+							},
+						},
+						{
+							Name: "iam-secret",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: serviceAccountSecretName,
 								},
 							},
 						},
@@ -213,11 +231,11 @@ func Test_deployer_Deploy(t *testing.T) {
 				Memory: "1Gi",
 			},
 		},
-		EnvironmentName:    "dev",
-		Replicas:           2,
-		TargetNamespace:    namespace,
-		ServiceAccountName: serviceAccountName,
-		DeploymentTimeout:  5 * time.Second,
+		EnvironmentName:          "dev",
+		Replicas:                 2,
+		TargetNamespace:          namespace,
+		ServiceAccountSecretName: serviceAccountName,
+		DeploymentTimeout:        5 * time.Second,
 	}
 	requestResource := corev1.ResourceList{
 		corev1.ResourceCPU:    resource.MustParse("1"),
@@ -317,7 +335,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource, consumerConfig.ImageName)
+				}, requestResource, limitResource, consumerConfig.ImageName, consumerConfig.ServiceAccountSecretName)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, nil, false)
 
 				updatedDepl := changeDeploymentStatus(depl, ready, 1)
@@ -441,7 +459,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource, consumerConfig.ImageName)
+				}, requestResource, limitResource, consumerConfig.ImageName, consumerConfig.ServiceAccountSecretName)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, fmt.Errorf("control plane is down"), false)
 				prependDeleteSecretReactor(t, secretAPI, "project-1-model-1-config", nil)
 				prependDeleteDeploymentReactor(t, deploymentAPI, "project-1-model-1-mlobs", nil)
@@ -526,7 +544,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource, consumerConfig.ImageName)
+				}, requestResource, limitResource, consumerConfig.ImageName, consumerConfig.ServiceAccountSecretName)
 				preprendGetDeploymentReactor(t, deploymentAPI, depl, nil)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, nil, true)
 
@@ -631,7 +649,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						Stream:    "stream",
 						Team:      "team",
 					},
-				}, requestResource, limitResource, consumerConfig.ImageName)
+				}, requestResource, limitResource, consumerConfig.ImageName, consumerConfig.ServiceAccountSecretName)
 				preprendGetDeploymentReactor(t, deploymentAPI, depl, nil)
 				prependUpsertDeploymentReactor(t, deploymentAPI, depl, nil, true)
 
@@ -810,7 +828,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 		},
 		TopicSource: "caraml-project-1-model-1-1-prediction-log",
 	}
-	depl := createDeploymentSpec(workerData, requestResource, limitResource, "image:v0.1")
+	depl := createDeploymentSpec(workerData, requestResource, limitResource, "image:v0.1", serviceAccountName)
 	testCases := []struct {
 		name             string
 		data             *models.WorkerData
