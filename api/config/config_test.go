@@ -387,9 +387,8 @@ func TestLoad(t *testing.T) {
 					EnvironmentConfigs:    []*EnvironmentConfig{},
 				},
 				ImageBuilderConfig: ImageBuilderConfig{
-					ClusterName:         "test-cluster",
-					GcpProject:          "test-project",
-					ArtifactServiceType: "gcs",
+					ClusterName: "test-cluster",
+					GcpProject:  "test-project",
 					BaseImage: BaseImageConfig{
 						ImageName:           "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.0.0",
 						DockerfilePath:      "pyfunc-server/docker/Dockerfile",
