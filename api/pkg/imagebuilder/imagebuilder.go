@@ -409,21 +409,18 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 	// the DOCKER_CONFIG environment variable, if set.
 	var keychain authn.Keychain
 	keychain = authn.DefaultKeychain
-
 	for _, domain := range getGCPSubDomains() {
 		if strings.Contains(c.config.DockerRegistry, domain) {
 			keychain = google.Keychain
 		}
 	}
 
-	multiKeychain := authn.NewMultiKeychain(keychain)
-
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
 		return false, fmt.Errorf("unable to parse docker repository %s: %w", imageName, err)
 	}
 
-	tags, err := remote.List(repo, remote.WithAuthFromKeychain(multiKeychain))
+	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
 	if err != nil {
 		var terr *transport.Error
 		if errors.As(err, &terr) {
