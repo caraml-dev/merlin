@@ -211,7 +211,6 @@ type ClusterConfig struct {
 type ImageBuilderConfig struct {
 	ClusterName                      string `validate:"required"`
 	GcpProject                       string
-	ArtifactServiceType              string          `validate:"required"`
 	BaseImage                        BaseImageConfig `validate:"required"`
 	PredictionJobBaseImage           BaseImageConfig `validate:"required"`
 	BuildNamespace                   string          `validate:"required" default:"mlp"`
@@ -219,7 +218,7 @@ type ImageBuilderConfig struct {
 	BuildTimeout                     string          `validate:"required" default:"10m"`
 	KanikoImage                      string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	KanikoServiceAccount             string
-	KanikoPushRegistryType           string `validate:"required" default:"docker"`
+	KanikoPushRegistryType           string `validate:"required,oneof=docker gcr" default:"docker"`
 	KanikoDockerCredentialSecretName string
 	KanikoAdditionalArgs             []string
 	DefaultResources                 ResourceRequestsLimits `validate:"required"`
@@ -455,8 +454,8 @@ type JaegerConfig struct {
 }
 
 type MlflowConfig struct {
-	TrackingURL         string `validate:"required"`
-	ArtifactServiceType string `validate:"required"`
+	TrackingURL         string `validate:"required_if=ArtifactServiceType gcs ArtifactServiceType s3"`
+	ArtifactServiceType string `validate:"required,oneof=nop gcs s3"`
 }
 
 func (cfg *Config) Validate() error {

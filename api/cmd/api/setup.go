@@ -104,14 +104,14 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	}
 
 	var artifactService artifact.Service
-	if cfg.ImageBuilderConfig.ArtifactServiceType == "gcs" {
+	if cfg.MlflowConfig.ArtifactServiceType == "gcs" {
 		artifactService, err = artifact.NewGcsArtifactClient()
-	} else if cfg.ImageBuilderConfig.ArtifactServiceType == "s3" {
+	} else if cfg.MlflowConfig.ArtifactServiceType == "s3" {
 		artifactService, err = artifact.NewS3ArtifactClient()
-	} else if cfg.ImageBuilderConfig.ArtifactServiceType == "nop" {
+	} else if cfg.MlflowConfig.ArtifactServiceType == "nop" {
 		artifactService = artifact.NewNopArtifactClient()
 	} else {
-		log.Panicf("invalid artifact service type %s", cfg.ImageBuilderConfig.ArtifactServiceType)
+		log.Panicf("invalid artifact service type %s", cfg.MlflowConfig.ArtifactServiceType)
 	}
 
 	if cfg.ImageBuilderConfig.KanikoPushRegistryType != "gcs" &&
