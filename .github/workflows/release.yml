@@ -28,7 +28,7 @@ jobs:
           cache: pip
       - name: Install dependencies
         working-directory: ./python/sdk
-        run: pip install setuptools>=64 setuptools_scm>=8 twine wheel
+        run: pip install setuptools>=64,<75 setuptools_scm>=8 twine wheel
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.pypi_username }}
@@ -53,7 +53,7 @@ jobs:
           cache: pip
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
-        run: pip install setuptools>=64 setuptools_scm>=8 twine wheel
+        run: pip install setuptools>=64,<75 setuptools_scm>=8 twine wheel
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.pypi_username }}
@@ -78,7 +78,7 @@ jobs:
           cache: pip
       - name: Install dependencies
         working-directory: ./python/batch-predictor
-        run: pip install setuptools>=64 setuptools_scm>=8 twine wheel
+        run: pip install setuptools>=64,<75 setuptools_scm>=8 twine wheel
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.pypi_username }}

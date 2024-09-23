@@ -8,5 +8,6 @@ merlin-sdk==0.44.0
 numpy>=1.8.2
 orjson>=2.6.8
 prometheus-client
+setuptools<75
 tornado
 uvloop
