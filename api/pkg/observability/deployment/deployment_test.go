@@ -48,8 +48,8 @@ const (
 	ready        deploymentStatus = "ready"
 	timeoutError deploymentStatus = "timeout_error"
 
-	namespace          = "caraml-observability"
-	serviceAccountName = "caraml-observability-sa-secret"
+	namespace                = "caraml-observability"
+	serviceAccountSecretName = "caraml-observability-sa-secret"
 )
 
 func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.ResourceList, resourceLimit corev1.ResourceList, imageName string, serviceAccountSecretName string) *appsv1.Deployment {
@@ -234,7 +234,7 @@ func Test_deployer_Deploy(t *testing.T) {
 		EnvironmentName:          "dev",
 		Replicas:                 2,
 		TargetNamespace:          namespace,
-		ServiceAccountSecretName: serviceAccountName,
+		ServiceAccountSecretName: serviceAccountSecretName,
 		DeploymentTimeout:        5 * time.Second,
 	}
 	requestResource := corev1.ResourceList{
@@ -828,7 +828,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 		},
 		TopicSource: "caraml-project-1-model-1-1-prediction-log",
 	}
-	depl := createDeploymentSpec(workerData, requestResource, limitResource, "image:v0.1", serviceAccountName)
+	depl := createDeploymentSpec(workerData, requestResource, limitResource, "image:v0.1", serviceAccountSecretName)
 	testCases := []struct {
 		name             string
 		data             *models.WorkerData

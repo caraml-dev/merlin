@@ -11,27 +11,30 @@ func enrichIdentityToPod(podSpec corev1.PodSpec, secretName string, containerNam
 	updatedPodSpec := podSpec.DeepCopy()
 
 	containerExist := false
+	containerNameLookup := make(map[string]bool)
+	for _, containerName := range containerNames {
+		containerNameLookup[containerName] = true
+	}
+
 	for idx, containerSpec := range updatedPodSpec.Containers {
-		updatedContainerSpec := containerSpec
-		for _, targetName := range containerNames {
-			if targetName != updatedContainerSpec.Name {
-				continue
-			}
-			containerExist = true
-			mountPath := fmt.Sprintf("/iam/%s", secretName)
-			volumeMount := corev1.VolumeMount{
-				Name:      secretVolume.Name,
-				MountPath: mountPath,
-				ReadOnly:  true,
-			}
-			updatedContainerSpec.VolumeMounts = append(updatedContainerSpec.VolumeMounts, volumeMount)
-			gcpCredentialEnvVar := corev1.EnvVar{
-				Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-				Value: fmt.Sprintf("%s/service-account.json", mountPath),
-			}
-			updatedContainerSpec.Env = append(updatedContainerSpec.Env, gcpCredentialEnvVar)
+		if val := containerNameLookup[containerSpec.Name]; !val {
+			continue
 		}
-		updatedPodSpec.Containers[idx] = updatedContainerSpec
+
+		containerExist = true
+		mountPath := fmt.Sprintf("/iam/%s", secretName)
+		volumeMount := corev1.VolumeMount{
+			Name:      secretVolume.Name,
+			MountPath: mountPath,
+			ReadOnly:  true,
+		}
+		containerSpec.VolumeMounts = append(containerSpec.VolumeMounts, volumeMount)
+		gcpCredentialEnvVar := corev1.EnvVar{
+			Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+			Value: fmt.Sprintf("%s/service-account.json", mountPath),
+		}
+		containerSpec.Env = append(containerSpec.Env, gcpCredentialEnvVar)
+		updatedPodSpec.Containers[idx] = containerSpec
 	}
 
 	if containerExist {
