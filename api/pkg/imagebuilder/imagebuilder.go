@@ -647,51 +647,9 @@ func (c *imageBuilder) createKanikoJobSpec(
 	var envVar []v1.EnvVar
 
 	// Configure additional authentication requirements for specific image registries
-	if c.config.KanikoPushRegistryType == "gcr" {
-		if c.config.KanikoServiceAccount == "" {
-			kanikoArgs = append(kanikoArgs,
-				fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
-			volumes = []v1.Volume{
-				{
-					Name: kanikoSecretName,
-					VolumeSource: v1.VolumeSource{
-						Secret: &v1.SecretVolumeSource{
-							SecretName: kanikoSecretName,
-						},
-					},
-				},
-			}
-			volumeMounts = []v1.VolumeMount{
-				{
-					Name:      kanikoSecretName,
-					MountPath: "/secret",
-				},
-			}
-			envVar = []v1.EnvVar{
-				{
-					Name:  gacEnvKey,
-					Value: saFilePath,
-				},
-			}
-		}
-	} else if c.config.KanikoPushRegistryType == "docker" {
-		volumes = []v1.Volume{
-			{
-				Name: kanikoSecretName,
-				VolumeSource: v1.VolumeSource{
-					Secret: &v1.SecretVolumeSource{
-						SecretName: c.config.KanikoDockerCredentialSecretName,
-					},
-				},
-			},
-		}
-		volumeMounts = []v1.VolumeMount{
-			{
-				Name:      kanikoSecretName,
-				MountPath: dockerCredentialConfigPath,
-			},
-		}
-	}
+	kanikoArgs = c.configureKanikoArgsForKanikoPushRegistry(kanikoArgs)
+	volumes, volumeMounts = c.configureVolumesAndVolumeMountsForKanikoPushRegistry(volumes, volumeMounts)
+	envVar = c.configureEnvVarsForKanikoPushRegistry(envVar)
 
 	var resourceRequirements RequestLimitResources
 	cpuRequest := resource.MustParse(c.config.DefaultResources.Requests.CPU)
@@ -764,6 +722,64 @@ func (c *imageBuilder) createKanikoJobSpec(
 		job.Spec.Template.Spec.ServiceAccountName = c.config.KanikoServiceAccount
 	}
 	return job, nil
+}
+
+func (c *imageBuilder) configureVolumesAndVolumeMountsForKanikoPushRegistry(
+	volumes []v1.Volume,
+	volumeMounts []v1.VolumeMount,
+) ([]v1.Volume, []v1.VolumeMount) {
+	if c.config.KanikoPushRegistryType == "gcr" {
+		if c.config.KanikoServiceAccount == "" {
+			volumes = append(volumes, v1.Volume{
+				Name: kanikoSecretName,
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: kanikoSecretName,
+					},
+				},
+			})
+			volumeMounts = append(volumeMounts, v1.VolumeMount{
+				Name:      kanikoSecretName,
+				MountPath: "/secret",
+			})
+		}
+	} else if c.config.KanikoPushRegistryType == "docker" {
+		volumes = append(volumes, v1.Volume{
+			Name: kanikoSecretName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: c.config.KanikoDockerCredentialSecretName,
+				},
+			},
+		})
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      kanikoSecretName,
+			MountPath: dockerCredentialConfigPath,
+		})
+	}
+	return volumes, volumeMounts
+}
+
+func (c *imageBuilder) configureEnvVarsForKanikoPushRegistry(envVar []v1.EnvVar) []v1.EnvVar {
+	if c.config.KanikoPushRegistryType == "gcr" {
+		if c.config.KanikoServiceAccount == "" {
+			envVar = append(envVar, v1.EnvVar{
+				Name:  gacEnvKey,
+				Value: saFilePath,
+			})
+		}
+	}
+	return envVar
+}
+
+func (c *imageBuilder) configureKanikoArgsForKanikoPushRegistry(kanikoArgs []string) []string {
+	if c.config.KanikoPushRegistryType == "gcr" {
+		if c.config.KanikoServiceAccount == "" {
+			kanikoArgs = append(kanikoArgs,
+				fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
+		}
+	}
+	return kanikoArgs
 }
 
 func (c *imageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (status models.ImageBuildingJobStatus) {
