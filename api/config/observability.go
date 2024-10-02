@@ -4,16 +4,16 @@ import "time"
 
 // ObservabilityPublisher
 type ObservabilityPublisher struct {
-	ArizeSink          ArizeSink
-	BigQuerySink       BigQuerySink
-	KafkaConsumer      KafkaConsumer
-	ImageName          string
-	DefaultResources   ResourceRequestsLimits
-	EnvironmentName    string
-	Replicas           int32
-	TargetNamespace    string
-	ServiceAccountName string
-	DeploymentTimeout  time.Duration `default:"30m"`
+	ArizeSink                ArizeSink
+	BigQuerySink             BigQuerySink
+	KafkaConsumer            KafkaConsumer
+	ImageName                string
+	DefaultResources         ResourceRequestsLimits
+	EnvironmentName          string
+	Replicas                 int32
+	TargetNamespace          string
+	DeploymentTimeout        time.Duration `default:"30m"`
+	ServiceAccountSecretName string
 }
 
 // KafkaConsumer

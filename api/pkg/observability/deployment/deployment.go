@@ -346,6 +346,52 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 	labels := c.getLabels(data)
 
 	cfgVolName := "config-volume"
+	workerContainer := "worker"
+	podSpec := corev1.PodSpec{
+		Containers: []corev1.Container{
+			{
+				Name:  workerContainer,
+				Image: c.consumerConfig.ImageName,
+				Command: []string{
+					"python",
+					"-m",
+					"publisher",
+					"+environment=config",
+				},
+				ImagePullPolicy: corev1.PullIfNotPresent,
+
+				Resources: corev1.ResourceRequirements{
+					Requests: c.resourceRequest,
+					Limits:   c.resourceLimit,
+				},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      cfgVolName,
+						MountPath: "/mlobs/observation-publisher/conf/environment",
+						ReadOnly:  true,
+					},
+				},
+				Ports: []corev1.ContainerPort{
+					{
+						Name:          "prom-metric",
+						ContainerPort: 8000,
+						Protocol:      corev1.ProtocolTCP,
+					},
+				},
+			},
+		},
+		Volumes: []corev1.Volume{
+			{
+				Name: cfgVolName,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: secretName,
+					},
+				},
+			},
+		},
+	}
+	podSpecWithIdentity := enrichIdentityToPod(podSpec, c.consumerConfig.ServiceAccountSecretName, []string{workerContainer})
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.getDeploymentName(data),
@@ -369,52 +415,7 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 						PublisherRevisionAnnotationKey: strconv.Itoa(data.Revision),
 					},
 				},
-
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "worker",
-							Image: c.consumerConfig.ImageName,
-							Command: []string{
-								"python",
-								"-m",
-								"publisher",
-								"+environment=config",
-							},
-							ImagePullPolicy: corev1.PullIfNotPresent,
-
-							Resources: corev1.ResourceRequirements{
-								Requests: c.resourceRequest,
-								Limits:   c.resourceLimit,
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      cfgVolName,
-									MountPath: "/mlobs/observation-publisher/conf/environment",
-									ReadOnly:  true,
-								},
-							},
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "prom-metric",
-									ContainerPort: 8000,
-									Protocol:      corev1.ProtocolTCP,
-								},
-							},
-						},
-					},
-					Volumes: []corev1.Volume{
-						{
-							Name: cfgVolName,
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: secretName,
-								},
-							},
-						},
-					},
-					ServiceAccountName: c.consumerConfig.ServiceAccountName,
-				},
+				Spec: podSpecWithIdentity,
 			},
 		},
 	}, nil
