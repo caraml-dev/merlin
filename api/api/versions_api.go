@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"gorm.io/gorm"
-
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/utils"
+	"github.com/caraml-dev/merlin/webhook"
+	"gorm.io/gorm"
 )
 
 const DEFAULT_PYTHON_VERSION = "3.8.*"
@@ -78,6 +78,9 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error patching model version: %v", err))
 	}
+
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelVersionEvent(ctx, webhook.OnModelVersionUpdated, v)
 
 	return Ok(patchedVersion)
 }
@@ -148,6 +151,10 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Failed to save version: %v", err))
 	}
+
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelVersionEvent(ctx, webhook.OnModelVersionCreated, version)
+
 	return Created(version)
 }
 
@@ -210,6 +217,9 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Delete model version failed: %s", err.Error()))
 	}
+
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelVersionEvent(ctx, webhook.OnModelVersionDeleted, version)
 
 	return Ok(versionID)
 }
