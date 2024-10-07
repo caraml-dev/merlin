@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/caraml-dev/merlin/webhook"
 	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/mlflow"
@@ -77,6 +78,9 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error saving model: %v", err))
 	}
+
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelEvent(ctx, webhook.OnModelCreated, model)
 
 	return Created(model)
 }

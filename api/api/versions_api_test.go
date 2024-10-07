@@ -22,6 +22,8 @@ import (
 	"testing"
 
 	"github.com/caraml-dev/merlin/service"
+	"github.com/caraml-dev/merlin/webhook"
+	webhookMock "github.com/caraml-dev/merlin/webhook/mocks"
 	"github.com/google/uuid"
 
 	"github.com/caraml-dev/merlin/config"
@@ -290,6 +292,7 @@ func TestPatchVersion(t *testing.T) {
 		requestBody    interface{}
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
+		webhook        func() *webhookMock.Client
 		expected       *Response
 	}{
 		{
@@ -355,6 +358,11 @@ func TestPatchVersion(t *testing.T) {
 					},
 				}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				return w
 			},
 			expected: &Response{
 				code: http.StatusOK,
@@ -443,6 +451,11 @@ func TestPatchVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				return w
+			},
 			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
@@ -526,6 +539,11 @@ func TestPatchVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				return w
+			},
 			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
@@ -576,6 +594,9 @@ func TestPatchVersion(t *testing.T) {
 					}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Error validating version: custom predictor image must be set"},
@@ -597,6 +618,9 @@ func TestPatchVersion(t *testing.T) {
 					nil, gorm.ErrRecordNotFound)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model version not found: record not found"},
@@ -617,6 +641,9 @@ func TestPatchVersion(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
 					nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
@@ -650,6 +677,9 @@ func TestPatchVersion(t *testing.T) {
 						MlflowURL: "http://mlflow.com",
 					}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
@@ -702,6 +732,9 @@ func TestPatchVersion(t *testing.T) {
 					},
 				}, mock.Anything).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
@@ -831,6 +864,11 @@ func TestPatchVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				return w
+			},
 			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
@@ -922,6 +960,9 @@ func TestPatchVersion(t *testing.T) {
 					}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{
@@ -933,6 +974,7 @@ func TestPatchVersion(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			versionSvc := tC.versionService()
+			webhook := tC.webhook()
 
 			ctl := &VersionsController{
 				AppContext: &AppContext{
@@ -946,6 +988,7 @@ func TestPatchVersion(t *testing.T) {
 							MonitoringBaseURL: "http://grafana",
 						},
 					},
+					Webhook: webhook,
 				},
 			}
 			resp := ctl.PatchVersion(&http.Request{}, tC.vars, tC.requestBody)
@@ -962,6 +1005,7 @@ func TestCreateVersion(t *testing.T) {
 		versionService func() *mocks.VersionsService
 		mlflowClient   func() *mlfmocks.Client
 		modelsService  func() *mocks.ModelsService
+		webhook        func() *webhookMock.Client
 		expected       *Response
 	}{
 		{
@@ -1036,6 +1080,11 @@ func TestCreateVersion(t *testing.T) {
 					PythonVersion: "3.10.*",
 				}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
+				return w
 			},
 			expected: &Response{
 				code: http.StatusCreated,
@@ -1115,6 +1164,9 @@ func TestCreateVersion(t *testing.T) {
 				}, mock.Anything).Return(nil, fmt.Errorf("pq constraint violation"))
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{
@@ -1147,6 +1199,9 @@ func TestCreateVersion(t *testing.T) {
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
@@ -1176,6 +1231,9 @@ func TestCreateVersion(t *testing.T) {
 				svc := &mocks.VersionsService{}
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
@@ -1207,6 +1265,9 @@ func TestCreateVersion(t *testing.T) {
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
@@ -1236,6 +1297,9 @@ func TestCreateVersion(t *testing.T) {
 				svc := &mocks.VersionsService{}
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
@@ -1267,6 +1331,9 @@ func TestCreateVersion(t *testing.T) {
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
@@ -1296,6 +1363,9 @@ func TestCreateVersion(t *testing.T) {
 				svc := &mocks.VersionsService{}
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
@@ -1327,6 +1397,9 @@ func TestCreateVersion(t *testing.T) {
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
@@ -1356,6 +1429,9 @@ func TestCreateVersion(t *testing.T) {
 				svc := &mocks.VersionsService{}
 				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
@@ -1417,6 +1493,11 @@ func TestCreateVersion(t *testing.T) {
 					PythonVersion: DEFAULT_PYTHON_VERSION,
 				}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
+				return w
 			},
 			expected: &Response{
 				code: http.StatusCreated,
@@ -1551,6 +1632,11 @@ func TestCreateVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
+				return w
+			},
 			expected: &Response{
 				code: http.StatusCreated,
 				data: &models.Version{
@@ -1645,6 +1731,9 @@ func TestCreateVersion(t *testing.T) {
 				svc := &mocks.VersionsService{}
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{
@@ -1658,6 +1747,7 @@ func TestCreateVersion(t *testing.T) {
 			versionSvc := tC.versionService()
 			modelsSvc := tC.modelsService()
 			mlflowClient := tC.mlflowClient()
+			webhook := tC.webhook()
 
 			ctl := &VersionsController{
 				AppContext: &AppContext{
@@ -1673,6 +1763,7 @@ func TestCreateVersion(t *testing.T) {
 					},
 					MlflowClient:  mlflowClient,
 					ModelsService: modelsSvc,
+					Webhook:       webhook,
 				},
 			}
 			resp := ctl.CreateVersion(&http.Request{}, tC.vars, &tC.body)
@@ -1690,6 +1781,7 @@ func TestDeleteVersion(t *testing.T) {
 		mlflowDeleteService  func() *mlflowDeleteServiceMocks.Service
 		predictionJobService func() *mocks.PredictionJobService
 		endpointService      func() *mocks.EndpointsService
+		webhook              func() *webhookMock.Client
 		expected             *Response
 	}{
 		{
@@ -1752,6 +1844,11 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionDeleted, mock.Anything).Return(nil)
+				return w
+			},
 			expected: &Response{
 				code: http.StatusOK,
 				data: models.ID(1),
@@ -1812,6 +1909,11 @@ func TestDeleteVersion(t *testing.T) {
 				svc := &mlflowDeleteServiceMocks.Service{}
 				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				w := webhookMock.NewClient(t)
+				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionDeleted, mock.Anything).Return(nil)
+				return w
 			},
 			expected: &Response{
 				code: http.StatusOK,
@@ -1886,6 +1988,9 @@ func TestDeleteVersion(t *testing.T) {
 				svc := &mlflowDeleteServiceMocks.Service{}
 				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
@@ -1963,6 +2068,9 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed to delete endpoint: failed to delete endpoint"},
@@ -2036,6 +2144,9 @@ func TestDeleteVersion(t *testing.T) {
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
@@ -2113,6 +2224,9 @@ func TestDeleteVersion(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed stopping prediction job: failed to stop prediction job"},
@@ -2177,6 +2291,9 @@ func TestDeleteVersion(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
+			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
@@ -2243,6 +2360,9 @@ func TestDeleteVersion(t *testing.T) {
 				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
+			webhook: func() *webhookMock.Client {
+				return webhookMock.NewClient(t)
+			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Delete model version failed: failed to delete model version"},
@@ -2256,6 +2376,7 @@ func TestDeleteVersion(t *testing.T) {
 			mlflowDeleteSvc := tC.mlflowDeleteService
 			predictionJobSvc := tC.predictionJobService
 			endpointService := tC.endpointService
+			webhook := tC.webhook()
 
 			ctl := &VersionsController{
 				AppContext: &AppContext{
@@ -2273,6 +2394,7 @@ func TestDeleteVersion(t *testing.T) {
 					MlflowDeleteService:  mlflowDeleteSvc(),
 					PredictionJobService: predictionJobSvc(),
 					EndpointsService:     endpointService(),
+					Webhook:              webhook,
 				},
 			}
 			resp := ctl.DeleteVersion(&http.Request{}, tC.vars, nil)

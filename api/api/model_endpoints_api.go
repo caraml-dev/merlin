@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/webhook"
 	"gorm.io/gorm"
 )
 
@@ -124,6 +125,9 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error creating model endpoint: %v", err))
 	}
 
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelEndpointEvent(ctx, webhook.OnModelEndpointCreated, endpoint)
+
 	// Success. Return endpoint as response.
 	return Created(endpoint)
 }
@@ -192,6 +196,9 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error updating model endpoint: %v", err))
 	}
 
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelEndpointEvent(ctx, webhook.OnModelEndpointUpdated, newEndpoint)
+
 	return Ok(newEndpoint)
 }
 
@@ -226,6 +233,9 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error deleting model endpoint: %v", err))
 	}
+
+	// trigger webhook call
+	_ = c.Webhook.TriggerModelEndpointEvent(ctx, webhook.OnModelEndpointDeleted, modelEndpoint)
 
 	return Ok(nil)
 }
