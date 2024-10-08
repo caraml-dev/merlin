@@ -29,7 +29,6 @@ import (
 	"github.com/caraml-dev/merlin/cluster/labeller"
 	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
-	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
@@ -49,7 +48,7 @@ import (
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/caraml-dev/merlin/warden"
-	"github.com/caraml-dev/merlin/webhooks"
+	"github.com/caraml-dev/merlin/webhook"
 	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 )
@@ -268,11 +267,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		log.Panicf("invalid deployment label prefix (%s): %s", cfg.DeploymentLabelPrefix, err)
 	}
 
-	webhookClient, err := webhookManager.InitializeWebhooks(&cfg.WebhooksConfig, webhooks.WebhookEvents)
-	if err != nil {
-		log.Panicf("failed to initialize webhooks: %s", err)
-	}
-
+	webhookClient := webhook.NewWebhook(&cfg.WebhooksConfig)
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 
 	observabilityPublisherStorage := storage.NewObservabilityPublisherStorage(db)
@@ -367,6 +362,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 		FeastCoreClient: coreClient,
 		MlflowClient:    mlflowClient,
+		Webhook:         webhookClient,
 	}
 	return deps{
 		apiContext:              apiContext,
