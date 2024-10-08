@@ -5,11 +5,6 @@ import (
 	"github.com/caraml-dev/mlp/api/pkg/webhooks"
 )
 
-type VersionRequest struct {
-	EventType webhooks.EventType `json:"event_type"`
-	Data      interface{}        `json:"data"`
-}
-
 type VersionEndpointRequest struct {
 	EventType       webhooks.EventType      `json:"event_type"`
 	VersionEndpoint *models.VersionEndpoint `json:"version_endpoint"`

@@ -747,7 +747,7 @@ func TestExecuteDeployment(t *testing.T) {
 				DeploymentStorage:          mockDeploymentStorage,
 				LoggerDestinationURL:       loggerDestinationURL,
 				ObservabilityEventProducer: tt.eventProducer,
-				WebhookManager:             mockWebhook,
+				Webhook:                    mockWebhook,
 			}
 
 			err := svc.Deploy(job)
@@ -1170,7 +1170,7 @@ func TestExecuteRedeployment(t *testing.T) {
 				Storage:              mockStorage,
 				DeploymentStorage:    mockDeploymentStorage,
 				LoggerDestinationURL: loggerDestinationURL,
-				WebhookManager:       mockWebhook,
+				Webhook:              mockWebhook,
 			}
 
 			err := svc.Deploy(job)

@@ -431,7 +431,7 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 		LoggerDestinationURL:       cfg.LoggerDestinationURL,
 		MLObsLoggerDestinationURL:  cfg.MLObsLoggerDestinationURL,
 		ObservabilityEventProducer: observabilityEvent,
-		WebhookManager:             webhook,
+		Webhook:                    webhook,
 	}
 }
 
