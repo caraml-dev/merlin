@@ -39,7 +39,7 @@ var Events = []webhooks.EventType{
 }
 
 type Webhook struct {
-	WebhookManager webhookManager.WebhookManager
+	webhookManager webhookManager.WebhookManager
 }
 
 type Client interface {
@@ -56,7 +56,7 @@ func NewWebhook(cfg *webhookManager.Config) *Webhook {
 	}
 
 	return &Webhook{
-		WebhookManager: manager,
+		webhookManager: manager,
 	}
 }
 
@@ -70,7 +70,7 @@ func (w Webhook) TriggerModelEvent(ctx context.Context, event webhooks.EventType
 		Model:     model,
 	}
 
-	err = w.WebhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
+	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
 	if err != nil {
 		log.Warnf("unable to invoke webhook for event type: %s, model: %s, error: %v", event, model.Name, err)
 		return err
@@ -89,7 +89,7 @@ func (w Webhook) TriggerModelVersionEvent(ctx context.Context, event webhooks.Ev
 		Version:   version,
 	}
 
-	err = w.WebhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
+	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
 	if err != nil {
 		log.Warnf("unable to invoke webhook for event type: %s, model: %s, version: %d, error: %v", event, version.ModelID, version.ID, err)
 		return err
@@ -108,7 +108,7 @@ func (w Webhook) TriggerModelEndpointEvent(ctx context.Context, event webhooks.E
 		ModelEndpoint: modelEndpoint,
 	}
 
-	err = w.WebhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
+	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
 	if err != nil {
 		log.Warnf("unable to invoke webhook for event type: %s, model id: %s, endpoint: %s, error: %v", event, modelEndpoint.ModelID, modelEndpoint.ID, err)
 		return err
@@ -127,7 +127,7 @@ func (w Webhook) TriggerVersionEndpointEvent(ctx context.Context, event webhooks
 		VersionEndpoint: versionEndpoint,
 	}
 
-	err = w.WebhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
+	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
 	if err != nil {
 		log.Warnf("unable to invoke webhook for event type: %s, model id: %s, version: %d, error: %v", event, versionEndpoint.VersionModelID, versionEndpoint.ID, err)
 		return err
@@ -137,5 +137,5 @@ func (w Webhook) TriggerVersionEndpointEvent(ctx context.Context, event webhooks
 }
 
 func (w Webhook) isEventConfigured(event webhooks.EventType) bool {
-	return w.WebhookManager != nil && w.WebhookManager.IsEventConfigured(event)
+	return w.webhookManager != nil && w.webhookManager.IsEventConfigured(event)
 }
