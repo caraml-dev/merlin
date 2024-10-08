@@ -43,7 +43,7 @@ type ModelServiceDeployment struct {
 	LoggerDestinationURL       string
 	MLObsLoggerDestinationURL  string
 	ObservabilityEventProducer event.EventProducer
-	WebhookManager             webhook.Client
+	Webhook                    webhook.Client
 }
 
 type EndpointJob struct {
@@ -211,7 +211,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	}
 
 	// trigger webhook call
-	_ = depl.WebhookManager.TriggerVersionEndpointEvent(ctx, webhook.OnVersionEndpointDeployed, endpoint)
+	_ = depl.Webhook.TriggerVersionEndpointEvent(ctx, webhook.OnVersionEndpointDeployed, endpoint)
 
 	return nil
 }

@@ -267,7 +267,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		log.Panicf("invalid deployment label prefix (%s): %s", cfg.DeploymentLabelPrefix, err)
 	}
 
-	webhookClients := webhook.NewWebhook(&cfg.WebhooksConfig)
+	webhookClient := webhook.NewWebhook(&cfg.WebhooksConfig)
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 
 	observabilityPublisherStorage := storage.NewObservabilityPublisherStorage(db)
@@ -275,8 +275,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	versionStorage := storage.NewVersionStorage(db)
 	observabilityEvent := event.NewEventProducer(dispatcher, observabilityPublisherStorage, versionStorage)
 	clusterControllers := initClusterControllers(cfg)
-	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db, observabilityEvent, webhookClients)
-	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher, webhookClients)
+	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db, observabilityEvent, webhookClient)
+	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher, webhookClient)
 	modelEndpointService := initModelEndpointService(cfg, db, observabilityEvent)
 
 	batchControllers := initBatchControllers(cfg, db, mlpAPIClient)
@@ -362,7 +362,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 		FeastCoreClient: coreClient,
 		MlflowClient:    mlflowClient,
-		Webhook:         webhookClients,
+		Webhook:         webhookClient,
 	}
 	return deps{
 		apiContext:              apiContext,
