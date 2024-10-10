@@ -202,6 +202,8 @@ github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dR
 github.com/boombuler/barcode v1.0.0/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
+github.com/caraml-dev/mlp v1.13.2 h1:N3lk+ToQ281duZImQLTQ28uJtmoc9Zkxx1CR94rS15U=
+github.com/caraml-dev/mlp v1.13.2/go.mod h1:9kPooDSYsVu5q/z2K4T9uu08RGyiFNbCAFnQVBMJxOk=
 github.com/caraml-dev/protopath v0.1.0 h1:hjJ/U9RGD6QZ0Ee9SIYbVmwPugps4S5EpL6R+5ZrBe0=
 github.com/caraml-dev/protopath v0.1.0/go.mod h1:hVA2HkTrMYv+Q57gtrzu9/P7EXlNtBUcTz43z6EE010=
 github.com/caraml-dev/universal-prediction-interface v1.0.0 h1:3Z6adv1XZnBVRzFIeCu3mPcPnJrdB5IByYfdD9K/atI=
@@ -265,8 +267,6 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/deadlycoconuts/mlp v0.0.0-20240917090435-d94d92572eac h1:M6dR1d3O+xY4suQPumkbNO1Ie70M6WoYFaoW+cjKT+8=
-github.com/deadlycoconuts/mlp v0.0.0-20240917090435-d94d92572eac/go.mod h1:9kPooDSYsVu5q/z2K4T9uu08RGyiFNbCAFnQVBMJxOk=
 github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3/go.mod h1:zAg7JM8CkOJ43xKXIj7eRO9kmWm/TW578qo+oDO6tuM=
 github.com/dennwc/varint v1.0.0 h1:kGNFFSSw8ToIy3obO/kKr8U9GZYUAxQEVuix4zfDWzE=
 github.com/dennwc/varint v1.0.0/go.mod h1:hnItb35rvZvJrbTALZtY/iQfDs48JKRG1RPpgziApxA=
