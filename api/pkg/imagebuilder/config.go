@@ -36,6 +36,10 @@ type Config struct {
 	BuildTimeoutDuration time.Duration
 	// Kaniko docker image
 	KanikoImage string
+	// Kaniko push registry type
+	KanikoPushRegistryType string
+	// Kaniko docker credential secret name
+	KanikoDockerCredentialSecretName string
 	// Kaniko kubernetes service account
 	KanikoServiceAccount string
 	// Kaniko additional args
