@@ -11,7 +11,7 @@ require (
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
-	github.com/caraml-dev/mlp v1.13.2-rc2
+	github.com/caraml-dev/mlp v1.13.2
 	github.com/caraml-dev/protopath v0.1.0
 	github.com/caraml-dev/universal-prediction-interface v1.0.0
 	github.com/cenkalti/backoff/v4 v4.2.1
@@ -274,7 +274,6 @@ require (
 
 replace (
 	github.com/caraml-dev/merlin-pyspark-app => ../python/batch-predictor
-	github.com/caraml-dev/mlp => github.com/deadlycoconuts/mlp v0.0.0-20240917090435-d94d92572eac
 	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
