@@ -25,7 +25,7 @@ var (
 	OnVersionEndpointUndeployed    = webhooks.EventType("on-version-endpoint-undeployed")
 )
 
-var Events = []webhooks.EventType{
+var events = []webhooks.EventType{
 	OnModelCreated,
 	OnModelEndpointCreated,
 	OnModelEndpointUpdated,
@@ -42,15 +42,20 @@ type Webhook struct {
 	webhookManager webhookManager.WebhookManager
 }
 
+type Option func(*config)
+
+type config struct {
+	successCallback func(payload []byte) error
+	errorCallback   func(error) error
+	body            map[string]interface{}
+}
+
 type Client interface {
-	TriggerModelEvent(ctx context.Context, event webhooks.EventType, model *models.Model) (err error)
-	TriggerModelVersionEvent(ctx context.Context, event webhooks.EventType, version *models.Version) (err error)
-	TriggerModelEndpointEvent(ctx context.Context, event webhooks.EventType, modelEndpoint *models.ModelEndpoint) (err error)
-	TriggerVersionEndpointEvent(ctx context.Context, event webhooks.EventType, versionEndpoint *models.VersionEndpoint) (err error)
+	TriggerWebhooks(ctx context.Context, event webhooks.EventType, opts ...Option) error
 }
 
 func NewWebhook(cfg *webhookManager.Config) *Webhook {
-	manager, err := webhookManager.InitializeWebhooks(cfg, Events)
+	manager, err := webhookManager.InitializeWebhooks(cfg, events)
 	if err != nil {
 		log.Panicf("failed to initialize webhook: %s", err)
 	}
@@ -60,82 +65,64 @@ func NewWebhook(cfg *webhookManager.Config) *Webhook {
 	}
 }
 
-func (w Webhook) TriggerModelEvent(ctx context.Context, event webhooks.EventType, model *models.Model) (err error) {
+func newDefaultOption() *config {
+	return &config{
+		successCallback: webhooks.NoOpCallback,
+		errorCallback:   webhooks.NoOpErrorHandler,
+	}
+}
+
+func (w Webhook) TriggerWebhooks(ctx context.Context, event webhooks.EventType, opts ...Option) error {
 	if !w.isEventConfigured(event) {
-		return
+		return nil
 	}
 
-	body := &ModelRequest{
+	conf := newDefaultOption()
+	for _, opt := range opts {
+		opt(conf)
+	}
+
+	b := &WebhookRequest{
 		EventType: event,
-		Model:     model,
+		Data:      conf.body,
 	}
 
-	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
-	if err != nil {
-		log.Warnf("unable to invoke webhook for event type: %s, model: %s, error: %v", event, model.Name, err)
-		return err
-	}
-
-	return nil
-}
-
-func (w Webhook) TriggerModelVersionEvent(ctx context.Context, event webhooks.EventType, version *models.Version) (err error) {
-	if !w.isEventConfigured(event) {
-		return
-	}
-
-	body := &ModelVersionRequest{
-		EventType: event,
-		Version:   version,
-	}
-
-	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
-	if err != nil {
-		log.Warnf("unable to invoke webhook for event type: %s, model: %s, version: %d, error: %v", event, version.ModelID, version.ID, err)
-		return err
-	}
-
-	return nil
-}
-
-func (w Webhook) TriggerModelEndpointEvent(ctx context.Context, event webhooks.EventType, modelEndpoint *models.ModelEndpoint) (err error) {
-	if !w.isEventConfigured(event) {
-		return
-	}
-
-	body := &ModelEndpointRequest{
-		EventType:     event,
-		ModelEndpoint: modelEndpoint,
-	}
-
-	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
-	if err != nil {
-		log.Warnf("unable to invoke webhook for event type: %s, model id: %s, endpoint: %s, error: %v", event, modelEndpoint.ModelID, modelEndpoint.ID, err)
-		return err
-	}
-
-	return nil
-}
-
-func (w Webhook) TriggerVersionEndpointEvent(ctx context.Context, event webhooks.EventType, versionEndpoint *models.VersionEndpoint) (err error) {
-	if !w.isEventConfigured(event) {
-		return
-	}
-
-	body := &VersionEndpointRequest{
-		EventType:       event,
-		VersionEndpoint: versionEndpoint,
-	}
-
-	err = w.webhookManager.InvokeWebhooks(ctx, event, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
-	if err != nil {
-		log.Warnf("unable to invoke webhook for event type: %s, model id: %s, version: %d, error: %v", event, versionEndpoint.VersionModelID, versionEndpoint.ID, err)
-		return err
-	}
-
-	return nil
+	return w.webhookManager.InvokeWebhooks(ctx, event, b, conf.successCallback, conf.errorCallback)
 }
 
 func (w Webhook) isEventConfigured(event webhooks.EventType) bool {
 	return w.webhookManager != nil && w.webhookManager.IsEventConfigured(event)
+}
+
+func SetSuccessCallBack(f func(payload []byte) error) Option {
+	return func(c *config) {
+		c.successCallback = f
+	}
+}
+
+func SetErrorCallback(f func(error) error) Option {
+	return func(c *config) {
+		c.errorCallback = f
+	}
+}
+
+func SetBody(items ...interface{}) Option {
+	body := make(map[string]interface{})
+
+	for _, item := range items {
+		switch item.(type) {
+		case *models.Model:
+			body["model"] = item
+		case *models.Version:
+			body["model_version"] = item
+		case *models.ModelEndpoint:
+			body["model_endpoint"] = item
+		case *models.VersionEndpoint:
+			body["version_endpoint"] = item
+		}
+	}
+
+	return func(c *config) {
+		c.body = body
+	}
 }

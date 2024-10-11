@@ -211,7 +211,9 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	}
 
 	// trigger webhook call
-	_ = depl.Webhook.TriggerVersionEndpointEvent(ctx, webhook.OnVersionEndpointDeployed, endpoint)
+	if err = depl.Webhook.TriggerWebhooks(ctx, webhook.OnVersionEndpointDeployed, webhook.SetBody(endpoint)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, endpoint: %d, error: %v", webhook.OnVersionEndpointDeployed, endpoint.VersionModelID, endpoint.ID, err)
+	}
 
 	return nil
 }

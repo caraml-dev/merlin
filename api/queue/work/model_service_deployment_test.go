@@ -122,7 +122,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -172,7 +172,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 
@@ -237,7 +237,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -287,7 +287,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 
@@ -360,7 +360,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -417,7 +417,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -466,7 +466,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -517,7 +517,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -568,7 +568,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -631,7 +631,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -673,8 +673,6 @@ func TestExecuteDeployment(t *testing.T) {
 				return mockImgBuilder
 			},
 			webhook: func() *webhookMock.Client {
-				//w := webhookMock.NewClient(t)
-				//w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return webhookMock.NewClient(t)
 			},
 		},
@@ -715,8 +713,6 @@ func TestExecuteDeployment(t *testing.T) {
 				return mockImgBuilder
 			},
 			webhook: func() *webhookMock.Client {
-				//w := webhookMock.NewClient(t)
-				//w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return webhookMock.NewClient(t)
 			},
 		},
@@ -921,7 +917,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -998,7 +994,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},
@@ -1075,7 +1071,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerVersionEndpointEvent", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
 		},

@@ -23,6 +23,7 @@ import (
 	"github.com/caraml-dev/merlin/webhook"
 	"gorm.io/gorm"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
@@ -80,7 +81,9 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 	}
 
 	// trigger webhook call
-	_ = c.Webhook.TriggerModelEvent(ctx, webhook.OnModelCreated, model)
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelCreated, webhook.SetBody(model)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, project: %d, model: %s, error: %v", webhook.OnModelCreated, model.ProjectID, model.Name, err)
+	}
 
 	return Created(model)
 }

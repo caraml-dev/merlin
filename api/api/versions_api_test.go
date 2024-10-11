@@ -361,7 +361,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -453,7 +453,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -541,7 +541,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -866,7 +866,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionUpdated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -1083,7 +1083,7 @@ func TestCreateVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -1496,7 +1496,7 @@ func TestCreateVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -1634,7 +1634,7 @@ func TestCreateVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionCreated, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -1846,7 +1846,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionDeleted, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionDeleted, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{
@@ -1912,7 +1912,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			webhook: func() *webhookMock.Client {
 				w := webhookMock.NewClient(t)
-				w.On("TriggerModelVersionEvent", mock.Anything, webhook.OnModelVersionDeleted, mock.Anything).Return(nil)
+				w.On("TriggerWebhooks", mock.Anything, webhook.OnModelVersionDeleted, mock.Anything).Return(nil)
 				return w
 			},
 			expected: &Response{

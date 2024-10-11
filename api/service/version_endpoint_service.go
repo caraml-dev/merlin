@@ -21,6 +21,7 @@ import (
 
 	"github.com/caraml-dev/merlin/cluster"
 	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -137,8 +138,8 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 	}
 
 	// calling webhook if there's any webhook configured
-	err = k.webhook.TriggerVersionEndpointEvent(ctx, webhook.OnVersionEndpointPredeployment, endpoint)
-	if err != nil {
+	if err = k.webhook.TriggerWebhooks(ctx, webhook.OnVersionEndpointPredeployment, webhook.SetBody(endpoint)); err != nil {
+		log.Errorf("unable to invoke webhook for event type: %s, model: %s, endpoint: %d, error: %v", webhook.OnVersionEndpointPredeployment, endpoint.VersionModelID, endpoint.ID, err)
 		return nil, err
 	}
 
@@ -292,7 +293,9 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	}
 
 	// calling webhook if there's any webhook configured
-	_ = k.webhook.TriggerVersionEndpointEvent(ctx, webhook.OnVersionEndpointUndeployed, endpoint)
+	if err = k.webhook.TriggerWebhooks(ctx, webhook.OnVersionEndpointUndeployed, webhook.SetBody(endpoint)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, endpoint: %d, error: %v", webhook.OnVersionEndpointUndeployed, endpoint.VersionModelID, endpoint.ID, err)
+	}
 
 	return endpoint, nil
 }

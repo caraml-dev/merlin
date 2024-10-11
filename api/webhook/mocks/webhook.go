@@ -5,9 +5,8 @@ package mocks
 import (
 	context "context"
 
+	webhook "github.com/caraml-dev/merlin/webhook"
 	mock "github.com/stretchr/testify/mock"
-
-	models "github.com/caraml-dev/merlin/models"
 
 	webhooks "github.com/caraml-dev/mlp/api/pkg/webhooks"
 )
@@ -17,71 +16,24 @@ type Client struct {
 	mock.Mock
 }
 
-// TriggerModelEndpointEvent provides a mock function with given fields: ctx, event, modelEndpoint
-func (_m *Client) TriggerModelEndpointEvent(ctx context.Context, event webhooks.EventType, modelEndpoint *models.ModelEndpoint) error {
-	ret := _m.Called(ctx, event, modelEndpoint)
+// TriggerWebhooks provides a mock function with given fields: ctx, event, opts
+func (_m *Client) TriggerWebhooks(ctx context.Context, event webhooks.EventType, opts ...webhook.Option) error {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, event)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for TriggerModelEndpointEvent")
+		panic("no return value specified for TriggerWebhooks")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, webhooks.EventType, *models.ModelEndpoint) error); ok {
-		r0 = rf(ctx, event, modelEndpoint)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// TriggerModelEvent provides a mock function with given fields: ctx, event, model
-func (_m *Client) TriggerModelEvent(ctx context.Context, event webhooks.EventType, model *models.Model) error {
-	ret := _m.Called(ctx, event, model)
-
-	if len(ret) == 0 {
-		panic("no return value specified for TriggerModelEvent")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, webhooks.EventType, *models.Model) error); ok {
-		r0 = rf(ctx, event, model)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// TriggerModelVersionEvent provides a mock function with given fields: ctx, event, version
-func (_m *Client) TriggerModelVersionEvent(ctx context.Context, event webhooks.EventType, version *models.Version) error {
-	ret := _m.Called(ctx, event, version)
-
-	if len(ret) == 0 {
-		panic("no return value specified for TriggerModelVersionEvent")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, webhooks.EventType, *models.Version) error); ok {
-		r0 = rf(ctx, event, version)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// TriggerVersionEndpointEvent provides a mock function with given fields: ctx, event, versionEndpoint
-func (_m *Client) TriggerVersionEndpointEvent(ctx context.Context, event webhooks.EventType, versionEndpoint *models.VersionEndpoint) error {
-	ret := _m.Called(ctx, event, versionEndpoint)
-
-	if len(ret) == 0 {
-		panic("no return value specified for TriggerVersionEndpointEvent")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, webhooks.EventType, *models.VersionEndpoint) error); ok {
-		r0 = rf(ctx, event, versionEndpoint)
+	if rf, ok := ret.Get(0).(func(context.Context, webhooks.EventType, ...webhook.Option) error); ok {
+		r0 = rf(ctx, event, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
