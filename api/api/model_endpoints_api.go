@@ -19,7 +19,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/webhook"
 	"gorm.io/gorm"
 )
 
@@ -124,6 +126,11 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error creating model endpoint: %v", err))
 	}
 
+	// trigger webhook call
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelEndpointCreated, webhook.SetBody(endpoint)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, endpoint: %d, error: %v", webhook.OnModelEndpointCreated, model.Name, endpoint.ID, err)
+	}
+
 	// Success. Return endpoint as response.
 	return Created(endpoint)
 }
@@ -192,6 +199,11 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error updating model endpoint: %v", err))
 	}
 
+	// trigger webhook call
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelEndpointUpdated, webhook.SetBody(newEndpoint)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, error: %v", webhook.OnModelEndpointUpdated, model.Name, err)
+	}
+
 	return Ok(newEndpoint)
 }
 
@@ -225,6 +237,11 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 	_, err = c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error deleting model endpoint: %v", err))
+	}
+
+	// trigger webhook call
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelEndpointDeleted, webhook.SetBody(modelEndpoint)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, error: %v", webhook.OnModelEndpointDeleted, model.Name, err)
 	}
 
 	return Ok(nil)

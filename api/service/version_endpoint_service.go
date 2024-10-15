@@ -33,8 +33,7 @@ import (
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/queue/work"
 	"github.com/caraml-dev/merlin/storage"
-	"github.com/caraml-dev/merlin/webhooks"
-	webhookManager "github.com/caraml-dev/mlp/api/pkg/webhooks"
+	"github.com/caraml-dev/merlin/webhook"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -69,7 +68,7 @@ type EndpointServiceParams struct {
 	JobProducer               queue.Producer
 	FeastCoreClient           core.CoreServiceClient
 	StandardTransformerConfig config.StandardTransformerConfig
-	WebhookManager            webhookManager.WebhookManager
+	Webhook                   webhook.Client
 }
 
 type endpointService struct {
@@ -84,7 +83,7 @@ type endpointService struct {
 	jobProducer               queue.Producer
 	feastCoreClient           core.CoreServiceClient
 	standardTransformerConfig config.StandardTransformerConfig
-	webhookManager            webhookManager.WebhookManager
+	webhook                   webhook.Client
 }
 
 func NewEndpointService(params EndpointServiceParams) EndpointsService {
@@ -100,7 +99,7 @@ func NewEndpointService(params EndpointServiceParams) EndpointsService {
 		jobProducer:               params.JobProducer,
 		feastCoreClient:           params.FeastCoreClient,
 		standardTransformerConfig: params.StandardTransformerConfig,
-		webhookManager:            params.WebhookManager,
+		webhook:                   params.Webhook,
 	}
 }
 
@@ -138,18 +137,10 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		return nil, err
 	}
 
-	// calling webhooks if there's any webhooks configured
-	if k.webhookManager != nil && k.webhookManager.IsEventConfigured(webhooks.OnModelVersionPredeployment) {
-		body := &webhooks.VersionEndpointRequest{
-			EventType:       webhooks.OnModelVersionPredeployment,
-			VersionEndpoint: endpoint,
-		}
-
-		err := k.webhookManager.InvokeWebhooks(ctx, webhooks.OnModelVersionPredeployment, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
-		if err != nil {
-			log.Errorf("unable to invoke webhooks for event type: %s, model: %s, version: %s, error: %v", webhooks.OnModelVersionPredeployment, model.Name, version.ID, err)
-			return nil, err
-		}
+	// calling webhook if there's any webhook configured
+	if err = k.webhook.TriggerWebhooks(ctx, webhook.OnVersionEndpointPredeployment, webhook.SetBody(endpoint)); err != nil {
+		log.Errorf("unable to invoke webhook for event type: %s, model: %s, endpoint: %d, error: %v", webhook.OnVersionEndpointPredeployment, endpoint.VersionModelID, endpoint.ID, err)
+		return nil, err
 	}
 
 	// Copy to avoid race condition
@@ -301,17 +292,9 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 		return nil, err
 	}
 
-	// calling webhooks if there's any webhooks configured
-	if k.webhookManager != nil && k.webhookManager.IsEventConfigured(webhooks.OnModelVersionUndeployed) {
-		body := &webhooks.VersionEndpointRequest{
-			EventType:       webhooks.OnModelVersionUndeployed,
-			VersionEndpoint: endpoint,
-		}
-
-		err = k.webhookManager.InvokeWebhooks(ctx, webhooks.OnModelVersionUndeployed, body, webhookManager.NoOpCallback, webhookManager.NoOpErrorHandler)
-		if err != nil {
-			log.Warnf("unable to invoke webhooks for event type: %s, model: %s, version: %s, error: %v", webhooks.OnModelVersionUndeployed, model.Name, version.ID, err)
-		}
+	// calling webhook if there's any webhook configured
+	if err = k.webhook.TriggerWebhooks(ctx, webhook.OnVersionEndpointUndeployed, webhook.SetBody(endpoint)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, endpoint: %d, error: %v", webhook.OnVersionEndpointUndeployed, endpoint.VersionModelID, endpoint.ID, err)
 	}
 
 	return endpoint, nil

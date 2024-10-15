@@ -20,11 +20,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"gorm.io/gorm"
-
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/utils"
+	"github.com/caraml-dev/merlin/webhook"
+	"gorm.io/gorm"
 )
 
 const DEFAULT_PYTHON_VERSION = "3.8.*"
@@ -77,6 +78,11 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	patchedVersion, err := c.VersionsService.Save(ctx, v, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error patching model version: %v", err))
+	}
+
+	// trigger webhook call
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelVersionUpdated, webhook.SetBody(v)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, version: %d, error: %v", webhook.OnModelVersionUpdated, v.ModelID, v.ID, err)
 	}
 
 	return Ok(patchedVersion)
@@ -148,6 +154,12 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Failed to save version: %v", err))
 	}
+
+	// trigger webhook call
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelVersionCreated, webhook.SetBody(version)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, version: %d, error: %v", webhook.OnModelVersionCreated, version.ModelID, version.ID, err)
+	}
+
 	return Created(version)
 }
 
@@ -209,6 +221,11 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 	err = c.VersionsService.Delete(version)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Delete model version failed: %s", err.Error()))
+	}
+
+	// trigger webhook call
+	if err = c.Webhook.TriggerWebhooks(ctx, webhook.OnModelVersionDeleted, webhook.SetBody(version)); err != nil {
+		log.Warnf("unable to invoke webhook for event type: %s, model: %s, version: %d, error: %v", webhook.OnModelVersionDeleted, version.ModelID, version.ID, err)
 	}
 
 	return Ok(versionID)

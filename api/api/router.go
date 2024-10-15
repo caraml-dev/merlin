@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
+	webhook "github.com/caraml-dev/merlin/webhook"
 	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
-
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -75,6 +75,7 @@ type AppContext struct {
 
 	FeastCoreClient core.CoreServiceClient
 	MlflowClient    mlflow.Client
+	Webhook         webhook.Client
 }
 
 // Handler handles the API requests and responses.
