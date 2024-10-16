@@ -387,9 +387,8 @@ func TestLoad(t *testing.T) {
 					EnvironmentConfigs:    []*EnvironmentConfig{},
 				},
 				ImageBuilderConfig: ImageBuilderConfig{
-					ClusterName:         "test-cluster",
-					GcpProject:          "test-project",
-					ArtifactServiceType: "gcs",
+					ClusterName: "test-cluster",
+					GcpProject:  "test-project",
 					BaseImage: BaseImageConfig{
 						ImageName:           "ghcr.io/caraml-dev/merlin/merlin-pyfunc-base:0.0.0",
 						DockerfilePath:      "pyfunc-server/docker/Dockerfile",
@@ -403,12 +402,13 @@ func TestLoad(t *testing.T) {
 						BuildContextSubPath: "python",
 						MainAppPath:         "/home/spark/merlin-spark-app/main.py",
 					},
-					BuildNamespace:       "caraml",
-					DockerRegistry:       "test-docker.pkg.dev/test/caraml-registry",
-					BuildTimeout:         "30m",
-					KanikoImage:          "gcr.io/kaniko-project/executor:v1.21.0",
-					KanikoServiceAccount: "kaniko-merlin",
-					KanikoAdditionalArgs: []string{"--test=true", "--no-logs=false"},
+					BuildNamespace:         "caraml",
+					DockerRegistry:         "test-docker.pkg.dev/test/caraml-registry",
+					BuildTimeout:           "30m",
+					KanikoImage:            "gcr.io/kaniko-project/executor:v1.21.0",
+					KanikoServiceAccount:   "kaniko-merlin",
+					KanikoPushRegistryType: "docker",
+					KanikoAdditionalArgs:   []string{"--test=true", "--no-logs=false"},
 					DefaultResources: ResourceRequestsLimits{
 						Requests: Resource{
 							CPU:    "1",
