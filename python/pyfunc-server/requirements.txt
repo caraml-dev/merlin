@@ -10,4 +10,3 @@ prometheus-client
 setuptools<75
 tornado
 uvloop
-file:../sdk
