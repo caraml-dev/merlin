@@ -11,7 +11,7 @@ RUN apt-get update && \
 RUN pip install google-cloud-storage
 RUN pip install psycopg2-binary==2.8.6
 
-ARG BOTO3_VERSION=1.35.3
+ARG BOTO3_VERSION=1.35.39
 ARG MLFLOW_VERSION=2.16.2
 ARG SQLALCHEMY_VERSION=2.0.35
 
