@@ -34,7 +34,7 @@ REQUIRES = [
     "GitPython>=3.1.40",
     "google-cloud-storage>=1.19.0",
     "protobuf>=3.12.0,<5.0.0",  # Determined by the mlflow dependency
-    "mlflow==1.26.1",
+    "mlflow==2.16.2",
     "PyPrind>=2.11.2",
     "python_dateutil>=2.5.3",
     "PyYAML>=5.4",
