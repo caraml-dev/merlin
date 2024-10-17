@@ -2,7 +2,7 @@ joblib>=0.13.0,<1.2.0  # >=1.2.0 upon upgrade of kserve's version
 numpy>=1.19.5
 scikit-learn>=1.1.2
 xgboost==1.6.2
-mlflow==1.26.1
+mlflow==2.16.2
 merlin-sdk
 cloudpickle==2.0.0
 google-cloud

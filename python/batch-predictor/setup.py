@@ -14,6 +14,8 @@
 
 import imp
 import os
+import pathlib
+import pkg_resources
 
 from setuptools import find_packages, setup
 
@@ -21,8 +23,11 @@ version = imp.load_source(
     "merlinpyspark.version", os.path.join("merlinpyspark", "version.py")
 ).VERSION
 
-with open("requirements.txt") as f:
-    REQUIRE = f.read().splitlines()
+with pathlib.Path("requirements.txt").open() as requirements_txt:
+    requirements = [
+        str(requirement)
+        for requirement in pkg_resources.parse_requirements(requirements_txt)
+    ]
 
 with open("requirements_test.txt") as f:
     TESTS_REQUIRE = f.read().splitlines()
@@ -36,7 +41,7 @@ setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.8,<3.11",
     packages=find_packages(exclude=["test"]),
-    install_requires=REQUIRE,
+    install_requires=requirements,
     tests_require=TESTS_REQUIRE,
     extras_require={"test": TESTS_REQUIRE},
     entry_points="""

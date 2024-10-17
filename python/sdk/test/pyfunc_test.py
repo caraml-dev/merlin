@@ -55,7 +55,7 @@ def test_http():
     pyfunc_model = PyFuncModel()
     pyfunc_model.infer = MagicMock(return_value=response)
 
-    context = PythonModelContext(artifacts={})
+    context = PythonModelContext(artifacts={}, model_config={})
 
     pyfunc_model.load_context(context)
     model_input = {
@@ -71,7 +71,7 @@ def test_http_headers():
     pyfunc_model = PyFuncModel()
     pyfunc_model.infer = MagicMock(return_value=response)
 
-    context = PythonModelContext(artifacts={})
+    context = PythonModelContext(artifacts={}, model_config={})
 
     pyfunc_model.load_context(context)
     model_input = {
@@ -88,7 +88,7 @@ def test_explicit_protocol():
     pyfunc_model = PyFuncModel()
     pyfunc_model.infer = MagicMock(return_value=response)
 
-    context = PythonModelContext(artifacts={})
+    context = PythonModelContext(artifacts={}, model_config={})
 
     pyfunc_model.load_context(context)
     model_input = {
@@ -105,7 +105,7 @@ def test_upiv1():
     pyfunc_model = PyFuncModel()
     pyfunc_model.upiv1_infer = MagicMock(return_value=upiv1_response)
 
-    context = PythonModelContext(artifacts={})
+    context = PythonModelContext(artifacts={}, model_config={})
 
     pyfunc_model.load_context(context)
     model_input = {
@@ -128,7 +128,7 @@ def test_pyfuncv3_rest():
     pyfunc_model.preprocess = MagicMock(return_value=pyfunc_model_input)
     pyfunc_model.infer = MagicMock(return_value=pyfunc_model_output)
     pyfunc_model.postprocess = MagicMock(return_value=http_response)
-    context = PythonModelContext(artifacts={})
+    context = PythonModelContext(artifacts={}, model_config={})
 
     pyfunc_model.load_context(context)
     model_input = {
@@ -187,7 +187,7 @@ def test_pyfuncv3_upi():
     pyfunc_model.upiv1_preprocess = MagicMock(return_value=pyfunc_model_input)
     pyfunc_model.infer = MagicMock(return_value=pyfunc_model_output)
     pyfunc_model.upiv1_postprocess = MagicMock(return_value=upi_response)
-    context = PythonModelContext(artifacts={})
+    context = PythonModelContext(artifacts={}, model_config={})
 
     pyfunc_model.load_context(context)
     model_input = {
