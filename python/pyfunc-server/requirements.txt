@@ -10,4 +10,3 @@ prometheus-client
 setuptools<75
 tornado
 uvloop
-git+https://github.com/caraml-dev/merlin.git@upgrade_mlflow_version#subdirectory=python/sdk
