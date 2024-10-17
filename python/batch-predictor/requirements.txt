@@ -4,4 +4,3 @@ mlflow==2.16.2
 pyarrow>=0.14.1,<=17.0.0
 pyspark==3.0.1
 setuptools<75
-git+https://github.com/caraml-dev/merlin.git@upgrade_mlflow_version#subdirectory=python/sdk
