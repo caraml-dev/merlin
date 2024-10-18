@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM condaforge/miniforge3:23.11.0-0
+FROM --platform=linux/amd64 condaforge/miniforge3:23.11.0-0
 
 RUN apt-get update && apt-get install unzip
 
