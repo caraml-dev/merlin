@@ -5,3 +5,4 @@ verify_ssl = true
 
 [packages]
 pyfuncserver = {editable = true, extras = ["test"], path = "."}
+merlin-sdk = {editable = true, extras = ["test"], path = "../sdk"}
