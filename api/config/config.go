@@ -142,7 +142,7 @@ func (docs *Documentations) Decode(value string) error {
 
 type DatabaseConfig struct {
 	Host          string `validate:"required"`
-	Port          int    `validate:"required" default:"5431"`
+	Port          int    `validate:"required" default:"5432"`
 	User          string `validate:"required"`
 	Password      string `validate:"required"`
 	Database      string `validate:"required" default:"mlp"`
