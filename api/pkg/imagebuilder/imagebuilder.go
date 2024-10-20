@@ -636,10 +636,10 @@ func (c *imageBuilder) createKanikoJobSpec(
 	var volumeMounts []v1.VolumeMount
 	var envVar []v1.EnvVar
 
-	// Configure additional authentication requirements for specific image registries
-	kanikoArgs = c.configureKanikoArgsForKanikoPushRegistry(kanikoArgs)
-	volumes, volumeMounts = c.configureVolumesAndVolumeMountsForKanikoPushRegistry(volumes, volumeMounts)
-	envVar = c.configureEnvVarsForKanikoPushRegistry(envVar)
+	// Configure additional credentials for specific image registries and artifact services
+	kanikoArgs = c.configureKanikoArgsToAddCredentials(kanikoArgs)
+	volumes, volumeMounts = c.configureVolumesAndVolumeMountsToAddCredentials(volumes, volumeMounts)
+	envVar = c.configureEnvVarsToAddCredentials(envVar)
 
 	var resourceRequirements RequestLimitResources
 	cpuRequest := resource.MustParse(c.config.DefaultResources.Requests.CPU)
@@ -714,11 +714,21 @@ func (c *imageBuilder) createKanikoJobSpec(
 	return job, nil
 }
 
-func (c *imageBuilder) configureVolumesAndVolumeMountsForKanikoPushRegistry(
+func (c *imageBuilder) configureKanikoArgsToAddCredentials(kanikoArgs []string) []string {
+	if c.config.KanikoPushRegistryType == "gcr" || c.artifactService.GetType() == "gcs" {
+		if c.config.KanikoServiceAccount == "" {
+			kanikoArgs = append(kanikoArgs,
+				fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
+		}
+	}
+	return kanikoArgs
+}
+
+func (c *imageBuilder) configureVolumesAndVolumeMountsToAddCredentials(
 	volumes []v1.Volume,
 	volumeMounts []v1.VolumeMount,
 ) ([]v1.Volume, []v1.VolumeMount) {
-	if c.config.KanikoPushRegistryType == "gcr" {
+	if c.config.KanikoPushRegistryType == "gcr" || c.artifactService.GetType() == "gcs" {
 		if c.config.KanikoServiceAccount == "" {
 			volumes = append(volumes, v1.Volume{
 				Name: kanikoSecretName,
@@ -750,8 +760,8 @@ func (c *imageBuilder) configureVolumesAndVolumeMountsForKanikoPushRegistry(
 	return volumes, volumeMounts
 }
 
-func (c *imageBuilder) configureEnvVarsForKanikoPushRegistry(envVar []v1.EnvVar) []v1.EnvVar {
-	if c.config.KanikoPushRegistryType == "gcr" {
+func (c *imageBuilder) configureEnvVarsToAddCredentials(envVar []v1.EnvVar) []v1.EnvVar {
+	if c.config.KanikoPushRegistryType == "gcr" || c.artifactService.GetType() == "gcs" {
 		if c.config.KanikoServiceAccount == "" {
 			envVar = append(envVar, v1.EnvVar{
 				Name:  gacEnvKey,
@@ -760,16 +770,6 @@ func (c *imageBuilder) configureEnvVarsForKanikoPushRegistry(envVar []v1.EnvVar)
 		}
 	}
 	return envVar
-}
-
-func (c *imageBuilder) configureKanikoArgsForKanikoPushRegistry(kanikoArgs []string) []string {
-	if c.config.KanikoPushRegistryType == "gcr" {
-		if c.config.KanikoServiceAccount == "" {
-			kanikoArgs = append(kanikoArgs,
-				fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
-		}
-	}
-	return kanikoArgs
 }
 
 func (c *imageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (status models.ImageBuildingJobStatus) {
