@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 	"time"
@@ -626,15 +625,6 @@ func (c *imageBuilder) createKanikoJobSpec(
 		fmt.Sprintf("--destination=%s", imageRef),
 	}
 
-	if c.artifactService.GetType() == "s3" {
-		kanikoArgs = append(
-			kanikoArgs,
-			fmt.Sprintf("--build-arg=%s=%s", "AWS_ACCESS_KEY_ID", os.Getenv("AWS_ACCESS_KEY_ID")),
-			fmt.Sprintf("--build-arg=%s=%s", "AWS_SECRET_ACCESS_KEY", os.Getenv("AWS_SECRET_ACCESS_KEY")),
-			fmt.Sprintf("--build-arg=%s=%s", "AWS_DEFAULT_REGION", os.Getenv("AWS_DEFAULT_REGION")),
-			fmt.Sprintf("--build-arg=%s=%s", "AWS_ENDPOINT_URL", os.Getenv("AWS_ENDPOINT_URL")),
-		)
-	}
 	if c.config.BaseImage.BuildContextSubPath != "" {
 		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.BaseImage.BuildContextSubPath))
 	}
