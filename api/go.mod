@@ -4,7 +4,6 @@ go 1.22
 
 require (
 	cloud.google.com/go/bigtable v1.11.0
-	cloud.google.com/go/storage v1.39.0
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20221025152940-c261df66a006
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/antihax/optional v1.0.0
@@ -12,7 +11,7 @@ require (
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
-	github.com/caraml-dev/mlp v1.13.2-rc2
+	github.com/caraml-dev/mlp v1.13.2
 	github.com/caraml-dev/protopath v0.1.0
 	github.com/caraml-dev/universal-prediction-interface v1.0.0
 	github.com/cenkalti/backoff/v4 v4.2.1
@@ -246,11 +245,31 @@ require (
 )
 
 require (
+	cloud.google.com/go/storage v1.39.0 // indirect
 	github.com/avast/retry-go/v4 v4.6.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.30.6-0.20240906182417-827d25db0048 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.17.8 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.21 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.17 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.17 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.24 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.23 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.19 // indirect
+	github.com/aws/smithy-go v1.20.4 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231113174909-778a5567bc1e // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+
 )
 
 replace (

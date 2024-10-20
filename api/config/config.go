@@ -104,7 +104,7 @@ type BaseImageConfig struct {
 	ImageName string `validate:"required" json:"imageName"`
 	// Dockerfile Path within the build context
 	DockerfilePath string `validate:"required" json:"dockerfilePath"`
-	// GCS URL Containing build context
+	// GCS/S3 URL Containing build context
 	BuildContextURI string `validate:"required" json:"buildContextURI"`
 	// Path to sub folder which is intended to build instead of using root folder
 	BuildContextSubPath string `json:"buildContextSubPath"`
@@ -209,18 +209,19 @@ type ClusterConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName            string `validate:"required"`
-	GcpProject             string
-	ArtifactServiceType    string
-	BaseImage              BaseImageConfig `validate:"required"`
-	PredictionJobBaseImage BaseImageConfig `validate:"required"`
-	BuildNamespace         string          `validate:"required" default:"mlp"`
-	DockerRegistry         string          `validate:"required"`
-	BuildTimeout           string          `validate:"required" default:"10m"`
-	KanikoImage            string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
-	KanikoServiceAccount   string
-	KanikoAdditionalArgs   []string
-	DefaultResources       ResourceRequestsLimits `validate:"required"`
+	ClusterName                      string `validate:"required"`
+	GcpProject                       string
+	BaseImage                        BaseImageConfig `validate:"required"`
+	PredictionJobBaseImage           BaseImageConfig `validate:"required"`
+	BuildNamespace                   string          `validate:"required" default:"mlp"`
+	DockerRegistry                   string          `validate:"required"`
+	BuildTimeout                     string          `validate:"required" default:"10m"`
+	KanikoImage                      string          `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	KanikoServiceAccount             string
+	KanikoPushRegistryType           string `validate:"required,oneof=docker gcr" default:"docker"`
+	KanikoDockerCredentialSecretName string
+	KanikoAdditionalArgs             []string
+	DefaultResources                 ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
@@ -453,8 +454,13 @@ type JaegerConfig struct {
 }
 
 type MlflowConfig struct {
-	TrackingURL         string `validate:"required"`
-	ArtifactServiceType string `validate:"required"`
+	TrackingURL string `validate:"required_if=ArtifactServiceType gcs ArtifactServiceType s3"`
+	// Note that the Kaniko image builder needs to be configured correctly to have the necessary credentials to download
+	// the artifacts from the blob storage tool depending on the artifact service type selected (gcs/s3). For gcs, the
+	// credentials can be provided via a k8s service account or a secret but for s3, the credentials can be provided via
+	// additional arguments in the config KanikoAdditionalArgs e.g.
+	// --build-arg=[AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_DEFAULT_REGION/AWS_ENDPOINT_URL]=xxx
+	ArtifactServiceType string `validate:"required,oneof=nop gcs s3"`
 }
 
 func (cfg *Config) Validate() error {

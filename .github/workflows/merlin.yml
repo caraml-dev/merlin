@@ -137,13 +137,6 @@ jobs:
           E2E_USE_GOOGLE_OAUTH: false
         working-directory: ./python/sdk
         run: make unit-test
-      - uses: codecov/codecov-action@v4
-        with:
-          flags: sdk-test-${{ matrix.python-version }}
-          name: sdk-test-${{ matrix.python-version }}
-          token: ${{ secrets.CODECOV_TOKEN }}
-          working-directory: ./python/sdk
-          codecov_yml_path: ../../.github/workflows/codecov-config/codecov.yml
 
   lint-api:
     runs-on: ubuntu-latest
@@ -188,13 +181,6 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: make it-test-api-ci
-      - uses: codecov/codecov-action@v4
-        with:
-          flags: api-test
-          name: api-test
-          token: ${{ secrets.CODECOV_TOKEN }}
-          working-directory: ./api
-          codecov_yml_path: ../.github/workflows/codecov-config/codecov.yml
 
   test-observation-publisher:
     runs-on: ubuntu-latest

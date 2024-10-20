@@ -23,6 +23,8 @@ ENV PATH /opt/conda/bin:$PATH
 ENV SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
 ENV SPARK_BQ_CONNECTOR_VERSION=0.27.0
 
+RUN apt-get update && apt-get install unzip
+
 # Setup dependencies for Google Cloud Storage access.
 RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
 ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar \
@@ -58,6 +60,9 @@ RUN wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linu
 ENV PATH=$PATH:/google-cloud-sdk/bin
 ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf - -C /
+
+# Install aws CLI
+RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip && unzip awscli-exe-linux-x86_64.zip && ./aws/install
 
 # Configure non-root user
 ENV USER spark
