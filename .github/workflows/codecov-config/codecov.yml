@@ -1,5 +1,0 @@
-coverage:
-  status:
-    patch:
-      default:
-        threshold: 0.03%
