@@ -142,7 +142,7 @@ func (docs *Documentations) Decode(value string) error {
 
 type DatabaseConfig struct {
 	Host          string `validate:"required"`
-	Port          int    `validate:"required" default:"5432"`
+	Port          int    `validate:"required" default:"5431"`
 	User          string `validate:"required"`
 	Password      string `validate:"required"`
 	Database      string `validate:"required" default:"mlp"`
@@ -454,7 +454,12 @@ type JaegerConfig struct {
 }
 
 type MlflowConfig struct {
-	TrackingURL         string `validate:"required_if=ArtifactServiceType gcs ArtifactServiceType s3"`
+	TrackingURL string `validate:"required_if=ArtifactServiceType gcs ArtifactServiceType s3"`
+	// Note that the Kaniko image builder needs to be configured correctly to have the necessary credentials to download
+	// the artifacts from the blob storage tool depending on the artifact service type selected (gcs/s3). For gcs, the
+	// credentials can be provided via a k8s service account or a secret but for s3, the credentials can be provided via
+	// additional arguments in the config KanikoAdditionalArgs e.g.
+	// --build-arg=[AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_DEFAULT_REGION/AWS_ENDPOINT_URL]=xxx
 	ArtifactServiceType string `validate:"required,oneof=nop gcs s3"`
 }
 
