@@ -143,7 +143,7 @@ func (t *BatchJobTemplater) createDriverSpec(job *models.PredictionJob) (v1beta2
 	}
 
 	core := getCoreRequest(userCPURequest)
-	cpuRequest, cpuLimit := getCPURequestAndLimit(userCPURequest)
+	cpuRequest := getCPURequest(userCPURequest)
 
 	memoryRequest, err := toMegabyte(job.Config.ResourceRequest.DriverMemoryRequest)
 	if err != nil {
@@ -158,9 +158,8 @@ func (t *BatchJobTemplater) createDriverSpec(job *models.PredictionJob) (v1beta2
 	return v1beta2.DriverSpec{
 		CoreRequest: cpuRequest,
 		SparkPodSpec: v1beta2.SparkPodSpec{
-			Cores:     core,
-			CoreLimit: cpuLimit,
-			Memory:    memoryRequest,
+			Cores:  core,
+			Memory: memoryRequest,
 			ConfigMaps: []v1beta2.NamePath{
 				{
 					Name: job.Name,
@@ -188,7 +187,7 @@ func (t *BatchJobTemplater) createExecutorSpec(job *models.PredictionJob) (v1bet
 	}
 
 	core := getCoreRequest(userCPURequest)
-	cpuRequest, cpuLimit := getCPURequestAndLimit(userCPURequest)
+	cpuRequest := getCPURequest(userCPURequest)
 
 	memoryRequest, err := toMegabyte(job.Config.ResourceRequest.ExecutorMemoryRequest)
 	if err != nil {
@@ -204,9 +203,8 @@ func (t *BatchJobTemplater) createExecutorSpec(job *models.PredictionJob) (v1bet
 		Instances:   &job.Config.ResourceRequest.ExecutorReplica,
 		CoreRequest: cpuRequest,
 		SparkPodSpec: v1beta2.SparkPodSpec{
-			Cores:     core,
-			CoreLimit: cpuLimit,
-			Memory:    memoryRequest,
+			Cores:  core,
+			Memory: memoryRequest,
 			ConfigMaps: []v1beta2.NamePath{
 				{
 					Name: job.Name,
@@ -251,14 +249,9 @@ func createLabel(job *models.PredictionJob) map[string]string {
 	return labels
 }
 
-func getCPURequestAndLimit(cpuRequest resource.Quantity) (*string, *string) {
+func getCPURequest(cpuRequest resource.Quantity) *string {
 	cpuRequestStr := cpuRequest.String()
-
-	cpuLimitMilli := cpuRequestToCPULimit * float64(cpuRequest.MilliValue())
-	cpuLimit := resource.NewMilliQuantity(int64(cpuLimitMilli), resource.BinarySI)
-	cpuLimitStr := cpuLimit.String()
-
-	return &cpuRequestStr, &cpuLimitStr
+	return &cpuRequestStr
 }
 
 func getCoreRequest(cpuRequest resource.Quantity) *int32 {

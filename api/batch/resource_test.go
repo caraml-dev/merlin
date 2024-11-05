@@ -79,27 +79,21 @@ var (
 	}
 
 	driverCore       int32 = 1
-	driverCPURequest       = "1"     // coreToCpuRequestRatio * driverCore
-	driverCoreLimit        = "1250m" // cpuRequestToCPULimit * driverCPURequest
+	driverCPURequest       = "1" // coreToCpuRequestRatio * driverCore
 	driverMemory           = "1Gi"
 	driverMemoryInMB       = "1024m"
 
 	executorReplica    int32 = 5
 	executorCore       int32 = 1
-	executorCPURequest       = "2"     // coreToCpuRequestRatio * executorCore
-	executorCoreLimit        = "2500m" // cpuRequestToCPULimit * executorCPURequest
+	executorCPURequest       = "2" // coreToCpuRequestRatio * executorCore
 	executorMemory           = "2Gi"
 	executorMemoryInMB       = "2048m"
 
 	fractExecutorCPURequest = "1500m"
-	fractExecutorCPULimit   = "1875m"
-
-	fractDriverCPURequest = "500m"
-	fractDriverCPULimit   = "625m"
+	fractDriverCPURequest   = "500m"
 
 	largeExecutorCore       int32 = 5
 	largeExecutorCPURequest       = "8"
-	largeExecutorCPULimit         = "10"
 
 	defaultConfigMap = []v1beta2.NamePath{
 		{
@@ -193,7 +187,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
-							CoreLimit:  &driverCoreLimit,
 							Memory:     &driverMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -209,7 +202,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &executorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
-							CoreLimit:  &executorCoreLimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -272,7 +264,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &fractDriverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
-							CoreLimit:  &fractDriverCPULimit,
 							Memory:     &driverMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -288,7 +279,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &executorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
-							CoreLimit:  &executorCoreLimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -351,7 +341,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
-							CoreLimit:  &driverCoreLimit,
 							Memory:     &driverMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -367,7 +356,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &fractExecutorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
-							CoreLimit:  &fractExecutorCPULimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -430,7 +418,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
-							CoreLimit:  &driverCoreLimit,
 							Memory:     &driverMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -446,7 +433,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &largeExecutorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &largeExecutorCore,
-							CoreLimit:  &largeExecutorCPULimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -515,7 +501,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
-							CoreLimit:  &driverCoreLimit,
 							Memory:     &driverMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -534,7 +519,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						CoreRequest: &executorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
-							CoreLimit:  &executorCoreLimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
