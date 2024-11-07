@@ -104,6 +104,10 @@ const (
 	// jobDeletionTickDurationMilliseconds is the interval at which the API server checks if a job has been deleted
 	jobDeletionTickDurationMilliseconds = 100
 
+	dockerRegistryPushRegistryType        = "docker"
+	googleCloudRegistryPushRegistryType   = "gcr"
+	googleCloudStorageArtifactServiceType = "gcs"
+
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
 
@@ -715,7 +719,8 @@ func (c *imageBuilder) createKanikoJobSpec(
 }
 
 func (c *imageBuilder) configureKanikoArgsToAddCredentials(kanikoArgs []string) []string {
-	if c.config.KanikoPushRegistryType == "gcr" || c.artifactService.GetType() == "gcs" {
+	if c.config.KanikoPushRegistryType == googleCloudRegistryPushRegistryType ||
+		c.artifactService.GetType() == googleCloudStorageArtifactServiceType {
 		if c.config.KanikoServiceAccount == "" {
 			kanikoArgs = append(kanikoArgs,
 				fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
@@ -728,7 +733,8 @@ func (c *imageBuilder) configureVolumesAndVolumeMountsToAddCredentials(
 	volumes []v1.Volume,
 	volumeMounts []v1.VolumeMount,
 ) ([]v1.Volume, []v1.VolumeMount) {
-	if c.config.KanikoPushRegistryType == "gcr" || c.artifactService.GetType() == "gcs" {
+	if c.config.KanikoPushRegistryType == googleCloudRegistryPushRegistryType ||
+		c.artifactService.GetType() == googleCloudStorageArtifactServiceType {
 		if c.config.KanikoServiceAccount == "" {
 			volumes = append(volumes, v1.Volume{
 				Name: kanikoSecretName,
@@ -743,7 +749,8 @@ func (c *imageBuilder) configureVolumesAndVolumeMountsToAddCredentials(
 				MountPath: "/secret",
 			})
 		}
-	} else if c.config.KanikoPushRegistryType == "docker" {
+	}
+	if c.config.KanikoPushRegistryType == dockerRegistryPushRegistryType {
 		volumes = append(volumes, v1.Volume{
 			Name: kanikoSecretName,
 			VolumeSource: v1.VolumeSource{
@@ -761,7 +768,8 @@ func (c *imageBuilder) configureVolumesAndVolumeMountsToAddCredentials(
 }
 
 func (c *imageBuilder) configureEnvVarsToAddCredentials(envVar []v1.EnvVar) []v1.EnvVar {
-	if c.config.KanikoPushRegistryType == "gcr" || c.artifactService.GetType() == "gcs" {
+	if c.config.KanikoPushRegistryType == googleCloudRegistryPushRegistryType ||
+		c.artifactService.GetType() == googleCloudStorageArtifactServiceType {
 		if c.config.KanikoServiceAccount == "" {
 			envVar = append(envVar, v1.EnvVar{
 				Name:  gacEnvKey,
