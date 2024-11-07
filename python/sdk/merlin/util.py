@@ -67,27 +67,27 @@ def valid_name_check(input_name: str) -> bool:
     return matching_group == input_name
 
 
-def get_blob_storage_schema(artifact_uri: str) -> str:
+def get_blob_storage_scheme(artifact_uri: str) -> str:
     parsed_result = urlparse(artifact_uri)
     return parsed_result.scheme
 
 
-def get_bucket_name(gcs_uri: str) -> str:
-    parsed_result = urlparse(gcs_uri)
+def get_bucket_name(artifact_uri: str) -> str:
+    parsed_result = urlparse(artifact_uri)
     return parsed_result.netloc
 
 
-def get_gcs_path(gcs_uri: str) -> str:
-    parsed_result = urlparse(gcs_uri)
+def get_artifact_path(artifact_uri: str) -> str:
+    parsed_result = urlparse(artifact_uri)
     return parsed_result.path.strip("/")
 
 
 def download_files_from_blob_storage(artifact_uri: str, destination_path: str):
     makedirs(destination_path, exist_ok=True)
 
-    storage_schema = get_blob_storage_schema(artifact_uri)
+    storage_schema = get_blob_storage_scheme(artifact_uri)
     bucket_name = get_bucket_name(artifact_uri)
-    path = get_gcs_path(artifact_uri)
+    path = get_artifact_path(artifact_uri)
 
     if storage_schema == "gs":
         client = storage.Client()
