@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from merlin.util import guess_mlp_ui_url, valid_name_check, get_bucket_name, get_artifact_path
+from merlin.util import guess_mlp_ui_url, valid_name_check, get_blob_storage_scheme, get_bucket_name, get_artifact_path
 import pytest
 
 
@@ -37,10 +37,10 @@ def test_name_check():
 @pytest.mark.unit
 def test_get_blob_storage_scheme():
     gcs_artifact_uri = 'gs://some-bucket/mlflow/81/ddd'
-    assert test_get_blob_storage_scheme(gcs_artifact_uri) == 'gs'
+    assert get_blob_storage_scheme(gcs_artifact_uri) == 'gs'
 
     s3_artifact_uri = 's3://some-bucket/mlflow/81/ddd'
-    assert test_get_blob_storage_scheme(s3_artifact_uri) == 's3'
+    assert get_blob_storage_scheme(s3_artifact_uri) == 's3'
 
 
 @pytest.mark.unit
