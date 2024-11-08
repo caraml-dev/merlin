@@ -14,6 +14,7 @@
 
 import re
 import os
+import boto3
 from urllib.parse import urlparse
 from google.cloud import storage
 from os.path import dirname
@@ -66,34 +67,57 @@ def valid_name_check(input_name: str) -> bool:
     return matching_group == input_name
 
 
-def get_bucket_name(gcs_uri: str) -> str:
-    parsed_result = urlparse(gcs_uri)
+def get_blob_storage_scheme(artifact_uri: str) -> str:
+    parsed_result = urlparse(artifact_uri)
+    return parsed_result.scheme
+
+
+def get_bucket_name(artifact_uri: str) -> str:
+    parsed_result = urlparse(artifact_uri)
     return parsed_result.netloc
 
 
-def get_gcs_path(gcs_uri: str) -> str:
-    parsed_result = urlparse(gcs_uri)
+def get_artifact_path(artifact_uri: str) -> str:
+    parsed_result = urlparse(artifact_uri)
     return parsed_result.path.strip("/")
 
 
-def download_files_from_gcs(gcs_uri: str, destination_path: str):
+def download_files_from_blob_storage(artifact_uri: str, destination_path: str):
     makedirs(destination_path, exist_ok=True)
 
-    client = storage.Client()
-    bucket_name = get_bucket_name(gcs_uri)
-    path = get_gcs_path(gcs_uri)
+    storage_schema = get_blob_storage_scheme(artifact_uri)
+    bucket_name = get_bucket_name(artifact_uri)
+    path = get_artifact_path(artifact_uri)
 
-    bucket = client.get_bucket(bucket_name)
-    blobs = bucket.list_blobs(prefix=path)
-    for blob in blobs:
-        # Get only the path after .../artifacts/model
-        # E.g.
-        # Some blob looks like this mlflow/3/ad8f15a4023f461796955f71e1152bac/artifacts/model/1/saved_model.pb
-        # we only want to extract 1/saved_model.pb
-        artifact_path = os.path.join(*blob.name.split("/")[5:])
-        dir = os.path.join(destination_path, dirname(artifact_path))
-        makedirs(dir, exist_ok=True)
-        blob.download_to_filename(os.path.join(destination_path, artifact_path))
+    if storage_schema == "gs":
+        client = storage.Client()
+        bucket = client.get_bucket(bucket_name)
+        blobs = bucket.list_blobs(prefix=path)
+        for blob in blobs:
+            # Get only the path after .../artifacts/model
+            # E.g.
+            # Some blob looks like this mlflow/3/ad8f15a4023f461796955f71e1152bac/artifacts/model/1/saved_model.pb
+            # we only want to extract 1/saved_model.pb
+            artifact_path = os.path.join(*blob.name.split("/")[5:])
+            dir = os.path.join(destination_path, dirname(artifact_path))
+            makedirs(dir, exist_ok=True)
+            blob.download_to_filename(os.path.join(destination_path, artifact_path))
+    elif storage_schema == "s3":
+        client = boto3.client("s3")
+        bucket = client.list_objects_v2(Prefix=path, Bucket=bucket_name)["Contents"]
+        for s3_object in bucket:
+            # we do this because the list_objects_v2 method lists all subdirectories in addition to files
+            if not s3_object['Key'].endswith('/'):
+                # Get only the path after .../artifacts/model
+                # E.g.
+                # Some blob looks like this mlflow/3/ad8f15a4023f461796955f71e1152bac/artifacts/model/1/saved_model.pb
+                # we only want to extract 1/saved_model.pb
+                object_paths = s3_object['Key'].split("/")[5:]
+                if len(object_paths) != 0:
+                    artifact_path = os.path.join(*object_paths)
+                    os.makedirs(os.path.join(destination_path, dirname(artifact_path)), exist_ok=True)
+                    client.download_file(bucket_name, s3_object['Key'], os.path.join(destination_path, artifact_path))
+
 
 def extract_optional_value_with_default(opt: Optional[Any], default: Any) -> Any:
     if opt is not None:

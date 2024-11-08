@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from merlin.util import guess_mlp_ui_url, valid_name_check, get_bucket_name, get_gcs_path
+from merlin.util import guess_mlp_ui_url, valid_name_check, get_blob_storage_scheme, get_bucket_name, get_artifact_path
 import pytest
 
 
@@ -35,18 +35,27 @@ def test_name_check():
 
 
 @pytest.mark.unit
-def test_get_bucket_name():
-    gcs_uri = 'gs://some-bucket/mlflow/81/ddd'
-    assert get_bucket_name(gcs_uri) == 'some-bucket'
+def test_get_blob_storage_scheme():
+    gcs_artifact_uri = 'gs://some-bucket/mlflow/81/ddd'
+    assert get_blob_storage_scheme(gcs_artifact_uri) == 'gs'
+
+    s3_artifact_uri = 's3://some-bucket/mlflow/81/ddd'
+    assert get_blob_storage_scheme(s3_artifact_uri) == 's3'
 
 
 @pytest.mark.unit
-def test_get_gcs_path():
-    gcs_uri = 'gs://some-bucket/mlflow/81/ddd'
-    assert get_gcs_path(gcs_uri) == 'mlflow/81/ddd'
+def test_get_bucket_name():
+    artifact_uri = 'gs://some-bucket/mlflow/81/ddd'
+    assert get_bucket_name(artifact_uri) == 'some-bucket'
+
+
+@pytest.mark.unit
+def test_get_artifact_path():
+    artifact_uri = 'gs://some-bucket/mlflow/81/ddd'
+    assert get_artifact_path(artifact_uri) == 'mlflow/81/ddd'
 
     double_slash_uri_path = 'gs://some-bucket//mlflow/81/ddd'
-    assert get_gcs_path(double_slash_uri_path) == 'mlflow/81/ddd'
+    assert get_artifact_path(double_slash_uri_path) == 'mlflow/81/ddd'
 
 
 @pytest.mark.parametrize("mlp_api_url,expected", [

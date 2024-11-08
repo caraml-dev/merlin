@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	gcs "cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
 	"github.com/caraml-dev/merlin/webhook"
 	"github.com/caraml-dev/mlp/api/pkg/artifact"
@@ -105,55 +104,65 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	}
 
 	var artifactService artifact.Service
-	if cfg.ImageBuilderConfig.ArtifactServiceType == "gcs" {
-		gcsClient, err := gcs.NewClient(context.Background())
-		if err != nil {
-			log.Panicf("%s,failed initializing gcs for mlflow delete package", err.Error())
-		}
-		artifactService = artifact.NewGcsArtifactClient(gcsClient)
-	} else if cfg.ImageBuilderConfig.ArtifactServiceType == "nop" {
+	if cfg.MlflowConfig.ArtifactServiceType == "gcs" {
+		artifactService, err = artifact.NewGcsArtifactClient()
+	} else if cfg.MlflowConfig.ArtifactServiceType == "s3" {
+		artifactService, err = artifact.NewS3ArtifactClient()
+	} else if cfg.MlflowConfig.ArtifactServiceType == "nop" {
 		artifactService = artifact.NewNopArtifactClient()
 	} else {
-		log.Panicf("invalid artifact service type %s", cfg.ImageBuilderConfig.ArtifactServiceType)
+		log.Panicf("invalid artifact service type %s", cfg.MlflowConfig.ArtifactServiceType)
+	}
+	if err != nil {
+		log.Panicf("%s,failed initializing mlflow artifact service", err.Error())
+	}
+
+	if cfg.ImageBuilderConfig.KanikoPushRegistryType != "gcr" &&
+		cfg.ImageBuilderConfig.KanikoPushRegistryType != "docker" {
+		log.Panicf("invalid kaniko push registry type %s", cfg.ImageBuilderConfig.KanikoPushRegistryType)
 	}
 
 	webServiceConfig := imagebuilder.Config{
-		BaseImage:               cfg.ImageBuilderConfig.BaseImage,
-		BuildNamespace:          cfg.ImageBuilderConfig.BuildNamespace,
-		DockerRegistry:          cfg.ImageBuilderConfig.DockerRegistry,
-		BuildTimeoutDuration:    timeout,
-		KanikoImage:             cfg.ImageBuilderConfig.KanikoImage,
-		KanikoServiceAccount:    cfg.ImageBuilderConfig.KanikoServiceAccount,
-		KanikoAdditionalArgs:    cfg.ImageBuilderConfig.KanikoAdditionalArgs,
-		DefaultResources:        cfg.ImageBuilderConfig.DefaultResources,
-		Tolerations:             cfg.ImageBuilderConfig.Tolerations,
-		NodeSelectors:           cfg.ImageBuilderConfig.NodeSelectors,
-		MaximumRetry:            cfg.ImageBuilderConfig.MaximumRetry,
-		SafeToEvict:             cfg.ImageBuilderConfig.SafeToEvict,
-		ClusterName:             cfg.ImageBuilderConfig.ClusterName,
-		GcpProject:              cfg.ImageBuilderConfig.GcpProject,
-		Environment:             cfg.Environment,
-		SupportedPythonVersions: cfg.ImageBuilderConfig.SupportedPythonVersions,
+		BaseImage:                        cfg.ImageBuilderConfig.BaseImage,
+		BuildNamespace:                   cfg.ImageBuilderConfig.BuildNamespace,
+		DockerRegistry:                   cfg.ImageBuilderConfig.DockerRegistry,
+		BuildTimeoutDuration:             timeout,
+		KanikoImage:                      cfg.ImageBuilderConfig.KanikoImage,
+		KanikoPushRegistryType:           cfg.ImageBuilderConfig.KanikoPushRegistryType,
+		KanikoDockerCredentialSecretName: cfg.ImageBuilderConfig.KanikoDockerCredentialSecretName,
+		KanikoServiceAccount:             cfg.ImageBuilderConfig.KanikoServiceAccount,
+		KanikoAdditionalArgs:             cfg.ImageBuilderConfig.KanikoAdditionalArgs,
+		DefaultResources:                 cfg.ImageBuilderConfig.DefaultResources,
+		Tolerations:                      cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:                    cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:                     cfg.ImageBuilderConfig.MaximumRetry,
+		SafeToEvict:                      cfg.ImageBuilderConfig.SafeToEvict,
+		ClusterName:                      cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:                       cfg.ImageBuilderConfig.GcpProject,
+		Environment:                      cfg.Environment,
+		SupportedPythonVersions:          cfg.ImageBuilderConfig.SupportedPythonVersions,
 	}
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig, artifactService)
 
 	predJobConfig := imagebuilder.Config{
-		BaseImage:               cfg.ImageBuilderConfig.PredictionJobBaseImage,
-		BuildNamespace:          cfg.ImageBuilderConfig.BuildNamespace,
-		DockerRegistry:          cfg.ImageBuilderConfig.DockerRegistry,
-		BuildTimeoutDuration:    timeout,
-		KanikoImage:             cfg.ImageBuilderConfig.KanikoImage,
-		KanikoServiceAccount:    cfg.ImageBuilderConfig.KanikoServiceAccount,
-		KanikoAdditionalArgs:    cfg.ImageBuilderConfig.KanikoAdditionalArgs,
-		DefaultResources:        cfg.ImageBuilderConfig.DefaultResources,
-		Tolerations:             cfg.ImageBuilderConfig.Tolerations,
-		NodeSelectors:           cfg.ImageBuilderConfig.NodeSelectors,
-		MaximumRetry:            cfg.ImageBuilderConfig.MaximumRetry,
-		SafeToEvict:             cfg.ImageBuilderConfig.SafeToEvict,
-		ClusterName:             cfg.ImageBuilderConfig.ClusterName,
-		GcpProject:              cfg.ImageBuilderConfig.GcpProject,
-		Environment:             cfg.Environment,
-		SupportedPythonVersions: cfg.ImageBuilderConfig.SupportedPythonVersions,
+		BaseImage:                        cfg.ImageBuilderConfig.PredictionJobBaseImage,
+		BuildNamespace:                   cfg.ImageBuilderConfig.BuildNamespace,
+		DockerRegistry:                   cfg.ImageBuilderConfig.DockerRegistry,
+		BuildTimeoutDuration:             timeout,
+		KanikoImage:                      cfg.ImageBuilderConfig.KanikoImage,
+		KanikoPushRegistryType:           cfg.ImageBuilderConfig.KanikoPushRegistryType,
+		KanikoDockerCredentialSecretName: cfg.ImageBuilderConfig.KanikoDockerCredentialSecretName,
+		KanikoServiceAccount:             cfg.ImageBuilderConfig.KanikoServiceAccount,
+		KanikoAdditionalArgs:             cfg.ImageBuilderConfig.KanikoAdditionalArgs,
+		DefaultResources:                 cfg.ImageBuilderConfig.DefaultResources,
+		Tolerations:                      cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:                    cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:                     cfg.ImageBuilderConfig.MaximumRetry,
+		SafeToEvict:                      cfg.ImageBuilderConfig.SafeToEvict,
+		ClusterName:                      cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:                       cfg.ImageBuilderConfig.GcpProject,
+		Environment:                      cfg.Environment,
+		SupportedPythonVersions:          cfg.ImageBuilderConfig.SupportedPythonVersions,
 	}
 	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig, artifactService)
 

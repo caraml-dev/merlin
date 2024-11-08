@@ -58,7 +58,7 @@ from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.util import (
     autostr,
-    download_files_from_gcs,
+    download_files_from_blob_storage,
     extract_optional_value_with_default,
     guess_mlp_ui_url,
     valid_name_check,
@@ -956,7 +956,7 @@ class ModelVersion:
         if artifact_uri is None or artifact_uri == "":
             raise Exception("There is no artifact uri for this model version")
 
-        download_files_from_gcs(artifact_uri, destination_path)
+        download_files_from_blob_storage(artifact_uri, destination_path)
 
     def log_artifacts(self, local_dir, artifact_path=None):
         """

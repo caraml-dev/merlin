@@ -25,7 +25,6 @@ import (
 	"testing"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/caraml-dev/merlin/cluster/labeller"
 	cfg "github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
@@ -50,13 +49,13 @@ import (
 )
 
 const (
-	testEnvironmentName  = "dev"
-	testOrchestratorName = "merlin"
-	testProjectName      = "test-project"
-	testModelName        = "mymodel"
-	testArtifactURI      = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
-	testCondaEnvUrl      = testArtifactURI + "/model/conda.yaml"
-	testCondaEnvContent  = `dependencies:
+	testEnvironmentName   = "dev"
+	testOrchestratorName  = "merlin"
+	testProjectName       = "test-project"
+	testModelName         = "mymodel"
+	testArtifactURISuffix = "://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
+	testCondaEnvUrlSuffix = testArtifactURISuffix + "/model/conda.yaml"
+	testCondaEnvContent   = `dependencies:
 - python=3.8.*
 - pip:
 	- mlflow
@@ -65,9 +64,10 @@ const (
 	- scikit-learn
 	- xgboost`
 
-	testBuildContextURL = "gs://bucket/build.tar.gz"
-	testBuildNamespace  = "mynamespace"
-	testDockerRegistry  = "ghcr.io"
+	testGCSBuildContextURL = "gs://bucket/build.tar.gz"
+	testS3BuildContextURL  = "s3://bucket/build.tar.gz"
+	testBuildNamespace     = "mynamespace"
+	testDockerRegistry     = "ghcr.io"
 )
 
 var (
@@ -92,9 +92,18 @@ var (
 		Name: testModelName,
 	}
 
-	modelVersion = &models.Version{
+	modelVersionWithGCSArtifact = &models.Version{
 		ID:            models.ID(1),
-		ArtifactURI:   testArtifactURI,
+		ArtifactURI:   fmt.Sprintf("gs%s", testArtifactURISuffix),
+		PythonVersion: "3.10.*",
+		Labels: models.KV{
+			"test": "true",
+		},
+	}
+
+	modelVersionWithS3Artifact = &models.Version{
+		ID:            models.ID(1),
+		ArtifactURI:   fmt.Sprintf("s3%s", testArtifactURISuffix),
 		PythonVersion: "3.10.*",
 		Labels: models.KV{
 			"test": "true",
@@ -114,11 +123,11 @@ var (
 
 	defaultSupportedPythonVersions = []string{"3.8.*", "3.9.*", "3.10.*"}
 
-	config = Config{
+	configWithGCRPushRegistry = Config{
 		BuildNamespace: testBuildNamespace,
 		BaseImage: cfg.BaseImageConfig{
 			ImageName:           "gojek/base-image:1",
-			BuildContextURI:     testBuildContextURL,
+			BuildContextURI:     testGCSBuildContextURL,
 			BuildContextSubPath: "python/pyfunc-server",
 			DockerfilePath:      "./Dockerfile",
 		},
@@ -127,9 +136,51 @@ var (
 		ClusterName:             "my-cluster",
 		GcpProject:              "test-project",
 		Environment:             testEnvironmentName,
+		KanikoPushRegistryType:  googleCloudRegistryPushRegistryType,
 		KanikoImage:             "gcr.io/kaniko-project/executor:v1.1.0",
 		KanikoAdditionalArgs:    defaultKanikoAdditionalArgs,
 		SupportedPythonVersions: defaultSupportedPythonVersions,
+		DefaultResources: cfg.ResourceRequestsLimits{
+			Requests: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+			Limits: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+		},
+		Tolerations: []v1.Toleration{
+			{
+				Key:      "image-build-job",
+				Value:    "true",
+				Operator: v1.TolerationOpEqual,
+				Effect:   v1.TaintEffectNoSchedule,
+			},
+		},
+		NodeSelectors: map[string]string{
+			"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		},
+		MaximumRetry: jobBackOffLimit,
+	}
+	configWithDockerPushRegistry = Config{
+		BuildNamespace: testBuildNamespace,
+		BaseImage: cfg.BaseImageConfig{
+			ImageName:           "gojek/base-image:1",
+			BuildContextURI:     testS3BuildContextURL,
+			BuildContextSubPath: "python/pyfunc-server",
+			DockerfilePath:      "./Dockerfile",
+		},
+		DockerRegistry:                   testDockerRegistry,
+		BuildTimeoutDuration:             timeout,
+		ClusterName:                      "my-cluster",
+		GcpProject:                       "test-project",
+		Environment:                      testEnvironmentName,
+		KanikoPushRegistryType:           dockerRegistryPushRegistryType,
+		KanikoImage:                      "gcr.io/kaniko-project/executor:v1.1.0",
+		KanikoAdditionalArgs:             defaultKanikoAdditionalArgs,
+		KanikoDockerCredentialSecretName: "docker-secret",
+		SupportedPythonVersions:          defaultSupportedPythonVersions,
 		DefaultResources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
 				CPU:    "500m",
@@ -157,7 +208,7 @@ var (
 		BuildNamespace: testBuildNamespace,
 		BaseImage: cfg.BaseImageConfig{
 			ImageName:           "gojek/base-image:1",
-			BuildContextURI:     testBuildContextURL,
+			BuildContextURI:     testGCSBuildContextURL,
 			BuildContextSubPath: "python/pyfunc-server",
 			DockerfilePath:      "./Dockerfile",
 		},
@@ -264,7 +315,7 @@ func TestBuildImage(t *testing.T) {
 	hash := sha256.New()
 	hash.Write([]byte(testCondaEnvContent))
 	hashEnv := hash.Sum(nil)
-	modelDependenciesURL := fmt.Sprintf("gs://%s/merlin/model_dependencies/%x", testArtifactGsutilURL.Bucket, hashEnv)
+	modelDependenciesURLSuffix := fmt.Sprintf("://%s/merlin/model_dependencies/%x", testArtifactGsutilURL.Bucket, hashEnv)
 
 	type args struct {
 		project         mlp.Project
@@ -275,30 +326,32 @@ func TestBuildImage(t *testing.T) {
 	}
 
 	tests := []struct {
-		name              string
-		args              args
-		existingJob       *batchv1.Job
-		wantCreateJob     *batchv1.Job
-		wantDeleteJobName string
-		wantImageRef      string
-		config            Config
+		name                     string
+		args                     args
+		existingJob              *batchv1.Job
+		wantCreateJob            *batchv1.Job
+		wantDeleteJobName        string
+		wantImageRef             string
+		config                   Config
+		artifactServiceType      string
+		artifactServiceURLScheme string
 	}{
 		{
-			name: "success: no existing job",
+			name: "success: gcs artifact storage + gcr push registry; no existing job",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -319,7 +372,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -337,13 +390,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -392,28 +446,139 @@ func TestBuildImage(t *testing.T) {
 				},
 				Status: batchv1.JobStatus{},
 			},
-			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            config,
+			wantDeleteJobName:        "",
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			config:                   configWithGCRPushRegistry,
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: no existing job, use K8s Service account",
+			name: "success: s3 artifact storage + docker push registry; no existing job",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithS3Artifact,
 			},
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithS3Artifact.ID),
+					Namespace: configWithDockerPushRegistry.BuildNamespace,
+					Labels: map[string]string{
+						"gojek.com/app":          model.Name,
+						"gojek.com/component":    models.ComponentImageBuilder,
+						"gojek.com/environment":  configWithDockerPushRegistry.Environment,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       project.Stream,
+						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Completions:             &jobCompletions,
+					BackoffLimit:            &jobBackOffLimit,
+					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/component":    models.ComponentImageBuilder,
+								"gojek.com/environment":  configWithDockerPushRegistry.Environment,
+								"gojek.com/orchestrator": testOrchestratorName,
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
+							},
+						},
+						Spec: v1.PodSpec{
+							RestartPolicy: v1.RestartPolicyNever,
+							Containers: []v1.Container{
+								{
+									Name:  containerName,
+									Image: "gcr.io/kaniko-project/executor:v1.1.0",
+									Args: []string{
+										fmt.Sprintf("--dockerfile=%s", configWithDockerPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithDockerPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithDockerPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", "s3"),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=s3%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=s3%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithDockerPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithS3Artifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithDockerPushRegistry.BaseImage.BuildContextSubPath),
+										"--cache=true",
+										"--compressed-caching=false",
+										"--snapshot-mode=redo",
+										"--use-new-run",
+									},
+									VolumeMounts: []v1.VolumeMount{
+										{
+											Name:      kanikoSecretName,
+											MountPath: "/kaniko/.docker",
+										},
+									},
+									Resources:                defaultResourceRequests.Build(),
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+								},
+							},
+							Volumes: []v1.Volume{
+								{
+									Name: kanikoSecretName,
+									VolumeSource: v1.VolumeSource{
+										Secret: &v1.SecretVolumeSource{
+											SecretName: configWithDockerPushRegistry.KanikoDockerCredentialSecretName,
+										},
+									},
+								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+							},
+						},
+					},
+				},
+				Status: batchv1.JobStatus{},
+			},
+			wantDeleteJobName:        "",
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithDockerPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithS3Artifact.ID),
+			config:                   configWithDockerPushRegistry,
+			artifactServiceType:      "s3",
+			artifactServiceURLScheme: "s3",
+		},
+		{
+			name: "success: gcs artifact storage + gcr push registry; no existing job, use K8s Service account",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersionWithGCSArtifact,
+			},
+			existingJob: nil,
+			wantCreateJob: &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/component":    "image-builder",
 						"sample":                 "true",
 						"test":                   "true",
@@ -434,7 +599,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/component":    "image-builder",
 								"sample":                 "true",
 								"test":                   "true",
@@ -450,13 +615,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -483,26 +649,28 @@ func TestBuildImage(t *testing.T) {
 				},
 				Status: batchv1.JobStatus{},
 			},
-			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            configWithSa,
+			wantDeleteJobName:        "",
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			config:                   configWithSa,
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: no existing job, tolerations is not set",
+			name: "success: gcs artifact storage + gcr push registry; no existing job, tolerations is not set",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -523,7 +691,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -541,13 +709,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -589,12 +758,12 @@ func TestBuildImage(t *testing.T) {
 				Status: batchv1.JobStatus{},
 			},
 			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 			config: Config{
 				BuildNamespace: testBuildNamespace,
 				BaseImage: cfg.BaseImageConfig{
 					ImageName:           "gojek/base-image:1",
-					BuildContextURI:     testBuildContextURL,
+					BuildContextURI:     testGCSBuildContextURL,
 					BuildContextSubPath: "python/pyfunc-server",
 					DockerfilePath:      "./Dockerfile",
 				},
@@ -604,31 +773,34 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:              "test-project",
 				Environment:             testEnvironmentName,
 				KanikoImage:             "gcr.io/kaniko-project/executor:v1.1.0",
+				KanikoPushRegistryType:  googleCloudRegistryPushRegistryType,
 				KanikoAdditionalArgs:    defaultKanikoAdditionalArgs,
 				SupportedPythonVersions: defaultSupportedPythonVersions,
-				DefaultResources:        config.DefaultResources,
+				DefaultResources:        configWithGCRPushRegistry.DefaultResources,
 				NodeSelectors: map[string]string{
 					"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 				},
 				MaximumRetry: jobBackOffLimit,
 			},
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: no existing job, node selectors is not set",
+			name: "success: gcs artifact storage + gcr push registry; no existing job, node selectors is not set",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -649,7 +821,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -667,13 +839,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -720,12 +893,12 @@ func TestBuildImage(t *testing.T) {
 				Status: batchv1.JobStatus{},
 			},
 			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 			config: Config{
 				BuildNamespace: testBuildNamespace,
 				BaseImage: cfg.BaseImageConfig{
 					ImageName:           "gojek/base-image:1",
-					BuildContextURI:     testBuildContextURL,
+					BuildContextURI:     testGCSBuildContextURL,
 					BuildContextSubPath: "python/pyfunc-server",
 					DockerfilePath:      "./Dockerfile",
 				},
@@ -735,9 +908,10 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:              "test-project",
 				Environment:             testEnvironmentName,
 				KanikoImage:             "gcr.io/kaniko-project/executor:v1.1.0",
+				KanikoPushRegistryType:  googleCloudRegistryPushRegistryType,
 				KanikoAdditionalArgs:    defaultKanikoAdditionalArgs,
 				SupportedPythonVersions: defaultSupportedPythonVersions,
-				DefaultResources:        config.DefaultResources,
+				DefaultResources:        configWithGCRPushRegistry.DefaultResources,
 				Tolerations: []v1.Toleration{
 					{
 						Key:      "image-build-job",
@@ -748,23 +922,25 @@ func TestBuildImage(t *testing.T) {
 				},
 				MaximumRetry: jobBackOffLimit,
 			},
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: no existing job, not using context sub path",
+			name: "success: gcs artifact storage + gcr push registry; no existing job, not using context sub path",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -785,7 +961,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -803,12 +979,13 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -858,43 +1035,46 @@ func TestBuildImage(t *testing.T) {
 				Status: batchv1.JobStatus{},
 			},
 			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 			config: Config{
-				BuildNamespace: config.BuildNamespace,
+				BuildNamespace: configWithGCRPushRegistry.BuildNamespace,
 				BaseImage: cfg.BaseImageConfig{
 					ImageName:       "gojek/base-image:1",
-					BuildContextURI: testBuildContextURL,
+					BuildContextURI: testGCSBuildContextURL,
 					DockerfilePath:  "./Dockerfile",
 				},
-				DockerRegistry:          config.DockerRegistry,
-				BuildTimeoutDuration:    config.BuildTimeoutDuration,
-				ClusterName:             config.ClusterName,
-				GcpProject:              config.GcpProject,
-				Environment:             config.Environment,
-				KanikoImage:             config.KanikoImage,
+				DockerRegistry:          configWithGCRPushRegistry.DockerRegistry,
+				BuildTimeoutDuration:    configWithGCRPushRegistry.BuildTimeoutDuration,
+				ClusterName:             configWithGCRPushRegistry.ClusterName,
+				GcpProject:              configWithGCRPushRegistry.GcpProject,
+				Environment:             configWithGCRPushRegistry.Environment,
+				KanikoImage:             configWithGCRPushRegistry.KanikoImage,
+				KanikoPushRegistryType:  configWithGCRPushRegistry.KanikoPushRegistryType,
 				KanikoAdditionalArgs:    defaultKanikoAdditionalArgs,
 				SupportedPythonVersions: defaultSupportedPythonVersions,
-				DefaultResources:        config.DefaultResources,
-				MaximumRetry:            config.MaximumRetry,
-				NodeSelectors:           config.NodeSelectors,
-				Tolerations:             config.Tolerations,
+				DefaultResources:        configWithGCRPushRegistry.DefaultResources,
+				MaximumRetry:            configWithGCRPushRegistry.MaximumRetry,
+				NodeSelectors:           configWithGCRPushRegistry.NodeSelectors,
+				Tolerations:             configWithGCRPushRegistry.Tolerations,
 			},
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: existing job is running",
+			name: "success: gcs artifact storage + gcr push registry; existing job is running",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -915,7 +1095,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -933,13 +1113,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -988,25 +1169,27 @@ func TestBuildImage(t *testing.T) {
 				},
 				Status: batchv1.JobStatus{},
 			},
-			wantCreateJob: nil,
-			wantImageRef:  fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:        config,
+			wantCreateJob:            nil,
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			config:                   configWithGCRPushRegistry,
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: existing job already successful",
+			name: "success: gcs artifact storage + gcr push registry; existing job already successful",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -1027,7 +1210,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -1045,13 +1228,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1102,26 +1286,28 @@ func TestBuildImage(t *testing.T) {
 					Succeeded: 1,
 				},
 			},
-			wantCreateJob:     nil,
-			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            config,
+			wantCreateJob:            nil,
+			wantDeleteJobName:        "",
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			config:                   configWithGCRPushRegistry,
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: existing job failed",
+			name: "success: gcs artifact storage + gcr push registry; existing job failed",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			existingJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -1142,7 +1328,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -1160,13 +1346,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1219,12 +1406,12 @@ func TestBuildImage(t *testing.T) {
 			},
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -1245,7 +1432,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -1263,13 +1450,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1318,16 +1506,18 @@ func TestBuildImage(t *testing.T) {
 				},
 				Status: batchv1.JobStatus{},
 			},
-			wantDeleteJobName: fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            config,
+			wantDeleteJobName:        fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			config:                   configWithGCRPushRegistry,
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 		{
-			name: "success: with custom resource request",
+			name: "success: gcs artifact storage + gcr push registry; with custom resource request",
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 				resourceRequest: &models.ResourceRequest{
 					CPURequest:    resource.MustParse("2"),
 					MemoryRequest: resource.MustParse("4Gi"),
@@ -1336,12 +1526,12 @@ func TestBuildImage(t *testing.T) {
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-					Namespace: config.BuildNamespace,
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+					Namespace: configWithGCRPushRegistry.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
-						"gojek.com/environment":  config.Environment,
+						"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
@@ -1362,7 +1552,7 @@ func TestBuildImage(t *testing.T) {
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
-								"gojek.com/environment":  config.Environment,
+								"gojek.com/environment":  configWithGCRPushRegistry.Environment,
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
@@ -1380,13 +1570,14 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.BaseImage.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BaseImage.BuildContextURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage.ImageName),
-										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=%s", modelDependenciesURL),
-										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=%s/model", testArtifactURI),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
-										fmt.Sprintf("--context-sub-path=%s", config.BaseImage.BuildContextSubPath),
+										fmt.Sprintf("--dockerfile=%s", configWithGCRPushRegistry.BaseImage.DockerfilePath),
+										fmt.Sprintf("--context=%s", configWithGCRPushRegistry.BaseImage.BuildContextURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", configWithGCRPushRegistry.BaseImage.ImageName),
+										fmt.Sprintf("--build-arg=MLFLOW_ARTIFACT_STORAGE_TYPE=%s", googleCloudStorageArtifactServiceType),
+										fmt.Sprintf("--build-arg=MODEL_DEPENDENCIES_URL=gs%s", modelDependenciesURLSuffix),
+										fmt.Sprintf("--build-arg=MODEL_ARTIFACTS_URL=gs%s/model", testArtifactURISuffix),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID)),
+										fmt.Sprintf("--context-sub-path=%s", configWithGCRPushRegistry.BaseImage.BuildContextSubPath),
 										"--cache=true",
 										"--compressed-caching=false",
 										"--snapshot-mode=redo",
@@ -1435,9 +1626,11 @@ func TestBuildImage(t *testing.T) {
 				},
 				Status: batchv1.JobStatus{},
 			},
-			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
-			config:            config,
+			wantDeleteJobName:        "",
+			wantImageRef:             fmt.Sprintf("%s/%s-%s:%s", configWithGCRPushRegistry.DockerRegistry, project.Name, model.Name, modelVersionWithGCSArtifact.ID),
+			config:                   configWithGCRPushRegistry,
+			artifactServiceType:      googleCloudStorageArtifactServiceType,
+			artifactServiceURLScheme: "gs",
 		},
 	}
 
@@ -1516,9 +1709,15 @@ func TestBuildImage(t *testing.T) {
 			imageBuilderCfg := tt.config
 
 			artifactServiceMock := &mocks.Service{}
-			artifactServiceMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
-			artifactServiceMock.On("ReadArtifact", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
-			artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
+			artifactServiceMock.On("ParseURL", fmt.Sprintf("%s%s",
+				tt.artifactServiceURLScheme, testArtifactURISuffix)).Return(testArtifactGsutilURL, nil)
+			artifactServiceMock.On("GetURLScheme").Return(tt.artifactServiceURLScheme)
+			artifactServiceMock.On("GetURLScheme").Return(tt.artifactServiceURLScheme)
+			artifactServiceMock.On("GetType").Return(tt.artifactServiceType)
+			artifactServiceMock.On("ReadArtifact", mock.Anything,
+				fmt.Sprintf("%s%s", tt.artifactServiceURLScheme, testCondaEnvUrlSuffix)).Return([]byte(testCondaEnvContent), nil)
+			artifactServiceMock.On("ReadArtifact", mock.Anything,
+				fmt.Sprintf("%s%s", tt.artifactServiceURLScheme, modelDependenciesURLSuffix)).Return([]byte(testCondaEnvContent), nil)
 
 			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg, artifactServiceMock)
 
@@ -1558,7 +1757,7 @@ func TestGetContainers(t *testing.T) {
 	}
 	modelVersion := &models.Version{
 		ID:          models.ID(1),
-		ArtifactURI: testArtifactURI,
+		ArtifactURI: testArtifactURISuffix,
 	}
 
 	type args struct {
@@ -1621,7 +1820,7 @@ func TestGetContainers(t *testing.T) {
 
 		artifaceServiceMock := &mocks.Service{}
 
-		c := NewModelServiceImageBuilder(kubeClient, config, artifaceServiceMock)
+		c := NewModelServiceImageBuilder(kubeClient, configWithGCRPushRegistry, artifaceServiceMock)
 		containers, err := c.GetContainers(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 
 		if !tt.wantError {
@@ -1823,11 +2022,13 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 			name: "hash dependencies is already exist",
 			args: args{
 				ctx:     context.Background(),
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			artifactServiceMock: func(artifactServiceMock *mocks.Service) {
-				artifactServiceMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
-				artifactServiceMock.On("ReadArtifact", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
+				artifactServiceMock.On("ParseURL", fmt.Sprintf("gs%s", testArtifactURISuffix)).Return(testArtifactGsutilURL, nil)
+				artifactServiceMock.On("GetURLScheme").Return("gs")
+				artifactServiceMock.On("GetURLScheme").Return("gs")
+				artifactServiceMock.On("ReadArtifact", mock.Anything, fmt.Sprintf("gs%s", testCondaEnvUrlSuffix)).Return([]byte(testCondaEnvContent), nil)
 				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return([]byte(testCondaEnvContent), nil)
 			},
 			want:    modelDependenciesURL,
@@ -1837,12 +2038,14 @@ func Test_imageBuilder_getHashedModelDependenciesUrl(t *testing.T) {
 			name: "hash dependencies is not exist yet",
 			args: args{
 				ctx:     context.Background(),
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			artifactServiceMock: func(artifactServiceMock *mocks.Service) {
-				artifactServiceMock.On("ParseURL", testArtifactURI).Return(testArtifactGsutilURL, nil)
-				artifactServiceMock.On("ReadArtifact", mock.Anything, testCondaEnvUrl).Return([]byte(testCondaEnvContent), nil)
-				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return(nil, storage.ErrObjectNotExist)
+				artifactServiceMock.On("ParseURL", fmt.Sprintf("gs%s", testArtifactURISuffix)).Return(testArtifactGsutilURL, nil)
+				artifactServiceMock.On("GetURLScheme").Return("gs")
+				artifactServiceMock.On("GetURLScheme").Return("gs")
+				artifactServiceMock.On("ReadArtifact", mock.Anything, fmt.Sprintf("gs%s", testCondaEnvUrlSuffix)).Return([]byte(testCondaEnvContent), nil)
+				artifactServiceMock.On("ReadArtifact", mock.Anything, modelDependenciesURL).Return(nil, artifact.ErrObjectNotExist)
 				artifactServiceMock.On("WriteArtifact", mock.Anything, modelDependenciesURL, []byte(testCondaEnvContent)).Return(nil)
 			},
 			want:    modelDependenciesURL,
@@ -1895,12 +2098,12 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				job := &batchv1.Job{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 						Namespace: config.BuildNamespace,
 					},
 					Status: batchv1.JobStatus{
@@ -1919,12 +2122,12 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				job := &batchv1.Job{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 						Namespace: config.BuildNamespace,
 					},
 					Status: batchv1.JobStatus{
@@ -1943,12 +2146,12 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				job := &batchv1.Job{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+						Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 						Namespace: config.BuildNamespace,
 					},
 					Status: batchv1.JobStatus{
@@ -1968,9 +2171,9 @@ func Test_imageBuilder_GetImageBuildingJobStatus(t *testing.T) {
 			mockListPods: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				pod := &v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: fmt.Sprintf("%s-%s-%s-1", project.Name, model.Name, modelVersion.ID),
+						Name: fmt.Sprintf("%s-%s-%s-1", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 						Labels: map[string]string{
-							"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+							"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersionWithGCSArtifact.ID),
 						},
 					},
 					Status: v1.PodStatus{
@@ -2021,7 +2224,7 @@ CondaEnvException: Pip failed`,
 			args: args{
 				project: project,
 				model:   model,
-				version: modelVersion,
+				version: modelVersionWithGCSArtifact,
 			},
 			mockGetJob: func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				job := &batchv1.Job{}
