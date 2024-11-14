@@ -61,6 +61,7 @@ func (mlflow *client) doCall(req *request, resp interface{}) error {
 		return err
 	}
 
+	httpReq.Header.Set("Content-Type", "application/json")
 	httpResp, err := mlflow.httpClient.Do(httpReq)
 	if err != nil {
 		return err
