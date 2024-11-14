@@ -15,8 +15,6 @@
 
 import imp
 import os
-import pathlib
-import pkg_resources
 
 from setuptools import find_packages, setup
 
@@ -24,17 +22,11 @@ version = imp.load_source(
     "merlin.version", os.path.join("merlin", "version.py")
 ).VERSION
 
-with pathlib.Path("requirements.txt").open() as requirements_txt:
-    requirements = [
-        str(requirement)
-        for requirement in pkg_resources.parse_requirements(requirements_txt)
-    ]
+with open("requirements.txt") as f:
+    REQUIRE = f.read().splitlines()
 
-with pathlib.Path("requirements.test.txt").open() as test_requirements_test:
-    test_requirements = [
-        str(requirement)
-        for requirement in pkg_resources.parse_requirements(test_requirements_test)
-    ]
+with open("requirements_test.txt") as f:
+    TESTS_REQUIRE = f.read().splitlines()
 
 setup(
     name="merlin-sdk",
@@ -45,10 +37,10 @@ setup(
     packages=find_packages(),
     package_data={"merlin": ["docker/pyfunc.Dockerfile", "docker/standard.Dockerfile"]},
     zip_safe=True,
-    install_requires=requirements,
+    install_requires=REQUIRE,
     setup_requires=["setuptools_scm"],
-    tests_require=test_requirements,
-    extras_require={"test": test_requirements},
+    tests_require=TESTS_REQUIRE,
+    extras_require={"test": TESTS_REQUIRE},
     python_requires=">=3.8,<3.11",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
