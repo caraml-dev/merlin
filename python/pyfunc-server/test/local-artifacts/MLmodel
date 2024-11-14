@@ -13,7 +13,7 @@ flavors:
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
     python_version: 3.8.18
-mlflow_version: 1.26.1
+mlflow_version: 2.17.2
 model_uuid: 126ccf3f97024b43a011b5aee072010c
 run_id: 74232b10e8064ccda29611c265921034
 utc_time_created: '2024-03-18 07:27:00.346244'
