@@ -1,0 +1,18 @@
+google-cloud-bigquery-storage>=0.7.0
+google-cloud-bigquery>=1.18.0
+joblib>=0.13.0,<1.2.0  # >=1.2.0 upon upgrade of kserve's version
+mypy>=0.812
+pytest-cov
+pytest-dependency
+pytest-xdist
+pytest
+recursive-diff>=1.0.0
+requests
+scikit-learn>=1.1.2
+types-python-dateutil
+types-PyYAML
+types-six
+types-protobuf
+urllib3-mock>=0.3.3
+xarray
+xgboost==1.6.2
