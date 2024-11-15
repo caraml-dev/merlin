@@ -48,6 +48,8 @@ install_merlin() {
     --set imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
     --set ingress.host=merlin.caraml.${INGRESS_HOST} \
     --set mlflow.ingress.host=merlin-mlflow.caraml.${INGRESS_HOST} \
+    --set mlflow.image.repository=caraml-dev/mlflow \
+    --set mlflow.image.tag=1.26.1 \
     --set mlp.deployment.apiHost=http://mlp.caraml.${INGRESS_HOST}/v1 \
     --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.caraml.${INGRESS_HOST} \
     --set mlp.ingress.host=mlp.caraml.${INGRESS_HOST} \
