@@ -146,7 +146,7 @@ marshmallow==3.20.2
     # via dataclasses-json
 mdurl==0.1.2
     # via markdown-it-py
-mlflow==1.30.0
+mlflow==1.26.1
     # via merlin-sdk
 mypy-extensions==1.0.0
     # via typing-inspect
@@ -215,7 +215,7 @@ python-dateutil==2.8.2
     #   pandas
 python-slugify==8.0.4
     # via cookiecutter
-pytz==2024.1
+pytz==2022.7.1
     # via
     #   mlflow
     #   pandas
