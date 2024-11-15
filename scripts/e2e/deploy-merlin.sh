@@ -28,7 +28,7 @@ install_merlin() {
     --set deployment.image.registry=${DOCKER_REGISTRY} \
     --set deployment.image.repository=merlin \
     --set deployment.image.tag=${VERSION} \
-    --set transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
+    --set rendered.overrides.StandardTransformerConfig.ImageName=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
     --set imageBuilder.dockerRegistry=${DOCKER_REGISTRY} \
     --set imageBuilder.predictionJobBaseImages."3\.7\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py37:${VERSION} \
     --set imageBuilder.predictionJobBaseImages."3\.7\.*".buildContextURI=git://github.com/caraml-dev/merlin.git#${GIT_REF} \
