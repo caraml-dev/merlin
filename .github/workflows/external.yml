@@ -26,5 +26,5 @@ jobs:
         with:
           context: mlflow
           file: mlflow/Dockerfile
-          build-args: MLFLOW_VERSION=2.17.2
-          tags: ghcr.io/caraml-dev/mlflow:2.17.2
+          build-args: MLFLOW_VERSION=1.26.1
+          tags: ghcr.io/caraml-dev/mlflow:1.26.1
