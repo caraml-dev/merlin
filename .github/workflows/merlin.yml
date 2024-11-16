@@ -400,6 +400,7 @@ jobs:
       K3D_CLUSTER: merlin-cluster
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
+      DOCKER_REGISTRY: "dev.localhost:12345"
       INGRESS_HOST: "127.0.0.1.nip.io"
       MERLIN_CHART_VERSION: 0.13.18
       E2E_PYTHON_VERSION: "3.10.6"
