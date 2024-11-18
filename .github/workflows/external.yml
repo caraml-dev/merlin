@@ -22,9 +22,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push MLflow Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: mlflow
+          push: true
           file: mlflow/Dockerfile
-          build-args: MLFLOW_VERSION=1.3.0
-          tags: ghcr.io/caraml-dev/mlflow:1.3.0
+          build-args: MLFLOW_VERSION=1.26.1
+          tags: ghcr.io/caraml-dev/mlflow:1.26.1

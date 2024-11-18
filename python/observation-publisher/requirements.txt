@@ -255,7 +255,7 @@ six==1.16.0
     #   querystring-parser
 smmap==5.0.1
     # via gitdb
-sqlalchemy==2.0.27
+sqlalchemy==1.4.54
     # via
     #   alembic
     #   mlflow

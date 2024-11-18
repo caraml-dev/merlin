@@ -103,6 +103,12 @@ install_knative() {
     kubectl rollout status deployment/domainmapping-webhook -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/webhook -n knative-serving -w --timeout=${TIMEOUT}
 
+    # Update knative config-deployment config map to allow resolving of the local e2e image repository
+    kubectl get configmap -n knative-serving config-deployment -o yaml > temp.yaml
+    yq -i '.data.registries-skipping-tag-resolving |= ("\(.),${DOCKER_REGISTRY}" | envsubst)' temp.yaml
+    kubectl apply -f temp.yaml
+    kubectl rollout restart deployment -n knative-serving controller
+
     # Install knative-istio
     kubectl apply -f https://github.com/knative-sandbox/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
 

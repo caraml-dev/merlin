@@ -12,7 +12,7 @@ export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -
 export DOCKER_REGISTRY=ghcr.io/caraml-dev
 export VERSION=0.33.0
 export GIT_REF=v0.33.0
-export MERLIN_CHART_VERSION=0.11.7
+export MERLIN_CHART_VERSION=0.13.18
 export OAUTH_CLIENT_ID=""
 
 cd e2e; ./deploy-merlin.sh $INGRESS_HOST $DOCKER_REGISTRY $VERSION $GIT_REF $MERLIN_CHART_VERSION $OAUTH_CLIENT_ID
