@@ -65,7 +65,7 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 			return err
 		}
 
-		return e.enqueueJob(version, model, publisher, models.UndeployPublisher)
+		return e.enqueueJob(version, model, publisher, models.UndeployPublisher, nil)
 	}
 
 	versionEndpoint := modelEndpoint.GetVersionEndpoint()
@@ -84,7 +84,12 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 	publisher.VersionID = versionEndpoint.VersionID
 	publisher.ModelSchemaSpec = version.ModelSchema.Spec
 
-	return e.enqueueJob(version, model, publisher, models.DeployPublisher)
+	var workerResourceRequest *models.WorkerResourceRequest
+	if versionEndpoint.ModelObservability != nil && versionEndpoint.ModelObservability.PredictionLogIngestionResourceRequest != nil {
+		workerResourceRequest = versionEndpoint.ModelObservability.PredictionLogIngestionResourceRequest
+	}
+
+	return e.enqueueJob(version, model, publisher, models.DeployPublisher, workerResourceRequest)
 }
 
 func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.VersionEndpoint, model *models.Model) error {
@@ -105,7 +110,7 @@ func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.Versi
 	}
 
 	// Undeploy if version endpoint observability is false
-	if !versionEndpoint.EnableModelObservability {
+	if !versionEndpoint.IsModelMonitoringEnabled() {
 		if publisher == nil || publisher.Status == models.Terminated {
 			return nil
 		}
@@ -113,7 +118,7 @@ func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.Versi
 		if err != nil {
 			return err
 		}
-		return e.enqueueJob(version, model, publisher, models.UndeployPublisher)
+		return e.enqueueJob(version, model, publisher, models.UndeployPublisher, nil)
 	}
 
 	version, err := e.findVersionWithModelSchema(ctx, versionEndpoint.VersionID, model.ID)
@@ -130,7 +135,12 @@ func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.Versi
 
 	publisher.VersionID = versionEndpoint.VersionID
 	publisher.ModelSchemaSpec = version.ModelSchema.Spec
-	return e.enqueueJob(version, model, publisher, models.DeployPublisher)
+
+	var workerResourceRequest *models.WorkerResourceRequest
+	if versionEndpoint.ModelObservability != nil && versionEndpoint.ModelObservability.PredictionLogIngestionResourceRequest != nil {
+		workerResourceRequest = versionEndpoint.ModelObservability.PredictionLogIngestionResourceRequest
+	}
+	return e.enqueueJob(version, model, publisher, models.DeployPublisher, workerResourceRequest)
 }
 
 func isUndeployAction(modelEndpoint *models.ModelEndpoint) bool {
@@ -141,7 +151,7 @@ func isUndeployAction(modelEndpoint *models.ModelEndpoint) bool {
 		return false
 	}
 	destination := modelEndpoint.Rule.Destination[0]
-	return !destination.VersionEndpoint.EnableModelObservability
+	return !destination.VersionEndpoint.IsModelMonitoringEnabled()
 }
 
 func (e *eventProducer) findVersionWithModelSchema(ctx context.Context, versionID models.ID, modelID models.ID) (*models.Version, error) {
@@ -155,7 +165,7 @@ func (e *eventProducer) findVersionWithModelSchema(ctx context.Context, versionI
 	return version, nil
 }
 
-func (e *eventProducer) enqueueJob(version *models.Version, model *models.Model, publisher *models.ObservabilityPublisher, actionType models.ActionType) error {
+func (e *eventProducer) enqueueJob(version *models.Version, model *models.Model, publisher *models.ObservabilityPublisher, actionType models.ActionType, workerResourceRequest *models.WorkerResourceRequest) error {
 	publisher.Status = models.Pending
 	if version.ModelSchema != nil {
 		publisher.ModelSchemaSpec = version.ModelSchema.Spec
@@ -182,7 +192,7 @@ func (e *eventProducer) enqueueJob(version *models.Version, model *models.Model,
 			dataArgKey: models.ObservabilityPublisherJob{
 				ActionType: actionType,
 				Publisher:  publisher,
-				WorkerData: models.NewWorkerData(version, model, publisher),
+				WorkerData: models.NewWorkerData(version, model, publisher, workerResourceRequest),
 			},
 		},
 	})

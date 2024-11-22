@@ -1,0 +1,1 @@
+ALTER TABLE version_endpoints ADD COLUMN model_observability jsonb;

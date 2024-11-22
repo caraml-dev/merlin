@@ -19,7 +19,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
 	github.com/coocood/freecache v1.2.3
-	github.com/fatih/color v1.15.0
+	github.com/fatih/color v1.18.0
 	github.com/feast-dev/feast/sdk/go v0.9.4
 	github.com/fraugster/parquet-go v0.10.0
 	github.com/ghodss/yaml v1.0.0
@@ -182,7 +182,7 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -228,7 +228,7 @@ require (
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect

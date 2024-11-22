@@ -26,6 +26,7 @@ from merlin.protocol import Protocol
 from merlin.util import autostr, get_url
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer, TransformerType
+from merlin.model_observability import ModelObservability
 from merlin.util import extract_optional_value_with_default
 
 class Status(Enum):
@@ -104,6 +105,9 @@ class VersionEndpoint:
             self._log_url = log_url
 
         self._enable_model_observability = extract_optional_value_with_default(endpoint.enable_model_observability, False)
+        if endpoint.model_observability is not None:
+            model_observability = ModelObservability.from_model_observability_response(endpoint.model_observability)
+            self._model_observability = extract_optional_value_with_default(model_observability, None)
 
     @property
     def url(self):
@@ -165,6 +169,10 @@ class VersionEndpoint:
     @property
     def enable_model_observability(self) -> bool:
         return self._enable_model_observability
+    
+    @property
+    def model_observability(self) -> Optional[client.ModelObservability]:
+        return self._model_observability
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""

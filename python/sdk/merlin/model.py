@@ -55,6 +55,7 @@ from merlin.protocol import Protocol
 from merlin.pyfunc import run_pyfunc_local_server
 from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
+from merlin.model_observability import ModelObservability
 from merlin.transformer import Transformer
 from merlin.util import (
     autostr,
@@ -1211,6 +1212,7 @@ class ModelVersion:
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
         enable_model_observability: bool = False,
+        model_observability: Optional[ModelObservability] = None
     ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
@@ -1246,6 +1248,7 @@ class ModelVersion:
         target_env_vars: List[client.EnvVar] = []
         target_transformer = None
         target_logger = None
+        target_model_observability = None
 
         # Get the currently deployed endpoint and if there's no deployed endpoint yet, use the default values for
         # non-nullable fields
@@ -1346,6 +1349,10 @@ class ModelVersion:
         if logger is not None:
             target_logger = logger.to_logger_spec()
 
+        if model_observability is not None:
+            print(f"model observability {model_observability}")
+            target_model_observability = model_observability.to_model_observability_request()
+
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
 
@@ -1360,6 +1367,7 @@ class ModelVersion:
             autoscaling_policy=target_autoscaling_policy,
             protocol=client.Protocol(target_protocol),
             enable_model_observability=enable_model_observability,
+            model_observability=target_model_observability,
         )
         if current_endpoint is not None:
             # This allows a serving deployment to be updated while it is serving

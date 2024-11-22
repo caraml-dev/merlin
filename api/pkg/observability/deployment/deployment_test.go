@@ -947,6 +947,152 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 	}
 }
 
+func toQuantityPointer(quantity resource.Quantity) *resource.Quantity {
+	return &quantity
+}
+
+func Test_deployer_getResources(t *testing.T) {
+	testCases := []struct {
+		name                     string
+		deployer                 *deployer
+		data                     *models.WorkerData
+		expectedRequestResources corev1.ResourceList
+		expectedLimitResources   corev1.ResourceList
+	}{
+		{
+			name: "worker data doesn't have resource request and limit hence using default",
+			deployer: &deployer{
+				resourceRequest: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+				resourceLimit: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+			},
+			data: &models.WorkerData{},
+			expectedRequestResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("1Gi"),
+			},
+			expectedLimitResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("1Gi"),
+			},
+		},
+		{
+			name: "worker data have cpu and memory resource request",
+			deployer: &deployer{
+				resourceRequest: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+				resourceLimit: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+			},
+			data: &models.WorkerData{
+				ResourceRequest: &models.WorkerResourceRequest{
+					CPURequest:    toQuantityPointer(resource.MustParse("2")),
+					MemoryRequest: toQuantityPointer(resource.MustParse("2Gi")),
+				},
+			},
+			expectedRequestResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("2"),
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+			expectedLimitResources: corev1.ResourceList{
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+		},
+		{
+			name: "worker data have cpu and memory resource request, default doesn't have cpu limit",
+			deployer: &deployer{
+				resourceRequest: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+				resourceLimit: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+			},
+			data: &models.WorkerData{
+				ResourceRequest: &models.WorkerResourceRequest{
+					CPURequest:    toQuantityPointer(resource.MustParse("2")),
+					MemoryRequest: toQuantityPointer(resource.MustParse("2Gi")),
+				},
+			},
+			expectedRequestResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("2"),
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+			expectedLimitResources: corev1.ResourceList{
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+		},
+		{
+			name: "worker data have cpu resource request but not memory",
+			deployer: &deployer{
+				resourceRequest: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+				resourceLimit: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("2Gi"),
+				},
+			},
+			data: &models.WorkerData{
+				ResourceRequest: &models.WorkerResourceRequest{
+					CPURequest: toQuantityPointer(resource.MustParse("2")),
+				},
+			},
+			expectedRequestResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("2"),
+				corev1.ResourceMemory: resource.MustParse("1Gi"),
+			},
+			expectedLimitResources: corev1.ResourceList{
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+		},
+		{
+			name: "worker data have memory resource request but not cpu",
+			deployer: &deployer{
+				resourceRequest: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+				resourceLimit: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+			},
+			data: &models.WorkerData{
+				ResourceRequest: &models.WorkerResourceRequest{
+					MemoryRequest: toQuantityPointer(resource.MustParse("2Gi")),
+				},
+			},
+			expectedRequestResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+			expectedLimitResources: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("2Gi"),
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.name, func(t *testing.T) {
+			requestResource, limitResource := tC.deployer.getResources(tC.data)
+			assert.Equal(t, tC.expectedRequestResources, requestResource)
+			assert.Equal(t, tC.expectedLimitResources, limitResource)
+		})
+	}
+}
+
 func prependGetSecretReactor(t *testing.T, secretAPI *fakecorev1.FakeSecrets, secretRet *corev1.Secret, expectedErr error) {
 	secretAPI.Fake.PrependReactor(getMethod, secretResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 		actualAction, ok := action.(ktesting.GetAction)

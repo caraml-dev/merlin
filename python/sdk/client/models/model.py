@@ -47,8 +47,8 @@ class Model(BaseModel):
         if value is None:
             return value
 
-        if value not in ('xgboost', 'tensorflow', 'sklearn', 'pytorch', 'pyfunc', 'pyfunc_v2', 'pyfunc_v3', 'custom'):
-            raise ValueError("must be one of enum values ('xgboost', 'tensorflow', 'sklearn', 'pytorch', 'pyfunc', 'pyfunc_v2', 'pyfunc_v3', 'custom')")
+        if value not in ('xgboost', 'tensorflow', 'sklearn', 'pytorch', 'pyfunc', 'pyfunc_v2', 'custom'):
+            raise ValueError("must be one of enum values ('xgboost', 'tensorflow', 'sklearn', 'pytorch', 'pyfunc', 'pyfunc_v2', 'custom')")
         return value
 
     model_config = {

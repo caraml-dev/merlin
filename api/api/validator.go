@@ -176,7 +176,7 @@ func deploymentModeValidation(prev *models.VersionEndpoint, new *models.VersionE
 
 func modelObservabilityValidation(endpoint *models.VersionEndpoint, model *models.Model) requestValidator {
 	return newFuncValidate(func() error {
-		if endpoint.EnableModelObservability && !slices.Contains(supportedObservabilityModelTypes, model.Type) {
+		if endpoint.IsModelMonitoringEnabled() && !slices.Contains(supportedObservabilityModelTypes, model.Type) {
 			return fmt.Errorf("%s: %w", model.Type, ErrUnsupportedObservabilityModelType)
 		}
 		return nil
