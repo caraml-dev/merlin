@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/models"
@@ -122,9 +123,11 @@ func TestVersionEndpointsStorage_GetModelObservability(t *testing.T) {
 		}
 		assert.Equal(t, expectedGroundTruthob, modelObservability.GroundTruthJob)
 
+		cpuQuantity := resource.MustParse("1")
+		memoryQuantity := resource.MustParse("1Gi")
 		expectedPredictionLogIngestionResourceRequest := &models.WorkerResourceRequest{
-			CPURequest:    "1",
-			MemoryRequest: "1Gi",
+			CPURequest:    &cpuQuantity,
+			MemoryRequest: &memoryQuantity,
 			Replica:       1,
 		}
 		assert.Equal(t, expectedPredictionLogIngestionResourceRequest, modelObservability.PredictionLogIngestionResourceRequest)
@@ -213,6 +216,8 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		Protocol:        protocol.HttpJson,
 	}
 	db.Create(&ep2)
+	cpuQuantity := resource.MustParse("1")
+	memoryQuantity := resource.MustParse("1Gi")
 	ep3 := models.VersionEndpoint{
 		ID:              uuid.New(),
 		VersionID:       v.ID,
@@ -243,8 +248,8 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 				ServiceAccountSecretName: "service_account_secret_name",
 			},
 			PredictionLogIngestionResourceRequest: &models.WorkerResourceRequest{
-				CPURequest:    "1",
-				MemoryRequest: "1Gi",
+				CPURequest:    &cpuQuantity,
+				MemoryRequest: &memoryQuantity,
 				Replica:       1,
 			},
 		},
