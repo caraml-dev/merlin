@@ -1350,7 +1350,6 @@ class ModelVersion:
             target_logger = logger.to_logger_spec()
 
         if model_observability is not None:
-            print(f"model observability {model_observability}")
             target_model_observability = model_observability.to_model_observability_request()
 
         model = self._model
