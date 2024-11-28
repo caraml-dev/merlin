@@ -1,0 +1,13 @@
+argparse>=1.4.0
+caraml-upi-protos>=0.3.4
+cloudpickle==2.0.0
+confluent-kafka==2.3.0
+grpcio-health-checking
+grpcio-reflection==1.64.3
+numpy>=1.8.2
+orjson>=2.6.8
+prometheus-client
+setuptools<75
+tornado
+uvloop
+merlin-sdk @ git+https://github.com/caraml-dev/merlin@test-branch#subdirectory=python/sdk

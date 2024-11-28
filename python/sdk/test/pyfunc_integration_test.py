@@ -24,6 +24,7 @@ import xgboost as xgb
 from merlin.model import ModelType, PyFuncModel, PyFuncV3Model
 from merlin.model_schema import ModelSchema
 from merlin.observability.inference import InferenceSchema, RegressionOutput, ValueType
+from merlin.model_observability import ModelObservability, GroundTruthJob, GroundTruthSource, PredictionLogIngestionResourceRequest
 from merlin.pyfunc import ModelInput, ModelOutput, Values
 from merlin.resource_request import ResourceRequest
 from sklearn import svm
@@ -272,7 +273,30 @@ def test_pyfunc_model_observability(
             artifacts={"xgb_model": xgb_path},
         )
 
-    endpoint = merlin.deploy(v, enable_model_observability=True)
+    endpoint = merlin.deploy(v, model_observability=ModelObservability(
+        enabled=True,
+        ground_truth_source=GroundTruthSource(
+            table_urn='gods-dev.mlobs.ground_truth_integration_test',
+            event_timestamp_column='event_timestamp',
+            dwh_project='gods-dev',
+        ),
+        ground_truth_job=GroundTruthJob(
+            cron_schedule='0 0 * * *',
+            service_account_secret_name='mlobs_svc_account',
+            start_day_offset_from_now=4,
+            end_day_offset_from_now=1,
+            cpu_request="1",
+            cpu_limit="1",
+            memory_request="1Gi",
+            memory_limit="2Gi",
+            grace_period_day=1
+        ),
+        prediction_log_ingestion_resource_request=PredictionLogIngestionResourceRequest(
+            cpu_request="1",
+            memory_request="1Gi",
+            replica=2
+        )
+    ))
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -280,7 +304,7 @@ def test_pyfunc_model_observability(
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
-    merlin.undeploy(v)
+    # merlin.undeploy(v)
 
 
 # This implementation of PyFuncModel uses the old infer method (no keyword arguments).
