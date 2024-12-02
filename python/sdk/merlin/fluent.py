@@ -418,6 +418,7 @@ def deploy(
             autoscaling_policy,
             protocol,
             enable_model_observability,
+            model_observability
         )
 
     return _merlin_client.deploy(  # type: ignore
@@ -432,6 +433,7 @@ def deploy(
         autoscaling_policy,
         protocol,
         enable_model_observability,
+        model_observability
     )
 
 
