@@ -31,8 +31,8 @@ class GroundTruthSource(BaseModel):
     """ # noqa: E501
     table_urn: StrictStr
     event_timestamp_column: StrictStr
-    dwh_project: StrictStr
-    __properties: ClassVar[List[str]] = ["table_urn", "event_timestamp_column", "dwh_project"]
+    source_project: StrictStr
+    __properties: ClassVar[List[str]] = ["table_urn", "event_timestamp_column", "source_project"]
 
     model_config = {
         "populate_by_name": True,
@@ -84,7 +84,7 @@ class GroundTruthSource(BaseModel):
         _obj = cls.model_validate({
             "table_urn": obj.get("table_urn"),
             "event_timestamp_column": obj.get("event_timestamp_column"),
-            "dwh_project": obj.get("dwh_project")
+            "source_project": obj.get("source_project")
         })
         return _obj
 

@@ -11,7 +11,7 @@ from merlin.model_observability import ModelObservability, GroundTruthSource, Gr
                 ground_truth_source=client.GroundTruthSource(
                     table_urn="table_urn",
                     event_timestamp_column="event_timestamp_column",
-                    dwh_project="dwh_project"
+                    source_project="dwh_project"
                 ),
                 ground_truth_job=client.GroundTruthJob(
                     cron_schedule="cron_schedule",
@@ -35,7 +35,7 @@ from merlin.model_observability import ModelObservability, GroundTruthSource, Gr
                 ground_truth_source=GroundTruthSource(
                     table_urn="table_urn",
                     event_timestamp_column="event_timestamp_column",
-                    dwh_project="dwh_project"
+                    source_project="dwh_project"
                 ),
                 ground_truth_job=GroundTruthJob(
                     cron_schedule="cron_schedule",

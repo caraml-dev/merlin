@@ -13,7 +13,8 @@ from dataclasses_json import dataclass_json
 class GroundTruthSource:
     table_urn: str
     event_timestamp_column: str
-    dwh_project: str
+    source_project: str
+
 
 @autostr
 @dataclass_json
@@ -29,6 +30,7 @@ class GroundTruthJob:
     memory_limit: Optional[str] = None
     grace_period_day: Optional[int] = None
 
+
 @autostr
 @dataclass_json
 @dataclass
@@ -36,6 +38,7 @@ class PredictionLogIngestionResourceRequest:
     replica: int
     cpu_request: Optional[str] = None
     memory_request: Optional[str] = None
+
 
 @autostr
 @dataclass_json
@@ -52,7 +55,7 @@ class ModelObservability:
             ground_truth_source = client.GroundTruthSource(
                 table_urn=self.ground_truth_source.table_urn,
                 event_timestamp_column=self.ground_truth_source.event_timestamp_column,
-                dwh_project=self.ground_truth_source.dwh_project
+                source_project=self.ground_truth_source.source_project
             )
 
         ground_truth_job = None
@@ -116,7 +119,7 @@ class ModelObservability:
         return GroundTruthSource(
             table_urn=response.table_urn,
             event_timestamp_column=response.event_timestamp_column,
-            dwh_project=response.dwh_project
+            source_project=response.source_project
         )
     
     @classmethod

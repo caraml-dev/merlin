@@ -346,8 +346,8 @@ func (c *deployer) getResources(data *models.WorkerData) (corev1.ResourceList, c
 	requests := c.resourceRequest.DeepCopy()
 	limits := c.resourceLimit.DeepCopy()
 	if data.ResourceRequest != nil {
-		if data.ResourceRequest.CPURequest != nil {
-			requests[corev1.ResourceCPU] = *data.ResourceRequest.CPURequest
+		if cpuReq := data.ResourceRequest.CPURequest; cpuReq != nil {
+			requests[corev1.ResourceCPU] = *cpuReq
 			// remove default limits
 			delete(limits, corev1.ResourceCPU)
 		}

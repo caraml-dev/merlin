@@ -107,7 +107,7 @@ func TestVersionEndpointsStorage_GetModelObservability(t *testing.T) {
 		expectedGroundTruthSource := &models.GroundTruthSource{
 			TableURN:             "table_urn",
 			EventTimestampColumn: "event_timestamp",
-			DWHProject:           "dwh_project",
+			SourceProject:        "dwh_project",
 		}
 		assert.Equal(t, expectedGroundTruthSource, modelObservability.GroundTruthSource)
 		expectedGroundTruthob := &models.GroundTruthJob{
@@ -234,7 +234,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 			GroundTruthSource: &models.GroundTruthSource{
 				TableURN:             "table_urn",
 				EventTimestampColumn: "event_timestamp",
-				DWHProject:           "dwh_project",
+				SourceProject:        "dwh_project",
 			},
 			GroundTruthJob: &models.GroundTruthJob{
 				CronSchedule:             "0 0 * * *",

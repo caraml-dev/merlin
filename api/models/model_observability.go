@@ -20,7 +20,7 @@ type ModelObservability struct {
 type GroundTruthSource struct {
 	TableURN             string `json:"table_urn"`
 	EventTimestampColumn string `json:"event_timestamp_column"`
-	DWHProject           string `json:"dwh_project"`
+	SourceProject        string `json:"source_project"`
 }
 
 // GroundTruthJob represents the configuration for a scheduled job.

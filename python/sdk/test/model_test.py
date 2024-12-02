@@ -182,7 +182,7 @@ more_granular_observability_cfg_ep = cl.VersionEndpoint(
         ground_truth_source=cl.GroundTruthSource(
             table_urn="table_urn",
             event_timestamp_column="event_timestamp_column",
-            dwh_project="dwh_project",
+            source_project="dwh_project",
         ),
         ground_truth_job=cl.GroundTruthJob(
             cron_schedule="cron_schedule",

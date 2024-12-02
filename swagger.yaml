@@ -2480,12 +2480,12 @@ components:
           type: string
         event_timestamp_column:
           type: string
-        dwh_project:
+        source_project:
           type: string
       required:
       - table_urn
       - event_timestamp_column
-      - dwh_project
+      - source_project
 
     PredictionLogIngestionResourceRequest:
       type: object
