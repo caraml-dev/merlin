@@ -41,9 +41,11 @@ var (
 	namespace        = flag.String("namespace", "my-project", "The namespace to add as header to log events")
 
 	// These flags are not needed by our logger but provided by Kserve, hence we need to parse it to avoid error.
-	sourceUri = flag.String("source-uri", "", "The source URI to use when publishing cloudevents")
-	endpoint  = flag.String("endpoint", "", "The endpoint name to add as header to log events")
-	component = flag.String("component", "", "The component name (predictor, explainer, transformer) to add as header to log events")
+	sourceUri     = flag.String("source-uri", "", "The source URI to use when publishing cloudevents")
+	endpoint      = flag.String("endpoint", "", "The endpoint name to add as header to log events")
+	component     = flag.String("component", "", "The component name (predictor, explainer, transformer) to add as header to log events")
+	CaCertFile    = flag.String("logger-ca-cert-file", "service-ca.crt", "The logger CA certificate file")
+	TlsSkipVerify = flag.Bool("logger-tls-skip-verify", false, "Skip verification of TLS certificate")
 )
 
 const (
