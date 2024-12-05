@@ -72,8 +72,12 @@ type VersionEndpoint struct {
 	// AutoscalingPolicy controls the conditions when autoscaling should be triggered
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy `json:"autoscaling_policy" gorm:"autoscaling_policy"`
 	// Protocol to be used when deploying the model
-	Protocol                 protocol.Protocol `json:"protocol" gorm:"protocol"`
-	EnableModelObservability bool              `json:"enable_model_observability" gorm:"enable_model_observability"`
+	Protocol protocol.Protocol `json:"protocol" gorm:"protocol"`
+	// EnableModelObservability flag indicate whether the version endpoint should enable model observability
+	// This flag will be deprecated in the future, please use ModelObservability.Enabled instead
+	EnableModelObservability bool `json:"enable_model_observability" gorm:"enable_model_observability"`
+	// ModelObservability configuration
+	ModelObservability *ModelObservability `json:"model_observability" gorm:"model_observability"`
 	CreatedUpdated
 }
 
@@ -125,6 +129,13 @@ func (ve *VersionEndpoint) IsRunning() bool {
 
 func (ve *VersionEndpoint) IsServing() bool {
 	return ve.Status == EndpointServing
+}
+
+func (ve *VersionEndpoint) IsModelMonitoringEnabled() bool {
+	if ve.ModelObservability == nil {
+		return ve.EnableModelObservability
+	}
+	return ve.ModelObservability.Enabled
 }
 
 func (ve *VersionEndpoint) Hostname() string {

@@ -33,6 +33,7 @@ from merlin.endpoint import VersionEndpoint
 from merlin.model import ModelType
 from merlin.model_schema import InferenceSchema, ModelSchema, RankingOutput, ValueType
 from merlin.protocol import Protocol
+from merlin.model_observability import ModelObservability
 from urllib3_mock import Responses
 
 responses = Responses("requests.packages.urllib3")
@@ -165,6 +166,39 @@ observability_enabled_ep = cl.VersionEndpoint(
     environment=env_3,
     monitoring_url="grafana.com",
     enable_model_observability=True,
+)
+
+more_granular_observability_cfg_ep = cl.VersionEndpoint(
+    id="8000",
+    version_id=1,
+    status="running",
+    url="localhost/1",
+    service_name="svc-1",
+    environment_name=env_3.name,
+    environment=env_3,
+    monitoring_url="grafana.com",
+    model_observability=cl.ModelObservability(
+        enabled=True,
+        ground_truth_source=cl.GroundTruthSource(
+            table_urn="table_urn",
+            event_timestamp_column="event_timestamp_column",
+            source_project="dwh_project",
+        ),
+        ground_truth_job=cl.GroundTruthJob(
+            cron_schedule="cron_schedule",
+            service_account_secret_name="service_account_secret_name",
+            start_day_offset_from_now=1,
+            end_day_offset_from_now=1,
+            cpu_request="cpu_request",
+            cpu_limit="cpu_limit",
+            memory_request="memory_request",
+            memory_limit="memory_limit",
+            grace_period_day=1,
+        ),
+        prediction_log_ingestion_resource_request=cl.PredictionLogIngestionResourceRequest(
+            replica=1, cpu_request="1", memory_request="1Gi"
+        ),
+    ),
 )
 
 rule_1 = cl.ModelEndpointRule(
@@ -837,6 +871,59 @@ class TestModelVersion:
         assert endpoint.environment.name == env_3.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
         assert endpoint.enable_model_observability == True
+
+
+    @responses.activate
+    def test_deploy_with_more_granular_model_observability_cfg(self, version):
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(more_granular_observability_cfg_ep.to_dict()),
+            status=201,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([more_granular_observability_cfg_ep.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint/8000",
+            body=json.dumps(more_granular_observability_cfg_ep.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+
+        model_observability = ModelObservability.from_model_observability_response(more_granular_observability_cfg_ep.model_observability)
+        endpoint = version.deploy(
+            environment_name=env_3.name, model_observability=model_observability
+        )
+
+        assert endpoint.id == more_granular_observability_cfg_ep.id
+        assert endpoint.status.value == more_granular_observability_cfg_ep.status
+        assert endpoint.environment_name == more_granular_observability_cfg_ep.environment_name
+        assert endpoint.environment.cluster == env_3.cluster
+        assert endpoint.environment.name == env_3.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.model_observability == model_observability
 
     @responses.activate
     def test_undeploy(self, version):

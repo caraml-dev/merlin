@@ -236,3 +236,56 @@ func TestVersionEndpoint_Path(t *testing.T) {
 		})
 	}
 }
+
+func TestVersionEndpoint_IsModelMonitoringEnabled(t *testing.T) {
+	tests := []struct {
+		name            string
+		versionEndpoint *VersionEndpoint
+		want            bool
+	}{
+		{
+			name: "model observability is nil but enable model observability is true",
+			versionEndpoint: &VersionEndpoint{
+				ModelObservability:       nil,
+				EnableModelObservability: true,
+			},
+			want: true,
+		},
+		{
+			name: "model observability is nil and enable model observability is false",
+			versionEndpoint: &VersionEndpoint{
+				ModelObservability:       nil,
+				EnableModelObservability: false,
+			},
+			want: false,
+		},
+		{
+			name: "model observability is not nil and enabled is true",
+			versionEndpoint: &VersionEndpoint{
+				ModelObservability: &ModelObservability{
+					Enabled: true,
+				},
+				EnableModelObservability: true,
+			},
+			want: true,
+		},
+		{
+			name: "model observability is not nil and enabled is false",
+			versionEndpoint: &VersionEndpoint{
+				ModelObservability: &ModelObservability{
+					Enabled: false,
+				},
+				EnableModelObservability: false,
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			if got := tt.versionEndpoint.IsModelMonitoringEnabled(); got != tt.want {
+				t.Errorf("VersionEndpoint.IsModelMonitoringEnabled() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

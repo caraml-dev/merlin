@@ -84,7 +84,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		AutoscalingPolicy:           endpoint.AutoscalingPolicy,
 		Protocol:                    endpoint.Protocol,
 		CurrentIsvcName:             endpoint.InferenceServiceName,
-		EnabledModelObservability:   endpoint.EnableModelObservability,
+		EnabledModelObservability:   endpoint.IsModelMonitoringEnabled(),
 		ModelSchema:                 version.ModelSchema,
 		PredictorUPIOverHTTPEnabled: predictorUPIOverHTTPEnabled(endpoint.Transformer, endpoint.Protocol),
 	}

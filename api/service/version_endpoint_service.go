@@ -257,6 +257,16 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 	}
 
 	left.EnableModelObservability = right.EnableModelObservability && model.ObservabilitySupported
+	if right.ModelObservability != nil {
+		left.ModelObservability = right.ModelObservability
+		left.ModelObservability.Enabled = right.ModelObservability.Enabled && model.ObservabilitySupported
+	}
+	// for older sdk
+	if left.EnableModelObservability && right.ModelObservability == nil {
+		left.ModelObservability = &models.ModelObservability{
+			Enabled: true,
+		}
+	}
 
 	return nil
 }

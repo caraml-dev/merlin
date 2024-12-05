@@ -26,6 +26,7 @@ from client.models.endpoint_status import EndpointStatus
 from client.models.env_var import EnvVar
 from client.models.environment import Environment
 from client.models.logger import Logger
+from client.models.model_observability import ModelObservability
 from client.models.protocol import Protocol
 from client.models.resource_request import ResourceRequest
 from client.models.transformer import Transformer
@@ -56,9 +57,10 @@ class VersionEndpoint(BaseModel):
     autoscaling_policy: Optional[AutoscalingPolicy] = None
     protocol: Optional[Protocol] = None
     enable_model_observability: Optional[StrictBool] = None
+    model_observability: Optional[ModelObservability] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    __properties: ClassVar[List[str]] = ["id", "version_id", "status", "url", "service_name", "environment_name", "environment", "monitoring_url", "message", "resource_request", "image_builder_resource_request", "env_vars", "transformer", "logger", "deployment_mode", "autoscaling_policy", "protocol", "enable_model_observability", "created_at", "updated_at"]
+    __properties: ClassVar[List[str]] = ["id", "version_id", "status", "url", "service_name", "environment_name", "environment", "monitoring_url", "message", "resource_request", "image_builder_resource_request", "env_vars", "transformer", "logger", "deployment_mode", "autoscaling_policy", "protocol", "enable_model_observability", "model_observability", "created_at", "updated_at"]
 
     model_config = {
         "populate_by_name": True,
@@ -121,6 +123,9 @@ class VersionEndpoint(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of autoscaling_policy
         if self.autoscaling_policy:
             _dict['autoscaling_policy'] = self.autoscaling_policy.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of model_observability
+        if self.model_observability:
+            _dict['model_observability'] = self.model_observability.to_dict()
         return _dict
 
     @classmethod
@@ -151,6 +156,7 @@ class VersionEndpoint(BaseModel):
             "autoscaling_policy": AutoscalingPolicy.from_dict(obj.get("autoscaling_policy")) if obj.get("autoscaling_policy") is not None else None,
             "protocol": obj.get("protocol"),
             "enable_model_observability": obj.get("enable_model_observability"),
+            "model_observability": ModelObservability.from_dict(obj.get("model_observability")) if obj.get("model_observability") is not None else None,
             "created_at": obj.get("created_at"),
             "updated_at": obj.get("updated_at")
         })

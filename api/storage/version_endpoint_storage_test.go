@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/models"
@@ -88,6 +89,48 @@ func TestVersionEndpointsStorage_GetTransformer(t *testing.T) {
 		assert.NotNil(t, actualEndpoint)
 		assert.NotNil(t, actualEndpoint.Transformer)
 		assert.Equal(t, actualEndpoint.Transformer.Image, endpoints[2].Transformer.Image)
+	})
+}
+
+func TestVersionEndpointsStorage_GetModelObservability(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		endpoints := populateVersionEndpointTable(db)
+		endpointSvc := NewVersionEndpointStorage(db)
+
+		actualEndpoint, err := endpointSvc.Get(endpoints[2].ID)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, actualEndpoint)
+		modelObservability := actualEndpoint.ModelObservability
+		assert.NotNil(t, modelObservability)
+		assert.Equal(t, true, modelObservability.Enabled)
+		expectedGroundTruthSource := &models.GroundTruthSource{
+			TableURN:             "table_urn",
+			EventTimestampColumn: "event_timestamp",
+			SourceProject:        "dwh_project",
+		}
+		assert.Equal(t, expectedGroundTruthSource, modelObservability.GroundTruthSource)
+		expectedGroundTruthob := &models.GroundTruthJob{
+			CronSchedule:             "0 0 * * *",
+			CPURequest:               "1",
+			CPULimit:                 nil,
+			MemoryRequest:            "1Gi",
+			MemoryLimit:              nil,
+			StartDayOffsetFromNow:    2,
+			EndDayOffsetFromNow:      1,
+			GracePeriodDay:           3,
+			ServiceAccountSecretName: "service_account_secret_name",
+		}
+		assert.Equal(t, expectedGroundTruthob, modelObservability.GroundTruthJob)
+
+		cpuQuantity := resource.MustParse("1")
+		memoryQuantity := resource.MustParse("1Gi")
+		expectedPredictionLogIngestionResourceRequest := &models.WorkerResourceRequest{
+			CPURequest:    &cpuQuantity,
+			MemoryRequest: &memoryQuantity,
+			Replica:       1,
+		}
+		assert.Equal(t, expectedPredictionLogIngestionResourceRequest, modelObservability.PredictionLogIngestionResourceRequest)
 	})
 }
 
@@ -173,6 +216,8 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		Protocol:        protocol.HttpJson,
 	}
 	db.Create(&ep2)
+	cpuQuantity := resource.MustParse("1")
+	memoryQuantity := resource.MustParse("1Gi")
 	ep3 := models.VersionEndpoint{
 		ID:              uuid.New(),
 		VersionID:       v.ID,
@@ -184,6 +229,30 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 			Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 		},
 		DeploymentMode: deployment.ServerlessDeploymentMode,
+		ModelObservability: &models.ModelObservability{
+			Enabled: true,
+			GroundTruthSource: &models.GroundTruthSource{
+				TableURN:             "table_urn",
+				EventTimestampColumn: "event_timestamp",
+				SourceProject:        "dwh_project",
+			},
+			GroundTruthJob: &models.GroundTruthJob{
+				CronSchedule:             "0 0 * * *",
+				CPURequest:               "1",
+				CPULimit:                 nil,
+				MemoryRequest:            "1Gi",
+				MemoryLimit:              nil,
+				StartDayOffsetFromNow:    2,
+				EndDayOffsetFromNow:      1,
+				GracePeriodDay:           3,
+				ServiceAccountSecretName: "service_account_secret_name",
+			},
+			PredictionLogIngestionResourceRequest: &models.WorkerResourceRequest{
+				CPURequest:    &cpuQuantity,
+				MemoryRequest: &memoryQuantity,
+				Replica:       1,
+			},
+		},
 	}
 	db.Create(&ep3)
 	return []*models.VersionEndpoint{&ep1, &ep2, &ep3}

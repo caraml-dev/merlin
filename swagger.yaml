@@ -1952,6 +1952,8 @@ components:
           "$ref": "#/components/schemas/Protocol"
         enable_model_observability:
           type: boolean
+        model_observability:
+          "$ref": "#/components/schemas/ModelObservability"
         created_at:
           type: string
           format: date-time
@@ -2471,6 +2473,72 @@ components:
             "$ref": "#/components/schemas/PredictionJob"
         paging:
           "$ref": "#/components/schemas/Paging"
+    GroundTruthSource:
+      type: object
+      properties:
+        table_urn:
+          type: string
+        event_timestamp_column:
+          type: string
+        source_project:
+          type: string
+      required:
+      - table_urn
+      - event_timestamp_column
+      - source_project
+
+    PredictionLogIngestionResourceRequest:
+      type: object
+      properties:
+        cpu_request:
+          type: string
+        memory_request:
+          type: string
+        replica:
+          type: integer
+      required:
+      - replica
+      
+    GroundTruthJob:
+      type: object
+      properties:
+        cron_schedule:
+          type: string
+        cpu_request:
+          type: string
+        cpu_limit:
+          type: string
+        memory_request:
+          type: string
+        memory_limit:
+          type: string
+        start_day_offset_from_now:
+          type: integer
+        end_day_offset_from_now:
+          type: integer
+        grace_period_day:
+          type: integer
+        service_account_secret_name:
+          type: string
+      required:
+      - cron_schedule
+      - service_account_secret_name
+      - start_day_offset_from_now
+      - end_day_offset_from_now
+    ModelObservability:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        ground_truth_source:
+          "$ref": "#/components/schemas/GroundTruthSource"
+        ground_truth_job:
+          "$ref": "#/components/schemas/GroundTruthJob"
+        prediction_log_ingestion_resource_request:
+          "$ref": "#/components/schemas/PredictionLogIngestionResourceRequest"
+      required:
+        - enabled
+        
   securitySchemes:
     Bearer:
       type: apiKey

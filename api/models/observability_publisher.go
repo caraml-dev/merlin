@@ -40,9 +40,10 @@ type WorkerData struct {
 	ModelVersion    string
 	Revision        int
 	TopicSource     string
+	ResourceRequest *WorkerResourceRequest
 }
 
-func NewWorkerData(modelVersion *Version, model *Model, observabilityPublisher *ObservabilityPublisher) *WorkerData {
+func NewWorkerData(modelVersion *Version, model *Model, observabilityPublisher *ObservabilityPublisher, resourceRequest *WorkerResourceRequest) *WorkerData {
 	return &WorkerData{
 		ModelName:       model.Name,
 		Project:         model.Project.Name,
@@ -54,9 +55,10 @@ func NewWorkerData(modelVersion *Version, model *Model, observabilityPublisher *
 			Team:      model.Project.Team,
 			Labels:    model.Project.Labels,
 		},
-		ModelVersion: modelVersion.ID.String(),
-		Revision:     observabilityPublisher.Revision,
-		TopicSource:  getPredictionLogTopicForVersion(model.Project.Name, model.Name, modelVersion.ID.String()),
+		ModelVersion:    modelVersion.ID.String(),
+		Revision:        observabilityPublisher.Revision,
+		TopicSource:     getPredictionLogTopicForVersion(model.Project.Name, model.Name, modelVersion.ID.String()),
+		ResourceRequest: resourceRequest,
 	}
 }
 

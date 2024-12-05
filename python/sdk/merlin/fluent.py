@@ -30,6 +30,7 @@ from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.version_image import VersionImage
+from merlin.model_observability import ModelObservability
 
 _merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]
@@ -384,6 +385,7 @@ def deploy(
     autoscaling_policy: AutoscalingPolicy = None,
     protocol: Protocol = None,
     enable_model_observability: bool = False,
+    model_observability: Optional[ModelObservability] = None,
 ) -> VersionEndpoint:
     """
     Deploy a model version.
@@ -399,6 +401,7 @@ def deploy(
     :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
     :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
     :param enable_model_observability: flag to determine whether model observability enabled for the endpoint
+    :param model_observability: detail of model observability configuration
     :return: VersionEndpoint object
     """
     _check_active_client()
@@ -415,6 +418,7 @@ def deploy(
             autoscaling_policy,
             protocol,
             enable_model_observability,
+            model_observability
         )
 
     return _merlin_client.deploy(  # type: ignore
@@ -429,6 +433,7 @@ def deploy(
         autoscaling_policy,
         protocol,
         enable_model_observability,
+        model_observability
     )
 
 

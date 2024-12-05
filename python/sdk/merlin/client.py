@@ -45,6 +45,7 @@ from merlin.transformer import Transformer
 from merlin.util import valid_name_check
 from merlin.version import VERSION
 from merlin.version_image import VersionImage
+from merlin.model_observability import ModelObservability
 
 
 class MerlinClient:
@@ -277,6 +278,7 @@ class MerlinClient:
         autoscaling_policy: AutoscalingPolicy = None,
         protocol: Protocol = None,
         enable_model_observability: bool = False,
+        model_observability: Optional[ModelObservability] = None
     ) -> VersionEndpoint:
         return model_version.deploy(
             environment_name,
@@ -289,6 +291,7 @@ class MerlinClient:
             autoscaling_policy,
             protocol,
             enable_model_observability,
+            model_observability
         )
 
     def undeploy(self, model_version: ModelVersion, environment_name: str = None):

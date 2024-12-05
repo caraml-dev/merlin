@@ -29,6 +29,8 @@ from client.models.environment import Environment
 from client.models.file_format import FileFormat
 from client.models.gpu_config import GPUConfig
 from client.models.gpu_toleration import GPUToleration
+from client.models.ground_truth_job import GroundTruthJob
+from client.models.ground_truth_source import GroundTruthSource
 from client.models.image_building_job_state import ImageBuildingJobState
 from client.models.image_building_job_status import ImageBuildingJobStatus
 from client.models.label import Label
@@ -44,6 +46,7 @@ from client.models.model_endpoint_alert import ModelEndpointAlert
 from client.models.model_endpoint_alert_condition import ModelEndpointAlertCondition
 from client.models.model_endpoint_rule import ModelEndpointRule
 from client.models.model_endpoint_rule_destination import ModelEndpointRuleDestination
+from client.models.model_observability import ModelObservability
 from client.models.model_prediction_config import ModelPredictionConfig
 from client.models.model_prediction_output import ModelPredictionOutput
 from client.models.model_prediction_output_class import ModelPredictionOutputClass
@@ -60,6 +63,7 @@ from client.models.prediction_job_config_gcs_source import PredictionJobConfigGc
 from client.models.prediction_job_config_model import PredictionJobConfigModel
 from client.models.prediction_job_config_model_result import PredictionJobConfigModelResult
 from client.models.prediction_job_resource_request import PredictionJobResourceRequest
+from client.models.prediction_log_ingestion_resource_request import PredictionLogIngestionResourceRequest
 from client.models.prediction_logger_config import PredictionLoggerConfig
 from client.models.project import Project
 from client.models.protocol import Protocol

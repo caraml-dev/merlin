@@ -342,11 +342,30 @@ func (c *deployer) getLabels(data *models.WorkerData) map[string]string {
 	return labels
 }
 
+func (c *deployer) getResources(data *models.WorkerData) (corev1.ResourceList, corev1.ResourceList) {
+	requests := c.resourceRequest.DeepCopy()
+	limits := c.resourceLimit.DeepCopy()
+	if data.ResourceRequest != nil {
+		if cpuReq := data.ResourceRequest.CPURequest; cpuReq != nil {
+			requests[corev1.ResourceCPU] = *cpuReq
+			// remove default limits
+			delete(limits, corev1.ResourceCPU)
+		}
+		if memoryReq := data.ResourceRequest.MemoryRequest; memoryReq != nil {
+			requests[corev1.ResourceMemory] = *memoryReq
+			limits[corev1.ResourceMemory] = *memoryReq
+		}
+	}
+	return requests, limits
+}
+
 func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName string) (*appsv1.Deployment, error) {
 	labels := c.getLabels(data)
 
 	cfgVolName := "config-volume"
 	workerContainer := "worker"
+
+	requestsResources, limitsResources := c.getResources(data)
 	podSpec := corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
@@ -361,8 +380,8 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 				ImagePullPolicy: corev1.PullIfNotPresent,
 
 				Resources: corev1.ResourceRequirements{
-					Requests: c.resourceRequest,
-					Limits:   c.resourceLimit,
+					Requests: requestsResources,
+					Limits:   limitsResources,
 				},
 				VolumeMounts: []corev1.VolumeMount{
 					{
@@ -392,6 +411,11 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 		},
 	}
 	podSpecWithIdentity := enrichIdentityToPod(podSpec, c.consumerConfig.ServiceAccountSecretName, []string{workerContainer})
+	numReplicas := c.consumerConfig.Replicas
+	if data.ResourceRequest != nil && data.ResourceRequest.Replica > 0 {
+		numReplicas = data.ResourceRequest.Replica
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.getDeploymentName(data),
@@ -407,7 +431,7 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 					appLabelKey: data.Metadata.App,
 				},
 			},
-			Replicas: &c.consumerConfig.Replicas,
+			Replicas: &numReplicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
