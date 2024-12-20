@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -638,12 +639,20 @@ func (c *imageBuilder) createKanikoJobSpec(
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
 	var volumes []v1.Volume
 	var volumeMounts []v1.VolumeMount
-	var envVar []v1.EnvVar
+	var envVars []v1.EnvVar
 
 	// Configure additional credentials for specific image registries and artifact services
 	kanikoArgs = c.configureKanikoArgsToAddCredentials(kanikoArgs)
 	volumes, volumeMounts = c.configureVolumesAndVolumeMountsToAddCredentials(volumes, volumeMounts)
-	envVar = c.configureEnvVarsToAddCredentials(envVar)
+	envVars = c.configureEnvVarsToAddCredentials(envVars)
+
+	// Add all other env vars that are propagated from the API server
+	for _, envVar := range c.config.KanikoAPIServerEnvVars {
+		envVars = append(envVars, v1.EnvVar{
+			Name:  envVar,
+			Value: os.Getenv(envVar),
+		})
+	}
 
 	var resourceRequirements RequestLimitResources
 	cpuRequest := resource.MustParse(c.config.DefaultResources.Requests.CPU)
@@ -700,7 +709,7 @@ func (c *imageBuilder) createKanikoJobSpec(
 							Image:                    c.config.KanikoImage,
 							Args:                     kanikoArgs,
 							VolumeMounts:             volumeMounts,
-							Env:                      envVar,
+							Env:                      envVars,
 							Resources:                resourceRequirements.Build(),
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
@@ -767,17 +776,17 @@ func (c *imageBuilder) configureVolumesAndVolumeMountsToAddCredentials(
 	return volumes, volumeMounts
 }
 
-func (c *imageBuilder) configureEnvVarsToAddCredentials(envVar []v1.EnvVar) []v1.EnvVar {
+func (c *imageBuilder) configureEnvVarsToAddCredentials(envVars []v1.EnvVar) []v1.EnvVar {
 	if c.config.KanikoPushRegistryType == googleCloudRegistryPushRegistryType ||
 		c.artifactService.GetType() == googleCloudStorageArtifactServiceType {
 		if c.config.KanikoServiceAccount == "" {
-			envVar = append(envVar, v1.EnvVar{
+			envVars = append(envVars, v1.EnvVar{
 				Name:  gacEnvKey,
 				Value: saFilePath,
 			})
 		}
 	}
-	return envVar
+	return envVars
 }
 
 func (c *imageBuilder) GetImageBuildingJobStatus(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (status models.ImageBuildingJobStatus) {

@@ -44,6 +44,8 @@ type Config struct {
 	KanikoServiceAccount string
 	// Kaniko additional args
 	KanikoAdditionalArgs []string
+	// Kaniko environment variables that are propagated from the Merlin API server
+	KanikoAPIServerEnvVars []string
 	// Kubernetes resource request and limits for kaniko
 	DefaultResources cfg.ResourceRequestsLimits
 	// Tolerations for Jobs Specification
