@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
@@ -96,6 +97,11 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	kubeClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		log.Panicf("%s, unable to initialize image builder", err.Error())
+	}
+
+	_, err = kubeClient.CoreV1().Pods("").List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		log.Panicf("%s, error sending request to kube client at startup to verify connection", err.Error())
 	}
 
 	timeout, err := time.ParseDuration(cfg.ImageBuilderConfig.BuildTimeout)
