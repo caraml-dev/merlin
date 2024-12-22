@@ -409,6 +409,7 @@ func TestLoad(t *testing.T) {
 					KanikoServiceAccount:   "kaniko-merlin",
 					KanikoPushRegistryType: "docker",
 					KanikoAdditionalArgs:   []string{"--test=true", "--no-logs=false"},
+					KanikoAPIServerEnvVars: []string{"TEST_ENV_VAR"},
 					DefaultResources: ResourceRequestsLimits{
 						Requests: Resource{
 							CPU:    "1",

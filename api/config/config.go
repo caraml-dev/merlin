@@ -221,6 +221,7 @@ type ImageBuilderConfig struct {
 	KanikoPushRegistryType           string `validate:"required,oneof=docker gcr" default:"docker"`
 	KanikoDockerCredentialSecretName string
 	KanikoAdditionalArgs             []string
+	KanikoAPIServerEnvVars           []string
 	DefaultResources                 ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
