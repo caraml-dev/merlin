@@ -646,12 +646,9 @@ func (c *imageBuilder) createKanikoJobSpec(
 	volumes, volumeMounts = c.configureVolumesAndVolumeMountsToAddCredentials(volumes, volumeMounts)
 	envVars = c.configureEnvVarsToAddCredentials(envVars)
 
-	// Add all other env vars that are propagated from the API server
+	// Add all other env vars that are propagated from the API server as build args
 	for _, envVar := range c.config.KanikoAPIServerEnvVars {
-		envVars = append(envVars, v1.EnvVar{
-			Name:  envVar,
-			Value: os.Getenv(envVar),
-		})
+		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--build-arg=%s=%s", envVar, os.Getenv(envVar)))
 	}
 
 	var resourceRequirements RequestLimitResources
