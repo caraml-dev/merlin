@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
@@ -98,6 +99,11 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		log.Panicf("%s, unable to initialize image builder", err.Error())
 	}
 
+	_, err = kubeClient.CoreV1().Pods("").List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		log.Panicf("%s, error sending request to kube client at startup to verify connection", err.Error())
+	}
+
 	timeout, err := time.ParseDuration(cfg.ImageBuilderConfig.BuildTimeout)
 	if err != nil {
 		log.Panicf("unable to parse image builder timeout to time.Duration %s", cfg.ImageBuilderConfig.BuildTimeout)
@@ -132,6 +138,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		KanikoDockerCredentialSecretName: cfg.ImageBuilderConfig.KanikoDockerCredentialSecretName,
 		KanikoServiceAccount:             cfg.ImageBuilderConfig.KanikoServiceAccount,
 		KanikoAdditionalArgs:             cfg.ImageBuilderConfig.KanikoAdditionalArgs,
+		KanikoAPIServerEnvVars:           cfg.ImageBuilderConfig.KanikoAPIServerEnvVars,
 		DefaultResources:                 cfg.ImageBuilderConfig.DefaultResources,
 		Tolerations:                      cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:                    cfg.ImageBuilderConfig.NodeSelectors,

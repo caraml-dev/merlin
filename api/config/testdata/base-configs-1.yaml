@@ -50,6 +50,8 @@ ImageBuilderConfig:
   KanikoAdditionalArgs:
     - --test=true
     - --no-logs=false
+  KanikoAPIServerEnvVars:
+    - TEST_ENV_VAR
   DefaultResources:
     Requests:
       CPU: "1"

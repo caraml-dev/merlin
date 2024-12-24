@@ -221,6 +221,7 @@ type ImageBuilderConfig struct {
 	KanikoPushRegistryType           string `validate:"required,oneof=docker gcr" default:"docker"`
 	KanikoDockerCredentialSecretName string
 	KanikoAdditionalArgs             []string
+	KanikoAPIServerEnvVars           []string
 	DefaultResources                 ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
@@ -458,8 +459,11 @@ type MlflowConfig struct {
 	// Note that the Kaniko image builder needs to be configured correctly to have the necessary credentials to download
 	// the artifacts from the blob storage tool depending on the artifact service type selected (gcs/s3). For gcs, the
 	// credentials can be provided via a k8s service account or a secret but for s3, the credentials can be provided via
-	// additional arguments in the config KanikoAdditionalArgs e.g.
+	// 1) additional arguments in the config KanikoAdditionalArgs e.g.
 	// --build-arg=[AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_DEFAULT_REGION/AWS_ENDPOINT_URL]=xxx
+	// OR
+	// 2) additional arguments in the config KanikoAPIServerEnvVars, which will pass the specified environment variables
+	// PRESENT within the Merlin API server's container to the image builder as build arguments
 	ArtifactServiceType string `validate:"required,oneof=nop gcs s3"`
 }
 
