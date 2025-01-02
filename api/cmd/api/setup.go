@@ -161,6 +161,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		KanikoDockerCredentialSecretName: cfg.ImageBuilderConfig.KanikoDockerCredentialSecretName,
 		KanikoServiceAccount:             cfg.ImageBuilderConfig.KanikoServiceAccount,
 		KanikoAdditionalArgs:             cfg.ImageBuilderConfig.KanikoAdditionalArgs,
+		KanikoAPIServerEnvVars:           cfg.ImageBuilderConfig.KanikoAPIServerEnvVars,
 		DefaultResources:                 cfg.ImageBuilderConfig.DefaultResources,
 		Tolerations:                      cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:                    cfg.ImageBuilderConfig.NodeSelectors,
