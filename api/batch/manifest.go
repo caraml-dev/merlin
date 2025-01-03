@@ -70,6 +70,18 @@ var (
 				"*",
 			},
 		},
+		{
+			// Allow driver to manage configmaps
+			APIGroups: []string{
+				"", // indicates the core API group
+			},
+			Resources: []string{
+				"configmaps",
+			},
+			Verbs: []string{
+				"*",
+			},
+		},
 	}
 )
 
