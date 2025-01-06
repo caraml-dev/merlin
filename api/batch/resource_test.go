@@ -15,7 +15,6 @@
 package batch
 
 import (
-	"github.com/caraml-dev/merlin/config"
 	"os"
 	"testing"
 
@@ -25,6 +24,7 @@ import (
 	v12 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )
@@ -712,8 +712,10 @@ func TestAddEnvVars(t *testing.T) {
 		},
 	}
 
-	os.Setenv("TEST_ENV_VAR_1", "TEST_VALUE_1")
-	os.Setenv("TEST_ENV_VAR_2", "TEST_VALUE_2")
+	err := os.Setenv("TEST_ENV_VAR_1", "TEST_VALUE_1")
+	assert.NoError(t, err)
+	err = os.Setenv("TEST_ENV_VAR_2", "TEST_VALUE_2")
+	assert.NoError(t, err)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
