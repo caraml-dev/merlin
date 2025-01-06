@@ -23,4 +23,6 @@ type BatchConfig struct {
 	Tolerations []v1.Toleration
 	// Node Selectors for Jobs Specification
 	NodeSelectors map[string]string
+	// APIServerEnvVars specifies the environment variables that are propagated from the API server to the Spark job
+	APIServerEnvVars []string
 }
