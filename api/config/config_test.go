@@ -463,6 +463,7 @@ func TestLoad(t *testing.T) {
 					NodeSelectors: map[string]string{
 						"purpose.caraml.com/batch": "true",
 					},
+					APIServerEnvVars: []string{"TEST_ENV_VAR_2"},
 				},
 				AuthorizationConfig: AuthorizationConfig{
 					AuthorizationEnabled: true,
