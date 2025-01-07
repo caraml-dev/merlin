@@ -16,6 +16,7 @@ package batch
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -150,7 +151,7 @@ func (t *BatchJobTemplater) createDriverSpec(job *models.PredictionJob) (v1beta2
 		return v1beta2.DriverSpec{}, fmt.Errorf("invalid driver memory request: %s", job.Config.ResourceRequest.DriverMemoryRequest)
 	}
 
-	envVars, err := addEnvVars(job)
+	envVars, err := t.addEnvVars(job)
 	if err != nil {
 		return v1beta2.DriverSpec{}, err
 	}
@@ -194,7 +195,7 @@ func (t *BatchJobTemplater) createExecutorSpec(job *models.PredictionJob) (v1bet
 		return v1beta2.ExecutorSpec{}, fmt.Errorf("invalid executor memory request: %s", job.Config.ResourceRequest.ExecutorMemoryRequest)
 	}
 
-	envVars, err := addEnvVars(job)
+	envVars, err := t.addEnvVars(job)
 	if err != nil {
 		return v1beta2.ExecutorSpec{}, err
 	}
@@ -263,12 +264,15 @@ func getCoreRequest(cpuRequest resource.Quantity) *int32 {
 	return &core
 }
 
-func addEnvVars(job *models.PredictionJob) ([]corev1.EnvVar, error) {
+func (t *BatchJobTemplater) addEnvVars(job *models.PredictionJob) ([]corev1.EnvVar, error) {
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envServiceAccountPathKey,
 			Value: envServiceAccountPath,
 		},
+	}
+	for _, ev := range t.batchConfig.APIServerEnvVars {
+		envVars = append(envVars, corev1.EnvVar{Name: ev, Value: os.Getenv(ev)})
 	}
 	for _, ev := range job.Config.EnvVars.ToKubernetesEnvVars() {
 		if ev.Name == envServiceAccountPathKey {

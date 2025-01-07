@@ -92,6 +92,8 @@ BatchConfig:
       Value: "true"
   NodeSelectors:
     purpose.caraml.com/batch: "true"
+  APIServerEnvVars:
+    - TEST_ENV_VAR_2
 AuthorizationConfig:
   AuthorizationEnabled: true
   KetoRemoteRead: http://mlp-keto-read:80

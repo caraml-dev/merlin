@@ -15,6 +15,7 @@
 package batch
 
 import (
+	"os"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
@@ -23,6 +24,7 @@ import (
 	v12 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )
@@ -640,6 +642,92 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sp, err := testBatchJobTemplater.CreateSparkApplicationResource(test.arg)
+			if test.wantErr {
+				assert.Equal(t, test.wantErrMessage, err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, test.want, sp)
+		})
+	}
+}
+
+func TestAddEnvVars(t *testing.T) {
+	predictionJob := &models.PredictionJob{
+		Name: jobName,
+		ID:   jobID,
+		Metadata: models.Metadata{
+			App:       modelName,
+			Component: models.ComponentBatchJob,
+			Stream:    streamName,
+			Team:      teamName,
+			Labels:    userLabels,
+		},
+		VersionModelID: modelID,
+		VersionID:      versionID,
+		Config: &models.Config{
+			JobConfig: nil,
+			ImageRef:  imageRef,
+			ResourceRequest: &models.PredictionJobResourceRequest{
+				DriverCPURequest:      driverCPURequest,
+				DriverMemoryRequest:   driverMemory,
+				ExecutorReplica:       executorReplica,
+				ExecutorCPURequest:    executorCPURequest,
+				ExecutorMemoryRequest: executorMemory,
+			},
+			MainAppPath: mainAppPathInput,
+		},
+	}
+
+	tests := []struct {
+		name             string
+		apiServerEnvVars []string
+		wantErr          bool
+		wantErrMessage   string
+		want             []v12.EnvVar
+	}{
+		{
+			name:             "api server env vars specified",
+			apiServerEnvVars: []string{"TEST_ENV_VAR_1"},
+			want: []v12.EnvVar{
+				{
+					Name:  envServiceAccountPathKey,
+					Value: envServiceAccountPath,
+				},
+				{
+					Name:  "TEST_ENV_VAR_1",
+					Value: "TEST_VALUE_1",
+				},
+			},
+		},
+		{
+			name:             "no api server env vars specified",
+			apiServerEnvVars: []string{},
+			want: []v12.EnvVar{
+				{
+					Name:  envServiceAccountPathKey,
+					Value: envServiceAccountPath,
+				},
+			},
+		},
+	}
+
+	err := os.Setenv("TEST_ENV_VAR_1", "TEST_VALUE_1")
+	assert.NoError(t, err)
+	err = os.Setenv("TEST_ENV_VAR_2", "TEST_VALUE_2")
+	assert.NoError(t, err)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			defaultBatchConfig = config.BatchConfig{
+				Tolerations:   []v12.Toleration{defaultToleration},
+				NodeSelectors: defaultNodeSelector,
+			}
+			defaultBatchConfig.APIServerEnvVars = test.apiServerEnvVars
+
+			testBatchJobTemplater := NewBatchJobTemplater(defaultBatchConfig)
+
+			sp, err := testBatchJobTemplater.addEnvVars(predictionJob)
 			if test.wantErr {
 				assert.Equal(t, test.wantErrMessage, err.Error())
 				return
