@@ -49,6 +49,10 @@ message GcsSource {
     map<string, string> options = 4;
 }
 
+message MaxComputeSource {
+    string project = 1;
+}
+
 message Model {
     ModelType type = 1;
     string uri = 2;
