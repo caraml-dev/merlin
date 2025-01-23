@@ -56,6 +56,7 @@ func (op *ObservabilityPublisherDeployment) Deploy(job *queue.Job) (err error) {
 		}
 
 		if err != nil {
+			log.Errorf("failed to deploy observability publisher with error %w", err)
 			publisherRecord.Status = models.Failed
 		}
 
