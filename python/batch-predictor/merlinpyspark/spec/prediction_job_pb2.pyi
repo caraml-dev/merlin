@@ -133,9 +133,11 @@ class PredictionJob(google.protobuf.message.Message):
     NAME_FIELD_NUMBER: builtins.int
     BIGQUERY_SOURCE_FIELD_NUMBER: builtins.int
     GCS_SOURCE_FIELD_NUMBER: builtins.int
+    MAXCOMPUTE_SOURCE_FIELD_NUMBER: builtins.int
     MODEL_FIELD_NUMBER: builtins.int
     BIGQUERY_SINK_FIELD_NUMBER: builtins.int
     GCS_SINK_FIELD_NUMBER: builtins.int
+    MAXCOMPUTE_SINK_FIELD_NUMBER: builtins.int
     version: builtins.str
     kind: builtins.str
     name: builtins.str
@@ -144,11 +146,15 @@ class PredictionJob(google.protobuf.message.Message):
     @property
     def gcs_source(self) -> global___GcsSource: ...
     @property
+    def maxcompute_source(self) -> global___MaxComputeSource: ...
+    @property
     def model(self) -> global___Model: ...
     @property
     def bigquery_sink(self) -> global___BigQuerySink: ...
     @property
     def gcs_sink(self) -> global___GcsSink: ...
+    @property
+    def maxcompute_sink(self) -> global___MaxComputeSink: ...
     def __init__(
         self,
         *,
@@ -157,16 +163,18 @@ class PredictionJob(google.protobuf.message.Message):
         name: builtins.str = ...,
         bigquery_source: global___BigQuerySource | None = ...,
         gcs_source: global___GcsSource | None = ...,
+        maxcompute_source: global___MaxComputeSource | None = ...,
         model: global___Model | None = ...,
         bigquery_sink: global___BigQuerySink | None = ...,
         gcs_sink: global___GcsSink | None = ...,
+        maxcompute_sink: global___MaxComputeSink | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing.Literal["bigquery_sink", b"bigquery_sink", "bigquery_source", b"bigquery_source", "gcs_sink", b"gcs_sink", "gcs_source", b"gcs_source", "model", b"model", "sink", b"sink", "source", b"source"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["bigquery_sink", b"bigquery_sink", "bigquery_source", b"bigquery_source", "gcs_sink", b"gcs_sink", "gcs_source", b"gcs_source", "kind", b"kind", "model", b"model", "name", b"name", "sink", b"sink", "source", b"source", "version", b"version"]) -> None: ...
+    def HasField(self, field_name: typing.Literal["bigquery_sink", b"bigquery_sink", "bigquery_source", b"bigquery_source", "gcs_sink", b"gcs_sink", "gcs_source", b"gcs_source", "maxcompute_sink", b"maxcompute_sink", "maxcompute_source", b"maxcompute_source", "model", b"model", "sink", b"sink", "source", b"source"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["bigquery_sink", b"bigquery_sink", "bigquery_source", b"bigquery_source", "gcs_sink", b"gcs_sink", "gcs_source", b"gcs_source", "kind", b"kind", "maxcompute_sink", b"maxcompute_sink", "maxcompute_source", b"maxcompute_source", "model", b"model", "name", b"name", "sink", b"sink", "source", b"source", "version", b"version"]) -> None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing.Literal["sink", b"sink"]) -> typing.Literal["bigquery_sink", "gcs_sink"] | None: ...
+    def WhichOneof(self, oneof_group: typing.Literal["sink", b"sink"]) -> typing.Literal["bigquery_sink", "gcs_sink", "maxcompute_sink"] | None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing.Literal["source", b"source"]) -> typing.Literal["bigquery_source", "gcs_source"] | None: ...
+    def WhichOneof(self, oneof_group: typing.Literal["source", b"source"]) -> typing.Literal["bigquery_source", "gcs_source", "maxcompute_source"] | None: ...
 
 global___PredictionJob = PredictionJob
 
@@ -255,14 +263,38 @@ global___GcsSource = GcsSource
 class MaxComputeSource(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing.final
+    class OptionsEntry(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        KEY_FIELD_NUMBER: builtins.int
+        VALUE_FIELD_NUMBER: builtins.int
+        key: builtins.str
+        value: builtins.str
+        def __init__(
+            self,
+            *,
+            key: builtins.str = ...,
+            value: builtins.str = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing.Literal["key", b"key", "value", b"value"]) -> None: ...
+
     PROJECT_FIELD_NUMBER: builtins.int
+    FEATURES_FIELD_NUMBER: builtins.int
+    OPTIONS_FIELD_NUMBER: builtins.int
     project: builtins.str
+    @property
+    def features(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
+    @property
+    def options(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     def __init__(
         self,
         *,
         project: builtins.str = ...,
+        features: collections.abc.Iterable[builtins.str] | None = ...,
+        options: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["project", b"project"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["features", b"features", "options", b"options", "project", b"project"]) -> None: ...
 
 global___MaxComputeSource = MaxComputeSource
 
@@ -413,3 +445,47 @@ class GcsSink(google.protobuf.message.Message):
     def ClearField(self, field_name: typing.Literal["format", b"format", "options", b"options", "result_column", b"result_column", "save_mode", b"save_mode", "uri", b"uri"]) -> None: ...
 
 global___GcsSink = GcsSink
+
+@typing.final
+class MaxComputeSink(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    @typing.final
+    class OptionsEntry(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        KEY_FIELD_NUMBER: builtins.int
+        VALUE_FIELD_NUMBER: builtins.int
+        key: builtins.str
+        value: builtins.str
+        def __init__(
+            self,
+            *,
+            key: builtins.str = ...,
+            value: builtins.str = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing.Literal["key", b"key", "value", b"value"]) -> None: ...
+
+    PROJECT_FIELD_NUMBER: builtins.int
+    TABLE_FIELD_NUMBER: builtins.int
+    RESULT_COLUMN_FIELD_NUMBER: builtins.int
+    SAVE_MODE_FIELD_NUMBER: builtins.int
+    OPTIONS_FIELD_NUMBER: builtins.int
+    project: builtins.str
+    table: builtins.str
+    result_column: builtins.str
+    save_mode: global___SaveMode.ValueType
+    @property
+    def options(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
+    def __init__(
+        self,
+        *,
+        project: builtins.str = ...,
+        table: builtins.str = ...,
+        result_column: builtins.str = ...,
+        save_mode: global___SaveMode.ValueType = ...,
+        options: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["options", b"options", "project", b"project", "result_column", b"result_column", "save_mode", b"save_mode", "table", b"table"]) -> None: ...
+
+global___MaxComputeSink = MaxComputeSink

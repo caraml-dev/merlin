@@ -20,7 +20,7 @@ from google.protobuf import json_format
 from pyspark.sql.types import ArrayType, DataType, DoubleType, FloatType, \
     IntegerType, LongType, StringType
 
-from merlinpyspark.spec.prediction_job_pb2 import BigQuerySink, BigQuerySource, Model, \
+from merlinpyspark.spec.prediction_job_pb2 import BigQuerySink, BigQuerySource, MaxComputeSink, MaxComputeSource, Model, \
     PredictionJob, ResultType, ModelType, SaveMode
 
 
@@ -113,6 +113,28 @@ class BigQuerySourceConfig(SourceConfig):
     def table(self) -> str:
         return self._proto.table
 
+class MaxComputeSourceConfig(SourceConfig):
+    TYPE = "maxcompute"
+
+    def __init__(self, mc_src_proto: MaxComputeSource):
+        self._proto = mc_src_proto
+
+    def source_type(self) -> str:
+        return self.TYPE
+
+    def options(self) -> MutableMapping[str, str]:
+        return self._proto.options
+
+    def features(self) -> Iterable[str]:
+        return self._proto.features
+
+    def table(self) -> str:
+        return self._proto.table
+
+    def project(self) -> str:
+        return self._proto.project
+
+    # TODO: see if we need to add more fields
 
 class ModelConfig:
     PRIMITIVE_TYPE_MAP = {
