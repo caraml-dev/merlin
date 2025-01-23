@@ -17,7 +17,7 @@ from typing import Iterable, List
 
 from pyspark.sql import DataFrame, SparkSession
 
-from merlinpyspark.config import BigQuerySourceConfig, SourceConfig
+from merlinpyspark.config import BigQuerySourceConfig, SourceConfig, MaxComputeSourceConfig
 
 
 def create_source(spark_session: SparkSession,
@@ -82,3 +82,21 @@ class BigQuerySource(Source):
 
     def features(self) -> Iterable[str]:
         return self._config.features()
+
+class MaxComputeSource(Source):
+    READ_FORMAT = "maxcompute"
+    OPTION_TABLE = "table" # NOTE: decide what to do with this
+    OPTION_PROJECT = "project"
+
+    def __init__(self, spark_session: SparkSession, maxcompute_source_config: MaxComputeSourceConfig):
+        self._spark = spark_session
+        self._config = maxcompute_source_config
+
+        if maxcompute_source_config.table() is None:
+            raise ValueError("table field is empty")
+
+    def load(self) -> DataFrame:
+        pass
+
+    def features(self) -> Iterable[str]:
+        pass
