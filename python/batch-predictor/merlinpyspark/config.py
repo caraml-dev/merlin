@@ -135,14 +135,15 @@ class MaxComputeSourceConfig(SourceConfig):
         return self._proto.features
 
     def table(self) -> str:
-        return f"{self._proto.schema}.{self._proto.table}"
+        _, schema, table = self.table.split(".")
+        return f"{schema}.{table}"
     
     def project(self) -> str:
-        return self._proto.project
-    
+        project, _, _ = self.table.split(".")
+        return project
+        
     def endpoint(self) -> str:
         return self._proto.endpoint
-    # TODO: see if we need to add more fields
 
 class ModelConfig:
     PRIMITIVE_TYPE_MAP = {
@@ -246,7 +247,12 @@ class MaxComputeSinkConfig(SinkConfig):
         return SaveMode.Name(self._proto.save_mode).lower()
     
     def table(self) -> str:
-        return f"{self._proto.schema}.{self._proto.table}"
+        _, schema, table = self.table.split(".")
+        return f"{schema}.{table}"
 
     def project(self) -> str:
-        return self._proto.project
+        project, _, _ = self.table.split(".")
+        return project
+
+    def endpoint(self) -> str:
+        return self._proto.endpoint
