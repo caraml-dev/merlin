@@ -279,14 +279,10 @@ class MaxComputeSource(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing.Literal["key", b"key", "value", b"value"]) -> None: ...
 
-    PROJECT_FIELD_NUMBER: builtins.int
-    SCHEMA_FIELD_NUMBER: builtins.int
     TABLE_FIELD_NUMBER: builtins.int
     ENDPOINT_FIELD_NUMBER: builtins.int
     FEATURES_FIELD_NUMBER: builtins.int
     OPTIONS_FIELD_NUMBER: builtins.int
-    project: builtins.str
-    schema: builtins.str
     table: builtins.str
     endpoint: builtins.str
     @property
@@ -296,14 +292,12 @@ class MaxComputeSource(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        project: builtins.str = ...,
-        schema: builtins.str = ...,
         table: builtins.str = ...,
         endpoint: builtins.str = ...,
         features: collections.abc.Iterable[builtins.str] | None = ...,
         options: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["endpoint", b"endpoint", "features", b"features", "options", b"options", "project", b"project", "schema", b"schema", "table", b"table"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["endpoint", b"endpoint", "features", b"features", "options", b"options", "table", b"table"]) -> None: ...
 
 global___MaxComputeSource = MaxComputeSource
 
@@ -475,15 +469,11 @@ class MaxComputeSink(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing.Literal["key", b"key", "value", b"value"]) -> None: ...
 
-    PROJECT_FIELD_NUMBER: builtins.int
-    SCHEMA_FIELD_NUMBER: builtins.int
     TABLE_FIELD_NUMBER: builtins.int
     ENDPOINT_FIELD_NUMBER: builtins.int
     RESULT_COLUMN_FIELD_NUMBER: builtins.int
     SAVE_MODE_FIELD_NUMBER: builtins.int
     OPTIONS_FIELD_NUMBER: builtins.int
-    project: builtins.str
-    schema: builtins.str
     table: builtins.str
     endpoint: builtins.str
     result_column: builtins.str
@@ -493,14 +483,12 @@ class MaxComputeSink(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        project: builtins.str = ...,
-        schema: builtins.str = ...,
         table: builtins.str = ...,
         endpoint: builtins.str = ...,
         result_column: builtins.str = ...,
         save_mode: global___SaveMode.ValueType = ...,
         options: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["endpoint", b"endpoint", "options", b"options", "project", b"project", "result_column", b"result_column", "save_mode", b"save_mode", "schema", b"schema", "table", b"table"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["endpoint", b"endpoint", "options", b"options", "result_column", b"result_column", "save_mode", b"save_mode", "table", b"table"]) -> None: ...
 
 global___MaxComputeSink = MaxComputeSink

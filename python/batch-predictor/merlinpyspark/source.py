@@ -121,7 +121,7 @@ class MaxComputeSource(Source):
             .option(self.OPTION_QUERY_TIMEOUT, self.get_query_timeout())
             .option(self.OPTION_DB_TABLE, cfg.table())
         )
-        if cfg.optiosn() is not None:
+        if cfg.options() is not None:
             reader.options(**cfg.options())
         df = reader.load()
         if self.features() is not None:
