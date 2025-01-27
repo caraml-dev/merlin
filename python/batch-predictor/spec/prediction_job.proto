@@ -53,8 +53,11 @@ message GcsSource {
 
 message MaxComputeSource {
     string project = 1;
-    repeated string features = 2;
-    map<string, string> options = 3;
+    string schema = 2;
+    string table = 3;
+    string endpoint = 4;
+    repeated string features = 5;
+    map<string, string> options = 6;
 }
 
 message Model {
@@ -88,10 +91,12 @@ message GcsSink {
 
 message MaxComputeSink {
     string project = 1;
-    string table = 2;
-    string result_column = 3;
-    SaveMode save_mode = 4;
-    map<string, string> options = 5;
+    string schema = 2;
+    string table = 3;
+    string endpoint = 4;
+    string result_column = 5;
+    SaveMode save_mode = 6;
+    map<string, string> options = 7;
 }
 
 enum ResultType {
