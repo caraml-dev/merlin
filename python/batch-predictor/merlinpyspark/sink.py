@@ -27,7 +27,7 @@ def create_sink(sink_config: SinkConfig) -> "Sink":
             raise ValueError("sink_config is not BigQuerySink")
 
         return BigQuerySink(sink_config)
-    
+
     if sink_type == MaxComputeSinkConfig.TYPE:
         if not isinstance(sink_config, MaxComputeSinkConfig):
             raise ValueError("sink_config is not MaxComputeSink")
@@ -89,13 +89,27 @@ class MaxComputeSink(Sink):
         # since these are mounted from a configmap
         # these should be passed in via environment variable
         return os.environ.get("ODPS_SECRET_KEY")
+    
+    def _get_custom_dialect_class(self):
+        return os.environ.get(
+            "ODPS_CUSTOM_DIALECT_CLASS", "com.caraml.odps.CustomDialect"
+        )
 
     def save(self, df: DataFrame):
+        from py4j.java_gateway import java_import
         cfg = self._config
+
+        gw = self._spark.sparkContext._gateway
+        java_import(gw.jvm, self._get_custom_dialect_class())
+        gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
+            gw.jvm.com.caraml.odps.CustomDialect()
+        )
         df.write.mode(self._config.save_mode()).format(self.WRITE_FORMAT).option(
             self.OPTION_DRIVER, self.get_jdbc_driver()
         ).option(self.OPTION_URL, self.get_jdbc_url()).option(
-            self.OPTION_QUERY_TIMEOUT, self.get_query_timeout()
+            # TODO: use query timeout from config.options() if present
+            self.OPTION_QUERY_TIMEOUT,
+            self.get_query_timeout(),
         ).option(
             self.OPTION_DB_TABLE, cfg.table()
         ).save()
