@@ -106,7 +106,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -156,7 +156,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -221,7 +221,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -271,7 +271,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -344,7 +344,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -401,7 +401,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -450,7 +450,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -615,7 +615,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -664,7 +664,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil, errors.New("Failed to deploy"))
 				return ctrl
 			},
@@ -899,7 +899,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:            fmt.Sprintf("%s-%d-2", model.Name, version.ID),
 						CurrentIsvcName: fmt.Sprintf("%s-%d-2", model.Name, version.ID),
@@ -976,7 +976,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:            fmt.Sprintf("%s-%d-2", model.Name, version.ID),
 						CurrentIsvcName: fmt.Sprintf("%s-%d-2", model.Name, version.ID),
@@ -1053,7 +1053,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:            fmt.Sprintf("%s-%d-2", model.Name, version.ID),
 						CurrentIsvcName: fmt.Sprintf("%s-%d-2", model.Name, version.ID),
@@ -1128,7 +1128,7 @@ func TestExecuteRedeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil, errors.New("Failed to deploy"))
 				return ctrl
 			},
