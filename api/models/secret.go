@@ -48,7 +48,7 @@ func (sec Secrets) Scan(value interface{}) error {
 
 // ToKubernetesEnvVars returns the representation of Kubernetes'
 // v1.EnvVars.
-func (sec Secrets) ToKubernetesEnvVars() []v1.EnvVar {
+func (sec Secrets) ToKubernetesEnvVars(secretKeyRefName string) []v1.EnvVar {
 	kubeEnvVars := make([]v1.EnvVar, len(sec))
 
 	for k, secret := range sec {
@@ -56,6 +56,9 @@ func (sec Secrets) ToKubernetesEnvVars() []v1.EnvVar {
 			Name: secret.EnvVarSecretName,
 			ValueFrom: &v1.EnvVarSource{
 				SecretKeyRef: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: secretKeyRefName,
+					},
 					Key: secret.MLPSecretName,
 				},
 			},

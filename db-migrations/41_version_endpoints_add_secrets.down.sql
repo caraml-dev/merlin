@@ -13,3 +13,5 @@
 -- limitations under the License.
 
 ALTER TABLE version_endpoints DROP COLUMN secrets;
+
+ALTER TABLE transformers DROP COLUMN secrets;

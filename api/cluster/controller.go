@@ -21,6 +21,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/caraml-dev/merlin/mlp"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	"github.com/pkg/errors"
@@ -48,7 +49,7 @@ import (
 )
 
 type Controller interface {
-	Deploy(ctx context.Context, modelService *models.Service) (*models.Service, error)
+	Deploy(ctx context.Context, modelService *models.Service, projectID int) (*models.Service, error)
 	Delete(ctx context.Context, modelService *models.Service) (*models.Service, error)
 
 	ListPods(ctx context.Context, namespace, labelSelector string) (*corev1.PodList, error)
@@ -92,10 +93,11 @@ type controller struct {
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
 	kfServingResourceTemplater *resource.InferenceServiceTemplater
+	mlpAPIClient               mlp.APIClient
 	ContainerFetcher
 }
 
-func NewController(clusterConfig Config, deployConfig config.DeploymentConfig) (Controller, error) {
+func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, mlpAPIClient mlp.APIClient) (Controller, error) {
 	var cfg *rest.Config
 	var err error
 	if clusterConfig.InClusterConfig {
@@ -153,6 +155,7 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig) (
 		deployConfig,
 		containerFetcher,
 		kfServingResourceTemplater,
+		mlpAPIClient,
 	)
 }
 
@@ -166,6 +169,7 @@ func newController(
 	deploymentConfig config.DeploymentConfig,
 	containerFetcher ContainerFetcher,
 	templater *resource.InferenceServiceTemplater,
+	mlpAPIClient mlp.APIClient,
 ) (Controller, error) {
 	return &controller{
 		knServingClient:            knServingClient,
@@ -178,10 +182,11 @@ func newController(
 		deploymentConfig:           &deploymentConfig,
 		ContainerFetcher:           containerFetcher,
 		kfServingResourceTemplater: templater,
+		mlpAPIClient:               mlpAPIClient,
 	}, nil
 }
 
-func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (*models.Service, error) {
+func (c *controller) Deploy(ctx context.Context, modelService *models.Service, projectID int) (*models.Service, error) {
 	if modelService.ResourceRequest != nil {
 		cpuRequest, _ := modelService.ResourceRequest.CPURequest.AsInt64()
 		maxCPU, _ := c.deploymentConfig.MaxCPU.AsInt64()
@@ -208,6 +213,11 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	if err != nil {
 		log.Errorf("unable to create namespace %s %v", modelService.Namespace, err)
 		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateNamespace, modelService.Namespace))
+	}
+
+	err = c.createSecrets(ctx, modelService, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed creating secret for deployment %s: %w", modelService.Name, err)
 	}
 
 	isvcName := modelService.Name
@@ -302,6 +312,11 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			if err := c.deletePodDisruptionBudgets(ctx, unusedPdbs); err != nil {
 				log.Warnf("unable to delete model name %s, version %s unused pdb: %v", modelService.ModelName, modelService.ModelVersion, err)
 			}
+		}
+
+		err = c.deleteSecrets(ctx, modelService)
+		if err != nil {
+			return nil, fmt.Errorf("failed creating secret for deployment %s: %w", modelService.Name, err)
 		}
 	}
 
@@ -505,4 +520,64 @@ func (c *controller) GetCurrentDeploymentScale(
 	}
 
 	return deploymentScale
+}
+
+func (c *controller) createSecrets(ctx context.Context, modelService *models.Service, projectID int) error {
+	err := c.createSecretForComponent(ctx, modelService.Name, modelService.Secrets, modelService.Namespace, projectID)
+	if err != nil {
+		return fmt.Errorf("failed creating secret for model %s in namespace %s: %w", modelService.Name, modelService.Namespace, err)
+	}
+
+	if modelService.Transformer != nil {
+		transformerSecretName := fmt.Sprintf("%s-transformer", modelService.Name)
+		err = c.createSecretForComponent(ctx, transformerSecretName, modelService.Transformer.Secrets, modelService.Namespace, projectID)
+		if err != nil {
+			return fmt.Errorf("failed creating secret for transformer %s in namespace %s: %w", transformerSecretName, modelService.Namespace, err)
+		}
+	}
+	return nil
+}
+
+func (c *controller) createSecretForComponent(ctx context.Context, componentName string, secrets models.Secrets, namespace string, projectID int) error {
+	// Get MLP secrets for Google service account and user-specified MLP secrets
+	secretMap, err := c.getMLPSecrets(ctx, secrets, namespace, projectID)
+	if err != nil {
+		return fmt.Errorf("error retrieving secrets: %w", err)
+	}
+
+	_, err = c.createSecret(ctx, componentName, namespace, secretMap)
+	if err != nil {
+		return fmt.Errorf("failed creating secret %s in namespace %s: %w", componentName, namespace, err)
+	}
+	return nil
+}
+
+func (c *controller) deleteSecrets(ctx context.Context, modelService *models.Service) error {
+	err := c.deleteSecret(ctx, modelService.Name, modelService.Namespace)
+	if err != nil && !kerrors.IsNotFound(err) {
+		return fmt.Errorf("failed deleting secret for model %s in namespace %s: %w", modelService.Name, modelService.Namespace, err)
+	}
+
+	if modelService.Transformer != nil {
+		transformerSecretName := fmt.Sprintf("%s-transformer", modelService.Name)
+		err = c.deleteSecret(ctx, transformerSecretName, modelService.Namespace)
+		if err != nil && !kerrors.IsNotFound(err) {
+			return fmt.Errorf("failed deleting secret for transformer %s in namespace %s: %w", transformerSecretName, modelService.Namespace, err)
+		}
+	}
+	return nil
+}
+
+func (c *controller) getMLPSecrets(ctx context.Context, secrets models.Secrets, namespace string, projectID int) (map[string]string, error) {
+	secretMap := make(map[string]string)
+	// Retrieve user-configured secrets from MLP
+	for _, secret := range secrets {
+		userConfiguredSecret, err := c.mlpAPIClient.GetSecretByName(ctx, secret.MLPSecretName, int32(projectID))
+		if err != nil {
+			return nil, fmt.Errorf("user-configured secret %s is not found within %s project: %w", secret.MLPSecretName, namespace, err)
+		}
+		secretMap[secret.MLPSecretName] = userConfiguredSecret.Data
+	}
+
+	return secretMap, nil
 }

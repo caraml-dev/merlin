@@ -813,7 +813,88 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "pyfunc spec with liveness probe disabled",
+			name: "pyfunc spec with user-configured secrets specified",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypePyFunc,
+				Options: &models.ModelOption{
+					PyFuncImageName: "gojek/project-model:1",
+				},
+				ResourceRequest: userResourceRequestsWithCPULimits,
+				Metadata:        modelSvc.Metadata,
+				Protocol:        protocol.HttpJson,
+				Secrets: models.Secrets{
+					{
+						MLPSecretName:    "SECRET_NAME_1",
+						EnvVarSecretName: "ENV_SECRET_NAME_1",
+					},
+				},
+			},
+			resourcePercentage: queueResourcePercentage,
+			deploymentScale:    defaultDeploymentScale,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						"prometheus.io/scrape":                                "true",
+						"prometheus.io/port":                                  "8080",
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               fmt.Sprint(testPredictorScale),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/component":    models.ComponentModelVersion,
+						"gojek.com/environment":  testEnvironmentName,
+						"gojek.com/orchestrator": testOrchestratorName,
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"sample":                 "true",
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: MergeEnvVars(
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson).ToKubernetesEnvVars(),
+										[]corev1.EnvVar{
+											{
+												Name: "ENV_SECRET_NAME_1",
+												ValueFrom: &corev1.EnvVarSource{
+													SecretKeyRef: &corev1.SecretKeySelector{
+														LocalObjectReference: corev1.LocalObjectReference{
+															Name: modelSvc.Name,
+														},
+														Key: "SECRET_NAME_1",
+													},
+												},
+											},
+										},
+									),
+									Resources:     expUserResourceRequestsWithCPULimits,
+									LivenessProbe: probeConfig,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &userResourceRequestsWithCPULimits.MinReplica,
+							MaxReplicas: userResourceRequestsWithCPULimits.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "pyfunc spec with liveness probe disabled (old)",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,
@@ -972,7 +1053,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "pyfunc with liveness probe disabled",
+			name: "pyfunc spec with liveness probe disabled (new)",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
 				ModelName:    modelSvc.ModelName,

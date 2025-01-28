@@ -192,7 +192,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 }
 
 func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) (kservev1beta1.PredictorSpec, error) {
-	limits, envVars, err := t.getResourceLimitsAndEnvVars(modelService.ResourceRequest, modelService.EnvVars, modelService.Secrets)
+	limits, envVars, err := t.getResourceLimitsAndEnvVars(modelService.ResourceRequest, modelService.EnvVars, modelService.Secrets, modelService.Name)
 	if err != nil {
 		return kservev1beta1.PredictorSpec{}, err
 	}
@@ -375,7 +375,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	modelService *models.Service,
 	transformer *models.Transformer,
 ) (*kservev1beta1.TransformerSpec, error) {
-	limits, envVars, err := t.getResourceLimitsAndEnvVars(transformer.ResourceRequest, transformer.EnvVars, modelService.Secrets)
+	limits, envVars, err := t.getResourceLimitsAndEnvVars(transformer.ResourceRequest, transformer.EnvVars, transformer.Secrets, fmt.Sprintf("%s-transformer", modelService.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -891,6 +891,7 @@ func (t *InferenceServiceTemplater) getResourceLimitsAndEnvVars(
 	resourceRequest *models.ResourceRequest,
 	envVars models.EnvVars,
 	secrets models.Secrets,
+	secretName string,
 ) (map[corev1.ResourceName]resource.Quantity, []corev1.EnvVar, error) {
 	mergedEnvVars := envVars.ToKubernetesEnvVars()
 	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
@@ -922,7 +923,7 @@ func (t *InferenceServiceTemplater) getResourceLimitsAndEnvVars(
 	}
 
 	// Add user-configured secrets as env vars to the list of env vars to be created
-	mergedEnvVars = MergeEnvVars(mergedEnvVars, secrets.ToKubernetesEnvVars())
+	mergedEnvVars = MergeEnvVars(mergedEnvVars, secrets.ToKubernetesEnvVars(secretName))
 
 	return limits, mergedEnvVars, nil
 }

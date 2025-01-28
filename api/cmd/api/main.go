@@ -260,7 +260,7 @@ func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServi
 }
 
 func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) deps {
-	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
+	mlpAPIClient := initMLPAPIClient(cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience, cfg.StandardTransformerConfig.EnableAuth)
 
 	if err := labeller.InitKubernetesLabeller(cfg.DeploymentLabelPrefix, cfg.NamespaceLabelPrefix, cfg.Environment); err != nil {
@@ -274,7 +274,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	observabilityPublisherDeployment := initObservabilityPublisherDeployment(cfg, observabilityPublisherStorage)
 	versionStorage := storage.NewVersionStorage(db)
 	observabilityEvent := event.NewEventProducer(dispatcher, observabilityPublisherStorage, versionStorage)
-	clusterControllers := initClusterControllers(cfg)
+	clusterControllers := initClusterControllers(cfg, mlpAPIClient)
 	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db, observabilityEvent, webhookClient)
 	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher, webhookClient)
 	modelEndpointService := initModelEndpointService(cfg, db, observabilityEvent)

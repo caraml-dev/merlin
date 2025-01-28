@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/caraml-dev/merlin/cluster/labeller"
+	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	fakekserve "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	fakekservev1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
@@ -338,8 +339,10 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, clusterresource.NewInferenceServiceTemplater(deployConfig))
-			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, clusterresource.NewInferenceServiceTemplater(deployConfig), mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), modelSvc, 1)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -745,8 +748,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater)
-			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater, mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), tt.modelService, 1)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -964,8 +969,10 @@ func TestController_DeployInferenceService_PodDisruptionBudgetsRemoval(t *testin
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater)
-			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater, mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), tt.modelService, 1)
 
 			if tt.deletedPdbResult.err == nil {
 				assert.ElementsMatch(t, deletedPdbNames, tt.wantPdbs)
@@ -1099,8 +1106,10 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
 			// Create test controller
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, nil, deployConfig, containerFetcher, templater)
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, nil, deployConfig, containerFetcher, templater, mockMlpAPIClient)
 
 			desiredReplicas := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, tt.components)
 			assert.Equal(t, tt.expectedScale, desiredReplicas)
@@ -1434,7 +1443,9 @@ func TestController_Delete(t *testing.T) {
 
 			templater := clusterresource.NewInferenceServiceTemplater(tt.deployConfig)
 
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, tt.deployConfig, containerFetcher, templater)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, tt.deployConfig, containerFetcher, templater, mockMlpAPIClient)
 			mSvc, err := ctl.Delete(context.Background(), tt.modelService)
 
 			if tt.wantError {

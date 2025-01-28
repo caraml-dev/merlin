@@ -64,7 +64,7 @@ type VersionEndpoint struct {
 	// EnvVars environment variable to be set in the version endpoints'deployment
 	EnvVars EnvVars `json:"env_vars" gorm:"column:env_vars"`
 	// Secrets represent MLP secrets to be mounted as environment variables
-	Secrets Secrets `json:"secrets"`
+	Secrets Secrets `json:"secrets" gorm:"column:secrets"`
 	// Transformer transformer configuration
 	Transformer *Transformer `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
 	// Logger logger configuration

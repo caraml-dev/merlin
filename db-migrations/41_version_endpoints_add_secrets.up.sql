@@ -13,3 +13,5 @@
 -- limitations under the License.
 
 ALTER TABLE version_endpoints ADD COLUMN secrets jsonb;
+
+ALTER TABLE transformers ADD COLUMN secrets jsonb;

@@ -46,7 +46,7 @@ type deps struct {
 	imageBuilderJanitor     *imagebuilder.Janitor
 }
 
-func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClient {
+func initMLPAPIClient(cfg config.MlpAPIConfig) mlp.APIClient {
 	mlpHTTPClient := http.DefaultClient
 	googleClient, err := auth.InitGoogleClient(context.Background())
 	if err == nil {
@@ -177,6 +177,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	ctl, err := cluster.NewController(
 		clusterCfg,
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
+		nil,                       // We don't need the MLP client since the image builder doesn't use it
 	)
 	imageBuilderJanitor = imagebuilder.NewJanitor(ctl, imagebuilder.JanitorConfig{
 		BuildNamespace: cfg.ImageBuilderConfig.BuildNamespace,
@@ -494,7 +495,7 @@ func initObservabilityPublisherDeployment(cfg *config.Config, observabilityPubli
 	}
 }
 
-func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
+func initClusterControllers(cfg *config.Config, mlpAPIClient mlp.APIClient) map[string]cluster.Controller {
 	controllers := make(map[string]cluster.Controller)
 	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		clusterCfg := cluster.Config{
@@ -511,6 +512,7 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 		ctl, err := cluster.NewController(
 			clusterCfg,
 			config.ParseDeploymentConfig(env, cfg),
+			mlpAPIClient,
 		)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
@@ -552,6 +554,7 @@ func initLogService(cfg *config.Config) service.LogService {
 	ctl, err := cluster.NewController(
 		clusterCfg,
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
+		nil,                       // We don't need the MLP client since the log service doesn't use it
 	)
 	if err != nil {
 		log.Panicf("unable to initialize cluster controller %v", err)
@@ -575,6 +578,7 @@ func initLogService(cfg *config.Config) service.LogService {
 		ctl, err := cluster.NewController(
 			clusterCfg,
 			config.ParseDeploymentConfig(env, cfg),
+			nil, // We don't need the MLP client since the log service doesn't use it
 		)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
