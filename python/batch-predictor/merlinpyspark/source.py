@@ -113,6 +113,13 @@ class MaxComputeSource(Source):
             raise ValueError("table field is empty")
 
     def load(self) -> DataFrame:
+        from py4j.java_gateway import java_import
+
+        gw = self._spark.sparkContext._gateway
+        java_import(gw.jvm, self._get_custom_dialect_class())
+        gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
+            gw.jvm.com.caraml.odps.CustomDialect()
+        )
         cfg = self._config
         reader = (
             self._spark.read.format(self.READ_FORMAT)
@@ -135,7 +142,7 @@ class MaxComputeSource(Source):
         return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}"
 
     def get_query_timeout(self):
-        return os.environ.get("ODPS_QUERY_TIMEOUT", "120")
+        return os.environ.get("ODPS_QUERY_TIMEOUT", "300")
 
     def get_jdbc_driver(self):
         return os.environ.get("ODPS_JDBC_DRIVER", "com.aliyun.odps.jdbc.OdpsDriver")
@@ -151,3 +158,8 @@ class MaxComputeSource(Source):
         # since these are mounted from a configmap
         # these should be passed in via environment variable
         return os.environ.get("ODPS_SECRET_KEY")
+
+    def _get_custom_dialect_class(self):
+        return os.environ.get(
+            "ODPS_CUSTOM_DIALECT_CLASS", "com.caraml.odps.CustomDialect"
+        )

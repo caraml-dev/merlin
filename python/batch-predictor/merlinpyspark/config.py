@@ -135,11 +135,11 @@ class MaxComputeSourceConfig(SourceConfig):
         return self._proto.features
 
     def table(self) -> str:
-        _, schema, table = self.table.split(".")
+        _, schema, table = self._proto.table.split(".")
         return f"{schema}.{table}"
     
     def project(self) -> str:
-        project, _, _ = self.table.split(".")
+        project, _, _ = self._proto.table.split(".")
         return project
         
     def endpoint(self) -> str:
@@ -247,11 +247,11 @@ class MaxComputeSinkConfig(SinkConfig):
         return SaveMode.Name(self._proto.save_mode).lower()
     
     def table(self) -> str:
-        _, schema, table = self.table.split(".")
+        _, schema, table = self._proto.table.split(".")
         return f"{schema}.{table}"
 
     def project(self) -> str:
-        project, _, _ = self.table.split(".")
+        project, _, _ = self._proto.table.split(".")
         return project
 
     def endpoint(self) -> str:
