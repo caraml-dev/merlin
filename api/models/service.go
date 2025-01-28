@@ -46,6 +46,7 @@ type Service struct {
 	Options           *ModelOption
 	ResourceRequest   *ResourceRequest
 	EnvVars           EnvVars
+	Secrets           Secrets
 	Metadata          Metadata
 	Transformer       *Transformer
 	Logger            *Logger
@@ -71,6 +72,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		Options:         modelOpt,
 		ResourceRequest: endpoint.ResourceRequest,
 		EnvVars:         endpoint.EnvVars,
+		Secrets:         endpoint.Secrets,
 		Metadata: Metadata{
 			App:       model.Name,
 			Component: ComponentModelVersion,

@@ -7,7 +7,7 @@
 //      http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
+// distributed uthe License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
@@ -36,7 +36,7 @@ type ManifestManager interface {
 	CreateJobSpec(ctx context.Context, predictionJobName string, namespace string, spec *spec.PredictionJob) (string, error)
 	DeleteJobSpec(ctx context.Context, predictionJobName string, namespace string) error
 
-	CreateSecret(ctx context.Context, predictionJobName string, namespace string, data string) (string, error)
+	CreateSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error)
 	DeleteSecret(ctx context.Context, predictionJobName string, namespace string) error
 
 	CreateDriverAuthorization(ctx context.Context, namespace string) (string, error)
@@ -219,16 +219,14 @@ func (m *manifestManager) DeleteDriverAuthorization(ctx context.Context, namespa
 	return nil
 }
 
-func (m *manifestManager) CreateSecret(ctx context.Context, predictionJobName string, namespace string, data string) (string, error) {
+func (m *manifestManager) CreateSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error) {
 	secret, err := m.kubeClient.CoreV1().Secrets(namespace).Create(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      predictionJobName,
 			Namespace: namespace,
 		},
-		StringData: map[string]string{
-			serviceAccountFileName: data,
-		},
-		Type: corev1.SecretTypeOpaque,
+		StringData: secretMap,
+		Type:       corev1.SecretTypeOpaque,
 	}, metav1.CreateOptions{})
 
 	if err != nil {

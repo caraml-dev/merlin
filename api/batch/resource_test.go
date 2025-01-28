@@ -107,7 +107,7 @@ var (
 	defaultSecret = []v1beta2.SecretInfo{
 		{
 			Name: jobName,
-			Path: serviceAccountMount,
+			Path: secretMount,
 		},
 	}
 

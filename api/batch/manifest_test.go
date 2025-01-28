@@ -246,11 +246,13 @@ func TestDeleteJobSpecConfigMap(t *testing.T) {
 }
 
 func TestCreateSecret(t *testing.T) {
-	secret := "string secret"
+	secret := map[string]string{
+		serviceAccountFileName: "string secret",
+	}
 	tests := []struct {
 		name         string
 		jobName      string
-		data         string
+		data         map[string]string
 		want         *corev1.Secret
 		wantError    bool
 		wantErrorMsg string
@@ -265,7 +267,7 @@ func TestCreateSecret(t *testing.T) {
 					Namespace: defaultNamespace,
 				},
 				StringData: map[string]string{
-					serviceAccountFileName: secret,
+					serviceAccountFileName: secret[serviceAccountFileName],
 				},
 				Type: corev1.SecretTypeOpaque,
 			},

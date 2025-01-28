@@ -49,6 +49,7 @@ type Config struct {
 	ResourceRequest             *PredictionJobResourceRequest `json:"resource_request"`
 	ImageBuilderResourceRequest *ResourceRequest              `json:"image_builder_resource_request"`
 	EnvVars                     EnvVars                       `json:"env_vars"`
+	Secrets                     Secrets                       `json:"secrets"`
 }
 
 type PredictionJobResourceRequest struct {
