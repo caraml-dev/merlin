@@ -322,7 +322,7 @@ func (c *controller) onUpdate(old, new interface{}) {
 }
 
 func (c *controller) getMLPSecrets(ctx context.Context, predictionJob *models.PredictionJob, namespace string) (map[string]string, error) {
-	var secretMap map[string]string
+	secretMap := make(map[string]string)
 	// Retrieve Google Service Account secret from MLP
 	googleServiceAccountSecret, err := c.mlpAPIClient.GetSecretByName(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
 	if err != nil {
