@@ -158,12 +158,13 @@ func (c *controller) Submit(ctx context.Context, predictionJob *models.Predictio
 		return fmt.Errorf("failed creating spark driver authorization in namespace %s: %w", namespace, err)
 	}
 
-	secret, err := c.mlpAPIClient.GetSecretByName(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
+	// Get MLP secrets for Google service account and user-specified MLP secrets
+	secretMap, err := c.getMLPSecrets(ctx, predictionJob, namespace)
 	if err != nil {
-		return fmt.Errorf("service account %s is not found within %s project: %w", predictionJob.Config.ServiceAccountName, namespace, err)
+		return fmt.Errorf("error retrieving secrets: %w", err)
 	}
 
-	_, err = c.manifestManager.CreateSecret(ctx, predictionJob.Name, namespace, secret.Data)
+	_, err = c.manifestManager.CreateSecret(ctx, predictionJob.Name, namespace, secretMap)
 	if err != nil {
 		return fmt.Errorf("failed creating secret for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
@@ -318,6 +319,27 @@ func (c *controller) onUpdate(old, new interface{}) {
 		key, _ := cache.MetaNamespaceKeyFunc(newApp)
 		c.queue.AddRateLimited(key)
 	}
+}
+
+func (c *controller) getMLPSecrets(ctx context.Context, predictionJob *models.PredictionJob, namespace string) (map[string]string, error) {
+	var secretMap map[string]string
+	// Retrieve Google Service Account secret from MLP
+	googleServiceAccountSecret, err := c.mlpAPIClient.GetSecretByName(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
+	if err != nil {
+		return nil, fmt.Errorf("service account %s is not found within %s project: %w", predictionJob.Config.ServiceAccountName, namespace, err)
+	}
+	secretMap[serviceAccountFileName] = googleServiceAccountSecret.Data
+
+	// Retrieve user-configured secrets from MLP
+	for _, secret := range predictionJob.Config.Secrets {
+		userConfiguredSecret, err := c.mlpAPIClient.GetSecretByName(ctx, secret.MLPSecretName, int32(predictionJob.ProjectID))
+		if err != nil {
+			return nil, fmt.Errorf("user-configured secret %s is not found within %s project: %w", secret.MLPSecretName, namespace, err)
+		}
+		secretMap[secret.MLPSecretName] = userConfiguredSecret.Data
+	}
+
+	return secretMap, nil
 }
 
 func getModelName(projectionJobName string) string {

@@ -2077,12 +2077,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
-									Env: models.MergeEnvVars(
-										models.EnvVars{
+									Env: MergeEnvVars(
+										[]corev1.EnvVar{
 											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
 										},
 										createDefaultTransformerEnvVars(modelSvc),
-									).ToKubernetesEnvVars(),
+									),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -2169,12 +2169,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
-									Env: models.MergeEnvVars(
-										models.EnvVars{
+									Env: MergeEnvVars(
+										[]corev1.EnvVar{
 											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
 										},
 										createDefaultTransformerEnvVars(modelSvc),
-									).ToKubernetesEnvVars(),
+									),
 									Resources:     expUserResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -2261,7 +2261,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expUserResourceRequestsWithCPULimits,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -2346,12 +2346,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
-									Env: models.MergeEnvVars(
-										models.EnvVars{
+									Env: MergeEnvVars(
+										[]corev1.EnvVar{
 											{Name: defaultWorkersEnvVarName, Value: defaultWorkersEnvVarValue},
 										},
 										createDefaultTransformerEnvVars(modelSvcGRPC),
-									).ToKubernetesEnvVars(),
+									),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfigUPI,
 									Ports:         grpcServerlessContainerPorts,
@@ -2440,7 +2440,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								{
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
-									Env: models.MergeEnvVars(models.EnvVars{
+									Env: MergeEnvVars([]corev1.EnvVar{
 										{
 											Name:  defaultWorkersEnvVarName,
 											Value: defaultWorkersEnvVarValue,
@@ -2461,7 +2461,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-									}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
+									}, createDefaultTransformerEnvVars(modelSvc)),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -2550,7 +2550,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								{
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
-									Env: models.MergeEnvVars(models.EnvVars{
+									Env: MergeEnvVars([]corev1.EnvVar{
 										{
 											Name:  defaultWorkersEnvVarName,
 											Value: defaultWorkersEnvVarValue,
@@ -2577,7 +2577,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
+									}, createDefaultTransformerEnvVars(modelSvcGRPC)),
 									Resources:     expDefaultTransformerResourceRequests,
 									Ports:         grpcRawContainerPorts,
 									LivenessProbe: transformerProbeConfigUPI,
@@ -2683,7 +2683,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								{
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
-									Env: models.MergeEnvVars(models.EnvVars{
+									Env: MergeEnvVars([]corev1.EnvVar{
 										{
 											Name:  defaultWorkersEnvVarName,
 											Value: defaultWorkersEnvVarValue,
@@ -2713,7 +2713,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
+									}, createDefaultTransformerEnvVars(modelSvcGRPC)),
 									Resources:     expDefaultTransformerResourceRequests,
 									Ports:         grpcRawContainerPorts,
 									LivenessProbe: transformerProbeConfigUPI,
@@ -2818,7 +2818,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								{
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
-									Env: models.MergeEnvVars(models.EnvVars{
+									Env: MergeEnvVars([]corev1.EnvVar{
 										{
 											Name:  defaultWorkersEnvVarName,
 											Value: defaultWorkersEnvVarValue,
@@ -2849,7 +2849,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 										{Name: transformerpkg.PredictorUPIHTTPEnabled, Value: "true"},
-									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
+									}, createDefaultTransformerEnvVars(modelSvcGRPC)),
 									Resources:     expDefaultTransformerResourceRequests,
 									Ports:         grpcServerlessContainerPorts,
 									LivenessProbe: transformerProbeConfigUPI,
@@ -2996,7 +2996,6 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3067,7 +3066,6 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3088,7 +3086,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -3157,7 +3155,6 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3174,7 +3171,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -3243,7 +3240,6 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3260,7 +3256,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -3333,7 +3329,6 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3350,7 +3345,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -3481,7 +3476,6 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3585,7 +3579,6 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3688,7 +3681,6 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3797,7 +3789,6 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -3863,7 +3854,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -3973,7 +3964,6 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -4039,7 +4029,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -4148,7 +4138,6 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -4214,7 +4203,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									Image:         "ghcr.io/gojek/merlin-transformer-test",
 									Command:       []string{"python"},
 									Args:          []string{"main.py"},
-									Env:           createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:           createDefaultTransformerEnvVars(modelSvc),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
 								},
@@ -4421,7 +4410,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Image:   standardTransformerConfig.ImageName,
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
-							Env: models.MergeEnvVars(models.EnvVars{
+							Env: MergeEnvVars([]corev1.EnvVar{
 								{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
 								{
 									Name:  transformerpkg.FeastStorageConfigs,
@@ -4434,7 +4423,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 								{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"},
 								{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 								{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-							}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
+							}, createDefaultTransformerEnvVars(modelSvc)),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    cpuRequest,
@@ -4496,7 +4485,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Image:   standardTransformerConfig.ImageName,
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
-							Env: models.MergeEnvVars(models.EnvVars{
+							Env: MergeEnvVars([]corev1.EnvVar{
 								{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
 								{
 									Name:  transformerpkg.FeastStorageConfigs,
@@ -4509,7 +4498,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 								{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"},
 								{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 								{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-							}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
+							}, createDefaultTransformerEnvVars(modelSvc)),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    cpuRequest,
@@ -4566,7 +4555,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Image:   "ghcr.io/gojek/merlin-transformer-test",
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
-							Env:     createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+							Env:     createDefaultTransformerEnvVars(modelSvc),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    cpuRequest,
