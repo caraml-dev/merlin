@@ -20,26 +20,28 @@ var _ MappedNullable = &VersionEndpoint{}
 
 // VersionEndpoint struct for VersionEndpoint
 type VersionEndpoint struct {
-	Id                          *string            `json:"id,omitempty"`
-	VersionId                   *int32             `json:"version_id,omitempty"`
-	Status                      *EndpointStatus    `json:"status,omitempty"`
-	Url                         *string            `json:"url,omitempty"`
-	ServiceName                 *string            `json:"service_name,omitempty"`
-	EnvironmentName             *string            `json:"environment_name,omitempty"`
-	Environment                 *Environment       `json:"environment,omitempty"`
-	MonitoringUrl               *string            `json:"monitoring_url,omitempty"`
-	Message                     *string            `json:"message,omitempty"`
-	ResourceRequest             *ResourceRequest   `json:"resource_request,omitempty"`
-	ImageBuilderResourceRequest *ResourceRequest   `json:"image_builder_resource_request,omitempty"`
-	EnvVars                     []EnvVar           `json:"env_vars,omitempty"`
-	Transformer                 *Transformer       `json:"transformer,omitempty"`
-	Logger                      *Logger            `json:"logger,omitempty"`
-	DeploymentMode              *DeploymentMode    `json:"deployment_mode,omitempty"`
-	AutoscalingPolicy           *AutoscalingPolicy `json:"autoscaling_policy,omitempty"`
-	Protocol                    *Protocol          `json:"protocol,omitempty"`
-	EnableModelObservability    *bool              `json:"enable_model_observability,omitempty"`
-	CreatedAt                   *time.Time         `json:"created_at,omitempty"`
-	UpdatedAt                   *time.Time         `json:"updated_at,omitempty"`
+	Id                          *string             `json:"id,omitempty"`
+	VersionId                   *int32              `json:"version_id,omitempty"`
+	Status                      *EndpointStatus     `json:"status,omitempty"`
+	Url                         *string             `json:"url,omitempty"`
+	ServiceName                 *string             `json:"service_name,omitempty"`
+	EnvironmentName             *string             `json:"environment_name,omitempty"`
+	Environment                 *Environment        `json:"environment,omitempty"`
+	MonitoringUrl               *string             `json:"monitoring_url,omitempty"`
+	Message                     *string             `json:"message,omitempty"`
+	ResourceRequest             *ResourceRequest    `json:"resource_request,omitempty"`
+	ImageBuilderResourceRequest *ResourceRequest    `json:"image_builder_resource_request,omitempty"`
+	EnvVars                     []EnvVar            `json:"env_vars,omitempty"`
+	Secrets                     []MountedMLPSecret  `json:"secrets,omitempty"`
+	Transformer                 *Transformer        `json:"transformer,omitempty"`
+	Logger                      *Logger             `json:"logger,omitempty"`
+	DeploymentMode              *DeploymentMode     `json:"deployment_mode,omitempty"`
+	AutoscalingPolicy           *AutoscalingPolicy  `json:"autoscaling_policy,omitempty"`
+	Protocol                    *Protocol           `json:"protocol,omitempty"`
+	EnableModelObservability    *bool               `json:"enable_model_observability,omitempty"`
+	ModelObservability          *ModelObservability `json:"model_observability,omitempty"`
+	CreatedAt                   *time.Time          `json:"created_at,omitempty"`
+	UpdatedAt                   *time.Time          `json:"updated_at,omitempty"`
 }
 
 // NewVersionEndpoint instantiates a new VersionEndpoint object
@@ -447,6 +449,38 @@ func (o *VersionEndpoint) SetEnvVars(v []EnvVar) {
 	o.EnvVars = v
 }
 
+// GetSecrets returns the Secrets field value if set, zero value otherwise.
+func (o *VersionEndpoint) GetSecrets() []MountedMLPSecret {
+	if o == nil || IsNil(o.Secrets) {
+		var ret []MountedMLPSecret
+		return ret
+	}
+	return o.Secrets
+}
+
+// GetSecretsOk returns a tuple with the Secrets field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *VersionEndpoint) GetSecretsOk() ([]MountedMLPSecret, bool) {
+	if o == nil || IsNil(o.Secrets) {
+		return nil, false
+	}
+	return o.Secrets, true
+}
+
+// HasSecrets returns a boolean if a field has been set.
+func (o *VersionEndpoint) HasSecrets() bool {
+	if o != nil && !IsNil(o.Secrets) {
+		return true
+	}
+
+	return false
+}
+
+// SetSecrets gets a reference to the given []MountedMLPSecret and assigns it to the Secrets field.
+func (o *VersionEndpoint) SetSecrets(v []MountedMLPSecret) {
+	o.Secrets = v
+}
+
 // GetTransformer returns the Transformer field value if set, zero value otherwise.
 func (o *VersionEndpoint) GetTransformer() Transformer {
 	if o == nil || IsNil(o.Transformer) {
@@ -639,6 +673,38 @@ func (o *VersionEndpoint) SetEnableModelObservability(v bool) {
 	o.EnableModelObservability = &v
 }
 
+// GetModelObservability returns the ModelObservability field value if set, zero value otherwise.
+func (o *VersionEndpoint) GetModelObservability() ModelObservability {
+	if o == nil || IsNil(o.ModelObservability) {
+		var ret ModelObservability
+		return ret
+	}
+	return *o.ModelObservability
+}
+
+// GetModelObservabilityOk returns a tuple with the ModelObservability field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *VersionEndpoint) GetModelObservabilityOk() (*ModelObservability, bool) {
+	if o == nil || IsNil(o.ModelObservability) {
+		return nil, false
+	}
+	return o.ModelObservability, true
+}
+
+// HasModelObservability returns a boolean if a field has been set.
+func (o *VersionEndpoint) HasModelObservability() bool {
+	if o != nil && !IsNil(o.ModelObservability) {
+		return true
+	}
+
+	return false
+}
+
+// SetModelObservability gets a reference to the given ModelObservability and assigns it to the ModelObservability field.
+func (o *VersionEndpoint) SetModelObservability(v ModelObservability) {
+	o.ModelObservability = &v
+}
+
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
 func (o *VersionEndpoint) GetCreatedAt() time.Time {
 	if o == nil || IsNil(o.CreatedAt) {
@@ -749,6 +815,9 @@ func (o VersionEndpoint) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.EnvVars) {
 		toSerialize["env_vars"] = o.EnvVars
 	}
+	if !IsNil(o.Secrets) {
+		toSerialize["secrets"] = o.Secrets
+	}
 	if !IsNil(o.Transformer) {
 		toSerialize["transformer"] = o.Transformer
 	}
@@ -766,6 +835,9 @@ func (o VersionEndpoint) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.EnableModelObservability) {
 		toSerialize["enable_model_observability"] = o.EnableModelObservability
+	}
+	if !IsNil(o.ModelObservability) {
+		toSerialize["model_observability"] = o.ModelObservability
 	}
 	if !IsNil(o.CreatedAt) {
 		toSerialize["created_at"] = o.CreatedAt

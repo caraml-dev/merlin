@@ -41,8 +41,8 @@ EnvironmentsGet List available environment
 
 Environment can be filtered by optional `name` parameter
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiEnvironmentsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiEnvironmentsGetRequest
 */
 func (a *EnvironmentAPIService) EnvironmentsGet(ctx context.Context) ApiEnvironmentsGetRequest {
 	return ApiEnvironmentsGetRequest{
@@ -52,7 +52,8 @@ func (a *EnvironmentAPIService) EnvironmentsGet(ctx context.Context) ApiEnvironm
 }
 
 // Execute executes the request
-//  @return []Environment
+//
+//	@return []Environment
 func (a *EnvironmentAPIService) EnvironmentsGetExecute(r ApiEnvironmentsGetRequest) ([]Environment, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet

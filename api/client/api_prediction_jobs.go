@@ -56,10 +56,10 @@ func (r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) Execute() (*ListJ
 /*
 ModelsModelIdVersionsVersionIdJobsByPageGet List all prediction jobs of a model version with pagination
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @return ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@return ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest
 */
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGet(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest{
@@ -71,7 +71,8 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGet(c
 }
 
 // Execute executes the request
-//  @return ListJobsPaginatedResponse
+//
+//	@return ListJobsPaginatedResponse
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsByPageGetExecute(r ApiModelsModelIdVersionsVersionIdJobsByPageGetRequest) (*ListJobsPaginatedResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -184,10 +185,10 @@ func (r ApiModelsModelIdVersionsVersionIdJobsGetRequest) Execute() ([]Prediction
 /*
 ModelsModelIdVersionsVersionIdJobsGet List all prediction jobs of a model version. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @return ApiModelsModelIdVersionsVersionIdJobsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@return ApiModelsModelIdVersionsVersionIdJobsGetRequest
 
 Deprecated
 */
@@ -201,7 +202,9 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsGet(ctx con
 }
 
 // Execute executes the request
-//  @return []PredictionJob
+//
+//	@return []PredictionJob
+//
 // Deprecated
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsGetExecute(r ApiModelsModelIdVersionsVersionIdJobsGetRequest) ([]PredictionJob, *http.Response, error) {
 	var (
@@ -307,11 +310,11 @@ func (r ApiModelsModelIdVersionsVersionIdJobsJobIdContainersGetRequest) Execute(
 /*
 ModelsModelIdVersionsVersionIdJobsJobIdContainersGet Get all container belong to a prediction job
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @param jobId
- @return ApiModelsModelIdVersionsVersionIdJobsJobIdContainersGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@param jobId
+	@return ApiModelsModelIdVersionsVersionIdJobsJobIdContainersGetRequest
 */
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdContainersGet(ctx context.Context, modelId int32, versionId int32, jobId string) ApiModelsModelIdVersionsVersionIdJobsJobIdContainersGetRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsJobIdContainersGetRequest{
@@ -324,7 +327,8 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdContai
 }
 
 // Execute executes the request
-//  @return Container
+//
+//	@return Container
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdContainersGetExecute(r ApiModelsModelIdVersionsVersionIdJobsJobIdContainersGetRequest) (*Container, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -430,11 +434,11 @@ func (r ApiModelsModelIdVersionsVersionIdJobsJobIdGetRequest) Execute() (*Predic
 /*
 ModelsModelIdVersionsVersionIdJobsJobIdGet Get prediction jobs with given id
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @param jobId
- @return ApiModelsModelIdVersionsVersionIdJobsJobIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@param jobId
+	@return ApiModelsModelIdVersionsVersionIdJobsJobIdGetRequest
 */
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdGet(ctx context.Context, modelId int32, versionId int32, jobId int32) ApiModelsModelIdVersionsVersionIdJobsJobIdGetRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsJobIdGetRequest{
@@ -447,7 +451,8 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdGet(ct
 }
 
 // Execute executes the request
-//  @return PredictionJob
+//
+//	@return PredictionJob
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdGetExecute(r ApiModelsModelIdVersionsVersionIdJobsJobIdGetRequest) (*PredictionJob, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -553,11 +558,11 @@ func (r ApiModelsModelIdVersionsVersionIdJobsJobIdStopPutRequest) Execute() (*ht
 /*
 ModelsModelIdVersionsVersionIdJobsJobIdStopPut Stop prediction jobs with given id
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @param jobId
- @return ApiModelsModelIdVersionsVersionIdJobsJobIdStopPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@param jobId
+	@return ApiModelsModelIdVersionsVersionIdJobsJobIdStopPutRequest
 */
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsJobIdStopPut(ctx context.Context, modelId int32, versionId int32, jobId int32) ApiModelsModelIdVersionsVersionIdJobsJobIdStopPutRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsJobIdStopPutRequest{
@@ -670,10 +675,10 @@ func (r ApiModelsModelIdVersionsVersionIdJobsPostRequest) Execute() (*Prediction
 /*
 ModelsModelIdVersionsVersionIdJobsPost Create a prediction job from the given model version
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @return ApiModelsModelIdVersionsVersionIdJobsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@return ApiModelsModelIdVersionsVersionIdJobsPostRequest
 */
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsPost(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdJobsPostRequest {
 	return ApiModelsModelIdVersionsVersionIdJobsPostRequest{
@@ -685,7 +690,8 @@ func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsPost(ctx co
 }
 
 // Execute executes the request
-//  @return PredictionJob
+//
+//	@return PredictionJob
 func (a *PredictionJobsAPIService) ModelsModelIdVersionsVersionIdJobsPostExecute(r ApiModelsModelIdVersionsVersionIdJobsPostRequest) (*PredictionJob, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
@@ -846,9 +852,9 @@ func (r ApiProjectsProjectIdJobsByPageGetRequest) Execute() (*ListJobsPaginatedR
 /*
 ProjectsProjectIdJobsByPageGet List all prediction jobs created using the model with pagination
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @return ApiProjectsProjectIdJobsByPageGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@return ApiProjectsProjectIdJobsByPageGetRequest
 */
 func (a *PredictionJobsAPIService) ProjectsProjectIdJobsByPageGet(ctx context.Context, projectId int32) ApiProjectsProjectIdJobsByPageGetRequest {
 	return ApiProjectsProjectIdJobsByPageGetRequest{
@@ -859,7 +865,8 @@ func (a *PredictionJobsAPIService) ProjectsProjectIdJobsByPageGet(ctx context.Co
 }
 
 // Execute executes the request
-//  @return ListJobsPaginatedResponse
+//
+//	@return ListJobsPaginatedResponse
 func (a *PredictionJobsAPIService) ProjectsProjectIdJobsByPageGetExecute(r ApiProjectsProjectIdJobsByPageGetRequest) (*ListJobsPaginatedResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -1024,9 +1031,9 @@ func (r ApiProjectsProjectIdJobsGetRequest) Execute() ([]PredictionJob, *http.Re
 /*
 ProjectsProjectIdJobsGet List all prediction jobs created using the model. This endpoint is deprecated. Please use the corresponding /jobs-by-page endpoint instead.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @return ApiProjectsProjectIdJobsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@return ApiProjectsProjectIdJobsGetRequest
 
 Deprecated
 */
@@ -1039,7 +1046,9 @@ func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGet(ctx context.Context,
 }
 
 // Execute executes the request
-//  @return []PredictionJob
+//
+//	@return []PredictionJob
+//
 // Deprecated
 func (a *PredictionJobsAPIService) ProjectsProjectIdJobsGetExecute(r ApiProjectsProjectIdJobsGetRequest) ([]PredictionJob, *http.Response, error) {
 	var (

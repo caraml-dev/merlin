@@ -35,9 +35,9 @@ func (r ApiModelsModelIdSchemasGetRequest) Execute() ([]ModelSchema, *http.Respo
 /*
 ModelsModelIdSchemasGet List all of the model schemas
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdSchemasGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdSchemasGetRequest
 */
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasGet(ctx context.Context, modelId int32) ApiModelsModelIdSchemasGetRequest {
 	return ApiModelsModelIdSchemasGetRequest{
@@ -48,7 +48,8 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasGet(ctx context.Context, mod
 }
 
 // Execute executes the request
-//  @return []ModelSchema
+//
+//	@return []ModelSchema
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasGetExecute(r ApiModelsModelIdSchemasGetRequest) ([]ModelSchema, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -156,9 +157,9 @@ func (r ApiModelsModelIdSchemasPutRequest) Execute() (*ModelSchema, *http.Respon
 /*
 ModelsModelIdSchemasPut Creating new schemas for a model
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdSchemasPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdSchemasPutRequest
 */
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasPut(ctx context.Context, modelId int32) ApiModelsModelIdSchemasPutRequest {
 	return ApiModelsModelIdSchemasPutRequest{
@@ -169,7 +170,8 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasPut(ctx context.Context, mod
 }
 
 // Execute executes the request
-//  @return ModelSchema
+//
+//	@return ModelSchema
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasPutExecute(r ApiModelsModelIdSchemasPutRequest) (*ModelSchema, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPut
@@ -274,10 +276,10 @@ func (r ApiModelsModelIdSchemasSchemaIdDeleteRequest) Execute() (*http.Response,
 /*
 ModelsModelIdSchemasSchemaIdDelete Delete schema
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param schemaId
- @return ApiModelsModelIdSchemasSchemaIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param schemaId
+	@return ApiModelsModelIdSchemasSchemaIdDeleteRequest
 */
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdDelete(ctx context.Context, modelId int32, schemaId int32) ApiModelsModelIdSchemasSchemaIdDeleteRequest {
 	return ApiModelsModelIdSchemasSchemaIdDeleteRequest{
@@ -382,10 +384,10 @@ func (r ApiModelsModelIdSchemasSchemaIdGetRequest) Execute() (*ModelSchema, *htt
 /*
 ModelsModelIdSchemasSchemaIdGet Get detail of the schema
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param schemaId
- @return ApiModelsModelIdSchemasSchemaIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param schemaId
+	@return ApiModelsModelIdSchemasSchemaIdGetRequest
 */
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdGet(ctx context.Context, modelId int32, schemaId int32) ApiModelsModelIdSchemasSchemaIdGetRequest {
 	return ApiModelsModelIdSchemasSchemaIdGetRequest{
@@ -397,7 +399,8 @@ func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdGet(ctx context.Cont
 }
 
 // Execute executes the request
-//  @return ModelSchema
+//
+//	@return ModelSchema
 func (a *ModelSchemaAPIService) ModelsModelIdSchemasSchemaIdGetExecute(r ApiModelsModelIdSchemasSchemaIdGetRequest) (*ModelSchema, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet

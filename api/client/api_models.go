@@ -34,8 +34,8 @@ func (r ApiAlertsTeamsGetRequest) Execute() ([]string, *http.Response, error) {
 /*
 AlertsTeamsGet Lists teams for alert notification channel.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiAlertsTeamsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiAlertsTeamsGetRequest
 */
 func (a *ModelsAPIService) AlertsTeamsGet(ctx context.Context) ApiAlertsTeamsGetRequest {
 	return ApiAlertsTeamsGetRequest{
@@ -45,7 +45,8 @@ func (a *ModelsAPIService) AlertsTeamsGet(ctx context.Context) ApiAlertsTeamsGet
 }
 
 // Execute executes the request
-//  @return []string
+//
+//	@return []string
 func (a *ModelsAPIService) AlertsTeamsGetExecute(r ApiAlertsTeamsGetRequest) ([]string, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -146,9 +147,9 @@ func (r ApiModelsModelIdAlertsGetRequest) Execute() ([]ModelEndpointAlert, *http
 /*
 ModelsModelIdAlertsGet Lists alerts for given model.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdAlertsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdAlertsGetRequest
 */
 func (a *ModelsAPIService) ModelsModelIdAlertsGet(ctx context.Context, modelId int32) ApiModelsModelIdAlertsGetRequest {
 	return ApiModelsModelIdAlertsGetRequest{
@@ -159,7 +160,8 @@ func (a *ModelsAPIService) ModelsModelIdAlertsGet(ctx context.Context, modelId i
 }
 
 // Execute executes the request
-//  @return []ModelEndpointAlert
+//
+//	@return []ModelEndpointAlert
 func (a *ModelsAPIService) ModelsModelIdAlertsGetExecute(r ApiModelsModelIdAlertsGetRequest) ([]ModelEndpointAlert, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -262,10 +264,10 @@ func (r ApiModelsModelIdEndpointsModelEndpointIdAlertGetRequest) Execute() (*Mod
 /*
 ModelsModelIdEndpointsModelEndpointIdAlertGet Gets alert for given model endpoint.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param modelEndpointId
- @return ApiModelsModelIdEndpointsModelEndpointIdAlertGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param modelEndpointId
+	@return ApiModelsModelIdEndpointsModelEndpointIdAlertGetRequest
 */
 func (a *ModelsAPIService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx context.Context, modelId int32, modelEndpointId string) ApiModelsModelIdEndpointsModelEndpointIdAlertGetRequest {
 	return ApiModelsModelIdEndpointsModelEndpointIdAlertGetRequest{
@@ -277,7 +279,8 @@ func (a *ModelsAPIService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx con
 }
 
 // Execute executes the request
-//  @return ModelEndpointAlert
+//
+//	@return ModelEndpointAlert
 func (a *ModelsAPIService) ModelsModelIdEndpointsModelEndpointIdAlertGetExecute(r ApiModelsModelIdEndpointsModelEndpointIdAlertGetRequest) (*ModelEndpointAlert, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -387,10 +390,10 @@ func (r ApiModelsModelIdEndpointsModelEndpointIdAlertPostRequest) Execute() (*ht
 /*
 ModelsModelIdEndpointsModelEndpointIdAlertPost Creates alert for given model endpoint.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param modelEndpointId
- @return ApiModelsModelIdEndpointsModelEndpointIdAlertPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param modelEndpointId
+	@return ApiModelsModelIdEndpointsModelEndpointIdAlertPostRequest
 */
 func (a *ModelsAPIService) ModelsModelIdEndpointsModelEndpointIdAlertPost(ctx context.Context, modelId int32, modelEndpointId string) ApiModelsModelIdEndpointsModelEndpointIdAlertPostRequest {
 	return ApiModelsModelIdEndpointsModelEndpointIdAlertPostRequest{
@@ -503,10 +506,10 @@ func (r ApiModelsModelIdEndpointsModelEndpointIdAlertPutRequest) Execute() (*htt
 /*
 ModelsModelIdEndpointsModelEndpointIdAlertPut Creates alert for given model endpoint.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param modelEndpointId
- @return ApiModelsModelIdEndpointsModelEndpointIdAlertPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param modelEndpointId
+	@return ApiModelsModelIdEndpointsModelEndpointIdAlertPutRequest
 */
 func (a *ModelsAPIService) ModelsModelIdEndpointsModelEndpointIdAlertPut(ctx context.Context, modelId int32, modelEndpointId string) ApiModelsModelIdEndpointsModelEndpointIdAlertPutRequest {
 	return ApiModelsModelIdEndpointsModelEndpointIdAlertPutRequest{
@@ -619,9 +622,9 @@ func (r ApiProjectsProjectIdModelsGetRequest) Execute() ([]Model, *http.Response
 /*
 ProjectsProjectIdModelsGet List existing models
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId Filter list of models by specific `project_id`
- @return ApiProjectsProjectIdModelsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId Filter list of models by specific `project_id`
+	@return ApiProjectsProjectIdModelsGetRequest
 */
 func (a *ModelsAPIService) ProjectsProjectIdModelsGet(ctx context.Context, projectId int32) ApiProjectsProjectIdModelsGetRequest {
 	return ApiProjectsProjectIdModelsGetRequest{
@@ -632,7 +635,8 @@ func (a *ModelsAPIService) ProjectsProjectIdModelsGet(ctx context.Context, proje
 }
 
 // Execute executes the request
-//  @return []Model
+//
+//	@return []Model
 func (a *ModelsAPIService) ProjectsProjectIdModelsGetExecute(r ApiProjectsProjectIdModelsGetRequest) ([]Model, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -738,10 +742,10 @@ func (r ApiProjectsProjectIdModelsModelIdDeleteRequest) Execute() (int32, *http.
 /*
 ProjectsProjectIdModelsModelIdDelete Delete model
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId project id of the project to be deleted
- @param modelId model id of the model to be deleted
- @return ApiProjectsProjectIdModelsModelIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId project id of the project to be deleted
+	@param modelId model id of the model to be deleted
+	@return ApiProjectsProjectIdModelsModelIdDeleteRequest
 */
 func (a *ModelsAPIService) ProjectsProjectIdModelsModelIdDelete(ctx context.Context, projectId int32, modelId int32) ApiProjectsProjectIdModelsModelIdDeleteRequest {
 	return ApiProjectsProjectIdModelsModelIdDeleteRequest{
@@ -753,7 +757,8 @@ func (a *ModelsAPIService) ProjectsProjectIdModelsModelIdDelete(ctx context.Cont
 }
 
 // Execute executes the request
-//  @return int32
+//
+//	@return int32
 func (a *ModelsAPIService) ProjectsProjectIdModelsModelIdDeleteExecute(r ApiProjectsProjectIdModelsModelIdDeleteRequest) (int32, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodDelete
@@ -857,10 +862,10 @@ func (r ApiProjectsProjectIdModelsModelIdGetRequest) Execute() ([]Model, *http.R
 /*
 ProjectsProjectIdModelsModelIdGet Get model
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId project id of the project to be retrieved
- @param modelId model id of the model to be retrieved
- @return ApiProjectsProjectIdModelsModelIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId project id of the project to be retrieved
+	@param modelId model id of the model to be retrieved
+	@return ApiProjectsProjectIdModelsModelIdGetRequest
 */
 func (a *ModelsAPIService) ProjectsProjectIdModelsModelIdGet(ctx context.Context, projectId int32, modelId int32) ApiProjectsProjectIdModelsModelIdGetRequest {
 	return ApiProjectsProjectIdModelsModelIdGetRequest{
@@ -872,7 +877,8 @@ func (a *ModelsAPIService) ProjectsProjectIdModelsModelIdGet(ctx context.Context
 }
 
 // Execute executes the request
-//  @return []Model
+//
+//	@return []Model
 func (a *ModelsAPIService) ProjectsProjectIdModelsModelIdGetExecute(r ApiProjectsProjectIdModelsModelIdGetRequest) ([]Model, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -981,9 +987,9 @@ func (r ApiProjectsProjectIdModelsPostRequest) Execute() (*Model, *http.Response
 /*
 ProjectsProjectIdModelsPost Register a new models
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId Create new model in a specific `project_id`
- @return ApiProjectsProjectIdModelsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId Create new model in a specific `project_id`
+	@return ApiProjectsProjectIdModelsPostRequest
 */
 func (a *ModelsAPIService) ProjectsProjectIdModelsPost(ctx context.Context, projectId int32) ApiProjectsProjectIdModelsPostRequest {
 	return ApiProjectsProjectIdModelsPostRequest{
@@ -994,7 +1000,8 @@ func (a *ModelsAPIService) ProjectsProjectIdModelsPost(ctx context.Context, proj
 }
 
 // Execute executes the request
-//  @return Model
+//
+//	@return Model
 func (a *ModelsAPIService) ProjectsProjectIdModelsPostExecute(r ApiProjectsProjectIdModelsPostRequest) (*Model, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost

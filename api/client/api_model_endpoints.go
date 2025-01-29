@@ -35,9 +35,9 @@ func (r ApiModelsModelIdEndpointsGetRequest) Execute() ([]ModelEndpoint, *http.R
 /*
 ModelsModelIdEndpointsGet List model endpoint
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdEndpointsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdEndpointsGetRequest
 */
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsGet(ctx context.Context, modelId int32) ApiModelsModelIdEndpointsGetRequest {
 	return ApiModelsModelIdEndpointsGetRequest{
@@ -48,7 +48,8 @@ func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsGet(ctx context.Context
 }
 
 // Execute executes the request
-//  @return []ModelEndpoint
+//
+//	@return []ModelEndpoint
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsGetExecute(r ApiModelsModelIdEndpointsGetRequest) ([]ModelEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -151,10 +152,10 @@ func (r ApiModelsModelIdEndpointsModelEndpointIdDeleteRequest) Execute() (*http.
 /*
 ModelsModelIdEndpointsModelEndpointIdDelete Stop serving traffic to the model endpoint, then delete it.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param modelEndpointId
- @return ApiModelsModelIdEndpointsModelEndpointIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param modelEndpointId
+	@return ApiModelsModelIdEndpointsModelEndpointIdDeleteRequest
 */
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdDelete(ctx context.Context, modelId int32, modelEndpointId int32) ApiModelsModelIdEndpointsModelEndpointIdDeleteRequest {
 	return ApiModelsModelIdEndpointsModelEndpointIdDeleteRequest{
@@ -259,10 +260,10 @@ func (r ApiModelsModelIdEndpointsModelEndpointIdGetRequest) Execute() (*ModelEnd
 /*
 ModelsModelIdEndpointsModelEndpointIdGet Get a model endpoint
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param modelEndpointId
- @return ApiModelsModelIdEndpointsModelEndpointIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param modelEndpointId
+	@return ApiModelsModelIdEndpointsModelEndpointIdGetRequest
 */
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdGet(ctx context.Context, modelId int32, modelEndpointId int32) ApiModelsModelIdEndpointsModelEndpointIdGetRequest {
 	return ApiModelsModelIdEndpointsModelEndpointIdGetRequest{
@@ -274,7 +275,8 @@ func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdGet(ctx 
 }
 
 // Execute executes the request
-//  @return ModelEndpoint
+//
+//	@return ModelEndpoint
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdGetExecute(r ApiModelsModelIdEndpointsModelEndpointIdGetRequest) (*ModelEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -384,10 +386,10 @@ func (r ApiModelsModelIdEndpointsModelEndpointIdPutRequest) Execute() (*ModelEnd
 /*
 ModelsModelIdEndpointsModelEndpointIdPut Update model endpoint data. Mainly used to update its rule.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param modelEndpointId
- @return ApiModelsModelIdEndpointsModelEndpointIdPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param modelEndpointId
+	@return ApiModelsModelIdEndpointsModelEndpointIdPutRequest
 */
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdPut(ctx context.Context, modelId int32, modelEndpointId int32) ApiModelsModelIdEndpointsModelEndpointIdPutRequest {
 	return ApiModelsModelIdEndpointsModelEndpointIdPutRequest{
@@ -399,7 +401,8 @@ func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdPut(ctx 
 }
 
 // Execute executes the request
-//  @return ModelEndpoint
+//
+//	@return ModelEndpoint
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsModelEndpointIdPutExecute(r ApiModelsModelIdEndpointsModelEndpointIdPutRequest) (*ModelEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPut
@@ -511,9 +514,9 @@ func (r ApiModelsModelIdEndpointsPostRequest) Execute() (*ModelEndpoint, *http.R
 /*
 ModelsModelIdEndpointsPost Create a model endpoint
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdEndpointsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdEndpointsPostRequest
 */
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsPost(ctx context.Context, modelId int32) ApiModelsModelIdEndpointsPostRequest {
 	return ApiModelsModelIdEndpointsPostRequest{
@@ -524,7 +527,8 @@ func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsPost(ctx context.Contex
 }
 
 // Execute executes the request
-//  @return ModelEndpoint
+//
+//	@return ModelEndpoint
 func (a *ModelEndpointsAPIService) ModelsModelIdEndpointsPostExecute(r ApiModelsModelIdEndpointsPostRequest) (*ModelEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
@@ -638,9 +642,9 @@ func (r ApiProjectsProjectIdModelEndpointsGetRequest) Execute() ([]ModelEndpoint
 /*
 ProjectsProjectIdModelEndpointsGet List existing model endpoints for all models in particular project
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId Filter list of model endpoints by specific `project_id`
- @return ApiProjectsProjectIdModelEndpointsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId Filter list of model endpoints by specific `project_id`
+	@return ApiProjectsProjectIdModelEndpointsGetRequest
 */
 func (a *ModelEndpointsAPIService) ProjectsProjectIdModelEndpointsGet(ctx context.Context, projectId int32) ApiProjectsProjectIdModelEndpointsGetRequest {
 	return ApiProjectsProjectIdModelEndpointsGetRequest{
@@ -651,7 +655,8 @@ func (a *ModelEndpointsAPIService) ProjectsProjectIdModelEndpointsGet(ctx contex
 }
 
 // Execute executes the request
-//  @return []ModelEndpoint
+//
+//	@return []ModelEndpoint
 func (a *ModelEndpointsAPIService) ProjectsProjectIdModelEndpointsGetExecute(r ApiProjectsProjectIdModelEndpointsGetRequest) ([]ModelEndpoint, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet

@@ -20,16 +20,17 @@ var _ MappedNullable = &Transformer{}
 
 // Transformer struct for Transformer
 type Transformer struct {
-	Id              *string          `json:"id,omitempty"`
-	Enabled         *bool            `json:"enabled,omitempty"`
-	TransformerType *string          `json:"transformer_type,omitempty"`
-	Image           *string          `json:"image,omitempty"`
-	Command         *string          `json:"command,omitempty"`
-	Args            *string          `json:"args,omitempty"`
-	ResourceRequest *ResourceRequest `json:"resource_request,omitempty"`
-	EnvVars         []EnvVar         `json:"env_vars,omitempty"`
-	CreatedAt       *time.Time       `json:"created_at,omitempty"`
-	UpdatedAt       *time.Time       `json:"updated_at,omitempty"`
+	Id              *string            `json:"id,omitempty"`
+	Enabled         *bool              `json:"enabled,omitempty"`
+	TransformerType *string            `json:"transformer_type,omitempty"`
+	Image           *string            `json:"image,omitempty"`
+	Command         *string            `json:"command,omitempty"`
+	Args            *string            `json:"args,omitempty"`
+	ResourceRequest *ResourceRequest   `json:"resource_request,omitempty"`
+	EnvVars         []EnvVar           `json:"env_vars,omitempty"`
+	Secrets         []MountedMLPSecret `json:"secrets,omitempty"`
+	CreatedAt       *time.Time         `json:"created_at,omitempty"`
+	UpdatedAt       *time.Time         `json:"updated_at,omitempty"`
 }
 
 // NewTransformer instantiates a new Transformer object
@@ -305,6 +306,38 @@ func (o *Transformer) SetEnvVars(v []EnvVar) {
 	o.EnvVars = v
 }
 
+// GetSecrets returns the Secrets field value if set, zero value otherwise.
+func (o *Transformer) GetSecrets() []MountedMLPSecret {
+	if o == nil || IsNil(o.Secrets) {
+		var ret []MountedMLPSecret
+		return ret
+	}
+	return o.Secrets
+}
+
+// GetSecretsOk returns a tuple with the Secrets field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Transformer) GetSecretsOk() ([]MountedMLPSecret, bool) {
+	if o == nil || IsNil(o.Secrets) {
+		return nil, false
+	}
+	return o.Secrets, true
+}
+
+// HasSecrets returns a boolean if a field has been set.
+func (o *Transformer) HasSecrets() bool {
+	if o != nil && !IsNil(o.Secrets) {
+		return true
+	}
+
+	return false
+}
+
+// SetSecrets gets a reference to the given []MountedMLPSecret and assigns it to the Secrets field.
+func (o *Transformer) SetSecrets(v []MountedMLPSecret) {
+	o.Secrets = v
+}
+
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
 func (o *Transformer) GetCreatedAt() time.Time {
 	if o == nil || IsNil(o.CreatedAt) {
@@ -402,6 +435,9 @@ func (o Transformer) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.EnvVars) {
 		toSerialize["env_vars"] = o.EnvVars
+	}
+	if !IsNil(o.Secrets) {
+		toSerialize["secrets"] = o.Secrets
 	}
 	if !IsNil(o.CreatedAt) {
 		toSerialize["created_at"] = o.CreatedAt

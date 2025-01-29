@@ -135,8 +135,8 @@ func (r ApiLogsGetRequest) Execute() (*http.Response, error) {
 /*
 LogsGet Retrieve log from a container
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiLogsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiLogsGetRequest
 */
 func (a *LogAPIService) LogsGet(ctx context.Context) ApiLogsGetRequest {
 	return ApiLogsGetRequest{
