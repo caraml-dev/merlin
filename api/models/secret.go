@@ -28,7 +28,7 @@ type Secret struct {
 	MLPSecretName string `json:"name"`
 
 	// Name of the environment variable when the secret is mounted
-	EnvVarSecretName string `json:"value"`
+	EnvVarName string `json:"value"`
 }
 
 type Secrets []Secret
@@ -53,7 +53,7 @@ func (sec Secrets) ToKubernetesEnvVars(secretKeyRefName string) []v1.EnvVar {
 
 	for k, secret := range sec {
 		kubeEnvVars[k] = v1.EnvVar{
-			Name: secret.EnvVarSecretName,
+			Name: secret.EnvVarName,
 			ValueFrom: &v1.EnvVarSource{
 				SecretKeyRef: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{

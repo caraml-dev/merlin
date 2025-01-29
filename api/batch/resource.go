@@ -284,7 +284,7 @@ func (t *BatchJobTemplater) addEnvVars(job *models.PredictionJob) ([]corev1.EnvV
 		envVars = append(
 			envVars,
 			corev1.EnvVar{
-				Name: secret.EnvVarSecretName,
+				Name: secret.EnvVarName,
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{

@@ -417,8 +417,8 @@ func TestController_DeployInferenceService_SecretCreation(t *testing.T) {
 			},
 			models.Secrets{
 				{
-					MLPSecretName:    "SECRET_NAME_1",
-					EnvVarSecretName: "ENV_SECRET_NAME_1",
+					MLPSecretName: "SECRET_NAME_1",
+					EnvVarName:    "ENV_SECRET_NAME_1",
 				},
 			},
 			"",
@@ -443,8 +443,8 @@ func TestController_DeployInferenceService_SecretCreation(t *testing.T) {
 			},
 			models.Secrets{
 				{
-					MLPSecretName:    "SECRET_NAME_1",
-					EnvVarSecretName: "ENV_SECRET_NAME_1",
+					MLPSecretName: "SECRET_NAME_1",
+					EnvVarName:    "ENV_SECRET_NAME_1",
 				},
 			},
 			"failed creating secret for deployment my-model-1-r1: failed creating secret for model my-model-1-r1 " +
@@ -469,8 +469,8 @@ func TestController_DeployInferenceService_SecretCreation(t *testing.T) {
 			},
 			models.Secrets{
 				{
-					MLPSecretName:    "SECRET_NAME_1",
-					EnvVarSecretName: "ENV_SECRET_NAME_1",
+					MLPSecretName: "SECRET_NAME_1",
+					EnvVarName:    "ENV_SECRET_NAME_1",
 				},
 			},
 			"failed creating secret for deployment my-model-1-r1: failed creating secret for model my-model-1-r1 " +

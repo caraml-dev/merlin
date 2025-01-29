@@ -829,8 +829,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Protocol:        protocol.HttpJson,
 				Secrets: models.Secrets{
 					{
-						MLPSecretName:    "SECRET_NAME_1",
-						EnvVarSecretName: "ENV_SECRET_NAME_1",
+						MLPSecretName: "SECRET_NAME_1",
+						EnvVarName:    "ENV_SECRET_NAME_1",
 					},
 				},
 			},
