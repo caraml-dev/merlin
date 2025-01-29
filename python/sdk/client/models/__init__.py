@@ -51,6 +51,7 @@ from client.models.model_prediction_config import ModelPredictionConfig
 from client.models.model_prediction_output import ModelPredictionOutput
 from client.models.model_prediction_output_class import ModelPredictionOutputClass
 from client.models.model_schema import ModelSchema
+from client.models.mounted_mlp_secret import MountedMLPSecret
 from client.models.operation_tracing import OperationTracing
 from client.models.paging import Paging
 from client.models.pipeline_tracing import PipelineTracing

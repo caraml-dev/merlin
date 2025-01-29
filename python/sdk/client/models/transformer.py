@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictBool, StrictStr
 from client.models.env_var import EnvVar
+from client.models.mounted_mlp_secret import MountedMLPSecret
 from client.models.resource_request import ResourceRequest
 try:
     from typing import Self
@@ -39,9 +40,10 @@ class Transformer(BaseModel):
     args: Optional[StrictStr] = None
     resource_request: Optional[ResourceRequest] = None
     env_vars: Optional[List[EnvVar]] = None
+    secrets: Optional[List[MountedMLPSecret]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    __properties: ClassVar[List[str]] = ["id", "enabled", "transformer_type", "image", "command", "args", "resource_request", "env_vars", "created_at", "updated_at"]
+    __properties: ClassVar[List[str]] = ["id", "enabled", "transformer_type", "image", "command", "args", "resource_request", "env_vars", "secrets", "created_at", "updated_at"]
 
     model_config = {
         "populate_by_name": True,
@@ -89,6 +91,13 @@ class Transformer(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['env_vars'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in secrets (list)
+        _items = []
+        if self.secrets:
+            for _item in self.secrets:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['secrets'] = _items
         return _dict
 
     @classmethod
@@ -109,6 +118,7 @@ class Transformer(BaseModel):
             "args": obj.get("args"),
             "resource_request": ResourceRequest.from_dict(obj.get("resource_request")) if obj.get("resource_request") is not None else None,
             "env_vars": [EnvVar.from_dict(_item) for _item in obj.get("env_vars")] if obj.get("env_vars") is not None else None,
+            "secrets": [MountedMLPSecret.from_dict(_item) for _item in obj.get("secrets")] if obj.get("secrets") is not None else None,
             "created_at": obj.get("created_at"),
             "updated_at": obj.get("updated_at")
         })
