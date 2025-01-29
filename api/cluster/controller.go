@@ -276,6 +276,10 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service, p
 			log.Errorf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
+		if err := c.deleteSecrets(ctx, modelService); err != nil {
+			log.Warnf("failed deleting secret for deployment %s: %w", modelService.Name, err)
+		}
+
 		return nil, errors.Wrapf(err, fmt.Sprintf("%v (%s)", ErrUnableToCreateInferenceService, isvcName))
 	}
 
@@ -314,9 +318,8 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service, p
 			}
 		}
 
-		err = c.deleteSecrets(ctx, modelService)
-		if err != nil {
-			return nil, fmt.Errorf("failed creating secret for deployment %s: %w", modelService.Name, err)
+		if err := c.deleteSecrets(ctx, modelService); err != nil {
+			log.Warnf("failed deleting secret for deployment %s: %w", modelService.Name, err)
 		}
 	}
 
@@ -350,6 +353,11 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 			log.Errorf("unable to delete pdb %v", err)
 			return nil, ErrUnableToDeletePDB
 		}
+	}
+
+	err = c.deleteSecrets(ctx, modelService)
+	if err != nil {
+		return nil, fmt.Errorf("failed deleting secret for deployment %s: %w", modelService.Name, err)
 	}
 
 	vsCfg, err := NewVirtualService(modelService, "")
