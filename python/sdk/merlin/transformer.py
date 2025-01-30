@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 
-from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
+from merlin.mounted_mlp_secret import MountedMLPSecret
 from merlin.util import autostr
 from merlin import fluent
 
@@ -44,6 +44,7 @@ class Transformer:
         args: Optional[str] = None,
         resource_request: Optional[ResourceRequest] = None,
         env_vars: Optional[Dict[str, str]] = None,
+        secrets: List[MountedMLPSecret] = None,
         transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER,
     ):
         self._id = id
@@ -53,6 +54,7 @@ class Transformer:
         self._args = args
         self._resource_request = resource_request
         self._env_vars = env_vars
+        self._secrets = secrets
         self._transformer_type = transformer_type
 
     @property
@@ -82,6 +84,10 @@ class Transformer:
     @property
     def env_vars(self) -> Optional[Dict[str, str]]:
         return self._env_vars
+
+    @property
+    def secrets(self) -> List[MountedMLPSecret]:
+        return self._secrets
 
     @property
     def transformer_type(self) -> TransformerType:

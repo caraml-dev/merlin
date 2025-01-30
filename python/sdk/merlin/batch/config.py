@@ -13,11 +13,12 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from merlin.batch.sink import Sink
 from merlin.batch.source import Source
 from merlin.resource_request import ResourceRequest
+from merlin.mounted_mlp_secret import MountedMLPSecret
 
 
 class ResultType(Enum):
@@ -78,6 +79,7 @@ class PredictionJobConfig:
         resource_request: PredictionJobResourceRequest = None,
         image_builder_resource_request: ResourceRequest = None,
         env_vars: Dict[str, str] = None,
+        secrets: List[MountedMLPSecret] = None,
     ):
         """
         Create configuration for starting a prediction job
@@ -90,6 +92,7 @@ class PredictionJobConfig:
         :param resource_request: optional resource request for starting the prediction job. If not given the system default will be used.
         :param image_builder_resource_request: optional resource request for image builder job.
         :param env_vars: optional environment variables in the form of a key value pair in a list.
+        :param secrets: list of MLP secrets to mount into the prediction job environment as environment variables
         """
 
         self._source = source
@@ -100,6 +103,7 @@ class PredictionJobConfig:
         self._result_type = result_type
         self._item_type = item_type
         self._env_vars = env_vars
+        self._secrets = secrets
 
     @property
     def source(self) -> Source:
@@ -116,6 +120,10 @@ class PredictionJobConfig:
     @property
     def resource_request(self) -> Optional[PredictionJobResourceRequest]:
         return self._resource_request
+
+    @property
+    def secrets(self) -> List[MountedMLPSecret]:
+        return self._secrets
 
     @property
     def image_builder_resource_request(self) -> Optional[ResourceRequest]:
