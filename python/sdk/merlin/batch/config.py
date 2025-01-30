@@ -122,7 +122,7 @@ class PredictionJobConfig:
         return self._resource_request
 
     @property
-    def secrets(self) -> List[MountedMLPSecret]:
+    def secrets(self) -> Optional[List[MountedMLPSecret]]:
         return self._secrets
 
     @property

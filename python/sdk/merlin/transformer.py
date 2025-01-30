@@ -86,7 +86,7 @@ class Transformer:
         return self._env_vars
 
     @property
-    def secrets(self) -> List[MountedMLPSecret]:
+    def secrets(self) -> Optional[List[MountedMLPSecret]]:
         return self._secrets
 
     @property

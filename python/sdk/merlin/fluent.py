@@ -28,6 +28,7 @@ from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.model_schema import ModelSchema
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
+from merlin.mounted_mlp_secret import MountedMLPSecret
 from merlin.transformer import Transformer
 from merlin.version_image import VersionImage
 from merlin.model_observability import ModelObservability
@@ -379,6 +380,7 @@ def deploy(
     resource_request: ResourceRequest = None,
     image_builder_resource_request: ResourceRequest = None,
     env_vars: Dict[str, str] = None,
+    secrets: List[MountedMLPSecret] = None,
     transformer: Transformer = None,
     logger: Logger = None,
     deployment_mode: DeploymentMode = None,
@@ -395,6 +397,7 @@ def deploy(
     :param resource_request: The resource requirement and replicas requests for model version endpoint.
     :param image_builder_resource_request: The resource requirement and replicas requests for image builder job.
     :param env_vars: List of environment variables to be passed to the model container.
+    :param secrets: list of MLP secrets to mount into the prediction job environment as environment variables
     :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
     :param logger: Response/Request logging configuration for model or transformer.
     :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
@@ -412,6 +415,7 @@ def deploy(
             resource_request,
             image_builder_resource_request,
             env_vars,
+            secrets,
             transformer,
             logger,
             deployment_mode,
@@ -427,6 +431,7 @@ def deploy(
         resource_request,
         image_builder_resource_request,
         env_vars,
+        secrets,
         transformer,
         logger,
         deployment_mode,

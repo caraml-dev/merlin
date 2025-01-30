@@ -41,6 +41,7 @@ from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.model_schema import ModelSchema
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
+from merlin.mounted_mlp_secret import MountedMLPSecret
 from merlin.transformer import Transformer
 from merlin.util import valid_name_check
 from merlin.version import VERSION
@@ -272,6 +273,7 @@ class MerlinClient:
         resource_request: ResourceRequest = None,
         image_builder_resource_request: ResourceRequest = None,
         env_vars: Dict[str, str] = None,
+        secrets: List[MountedMLPSecret] = None,
         transformer: Transformer = None,
         logger: Logger = None,
         deployment_mode: DeploymentMode = None,
@@ -285,6 +287,7 @@ class MerlinClient:
             resource_request,
             image_builder_resource_request,
             env_vars,
+            secrets,
             transformer,
             logger,
             deployment_mode,

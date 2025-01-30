@@ -1345,7 +1345,6 @@ class ModelVersion:
                     mlp_secret_name=secret.mlp_secret_name,
                     env_var_name=secret.env_var_name,
                 ))
-            target_secrets = secrets
 
         if transformer is not None:
             target_transformer = ModelVersion._create_transformer_spec(

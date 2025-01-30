@@ -54,11 +54,12 @@ class VersionEndpoint:
         self._environment_name = endpoint.environment_name
         self._environment = Environment(endpoint.environment) if endpoint.environment is not None else None
         self._env_vars = endpoint.env_vars
-        self._secrets = endpoint.secrets
+        self._secrets = [MountedMLPSecret.from_response(secret) for secret in endpoint.secrets] if endpoint.secrets is not None else None
         self._logger = Logger.from_logger_response(endpoint.logger)
         self._resource_request = ResourceRequest.from_response(endpoint.resource_request) if endpoint.resource_request is not None else None
         self._deployment_mode = DeploymentMode.SERVERLESS if not endpoint.deployment_mode \
             else DeploymentMode(endpoint.deployment_mode)
+        self._transformer: Optional[Transformer] = None
 
         if endpoint.autoscaling_policy is None:
             if self._deployment_mode == DeploymentMode.SERVERLESS:
@@ -86,11 +87,20 @@ class VersionEndpoint:
                 )
 
             env_vars: Dict[str, str] = {}
-            self._transformer: Optional[Transformer] = None
             if transformer.env_vars is not None:
                 for env_var in transformer.env_vars:
                     if env_var.name is not None and env_var.value is not None:
                         env_vars[env_var.name] = env_var.value
+
+            secrets: List[MountedMLPSecret] = []
+            if transformer.secrets is not None:
+                for secret in transformer.secrets:
+                    secrets.append(
+                        MountedMLPSecret(
+                            mlp_secret_name=secret.mlp_secret_name,
+                            env_var_name=secret.env_var_name,
+                        )
+                    )
 
             self._transformer = Transformer(
                 image, 
@@ -101,7 +111,7 @@ class VersionEndpoint:
                 transformer_type=transformer_type,
                 resource_request=transformer_request, 
                 env_vars=env_vars,
-                secrets=transformer.secrets,
+                secrets=secrets,
             )
 
         if log_url is not None:
@@ -142,7 +152,7 @@ class VersionEndpoint:
         return env_vars
 
     @property
-    def secrets(self) -> List[MountedMLPSecret]:
+    def secrets(self) -> Optional[List[MountedMLPSecret]]:
         return self._secrets
 
     @property
