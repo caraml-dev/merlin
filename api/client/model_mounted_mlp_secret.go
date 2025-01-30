@@ -12,6 +12,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // checks if the MountedMLPSecret type satisfies the MappedNullable interface at compile time
@@ -19,16 +20,20 @@ var _ MappedNullable = &MountedMLPSecret{}
 
 // MountedMLPSecret struct for MountedMLPSecret
 type MountedMLPSecret struct {
-	MlpSecretName *string `json:"mlp_secret_name,omitempty"`
-	EnvVarName    *string `json:"env_var_name,omitempty"`
+	MlpSecretName string `json:"mlp_secret_name"`
+	EnvVarName    string `json:"env_var_name"`
 }
+
+type _MountedMLPSecret MountedMLPSecret
 
 // NewMountedMLPSecret instantiates a new MountedMLPSecret object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewMountedMLPSecret() *MountedMLPSecret {
+func NewMountedMLPSecret(mlpSecretName string, envVarName string) *MountedMLPSecret {
 	this := MountedMLPSecret{}
+	this.MlpSecretName = mlpSecretName
+	this.EnvVarName = envVarName
 	return &this
 }
 
@@ -40,68 +45,52 @@ func NewMountedMLPSecretWithDefaults() *MountedMLPSecret {
 	return &this
 }
 
-// GetMlpSecretName returns the MlpSecretName field value if set, zero value otherwise.
+// GetMlpSecretName returns the MlpSecretName field value
 func (o *MountedMLPSecret) GetMlpSecretName() string {
-	if o == nil || IsNil(o.MlpSecretName) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.MlpSecretName
+
+	return o.MlpSecretName
 }
 
-// GetMlpSecretNameOk returns a tuple with the MlpSecretName field value if set, nil otherwise
+// GetMlpSecretNameOk returns a tuple with the MlpSecretName field value
 // and a boolean to check if the value has been set.
 func (o *MountedMLPSecret) GetMlpSecretNameOk() (*string, bool) {
-	if o == nil || IsNil(o.MlpSecretName) {
+	if o == nil {
 		return nil, false
 	}
-	return o.MlpSecretName, true
+	return &o.MlpSecretName, true
 }
 
-// HasMlpSecretName returns a boolean if a field has been set.
-func (o *MountedMLPSecret) HasMlpSecretName() bool {
-	if o != nil && !IsNil(o.MlpSecretName) {
-		return true
-	}
-
-	return false
-}
-
-// SetMlpSecretName gets a reference to the given string and assigns it to the MlpSecretName field.
+// SetMlpSecretName sets field value
 func (o *MountedMLPSecret) SetMlpSecretName(v string) {
-	o.MlpSecretName = &v
+	o.MlpSecretName = v
 }
 
-// GetEnvVarName returns the EnvVarName field value if set, zero value otherwise.
+// GetEnvVarName returns the EnvVarName field value
 func (o *MountedMLPSecret) GetEnvVarName() string {
-	if o == nil || IsNil(o.EnvVarName) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.EnvVarName
+
+	return o.EnvVarName
 }
 
-// GetEnvVarNameOk returns a tuple with the EnvVarName field value if set, nil otherwise
+// GetEnvVarNameOk returns a tuple with the EnvVarName field value
 // and a boolean to check if the value has been set.
 func (o *MountedMLPSecret) GetEnvVarNameOk() (*string, bool) {
-	if o == nil || IsNil(o.EnvVarName) {
+	if o == nil {
 		return nil, false
 	}
-	return o.EnvVarName, true
+	return &o.EnvVarName, true
 }
 
-// HasEnvVarName returns a boolean if a field has been set.
-func (o *MountedMLPSecret) HasEnvVarName() bool {
-	if o != nil && !IsNil(o.EnvVarName) {
-		return true
-	}
-
-	return false
-}
-
-// SetEnvVarName gets a reference to the given string and assigns it to the EnvVarName field.
+// SetEnvVarName sets field value
 func (o *MountedMLPSecret) SetEnvVarName(v string) {
-	o.EnvVarName = &v
+	o.EnvVarName = v
 }
 
 func (o MountedMLPSecret) MarshalJSON() ([]byte, error) {
@@ -114,13 +103,45 @@ func (o MountedMLPSecret) MarshalJSON() ([]byte, error) {
 
 func (o MountedMLPSecret) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.MlpSecretName) {
-		toSerialize["mlp_secret_name"] = o.MlpSecretName
-	}
-	if !IsNil(o.EnvVarName) {
-		toSerialize["env_var_name"] = o.EnvVarName
-	}
+	toSerialize["mlp_secret_name"] = o.MlpSecretName
+	toSerialize["env_var_name"] = o.EnvVarName
 	return toSerialize, nil
+}
+
+func (o *MountedMLPSecret) UnmarshalJSON(bytes []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"mlp_secret_name",
+		"env_var_name",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &allProperties)
+
+	if err != nil {
+		return err
+	}
+
+	for _, requiredProperty := range requiredProperties {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varMountedMLPSecret := _MountedMLPSecret{}
+
+	err = json.Unmarshal(bytes, &varMountedMLPSecret)
+
+	if err != nil {
+		return err
+	}
+
+	*o = MountedMLPSecret(varMountedMLPSecret)
+
+	return err
 }
 
 type NullableMountedMLPSecret struct {

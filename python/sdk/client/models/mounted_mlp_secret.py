@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List
 from pydantic import BaseModel, StrictStr
 try:
     from typing import Self
@@ -29,8 +29,8 @@ class MountedMLPSecret(BaseModel):
     """
     MountedMLPSecret
     """ # noqa: E501
-    mlp_secret_name: Optional[StrictStr] = None
-    env_var_name: Optional[StrictStr] = None
+    mlp_secret_name: StrictStr
+    env_var_name: StrictStr
     __properties: ClassVar[List[str]] = ["mlp_secret_name", "env_var_name"]
 
     model_config = {

@@ -2142,6 +2142,9 @@ components:
         value:
           type: string
     MountedMLPSecret:
+      required:
+        - mlp_secret_name
+        - env_var_name
       type: object
       properties:
         mlp_secret_name:
