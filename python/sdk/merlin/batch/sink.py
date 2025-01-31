@@ -147,3 +147,76 @@ class BigQuerySink(Sink):
             save_mode=client.SaveMode(self._save_mode.value),
             options=opts
         )
+
+class MaxComputeSink(Sink):
+    """
+        Sink contract for MaxCompute to create prediction job
+    """
+
+    def __init__(self, endpoint: str,
+                 project: str,
+                 table: str,
+                 result_column: str,
+                 save_mode: SaveMode = SaveMode.ERRORIFEXISTS,
+                 options: MutableMapping[str, str] = None):
+        """
+        :param endpoint: MaxCompute endpoint
+        :param project: MaxCompute project
+        :param table: table name in MaxCompute
+        :param result_column: column name that will be used to store prediction result.
+        :param save_mode: save mode. Default to SaveMode.ERRORIFEXISTS. Which will fail if destination table already exists
+        :param options: additional sink option to configure the prediction job.
+        """
+        self._endpoint = endpoint
+        self._project = project
+        self._table = table
+        self._result_column = result_column
+        self._save_mode = save_mode
+        self._options = options
+
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
+
+    @endpoint.setter
+    def endpoint(self, endpoint):
+        self._endpoint = endpoint
+
+    @property
+    def project(self) -> str:
+        return self._project
+
+    @project.setter
+    def project(self, project):
+        self._project = project
+
+    @property
+    def table(self) -> str:
+        return self._table
+
+    @table.setter
+    def table(self, table):
+        self._table = table
+
+    @property
+    def result_column(self) -> str:
+        return self._result_column
+
+    @result_column.setter
+    def result_column(self, result_column):
+        self._result_column = result_column
+
+    def to_client_config(self) -> client.PredictionJobConfigMaxcomputeSink:
+        opts = {}
+        if self.options is not None:
+            for k, v in self.options.items():
+                opts[k] = v
+
+        return client.PredictionJobConfigMaxcomputeSink(
+            endpoint=self._endpoint,
+            project=self._project,
+            table=self._table,
+            result_column=self._result_column,
+            save_mode=client.SaveMode(self._save_mode.value),
+            options=opts
+        )

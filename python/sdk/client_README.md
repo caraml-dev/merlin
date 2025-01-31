@@ -179,6 +179,8 @@ Class | Method | HTTP request | Description
  - [PredictionJobConfigBigquerySource](client/docs/PredictionJobConfigBigquerySource.md)
  - [PredictionJobConfigGcsSink](client/docs/PredictionJobConfigGcsSink.md)
  - [PredictionJobConfigGcsSource](client/docs/PredictionJobConfigGcsSource.md)
+ - [PredictionJobConfigMaxcomputeSink](client/docs/PredictionJobConfigMaxcomputeSink.md)
+ - [PredictionJobConfigMaxcomputeSource](client/docs/PredictionJobConfigMaxcomputeSource.md)
  - [PredictionJobConfigModel](client/docs/PredictionJobConfigModel.md)
  - [PredictionJobConfigModelResult](client/docs/PredictionJobConfigModelResult.md)
  - [PredictionJobResourceRequest](client/docs/PredictionJobResourceRequest.md)

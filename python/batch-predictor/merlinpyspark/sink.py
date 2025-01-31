@@ -99,11 +99,6 @@ class MaxComputeSink(Sink):
         from py4j.java_gateway import java_import
         cfg = self._config
 
-        gw = self._spark.sparkContext._gateway
-        java_import(gw.jvm, self._get_custom_dialect_class())
-        gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
-            gw.jvm.com.caraml.odps.CustomDialect()
-        )
         df.write.mode(self._config.save_mode()).format(self.WRITE_FORMAT).option(
             self.OPTION_DRIVER, self.get_jdbc_driver()
         ).option(self.OPTION_URL, self.get_jdbc_url()).option(
