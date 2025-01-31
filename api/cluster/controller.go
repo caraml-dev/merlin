@@ -276,7 +276,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service, p
 			log.Errorf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
-		if err := c.deleteSecrets(ctx, modelService); err != nil {
+		if err := c.deleteSecrets(ctx, modelService.Name, modelService.Namespace); err != nil {
 			log.Warnf("failed deleting secret for deployment %s: %w", modelService.Name, err)
 		}
 
@@ -318,7 +318,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service, p
 			}
 		}
 
-		if err := c.deleteSecrets(ctx, modelService); err != nil {
+		if err := c.deleteSecrets(ctx, modelService.CurrentIsvcName, modelService.Namespace); err != nil {
 			log.Warnf("failed deleting secret for deployment %s: %w", modelService.Name, err)
 		}
 	}
@@ -355,7 +355,7 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 		}
 	}
 
-	err = c.deleteSecrets(ctx, modelService)
+	err = c.deleteSecrets(ctx, modelService.Name, modelService.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed deleting secret for deployment %s: %w", modelService.Name, err)
 	}
@@ -560,18 +560,16 @@ func (c *controller) createSecretForComponent(ctx context.Context, componentName
 	return nil
 }
 
-func (c *controller) deleteSecrets(ctx context.Context, modelService *models.Service) error {
-	err := c.deleteSecret(ctx, modelService.Name, modelService.Namespace)
+func (c *controller) deleteSecrets(ctx context.Context, modelServiceName string, namespace string) error {
+	err := c.deleteSecret(ctx, modelServiceName, namespace)
 	if err != nil && !kerrors.IsNotFound(err) {
-		return fmt.Errorf("failed deleting secret for model %s in namespace %s: %w", modelService.Name, modelService.Namespace, err)
+		return fmt.Errorf("failed deleting secret for model %s in namespace %s: %w", modelServiceName, namespace, err)
 	}
 
-	if modelService.Transformer != nil {
-		transformerSecretName := fmt.Sprintf("%s-transformer", modelService.Name)
-		err = c.deleteSecret(ctx, transformerSecretName, modelService.Namespace)
-		if err != nil && !kerrors.IsNotFound(err) {
-			return fmt.Errorf("failed deleting secret for transformer %s in namespace %s: %w", transformerSecretName, modelService.Namespace, err)
-		}
+	transformerSecretName := fmt.Sprintf("%s-transformer", modelServiceName)
+	err = c.deleteSecret(ctx, transformerSecretName, namespace)
+	if err != nil && !kerrors.IsNotFound(err) {
+		return fmt.Errorf("failed deleting secret for transformer %s in namespace %s: %w", transformerSecretName, namespace, err)
 	}
 	return nil
 }
