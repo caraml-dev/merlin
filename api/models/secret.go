@@ -25,10 +25,10 @@ import (
 // Secret represents an MLP secret present in a container that is mounted as an environment variable
 type Secret struct {
 	// Name of the secret as stored in MLP
-	MLPSecretName string `json:"name"`
+	MLPSecretName string `json:"mlp_secret_name"`
 
 	// Name of the environment variable when the secret is mounted
-	EnvVarName string `json:"value"`
+	EnvVarName string `json:"env_var_name"`
 }
 
 type Secrets []Secret
