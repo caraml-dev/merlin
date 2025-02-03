@@ -37,7 +37,7 @@ func (sec Secrets) Value() (driver.Value, error) {
 	return json.Marshal(sec)
 }
 
-func (sec Secrets) Scan(value interface{}) error {
+func (sec *Secrets) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
