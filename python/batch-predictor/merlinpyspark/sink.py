@@ -70,7 +70,7 @@ class MaxComputeSink(Sink):
         self._config = config
 
     def get_jdbc_url(self):
-        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}"
+        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode=true&odpsNamespaceSchema=true&schema=data_science_platform_playground"
 
     def get_query_timeout(self):
         return os.environ.get("ODPS_QUERY_TIMEOUT", "120")

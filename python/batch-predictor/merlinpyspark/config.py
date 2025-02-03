@@ -124,6 +124,8 @@ class MaxComputeSourceConfig(SourceConfig):
 
     def __init__(self, mc_src_proto: MaxComputeSource):
         self._proto = mc_src_proto
+        self._project, self._schema, self._table = self._proto.table.split(".")
+        
 
     def source_type(self) -> str:
         return self.TYPE
@@ -135,12 +137,13 @@ class MaxComputeSourceConfig(SourceConfig):
         return self._proto.features
 
     def table(self) -> str:
-        _, schema, table = self._proto.table.split(".")
-        return f"{schema}.{table}"
+        return self._table
     
     def project(self) -> str:
-        project, _, _ = self._proto.table.split(".")
-        return project
+        return self._project
+    
+    def schema(self) -> str:
+        return self._schema
         
     def endpoint(self) -> str:
         return self._proto.endpoint
@@ -230,6 +233,7 @@ class MaxComputeSinkConfig(SinkConfig):
 
     def __init__(self, mc_sink_proto: MaxComputeSink):
         self._proto = mc_sink_proto
+        self._project, self._schema, self._table = self._proto.table.split(".")
     
     def sink_type(self) -> str:
         return self.TYPE
@@ -247,12 +251,13 @@ class MaxComputeSinkConfig(SinkConfig):
         return SaveMode.Name(self._proto.save_mode).lower()
     
     def table(self) -> str:
-        _, schema, table = self._proto.table.split(".")
-        return f"{schema}.{table}"
+        return self._table
 
     def project(self) -> str:
-        project, _, _ = self._proto.table.split(".")
-        return project
+        return self._project
+    
+    def schema(self) -> str:
+        return self._schema
 
     def endpoint(self) -> str:
         return self._proto.endpoint

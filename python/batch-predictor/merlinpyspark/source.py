@@ -111,6 +111,13 @@ class MaxComputeSource(Source):
 
         if maxcompute_source_config.table() is None:
             raise ValueError("table field is empty")
+        
+        if maxcompute_source_config.project() is None:
+            raise ValueError("project field is empty")
+        
+        if maxcompute_source_config.schema() is None:
+            raise ValueError("schema field is empty")
+        
 
     def load(self) -> DataFrame:
         from py4j.java_gateway import java_import
@@ -118,7 +125,7 @@ class MaxComputeSource(Source):
         gw = self._spark.sparkContext._gateway
         java_import(gw.jvm, self._get_custom_dialect_class())
         gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
-            gw.jvm.com.caraml.odps.CustomDialect()
+            gw.jvm.dev.caraml.spark.odps.CustomDialect()
         )
         cfg = self._config
         reader = (
@@ -139,7 +146,7 @@ class MaxComputeSource(Source):
         return self._config.features()
 
     def get_jdbc_url(self):
-        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}"
+        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode=true&odpsNamespaceSchema=true&schema={self._config.schema()}"
 
     def get_query_timeout(self):
         return os.environ.get("ODPS_QUERY_TIMEOUT", "300")
@@ -161,5 +168,5 @@ class MaxComputeSource(Source):
 
     def _get_custom_dialect_class(self):
         return os.environ.get(
-            "ODPS_CUSTOM_DIALECT_CLASS", "com.caraml.odps.CustomDialect"
+            "ODPS_CUSTOM_DIALECT_CLASS", "dev.caraml.spark.odps.CustomDialect"
         )
