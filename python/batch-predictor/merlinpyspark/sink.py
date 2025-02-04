@@ -19,8 +19,9 @@ from pyspark.sql import DataFrame
 from merlinpyspark.config import SinkConfig, BigQuerySinkConfig, MaxComputeSinkConfig
 import os
 
+from pyspark.sql import SparkSession
 
-def create_sink(sink_config: SinkConfig) -> "Sink":
+def create_sink(spark_session: SparkSession, sink_config: SinkConfig) -> "Sink":
     sink_type = sink_config.sink_type()
     if sink_type == BigQuerySinkConfig.TYPE:
         if not isinstance(sink_config, BigQuerySinkConfig):
@@ -32,7 +33,7 @@ def create_sink(sink_config: SinkConfig) -> "Sink":
         if not isinstance(sink_config, MaxComputeSinkConfig):
             raise ValueError("sink_config is not MaxComputeSink")
 
-        return MaxComputeSink(sink_config)
+        return MaxComputeSink(spark_session, sink_config)
 
     raise ValueError(f"sink type is not implemented: {sink_config.sink_type()}")
 
@@ -66,11 +67,12 @@ class MaxComputeSink(Sink):
     OPTION_QUERY_TIMEOUT = "queryTimeout"
     OPTION_DB_TABLE = "dbtable"
 
-    def __init__(self, config: MaxComputeSinkConfig):
+    def __init__(self, spark_session: SparkSession, config: MaxComputeSinkConfig):
         self._config = config
+        self._spark = spark_session
 
     def get_jdbc_url(self):
-        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode=true&odpsNamespaceSchema=true&schema=data_science_platform_playground"
+        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode=true&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false"
 
     def get_query_timeout(self):
         return os.environ.get("ODPS_QUERY_TIMEOUT", "120")
@@ -92,12 +94,18 @@ class MaxComputeSink(Sink):
     
     def _get_custom_dialect_class(self):
         return os.environ.get(
-            "ODPS_CUSTOM_DIALECT_CLASS", "com.caraml.odps.CustomDialect"
+            "ODPS_CUSTOM_DIALECT_CLASS", "dev.caraml.spark.odps.CustomDialect"
         )
 
     def save(self, df: DataFrame):
         from py4j.java_gateway import java_import
         cfg = self._config
+
+        gw = self._spark.sparkContext._gateway
+        java_import(gw.jvm, self._get_custom_dialect_class())
+        gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
+            gw.jvm.dev.caraml.spark.odps.CustomDialect()
+        )
 
         df.write.mode(self._config.save_mode()).format(self.WRITE_FORMAT).option(
             self.OPTION_DRIVER, self.get_jdbc_driver()

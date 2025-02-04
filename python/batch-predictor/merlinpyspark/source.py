@@ -146,7 +146,7 @@ class MaxComputeSource(Source):
         return self._config.features()
 
     def get_jdbc_url(self):
-        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode=true&odpsNamespaceSchema=true&schema={self._config.schema()}"
+        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode=true&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false"
 
     def get_query_timeout(self):
         return os.environ.get("ODPS_QUERY_TIMEOUT", "300")

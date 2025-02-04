@@ -76,42 +76,43 @@ print(f"Called with arguments: {args}")
 
 def local_spark_session():
     conf = SparkConf()
-    # conf.set(
-    #     "spark.jars",
-    #     "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector"
-    #     "-hadoop2-2.0.1.jar",
-    # )
-    # conf.set(
-    #     "spark.jars.packages",
-    #     "com.google.cloud.spark:spark-bigquery-with-dependencies_2.11:0.13.1-beta",
-    # )
-
-    # conf.set("spark.jars.packages", "com.aliyun.odps:odps-jdbc:3.8.2")
     conf.set(
         "spark.jars",
-        "/Users/shidefoo/repos/caraml/merlin/python/batch-predictor/docker/odps-jdbc-3.8.2-jar-with-dependencies.jar,/Users/shidefoo/repos/caraml/merlin/python/batch-predictor/docker/custom-dialect.jar",
+        "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector"
+        "-hadoop2-2.0.1.jar",
+    )
+    conf.set(
+        "spark.jars.packages",
+        "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.13.1-beta",
+    )
+
+    conf.set(
+        "spark.jars",
+        "https://github.com/caraml-dev/caraml-store/releases/download/caraml-store-spark/odps/v0.0.1-test/custom-dialect.jar,"
+        "https://github.com/aliyun/aliyun-odps-jdbc/releases/download/v3.8.2/odps-jdbc-3.8.2-jar-with-dependencies.jar,"
+        "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.0.1.jar"
     )
 
     sc = SparkContext(conf=conf)
     sc.setLogLevel("INFO")
-    # sc._jsc.hadoopConfiguration().set(
-    #     "fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
-    # )
-    # sc._jsc.hadoopConfiguration().set(
-    #     "fs.AbstractFileSystem.gs.impl",
-    #     "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS",
-    # )
-    # sc._jsc.hadoopConfiguration().set(
-    #     "google.cloud.auth.service.account.enable", "true"
-    # )
+    sc._jsc.hadoopConfiguration().set(
+        "fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+    )
+    sc._jsc.hadoopConfiguration().set(
+        "fs.AbstractFileSystem.gs.impl",
+        "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS",
+    )
+    sc._jsc.hadoopConfiguration().set(
+        "google.cloud.auth.service.account.enable", "true"
+    )
 
-    # sa_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    # if sa_path is None:
-    #     print("You must set GOOGLE_APPLICATION_CREDENTIALS to run locally")
+    sa_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if sa_path is None:
+        print("You must set GOOGLE_APPLICATION_CREDENTIALS to run locally")
 
-    # sc._jsc.hadoopConfiguration().set(
-    #     "google.cloud.auth.service.account.json.keyfile", sa_path
-    # )
+    sc._jsc.hadoopConfiguration().set(
+        "google.cloud.auth.service.account.json.keyfile", sa_path
+    )
 
     spark = SparkSession.builder.config(conf=sc.getConf()).getOrCreate()
     return spark
@@ -160,12 +161,10 @@ def start(spec_path, spark):
         df = df.repartition(target_partition)
 
     model_udf = create_model_udf(spark, job_spec.model(), features)
-    data_sink = create_sink(job_spec.sink())
+    data_sink = create_sink(spark, job_spec.sink())
 
     df = df.withColumn(job_spec.sink().result_column(), model_udf(*features))
 
-    print("--here--")
-    # print(df.show())
     data_sink.save(df)
 
     print(f"The prediction job completed successfully!")
