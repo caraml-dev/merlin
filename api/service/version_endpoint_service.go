@@ -247,7 +247,7 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 	}
 
 	// override secrets
-	// Configure environment variables for Pyfunc model
+	// Configure secrets for Pyfunc model
 	if right.Secrets != nil {
 		left.Secrets = right.Secrets
 	}
