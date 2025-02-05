@@ -26,10 +26,10 @@ unit-test: type_check
 proto:
 	@echo "Checking libprotoc version..."
 	@echo "protocPath=$(PROTOC_PATH)"
-	@PROTOC_VERSION=$$($(PROTOC_PATH) --version | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+'); \
-	if [ "$$PROTOC_VERSION" != "3.9.2" ]; then \
-		echo "Error: libprotoc version 3.9.2 is required. Found version $$PROTOC_VERSION."; \
-		echo "Download protoc version from https://repo1.maven.org/maven2/com/google/protobuf/protoc/3.9.2/"; \
+	@PROTOC_VERSION=$$($(PROTOC_PATH) --version | grep -o '[0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?'); \
+	if [ "$$PROTOC_VERSION" != "25.6" ]; then \
+		echo "Error: libprotoc version 25.6 is required. Found version $$PROTOC_VERSION."; \
+		echo "Download protoc version from https://repo1.maven.org/maven2/com/google/protobuf/protoc/3.25.6/"; \
 		exit 1; \
 	fi
 	go install github.com/mitchellh/protoc-gen-go-json@${PROTOC_GEN_GO_JSON_VERSION}
