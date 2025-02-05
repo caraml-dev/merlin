@@ -1,6 +1,6 @@
 cloudpickle==2.0.0
 findspark==2.0.1
-merlin-sdk==0.45.1
+merlin-sdk==0.46.0
 mlflow==1.26.1
 pyarrow>=0.14.1,<=17.0.0
 pyspark==3.1.3
