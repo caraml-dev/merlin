@@ -1940,6 +1940,10 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/EnvVar"
+        secrets:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MountedMLPSecret"
         transformer:
           "$ref": "#/components/schemas/Transformer"
         logger:
@@ -2056,6 +2060,10 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/EnvVar"
+        secrets:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MountedMLPSecret"
         created_at:
           type: string
           format: date-time
@@ -2133,6 +2141,16 @@ components:
           type: string
         value:
           type: string
+    MountedMLPSecret:
+      required:
+        - mlp_secret_name
+        - env_var_name
+      type: object
+      properties:
+        mlp_secret_name:
+          type: string
+        env_var_name:
+          type: string
     Label:
       type: object
       properties:
@@ -2200,6 +2218,10 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/EnvVar"
+        secrets:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MountedMLPSecret"
     GPUConfig:
       type: object
       properties:

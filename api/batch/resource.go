@@ -48,10 +48,10 @@ const (
 
 	serviceAccountFileName   = "service-account.json"
 	envServiceAccountPathKey = "GOOGLE_APPLICATION_CREDENTIALS"
-	envServiceAccountPath    = serviceAccountMount + serviceAccountFileName
+	envServiceAccountPath    = secretMount + serviceAccountFileName
 
-	jobSpecMount        = "/mnt/job-spec/"
-	serviceAccountMount = "/mnt/secrets/"
+	jobSpecMount = "/mnt/job-spec/"
+	secretMount  = "/mnt/secrets/"
 
 	corePerCPURequest    = 1.5
 	cpuRequestToCPULimit = 1.25
@@ -170,7 +170,7 @@ func (t *BatchJobTemplater) createDriverSpec(job *models.PredictionJob) (v1beta2
 			Secrets: []v1beta2.SecretInfo{
 				{
 					Name: job.Name,
-					Path: serviceAccountMount,
+					Path: secretMount,
 				},
 			},
 			Env:            envVars,
@@ -215,7 +215,7 @@ func (t *BatchJobTemplater) createExecutorSpec(job *models.PredictionJob) (v1bet
 			Secrets: []v1beta2.SecretInfo{
 				{
 					Name: job.Name,
-					Path: serviceAccountMount,
+					Path: secretMount,
 				},
 			},
 			Env:         envVars,
@@ -279,6 +279,22 @@ func (t *BatchJobTemplater) addEnvVars(job *models.PredictionJob) ([]corev1.EnvV
 			return []corev1.EnvVar{}, fmt.Errorf("environment variable '%s' cannot be changed", ev.Name)
 		}
 		envVars = append(envVars, ev)
+	}
+	for _, secret := range job.Config.Secrets {
+		envVars = append(
+			envVars,
+			corev1.EnvVar{
+				Name: secret.EnvVarName,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: job.Name,
+						},
+						Key: secret.MLPSecretName,
+					},
+				},
+			},
+		)
 	}
 	return envVars, nil
 }

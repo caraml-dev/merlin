@@ -169,6 +169,7 @@ Class | Method | HTTP request | Description
  - [ModelPredictionOutput](client/docs/ModelPredictionOutput.md)
  - [ModelPredictionOutputClass](client/docs/ModelPredictionOutputClass.md)
  - [ModelSchema](client/docs/ModelSchema.md)
+ - [MountedMLPSecret](client/docs/MountedMLPSecret.md)
  - [OperationTracing](client/docs/OperationTracing.md)
  - [Paging](client/docs/Paging.md)
  - [PipelineTracing](client/docs/PipelineTracing.md)

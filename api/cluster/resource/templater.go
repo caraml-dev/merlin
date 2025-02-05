@@ -192,7 +192,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 }
 
 func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Service) (kservev1beta1.PredictorSpec, error) {
-	limits, envVars, err := t.getResourceLimitsAndEnvVars(modelService.ResourceRequest, modelService.EnvVars)
+	limits, envVars, err := t.getResourceLimitsAndEnvVars(modelService.ResourceRequest, modelService.EnvVars, modelService.Secrets, modelService.Name)
 	if err != nil {
 		return kservev1beta1.PredictorSpec{}, err
 	}
@@ -237,13 +237,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		}
 	}
 
-	// liveness probe config. if env var to disable != true or not set, it will default to enabled
-	var livenessProbeConfig *corev1.Probe = nil
-	envVarsMap := envVars.ToMap()
-	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
-		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(modelService.PredictorProtocol(), fmt.Sprintf("/v1/models/%s", modelService.Name))
-	}
+	livenessProbeConfig := getLivenessProbeConfig(modelService.PredictorProtocol(), envVars, fmt.Sprintf("/v1/models/%s", modelService.Name))
 
 	containerPorts := createContainerPorts(modelService.PredictorProtocol(), modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
@@ -259,7 +253,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
-						Env:           envVars.ToKubernetesEnvVars(),
+						Env:           envVars,
 					},
 				},
 			},
@@ -274,7 +268,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
-						Env:           envVars.ToKubernetesEnvVars(),
+						Env:           envVars,
 					},
 				},
 			},
@@ -289,7 +283,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
-						Env:           envVars.ToKubernetesEnvVars(),
+						Env:           envVars,
 					},
 				},
 			},
@@ -304,7 +298,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
-						Env:           envVars.ToKubernetesEnvVars(),
+						Env:           envVars,
 					},
 				},
 			},
@@ -318,32 +312,32 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		// 1. PyFunc default env
 		// 2. User environment variable
 		// 3. Default env variable that can be override by user environment
-		higherPriorityEnvVars := models.MergeEnvVars(envVars, pyfuncDefaultEnv)
-		lowerPriorityEnvVars := models.EnvVars{}
+		higherPriorityEnvVars := MergeEnvVars(envVars, pyfuncDefaultEnv.ToKubernetesEnvVars())
+		lowerPriorityEnvVars := make([]corev1.EnvVar, 0)
 		if modelService.Protocol == protocol.UpiV1 {
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envGRPCOptions, Value: t.deploymentConfig.PyfuncGRPCOptions})
 		}
 		if modelService.EnabledModelObservability {
 			pyfuncPublisherCfg := t.deploymentConfig.PyFuncPublisher
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherNumPartitions, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.NumPartitions)})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherReplicationFactor, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.ReplicationFactor)})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherSamplingRatio, Value: fmt.Sprintf("%f", pyfuncPublisherCfg.SamplingRatioRate)})
-			lowerPriorityEnvVars = append(lowerPriorityEnvVars, models.EnvVar{Name: envPublisherKafkaConfig, Value: pyfuncPublisherCfg.Kafka.AdditionalConfig})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherEnabled, Value: strconv.FormatBool(modelService.EnabledModelObservability)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherKafkaTopic, Value: modelService.GetPredictionLogTopicForVersion()})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherNumPartitions, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.NumPartitions)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherReplicationFactor, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.ReplicationFactor)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherKafkaBrokers, Value: pyfuncPublisherCfg.Kafka.Brokers})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherKafkaLinger, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.LingerMS)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherKafkaAck, Value: fmt.Sprintf("%d", pyfuncPublisherCfg.Kafka.Acks)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherSamplingRatio, Value: fmt.Sprintf("%f", pyfuncPublisherCfg.SamplingRatioRate)})
+			lowerPriorityEnvVars = append(lowerPriorityEnvVars, corev1.EnvVar{Name: envPublisherKafkaConfig, Value: pyfuncPublisherCfg.Kafka.AdditionalConfig})
 		}
 
-		envVars = models.MergeEnvVars(lowerPriorityEnvVars, higherPriorityEnvVars)
+		envVars = MergeEnvVars(lowerPriorityEnvVars, higherPriorityEnvVars)
 		predictorSpec = kservev1beta1.PredictorSpec{
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
 					{
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Image:         modelService.Options.PyFuncImageName,
-						Env:           envVars.ToKubernetesEnvVars(),
+						Env:           envVars,
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
@@ -381,7 +375,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	modelService *models.Service,
 	transformer *models.Transformer,
 ) (*kservev1beta1.TransformerSpec, error) {
-	limits, envVars, err := t.getResourceLimitsAndEnvVars(transformer.ResourceRequest, transformer.EnvVars)
+	limits, envVars, err := t.getResourceLimitsAndEnvVars(transformer.ResourceRequest, transformer.EnvVars, transformer.Secrets, fmt.Sprintf("%s-transformer", modelService.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +388,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 
 	// Overwrite user's values with defaults, if provided (overwrite by user not allowed)
 	defaultEnvVars := createDefaultTransformerEnvVars(modelService)
-	envVars = models.MergeEnvVars(envVars, defaultEnvVars)
+	envVars = MergeEnvVars(envVars, defaultEnvVars)
 
 	var loggerSpec *kservev1beta1.LoggerSpec
 	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
@@ -417,13 +411,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 		}
 	}
 
-	// liveness probe config. if env var to disable != true or not set, it will default to enabled
-	var livenessProbeConfig *corev1.Probe = nil
-	envVarsMap := envVars.ToMap()
-	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
-		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, "/")
-	}
+	livenessProbeConfig := getLivenessProbeConfig(modelService.Protocol, envVars, "/")
 
 	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	transformerSpec := &kservev1beta1.TransformerSpec{
@@ -432,7 +420,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 				{
 					Name:  "transformer",
 					Image: transformer.Image,
-					Env:   envVars.ToKubernetesEnvVars(),
+					Env:   envVars,
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
 							corev1.ResourceCPU:    transformer.ResourceRequest.CPURequest,
@@ -457,14 +445,14 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	return transformerSpec, nil
 }
 
-func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelService *models.Service, envVars models.EnvVars) models.EnvVars {
+func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelService *models.Service, envVars []corev1.EnvVar) []corev1.EnvVar {
 	// compact standard transformer config
-	envVarsMap := envVars.ToMap()
+	envVarsMap := getEnvVarMap(envVars)
 	standardTransformerSpec := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
-	if standardTransformerSpec != "" {
+	if standardTransformerSpec.Value != "" {
 		compactedfJsonBuffer := new(bytes.Buffer)
-		if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerSpec)); err == nil {
-			models.MergeEnvVars(envVars, models.EnvVars{
+		if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerSpec.Value)); err == nil {
+			envVars = MergeEnvVars(envVars, []corev1.EnvVar{
 				{
 					Name:  transformerpkg.StandardTransformerConfigEnvName,
 					Value: compactedfJsonBuffer.String(),
@@ -476,43 +464,44 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	standardTransformerCfg := t.deploymentConfig.StandardTransformer
 
 	// Additional env var to add
-	addEnvVar := models.EnvVars{}
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerCfg.DefaultFeastSource.String()})
+	//addEnvVar := models.EnvVars{}
+	addEnvVar := []corev1.EnvVar{}
+	addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerCfg.DefaultFeastSource.String()})
 
 	// adding feast related config env variable
 	feastStorageConfig := standardTransformerCfg.ToFeastStorageConfigs()
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
 	}
 	// Add keepalive configuration for predictor
 	// only pyfunc config that enforced by merlin
 	keepAliveModelCfg := standardTransformerCfg.ModelClientKeepAlive
 	if modelService.Protocol == protocol.UpiV1 && modelService.Type == models.ModelTypePyFunc {
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled)})
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String()})
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String()})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled)})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String()})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String()})
 	}
 
 	keepaliveCfg := standardTransformerCfg.FeastServingKeepAlive
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: strconv.FormatBool(keepaliveCfg.Enabled)})
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
-	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastGRPCConnCount, Value: fmt.Sprintf("%d", standardTransformerCfg.FeastGPRCConnCount)})
+	addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: strconv.FormatBool(keepaliveCfg.Enabled)})
+	addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
+	addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
+	addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.FeastGRPCConnCount, Value: fmt.Sprintf("%d", standardTransformerCfg.FeastGPRCConnCount)})
 
 	if modelService.Protocol == protocol.UpiV1 {
 		// add kafka configuration
 		kafkaCfg := standardTransformerCfg.Kafka
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaTopic, Value: modelService.GetPredictionLogTopic()})
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaBrokers, Value: kafkaCfg.Brokers})
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", kafkaCfg.MaxMessageSizeBytes)})
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", kafkaCfg.ConnectTimeoutMS)})
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaSerialization, Value: string(kafkaCfg.SerializationFmt)})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.KafkaTopic, Value: modelService.GetPredictionLogTopic()})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.KafkaBrokers, Value: kafkaCfg.Brokers})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", kafkaCfg.MaxMessageSizeBytes)})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", kafkaCfg.ConnectTimeoutMS)})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.KafkaSerialization, Value: string(kafkaCfg.SerializationFmt)})
 
-		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelServerConnCount, Value: fmt.Sprintf("%d", standardTransformerCfg.ModelServerConnCount)})
+		addEnvVar = append(addEnvVar, corev1.EnvVar{Name: transformerpkg.ModelServerConnCount, Value: fmt.Sprintf("%d", standardTransformerCfg.ModelServerConnCount)})
 	}
 
 	jaegerCfg := standardTransformerCfg.Jaeger
-	jaegerEnvVars := []models.EnvVar{
+	jaegerEnvVars := []corev1.EnvVar{
 		{Name: transformerpkg.JaegerCollectorURL, Value: jaegerCfg.CollectorURL},
 		{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
 		{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
@@ -521,7 +510,7 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	addEnvVar = append(addEnvVar, jaegerEnvVars...)
 
 	// merge back to envVars (default above will be overriden by users if provided)
-	envVars = models.MergeEnvVars(addEnvVar, envVars)
+	envVars = MergeEnvVars(addEnvVar, envVars)
 
 	return envVars
 }
@@ -558,6 +547,17 @@ func createGRPCLivenessProbe(port int) *corev1.Probe {
 		SuccessThreshold:    liveProbeSuccessThreshold,
 		FailureThreshold:    liveProbeFailureThreshold,
 	}
+}
+
+func getLivenessProbeConfig(protocol prt.Protocol, envVars []corev1.EnvVar, httpPath string) *corev1.Probe {
+	// liveness probe config. if env var to disable != true or not set, it will default to enabled
+	var livenessProbeConfig *corev1.Probe = nil
+	envVarsMap := getEnvVarMap(envVars)
+	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe].Value, "true") &&
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe].Value, "true") {
+		livenessProbeConfig = createLivenessProbeSpec(protocol, httpPath)
+	}
+	return livenessProbeConfig
 }
 
 func createLivenessProbeSpec(protocol prt.Protocol, httpPath string) *corev1.Probe {
@@ -715,22 +715,22 @@ func copyTopologySpreadConstraints(
 	return topologySpreadConstraints, nil
 }
 
-func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
-	defaultEnvVars := models.EnvVars{}
+func createDefaultTransformerEnvVars(modelService *models.Service) []corev1.EnvVar {
+	var defaultEnvVars []corev1.EnvVar
 
 	// These env vars are to be deprecated
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictorHost(modelService)})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envTransformerPredictURL, Value: createPredictorHost(modelService)})
 
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envHTTPPort, Value: fmt.Sprint(defaultHTTPPort)})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envGRPCPort, Value: fmt.Sprint(defaultGRPCPort)})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelName, Value: modelService.ModelName})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envProject, Value: modelService.Namespace})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorHost, Value: createPredictorHost(modelService)})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envProtocol, Value: fmt.Sprint(modelService.Protocol)})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envHTTPPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envGRPCPort, Value: fmt.Sprint(defaultGRPCPort)})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envModelName, Value: modelService.ModelName})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envModelFullName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envProject, Value: modelService.Namespace})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envPredictorHost, Value: createPredictorHost(modelService)})
+	defaultEnvVars = append(defaultEnvVars, corev1.EnvVar{Name: envProtocol, Value: fmt.Sprint(modelService.Protocol)})
 	return defaultEnvVars
 }
 
@@ -754,14 +754,14 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 
 func createCustomPredictorSpec(
 	modelService *models.Service,
-	envVars models.EnvVars,
+	envVars []corev1.EnvVar,
 	resources corev1.ResourceRequirements,
 	nodeSelector map[string]string,
 	tolerations []corev1.Toleration,
 ) kservev1beta1.PredictorSpec {
 	// Add default env var (Overwrite by user not allowed)
 	defaultEnvVar := createDefaultPredictorEnvVars(modelService)
-	envVars = models.MergeEnvVars(envVars, defaultEnvVar)
+	envVars = MergeEnvVars(envVars, defaultEnvVar.ToKubernetesEnvVars())
 
 	var containerCommand []string
 	customPredictor := modelService.Options.CustomPredictor
@@ -786,7 +786,7 @@ func createCustomPredictorSpec(
 			Containers: []corev1.Container{
 				{
 					Image:     customPredictor.Image,
-					Env:       envVars.ToKubernetesEnvVars(),
+					Env:       envVars,
 					Resources: resources,
 					Command:   containerCommand,
 					Args:      containerArgs,
@@ -890,7 +890,10 @@ func (t *InferenceServiceTemplater) applyDefaults(service *models.Service) {
 func (t *InferenceServiceTemplater) getResourceLimitsAndEnvVars(
 	resourceRequest *models.ResourceRequest,
 	envVars models.EnvVars,
-) (map[corev1.ResourceName]resource.Quantity, models.EnvVars, error) {
+	secrets models.Secrets,
+	secretName string,
+) (map[corev1.ResourceName]resource.Quantity, []corev1.EnvVar, error) {
+	mergedEnvVars := envVars.ToKubernetesEnvVars()
 	// Set resource limits to request * userContainerCPULimitRequestFactor or UserContainerMemoryLimitRequestFactor
 	limits := map[corev1.ResourceName]resource.Quantity{}
 	// Set cpu resource limits automatically if they have not been set
@@ -907,7 +910,7 @@ func (t *InferenceServiceTemplater) getResourceLimitsAndEnvVars(
 				return nil, nil, err
 			}
 			// Set additional env vars to manage concurrency so model performance improves when no CPU limits are set
-			envVars = models.MergeEnvVars(ParseEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits), envVars)
+			mergedEnvVars = MergeEnvVars(t.deploymentConfig.DefaultEnvVarsWithoutCPULimits, mergedEnvVars)
 		}
 	} else {
 		limits[corev1.ResourceCPU] = *resourceRequest.CPULimit
@@ -918,13 +921,38 @@ func (t *InferenceServiceTemplater) getResourceLimitsAndEnvVars(
 			resourceRequest.MemoryRequest, t.deploymentConfig.UserContainerMemoryLimitRequestFactor,
 		)
 	}
-	return limits, envVars, nil
+
+	// Add user-configured secrets as env vars to the list of env vars to be created
+	mergedEnvVars = MergeEnvVars(mergedEnvVars, secrets.ToKubernetesEnvVars(secretName))
+
+	return limits, mergedEnvVars, nil
 }
 
-func ParseEnvVars(envVars []corev1.EnvVar) models.EnvVars {
-	var parsedEnvVars models.EnvVars
-	for _, envVar := range envVars {
-		parsedEnvVars = append(parsedEnvVars, models.EnvVar{Name: envVar.Name, Value: envVar.Value})
+// MergeEnvVars merges multiple sets of environment variables and return the merging result.
+// All the EnvVars passed as arguments will be not mutated.
+// EnvVars to the right have higher precedence.
+func MergeEnvVars(left []corev1.EnvVar, rightEnvVars ...[]corev1.EnvVar) []corev1.EnvVar {
+	for _, right := range rightEnvVars {
+		envIndexMap := make(map[string]int, len(left)+len(right))
+		for index, ev := range left {
+			envIndexMap[ev.Name] = index
+		}
+		for _, add := range right {
+			if index, exist := envIndexMap[add.Name]; exist {
+				left[index].Value = add.Value
+				left[index].ValueFrom = add.ValueFrom
+			} else {
+				left = append(left, add)
+			}
+		}
 	}
-	return parsedEnvVars
+	return left
+}
+
+func getEnvVarMap(envVars []corev1.EnvVar) map[string]corev1.EnvVar {
+	envVarMap := make(map[string]corev1.EnvVar)
+	for _, envVar := range envVars {
+		envVarMap[envVar.Name] = envVar
+	}
+	return envVarMap
 }

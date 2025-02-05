@@ -178,7 +178,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
 	}
 
-	svc, err := ctl.Deploy(ctx, modelService)
+	svc, err := ctl.Deploy(ctx, modelService, int(model.ProjectID))
 	if err != nil {
 		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 		deployment.Status = models.EndpointFailed

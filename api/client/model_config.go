@@ -25,6 +25,7 @@ type Config struct {
 	ResourceRequest             *PredictionJobResourceRequest `json:"resource_request,omitempty"`
 	ImageBuilderResourceRequest *ResourceRequest              `json:"image_builder_resource_request,omitempty"`
 	EnvVars                     []EnvVar                      `json:"env_vars,omitempty"`
+	Secrets                     []MountedMLPSecret            `json:"secrets,omitempty"`
 }
 
 // NewConfig instantiates a new Config object
@@ -236,6 +237,38 @@ func (o *Config) SetEnvVars(v []EnvVar) {
 	o.EnvVars = v
 }
 
+// GetSecrets returns the Secrets field value if set, zero value otherwise.
+func (o *Config) GetSecrets() []MountedMLPSecret {
+	if o == nil || IsNil(o.Secrets) {
+		var ret []MountedMLPSecret
+		return ret
+	}
+	return o.Secrets
+}
+
+// GetSecretsOk returns a tuple with the Secrets field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Config) GetSecretsOk() ([]MountedMLPSecret, bool) {
+	if o == nil || IsNil(o.Secrets) {
+		return nil, false
+	}
+	return o.Secrets, true
+}
+
+// HasSecrets returns a boolean if a field has been set.
+func (o *Config) HasSecrets() bool {
+	if o != nil && !IsNil(o.Secrets) {
+		return true
+	}
+
+	return false
+}
+
+// SetSecrets gets a reference to the given []MountedMLPSecret and assigns it to the Secrets field.
+func (o *Config) SetSecrets(v []MountedMLPSecret) {
+	o.Secrets = v
+}
+
 func (o Config) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -263,6 +296,9 @@ func (o Config) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.EnvVars) {
 		toSerialize["env_vars"] = o.EnvVars
+	}
+	if !IsNil(o.Secrets) {
+		toSerialize["secrets"] = o.Secrets
 	}
 	return toSerialize, nil
 }

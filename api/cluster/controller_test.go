@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/caraml-dev/merlin/cluster/labeller"
+	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	fakekserve "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	fakekservev1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
@@ -338,8 +339,10 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, clusterresource.NewInferenceServiceTemplater(deployConfig))
-			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, clusterresource.NewInferenceServiceTemplater(deployConfig), mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), modelSvc, 1)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -349,6 +352,188 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, iSvc)
+		})
+	}
+}
+
+// TestController_DeployInferenceService_SecretCreation test secret creation when deploying inference service
+func TestController_DeployInferenceService_SecretCreation(t *testing.T) {
+	model := &models.Model{
+		Name: "my-model",
+	}
+	project := mlp.Project{
+		Name: "my-project",
+	}
+	version := &models.Version{
+		ID: 1,
+	}
+	revisionID := models.ID(1)
+	modelOpt := &models.ModelOption{}
+
+	isvc := fakeInferenceService(model.Name, version.ID.String(), revisionID.String(), project.Name)
+	vs := fakeVirtualService(model.Name, version.ID.String())
+	namespace := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: project.Name},
+		Status:     corev1.NamespaceStatus{Phase: corev1.NamespaceActive},
+	}
+
+	modelSvc := &models.Service{
+		Name:         isvc.Name,
+		ModelName:    model.Name,
+		ModelVersion: version.ID.String(),
+		RevisionID:   revisionID,
+		Namespace:    project.Name,
+		Options:      modelOpt,
+	}
+
+	tests := []struct {
+		name            string
+		prependReactors func(*fakecorev1.FakeSecrets, *bool)
+		reactorsCalled  bool
+		mockMLPClient   func(*mlpMock.APIClient)
+		secrets         models.Secrets
+		expectedErr     string
+	}{
+		{
+			"success: create secret",
+			func(secretsClient *fakecorev1.FakeSecrets, reactorsCalled *bool) {
+				secretsClient.Fake.PrependReactor(createMethod, "secrets", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					*reactorsCalled = true
+					return true, &corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      modelSvc.Name,
+							Namespace: modelSvc.Namespace,
+						},
+					}, nil
+				})
+			},
+			true,
+			func(mockMlpAPIClient *mlpMock.APIClient) {
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), "SECRET_NAME_1", int32(1)).Return(mlp.Secret{
+					ID:   1,
+					Name: "SECRET_NAME_1",
+					Data: "secret-data",
+				}, nil)
+			},
+			models.Secrets{
+				{
+					MLPSecretName: "SECRET_NAME_1",
+					EnvVarName:    "ENV_SECRET_NAME_1",
+				},
+			},
+			"",
+		},
+		{
+			"error: secret not found from mlp",
+			func(secretsClient *fakecorev1.FakeSecrets, reactorsCalled *bool) {
+				secretsClient.Fake.PrependReactor(createMethod, "secrets", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					*reactorsCalled = true
+					return true, &corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      modelSvc.Name,
+							Namespace: modelSvc.Namespace,
+						},
+					}, nil
+				})
+			},
+			false,
+			func(mockMlpAPIClient *mlpMock.APIClient) {
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), "SECRET_NAME_1", int32(1)).Return(mlp.Secret{},
+					fmt.Errorf("secret not found"))
+			},
+			models.Secrets{
+				{
+					MLPSecretName: "SECRET_NAME_1",
+					EnvVarName:    "ENV_SECRET_NAME_1",
+				},
+			},
+			"failed creating secret for deployment my-model-1-r1: failed creating secret for model my-model-1-r1 " +
+				"in namespace my-project: error retrieving secrets: user-configured secret SECRET_NAME_1 is not found " +
+				"within my-project project: secret not found",
+		},
+		{
+			"error: error creating secret",
+			func(secretsClient *fakecorev1.FakeSecrets, reactorsCalled *bool) {
+				secretsClient.Fake.PrependReactor(createMethod, "secrets", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					*reactorsCalled = true
+					return true, nil, fmt.Errorf("error creating secret")
+				})
+			},
+			true,
+			func(mockMlpAPIClient *mlpMock.APIClient) {
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), "SECRET_NAME_1", int32(1)).Return(mlp.Secret{
+					ID:   1,
+					Name: "SECRET_NAME_1",
+					Data: "secret-data",
+				}, nil)
+			},
+			models.Secrets{
+				{
+					MLPSecretName: "SECRET_NAME_1",
+					EnvVarName:    "ENV_SECRET_NAME_1",
+				},
+			},
+			"failed creating secret for deployment my-model-1-r1: failed creating secret for model my-model-1-r1 " +
+				"in namespace my-project: failed creating secret my-model-1-r1 in namespace my-project: failed creating " +
+				"secret my-model-1-r1 in namespace my-project: error creating secret",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset().ServingV1()
+
+			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
+			kfClient.PrependReactor(createMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, isvc, nil
+			})
+			isvcWatchReactor := newIsvcWatchReactor(isvc)
+			kfClient.WatchReactionChain = []ktesting.WatchReactor{isvcWatchReactor}
+
+			v1Client := fake.NewSimpleClientset().CoreV1()
+
+			nsClient := v1Client.Namespaces().(*fakecorev1.FakeNamespaces)
+			nsClient.Fake.PrependReactor(getMethod, namespaceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, namespace, nil
+			})
+
+			secretsClient := v1Client.Secrets(modelSvc.Namespace).(*fakecorev1.FakeSecrets)
+			called := false
+			tt.prependReactors(secretsClient, &called)
+
+			policyV1Client := fake.NewSimpleClientset().PolicyV1()
+
+			istioClient := fakeistio.NewSimpleClientset().NetworkingV1beta1().(*fakeistionetworking.FakeNetworkingV1beta1)
+			istioClient.PrependReactor(patchMethod, virtualServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, vs, nil
+			})
+
+			deployConfig := config.DeploymentConfig{
+				DeploymentTimeout:                     2 * tickDurationSecond * time.Second,
+				DefaultModelResourceRequests:          &config.ResourceRequests{},
+				UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+				UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+				UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+			}
+
+			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
+
+			mockMlpAPIClient := &mlpMock.APIClient{}
+			tt.mockMLPClient(mockMlpAPIClient)
+
+			modelSvc.Secrets = tt.secrets
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, clusterresource.NewInferenceServiceTemplater(deployConfig), mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), modelSvc, 1)
+
+			assert.Equal(t, tt.reactorsCalled, called)
+
+			if tt.expectedErr != "" {
+				assert.Error(t, err, tt.expectedErr)
+				assert.Nil(t, iSvc)
+			} else {
+				assert.True(t, called)
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
@@ -745,8 +930,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater)
-			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater, mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), tt.modelService, 1)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -964,8 +1151,10 @@ func TestController_DeployInferenceService_PodDisruptionBudgetsRemoval(t *testin
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater)
-			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, istioClient, deployConfig, containerFetcher, templater, mockMlpAPIClient)
+			iSvc, err := ctl.Deploy(context.Background(), tt.modelService, 1)
 
 			if tt.deletedPdbResult.err == nil {
 				assert.ElementsMatch(t, deletedPdbNames, tt.wantPdbs)
@@ -1099,8 +1288,10 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			templater := clusterresource.NewInferenceServiceTemplater(deployConfig)
 
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
 			// Create test controller
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, nil, deployConfig, containerFetcher, templater)
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, nil, deployConfig, containerFetcher, templater, mockMlpAPIClient)
 
 			desiredReplicas := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, tt.components)
 			assert.Equal(t, tt.expectedScale, desiredReplicas)
@@ -1434,7 +1625,9 @@ func TestController_Delete(t *testing.T) {
 
 			templater := clusterresource.NewInferenceServiceTemplater(tt.deployConfig)
 
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, tt.deployConfig, containerFetcher, templater)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, istioClient, tt.deployConfig, containerFetcher, templater, mockMlpAPIClient)
 			mSvc, err := ctl.Delete(context.Background(), tt.modelService)
 
 			if tt.wantError {

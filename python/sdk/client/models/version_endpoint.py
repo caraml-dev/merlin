@@ -27,6 +27,7 @@ from client.models.env_var import EnvVar
 from client.models.environment import Environment
 from client.models.logger import Logger
 from client.models.model_observability import ModelObservability
+from client.models.mounted_mlp_secret import MountedMLPSecret
 from client.models.protocol import Protocol
 from client.models.resource_request import ResourceRequest
 from client.models.transformer import Transformer
@@ -51,6 +52,7 @@ class VersionEndpoint(BaseModel):
     resource_request: Optional[ResourceRequest] = None
     image_builder_resource_request: Optional[ResourceRequest] = None
     env_vars: Optional[List[EnvVar]] = None
+    secrets: Optional[List[MountedMLPSecret]] = None
     transformer: Optional[Transformer] = None
     logger: Optional[Logger] = None
     deployment_mode: Optional[DeploymentMode] = None
@@ -60,7 +62,7 @@ class VersionEndpoint(BaseModel):
     model_observability: Optional[ModelObservability] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    __properties: ClassVar[List[str]] = ["id", "version_id", "status", "url", "service_name", "environment_name", "environment", "monitoring_url", "message", "resource_request", "image_builder_resource_request", "env_vars", "transformer", "logger", "deployment_mode", "autoscaling_policy", "protocol", "enable_model_observability", "model_observability", "created_at", "updated_at"]
+    __properties: ClassVar[List[str]] = ["id", "version_id", "status", "url", "service_name", "environment_name", "environment", "monitoring_url", "message", "resource_request", "image_builder_resource_request", "env_vars", "secrets", "transformer", "logger", "deployment_mode", "autoscaling_policy", "protocol", "enable_model_observability", "model_observability", "created_at", "updated_at"]
 
     model_config = {
         "populate_by_name": True,
@@ -114,6 +116,13 @@ class VersionEndpoint(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['env_vars'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in secrets (list)
+        _items = []
+        if self.secrets:
+            for _item in self.secrets:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['secrets'] = _items
         # override the default output from pydantic by calling `to_dict()` of transformer
         if self.transformer:
             _dict['transformer'] = self.transformer.to_dict()
@@ -150,6 +159,7 @@ class VersionEndpoint(BaseModel):
             "resource_request": ResourceRequest.from_dict(obj.get("resource_request")) if obj.get("resource_request") is not None else None,
             "image_builder_resource_request": ResourceRequest.from_dict(obj.get("image_builder_resource_request")) if obj.get("image_builder_resource_request") is not None else None,
             "env_vars": [EnvVar.from_dict(_item) for _item in obj.get("env_vars")] if obj.get("env_vars") is not None else None,
+            "secrets": [MountedMLPSecret.from_dict(_item) for _item in obj.get("secrets")] if obj.get("secrets") is not None else None,
             "transformer": Transformer.from_dict(obj.get("transformer")) if obj.get("transformer") is not None else None,
             "logger": Logger.from_dict(obj.get("logger")) if obj.get("logger") is not None else None,
             "deployment_mode": obj.get("deployment_mode"),

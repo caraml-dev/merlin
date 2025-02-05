@@ -21,6 +21,7 @@ import json
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr
 from client.models.env_var import EnvVar
+from client.models.mounted_mlp_secret import MountedMLPSecret
 from client.models.prediction_job_config import PredictionJobConfig
 from client.models.prediction_job_resource_request import PredictionJobResourceRequest
 from client.models.resource_request import ResourceRequest
@@ -39,7 +40,8 @@ class Config(BaseModel):
     resource_request: Optional[PredictionJobResourceRequest] = None
     image_builder_resource_request: Optional[ResourceRequest] = None
     env_vars: Optional[List[EnvVar]] = None
-    __properties: ClassVar[List[str]] = ["job_config", "image_ref", "service_account_name", "resource_request", "image_builder_resource_request", "env_vars"]
+    secrets: Optional[List[MountedMLPSecret]] = None
+    __properties: ClassVar[List[str]] = ["job_config", "image_ref", "service_account_name", "resource_request", "image_builder_resource_request", "env_vars", "secrets"]
 
     model_config = {
         "populate_by_name": True,
@@ -93,6 +95,13 @@ class Config(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['env_vars'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in secrets (list)
+        _items = []
+        if self.secrets:
+            for _item in self.secrets:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['secrets'] = _items
         return _dict
 
     @classmethod
@@ -110,7 +119,8 @@ class Config(BaseModel):
             "service_account_name": obj.get("service_account_name"),
             "resource_request": PredictionJobResourceRequest.from_dict(obj.get("resource_request")) if obj.get("resource_request") is not None else None,
             "image_builder_resource_request": ResourceRequest.from_dict(obj.get("image_builder_resource_request")) if obj.get("image_builder_resource_request") is not None else None,
-            "env_vars": [EnvVar.from_dict(_item) for _item in obj.get("env_vars")] if obj.get("env_vars") is not None else None
+            "env_vars": [EnvVar.from_dict(_item) for _item in obj.get("env_vars")] if obj.get("env_vars") is not None else None,
+            "secrets": [MountedMLPSecret.from_dict(_item) for _item in obj.get("secrets")] if obj.get("secrets") is not None else None
         })
         return _obj
 

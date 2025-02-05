@@ -54,9 +54,9 @@ func (r ApiModelsModelIdVersionsGetRequest) Execute() ([]Version, *http.Response
 /*
 ModelsModelIdVersionsGet List versions of the models
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdVersionsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdVersionsGetRequest
 */
 func (a *VersionAPIService) ModelsModelIdVersionsGet(ctx context.Context, modelId int32) ApiModelsModelIdVersionsGetRequest {
 	return ApiModelsModelIdVersionsGetRequest{
@@ -67,7 +67,8 @@ func (a *VersionAPIService) ModelsModelIdVersionsGet(ctx context.Context, modelI
 }
 
 // Execute executes the request
-//  @return []Version
+//
+//	@return []Version
 func (a *VersionAPIService) ModelsModelIdVersionsGetExecute(r ApiModelsModelIdVersionsGetRequest) ([]Version, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -184,9 +185,9 @@ func (r ApiModelsModelIdVersionsPostRequest) Execute() (*Version, *http.Response
 /*
 ModelsModelIdVersionsPost Log a new version of the models
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @return ApiModelsModelIdVersionsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@return ApiModelsModelIdVersionsPostRequest
 */
 func (a *VersionAPIService) ModelsModelIdVersionsPost(ctx context.Context, modelId int32) ApiModelsModelIdVersionsPostRequest {
 	return ApiModelsModelIdVersionsPostRequest{
@@ -197,7 +198,8 @@ func (a *VersionAPIService) ModelsModelIdVersionsPost(ctx context.Context, model
 }
 
 // Execute executes the request
-//  @return Version
+//
+//	@return Version
 func (a *VersionAPIService) ModelsModelIdVersionsPostExecute(r ApiModelsModelIdVersionsPostRequest) (*Version, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
@@ -302,10 +304,10 @@ func (r ApiModelsModelIdVersionsVersionIdDeleteRequest) Execute() (int32, *http.
 /*
 ModelsModelIdVersionsVersionIdDelete Delete version by ID from model
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @return ApiModelsModelIdVersionsVersionIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@return ApiModelsModelIdVersionsVersionIdDeleteRequest
 */
 func (a *VersionAPIService) ModelsModelIdVersionsVersionIdDelete(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdDeleteRequest {
 	return ApiModelsModelIdVersionsVersionIdDeleteRequest{
@@ -317,7 +319,8 @@ func (a *VersionAPIService) ModelsModelIdVersionsVersionIdDelete(ctx context.Con
 }
 
 // Execute executes the request
-//  @return int32
+//
+//	@return int32
 func (a *VersionAPIService) ModelsModelIdVersionsVersionIdDeleteExecute(r ApiModelsModelIdVersionsVersionIdDeleteRequest) (int32, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodDelete
@@ -421,10 +424,10 @@ func (r ApiModelsModelIdVersionsVersionIdGetRequest) Execute() (*Version, *http.
 /*
 ModelsModelIdVersionsVersionIdGet Get version by ID from model
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @return ApiModelsModelIdVersionsVersionIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@return ApiModelsModelIdVersionsVersionIdGetRequest
 */
 func (a *VersionAPIService) ModelsModelIdVersionsVersionIdGet(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdGetRequest {
 	return ApiModelsModelIdVersionsVersionIdGetRequest{
@@ -436,7 +439,8 @@ func (a *VersionAPIService) ModelsModelIdVersionsVersionIdGet(ctx context.Contex
 }
 
 // Execute executes the request
-//  @return Version
+//
+//	@return Version
 func (a *VersionAPIService) ModelsModelIdVersionsVersionIdGetExecute(r ApiModelsModelIdVersionsVersionIdGetRequest) (*Version, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
@@ -546,10 +550,10 @@ func (r ApiModelsModelIdVersionsVersionIdPatchRequest) Execute() (*http.Response
 /*
 ModelsModelIdVersionsVersionIdPatch Patch the version
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param modelId
- @param versionId
- @return ApiModelsModelIdVersionsVersionIdPatchRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param modelId
+	@param versionId
+	@return ApiModelsModelIdVersionsVersionIdPatchRequest
 */
 func (a *VersionAPIService) ModelsModelIdVersionsVersionIdPatch(ctx context.Context, modelId int32, versionId int32) ApiModelsModelIdVersionsVersionIdPatchRequest {
 	return ApiModelsModelIdVersionsVersionIdPatchRequest{

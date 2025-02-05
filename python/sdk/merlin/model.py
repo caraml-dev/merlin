@@ -55,6 +55,7 @@ from merlin.protocol import Protocol
 from merlin.pyfunc import run_pyfunc_local_server
 from merlin.requirements import process_conda_env
 from merlin.resource_request import ResourceRequest
+from merlin.mounted_mlp_secret import MountedMLPSecret
 from merlin.model_observability import ModelObservability
 from merlin.transformer import Transformer
 from merlin.util import (
@@ -1206,6 +1207,7 @@ class ModelVersion:
         resource_request: Optional[ResourceRequest] = None,
         image_builder_resource_request: Optional[ResourceRequest] = None,
         env_vars: Dict[str, str] = None,
+        secrets: List[MountedMLPSecret] = None,
         transformer: Transformer = None,
         logger: Logger = None,
         deployment_mode: DeploymentMode = None,
@@ -1246,6 +1248,7 @@ class ModelVersion:
         target_image_builder_resource_request = None
         target_autoscaling_policy = None
         target_env_vars: List[client.EnvVar] = []
+        target_secrets: List[client.MountedMLPSecret] = []
         target_transformer = None
         target_logger = None
         target_model_observability = None
@@ -1336,6 +1339,13 @@ class ModelVersion:
         if env_vars is not None:
             target_env_vars = ModelVersion._add_env_vars(target_env_vars, env_vars)
 
+        if secrets is not None:
+            for secret in secrets:
+                target_secrets.append(client.MountedMLPSecret(
+                    mlp_secret_name=secret.mlp_secret_name,
+                    env_var_name=secret.env_var_name,
+                ))
+
         if transformer is not None:
             target_transformer = ModelVersion._create_transformer_spec(
                 transformer, target_env_name, env_list
@@ -1360,6 +1370,7 @@ class ModelVersion:
             resource_request=target_resource_request,
             image_builder_resource_request=target_image_builder_resource_request,
             env_vars=target_env_vars,
+            secrets=target_secrets,
             transformer=target_transformer,
             logger=target_logger,
             deployment_mode=client.DeploymentMode(target_deployment_mode),
@@ -1531,6 +1542,15 @@ class ModelVersion:
                 for name, value in job_config.env_vars.items():
                     target_env_vars.append(client.EnvVar(name=name, value=value))
                 cfg.env_vars = target_env_vars
+
+        target_secrets = []
+        if job_config.secrets is not None:
+            for secret in job_config.secrets:
+                target_secrets.append(client.MountedMLPSecret(
+                    mlp_secret_name=secret.mlp_secret_name,
+                    env_var_name=secret.env_var_name,
+                ))
+            cfg.secrets = target_secrets
 
         req = client.PredictionJob(
             version_id=self.id, model_id=self.model.id, config=cfg

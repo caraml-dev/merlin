@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 	kserveclifake "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	kservev1beta1fake "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"github.com/stretchr/testify/assert"
@@ -88,7 +89,10 @@ func TestContainer_GetContainers(t *testing.T) {
 		clusterMetadata := Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
 
 		containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-		ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, nil, config.DeploymentConfig{}, containerFetcher, nil)
+
+		mockMlpAPIClient := &mlpMock.APIClient{}
+
+		ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, nil, config.DeploymentConfig{}, containerFetcher, nil, mockMlpAPIClient)
 		containers, err := ctl.GetContainers(context.Background(), tt.args.namespace, tt.args.labelSelector)
 		if !tt.wantError {
 			assert.NoErrorf(t, err, "expected no error got %v", err)

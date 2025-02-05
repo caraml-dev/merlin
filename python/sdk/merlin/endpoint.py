@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import client
 from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
@@ -25,6 +25,7 @@ from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.util import autostr, get_url
 from merlin.resource_request import ResourceRequest
+from merlin.mounted_mlp_secret import MountedMLPSecret
 from merlin.transformer import Transformer, TransformerType
 from merlin.model_observability import ModelObservability
 from merlin.util import extract_optional_value_with_default
@@ -53,10 +54,12 @@ class VersionEndpoint:
         self._environment_name = endpoint.environment_name
         self._environment = Environment(endpoint.environment) if endpoint.environment is not None else None
         self._env_vars = endpoint.env_vars
+        self._secrets = [MountedMLPSecret.from_response(secret) for secret in endpoint.secrets] if endpoint.secrets is not None else None
         self._logger = Logger.from_logger_response(endpoint.logger)
         self._resource_request = ResourceRequest.from_response(endpoint.resource_request) if endpoint.resource_request is not None else None
         self._deployment_mode = DeploymentMode.SERVERLESS if not endpoint.deployment_mode \
             else DeploymentMode(endpoint.deployment_mode)
+        self._transformer: Optional[Transformer] = None
 
         if endpoint.autoscaling_policy is None:
             if self._deployment_mode == DeploymentMode.SERVERLESS:
@@ -84,11 +87,20 @@ class VersionEndpoint:
                 )
 
             env_vars: Dict[str, str] = {}
-            self._transformer: Optional[Transformer] = None
             if transformer.env_vars is not None:
                 for env_var in transformer.env_vars:
                     if env_var.name is not None and env_var.value is not None:
                         env_vars[env_var.name] = env_var.value
+
+            secrets: List[MountedMLPSecret] = []
+            if transformer.secrets is not None:
+                for secret in transformer.secrets:
+                    secrets.append(
+                        MountedMLPSecret(
+                            mlp_secret_name=secret.mlp_secret_name,
+                            env_var_name=secret.env_var_name,
+                        )
+                    )
 
             self._transformer = Transformer(
                 image, 
@@ -99,6 +111,7 @@ class VersionEndpoint:
                 transformer_type=transformer_type,
                 resource_request=transformer_request, 
                 env_vars=env_vars,
+                secrets=secrets,
             )
 
         if log_url is not None:
@@ -137,6 +150,10 @@ class VersionEndpoint:
                 if ev.name is not None and ev.value is not None:
                     env_vars[ev.name] = ev.value
         return env_vars
+
+    @property
+    def secrets(self) -> Optional[List[MountedMLPSecret]]:
+        return self._secrets
 
     @property
     def logger(self) -> Logger:

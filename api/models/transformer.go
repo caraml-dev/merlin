@@ -43,6 +43,7 @@ type Transformer struct {
 
 	ResourceRequest *ResourceRequest `json:"resource_request"`
 	EnvVars         EnvVars          `json:"env_vars"`
+	Secrets         Secrets          `json:"secrets"`
 	CreatedUpdated
 }
 
