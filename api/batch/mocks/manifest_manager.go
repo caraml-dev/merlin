@@ -71,11 +71,11 @@ func (_m *ManifestManager) CreateJobSpec(ctx context.Context, predictionJobName 
 }
 
 // CreateSecret provides a mock function with given fields: ctx, predictionJobName, namespace, secretMap
-func (_m *ManifestManager) CreateSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error) {
+func (_m *ManifestManager) CreateK8sSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error) {
 	ret := _m.Called(ctx, predictionJobName, namespace, secretMap)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CreateSecret")
+		panic("no return value specified for CreateK8sSecret")
 	}
 
 	var r0 string
@@ -135,11 +135,11 @@ func (_m *ManifestManager) DeleteJobSpec(ctx context.Context, predictionJobName 
 }
 
 // DeleteSecret provides a mock function with given fields: ctx, predictionJobName, namespace
-func (_m *ManifestManager) DeleteSecret(ctx context.Context, predictionJobName string, namespace string) error {
+func (_m *ManifestManager) DeleteK8sSecret(ctx context.Context, predictionJobName string, namespace string) error {
 	ret := _m.Called(ctx, predictionJobName, namespace)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DeleteSecret")
+		panic("no return value specified for DeleteK8sSecret")
 	}
 
 	var r0 error

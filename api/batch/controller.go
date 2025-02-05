@@ -164,7 +164,7 @@ func (c *controller) Submit(ctx context.Context, predictionJob *models.Predictio
 		return fmt.Errorf("error retrieving secrets: %w", err)
 	}
 
-	_, err = c.manifestManager.CreateSecret(ctx, predictionJob.Name, namespace, secretMap)
+	_, err = c.manifestManager.CreateK8sSecret(ctx, predictionJob.Name, namespace, secretMap)
 	if err != nil {
 		return fmt.Errorf("failed creating secret for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
@@ -232,7 +232,7 @@ func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJ
 }
 
 func (c *controller) cleanup(ctx context.Context, job *models.PredictionJob, namespace string) {
-	err := c.manifestManager.DeleteSecret(ctx, job.Name, namespace)
+	err := c.manifestManager.DeleteK8sSecret(ctx, job.Name, namespace)
 	if err != nil {
 		log.Warnf("failed deleting secret %s in namespace %s: %w", job.Name, namespace, err)
 	}

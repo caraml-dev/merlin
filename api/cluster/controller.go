@@ -553,7 +553,7 @@ func (c *controller) createSecretForComponent(ctx context.Context, componentName
 		return fmt.Errorf("error retrieving secrets: %w", err)
 	}
 
-	_, err = c.createSecret(ctx, componentName, namespace, secretMap)
+	_, err = c.createK8sSecret(ctx, componentName, namespace, secretMap)
 	if err != nil {
 		return fmt.Errorf("failed creating secret %s in namespace %s: %w", componentName, namespace, err)
 	}
@@ -561,13 +561,13 @@ func (c *controller) createSecretForComponent(ctx context.Context, componentName
 }
 
 func (c *controller) deleteSecrets(ctx context.Context, modelServiceName string, namespace string) error {
-	err := c.deleteSecret(ctx, modelServiceName, namespace)
+	err := c.deleteK8sSecret(ctx, modelServiceName, namespace)
 	if err != nil && !kerrors.IsNotFound(err) {
 		return fmt.Errorf("failed deleting secret for model %s in namespace %s: %w", modelServiceName, namespace, err)
 	}
 
 	transformerSecretName := fmt.Sprintf("%s-transformer", modelServiceName)
-	err = c.deleteSecret(ctx, transformerSecretName, namespace)
+	err = c.deleteK8sSecret(ctx, transformerSecretName, namespace)
 	if err != nil && !kerrors.IsNotFound(err) {
 		return fmt.Errorf("failed deleting secret for transformer %s in namespace %s: %w", transformerSecretName, namespace, err)
 	}

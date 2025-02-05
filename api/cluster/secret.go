@@ -11,7 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (c *controller) createSecret(ctx context.Context, secretName string, namespace string, secretMap map[string]string) (string, error) {
+func (c *controller) createK8sSecret(ctx context.Context, secretName string, namespace string, secretMap map[string]string) (string, error) {
 	_, err := c.clusterClient.Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
 	secretConfig := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -39,7 +39,7 @@ func (c *controller) createSecret(ctx context.Context, secretName string, namesp
 	return secret.Name, nil
 }
 
-func (c *controller) deleteSecret(ctx context.Context, secretName string, namespace string) error {
+func (c *controller) deleteK8sSecret(ctx context.Context, secretName string, namespace string) error {
 	err := c.clusterClient.Secrets(namespace).Delete(ctx, secretName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		return fmt.Errorf("failed deleting secret %s in namespace %s: %w", secretName, namespace, err)

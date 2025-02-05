@@ -36,8 +36,8 @@ type ManifestManager interface {
 	CreateJobSpec(ctx context.Context, predictionJobName string, namespace string, spec *spec.PredictionJob) (string, error)
 	DeleteJobSpec(ctx context.Context, predictionJobName string, namespace string) error
 
-	CreateSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error)
-	DeleteSecret(ctx context.Context, predictionJobName string, namespace string) error
+	CreateK8sSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error)
+	DeleteK8sSecret(ctx context.Context, predictionJobName string, namespace string) error
 
 	CreateDriverAuthorization(ctx context.Context, namespace string) (string, error)
 	DeleteDriverAuthorization(ctx context.Context, namespace string) error
@@ -219,7 +219,7 @@ func (m *manifestManager) DeleteDriverAuthorization(ctx context.Context, namespa
 	return nil
 }
 
-func (m *manifestManager) CreateSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error) {
+func (m *manifestManager) CreateK8sSecret(ctx context.Context, predictionJobName string, namespace string, secretMap map[string]string) (string, error) {
 	secret, err := m.kubeClient.CoreV1().Secrets(namespace).Create(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      predictionJobName,
@@ -237,7 +237,7 @@ func (m *manifestManager) CreateSecret(ctx context.Context, predictionJobName st
 	return secret.Name, nil
 }
 
-func (m *manifestManager) DeleteSecret(ctx context.Context, predictionJobName string, namespace string) error {
+func (m *manifestManager) DeleteK8sSecret(ctx context.Context, predictionJobName string, namespace string) error {
 	err := m.kubeClient.CoreV1().Secrets(namespace).Delete(ctx, predictionJobName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed deleting secret %s in namespace %s: %v", predictionJobName, namespace, err)

@@ -299,7 +299,7 @@ func TestCreateSecret(t *testing.T) {
 			}
 
 			manifestManager := NewManifestManager(fakeClient)
-			secretName, err := manifestManager.CreateSecret(context.Background(), test.jobName, defaultNamespace, test.data)
+			secretName, err := manifestManager.CreateK8sSecret(context.Background(), test.jobName, defaultNamespace, test.data)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
@@ -352,7 +352,7 @@ func TestDeleteSecret(t *testing.T) {
 			}
 
 			manifestManager := NewManifestManager(fakeClient)
-			err := manifestManager.DeleteSecret(context.Background(), test.secretName, defaultNamespace)
+			err := manifestManager.DeleteK8sSecret(context.Background(), test.secretName, defaultNamespace)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
