@@ -121,7 +121,7 @@ class MaxComputeSource(Source):
         table: str,
         features: Iterable[str],
         endpoint: str,
-        options: MutableMapping[str, str] = None,
+        options: MutableMapping[str, str],
     ):
         """
 
@@ -173,11 +173,6 @@ class MaxComputeSource(Source):
         if not isinstance(self._features, list):
             return False
         if self._options is not None and not isinstance(self._options, MutableMapping):
-            return False
-        if (
-            self._options.get("ODPS_ACCESS_ID", None) is None
-            or self._options.get("ODPS_SECRET_KEY", None) is None
-        ):
             return False
         if not isinstance(self._endpoint, str):
             return False

@@ -2323,9 +2323,6 @@ components:
                 type: string
             options:
               type: object
-              required:
-                - odps_access_id
-                - odps_access_key
               additionalProperties:
                 type: string
         model:
@@ -2400,9 +2397,6 @@ components:
               "$ref": "#/components/schemas/SaveMode"
             options:
               type: object
-              required:
-                - odps_access_id
-                - odps_access_key
               additionalProperties:
                 type: string
     FileFormat:

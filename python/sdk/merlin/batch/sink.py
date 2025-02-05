@@ -192,6 +192,10 @@ class MaxComputeSink(Sink):
     def result_column(self) -> str:
         return self._result_column
 
+    @result_column.setter
+    def result_column(self, result_column):
+        self._result_column = result_column
+
     @property
     def options(self) -> Optional[MutableMapping[str, str]]:
         return self._options
@@ -199,6 +203,20 @@ class MaxComputeSink(Sink):
     @options.setter
     def options(self, options):
         self._options = options
+
+    def _valid_types(self):
+        if not isinstance(self._endpoint, str):
+            return False
+        if not isinstance(self._table, str):
+            return False
+        if not isinstance(self._result_column, str):
+            return False
+        if not isinstance(self._save_mode, SaveMode):
+            return False
+        if self._options is not None and not isinstance(self._options, MutableMapping):
+            return False
+
+        return
 
 
     def _validate(self):
@@ -208,10 +226,6 @@ class MaxComputeSink(Sink):
             raise ValueError(f"invalid table: {self.table}")
         if not mc_valid_columns(self.features):
             raise ValueError(f"invalid features column: {self.features}")
-
-    @result_column.setter
-    def result_column(self, result_column):
-        self._result_column = result_column
 
     def to_dict(self) -> Mapping[str, Any]:
         self._validate()
