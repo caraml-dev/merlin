@@ -15,6 +15,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, MutableMapping, Mapping, Any, Optional
 from merlin.batch.big_query_util import valid_table_id, valid_columns
+from merlin.batch.maxcompute_util import mc_valid_table_id, mc_valid_columns
 import client
 
 
@@ -161,9 +162,9 @@ class MaxComputeSource(Source):
     def _validate(self):
         if not self._valid_types():
             raise ValueError("invalid input type")
-        if not valid_table_id(self.table):
+        if not mc_valid_table_id(self.table):
             raise ValueError(f"invalid table: {self.table}")
-        if not valid_columns(self.features):
+        if not mc_valid_columns(self.features):
             raise ValueError(f"invalid features column: {self.features}")
 
     def _valid_types(self) -> bool:
@@ -184,6 +185,19 @@ class MaxComputeSource(Source):
             if not isinstance(feature, str):
                 return False
         return True
+
+    def to_dict(self):
+        self._validate()
+
+        opts = self.options
+        if opts is None:
+            opts = {}
+        return {
+            "table": self._table,
+            "features": self._features,
+            "endpoint": self._endpoint,
+            "options": opts,
+        }
 
     def to_client_maxcompute_source(self) -> client.PredictionJobConfigMaxcomputeSource:
         opts = {}

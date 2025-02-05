@@ -69,7 +69,7 @@ def valid_table_name(table_name: str) -> bool:
     return validate_text(table_name, WORD_CHARACTER_EXPRESSION, DEFAULT_CHARACTER_LIMIT)
 
 
-def validate_text(text: str, pattern: str, max_length: int) -> bool:
+def validate_text(text: str, pattern: str, max_length: int, min_length: int = 1) -> bool:
     """
     Validate text based on regex pattern and maximum length allowed
 
@@ -78,6 +78,8 @@ def validate_text(text: str, pattern: str, max_length: int) -> bool:
     :param max_length: Maximum length allowed
     :return: boolean
     """
+    if len(text) < min_length:
+        return False
     if len(text) > max_length:
         return False
     if re.search(pattern, text):

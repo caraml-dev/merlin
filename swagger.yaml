@@ -2310,6 +2310,24 @@ components:
               type: object
               additionalProperties:
                 type: string
+        maxcompute_source:
+          type: object
+          properties:
+            endpoint:
+              type: string
+            table:
+              type: string
+            features:
+              type: array
+              items:
+                type: string
+            options:
+              type: object
+              required:
+                - odps_access_id
+                - odps_access_key
+              additionalProperties:
+                type: string
         model:
           type: object
           properties:
@@ -2367,6 +2385,24 @@ components:
               "$ref": "#/components/schemas/SaveMode"
             options:
               type: object
+              additionalProperties:
+                type: string
+        maxcompute_sink:
+          type: object
+          properties:
+            endpoint:
+              type: string
+            table:
+              type: string
+            result_column:
+              type: string
+            save_mode:
+              "$ref": "#/components/schemas/SaveMode"
+            options:
+              type: object
+              required:
+                - odps_access_id
+                - odps_access_key
               additionalProperties:
                 type: string
     FileFormat:
