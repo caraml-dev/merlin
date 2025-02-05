@@ -121,7 +121,7 @@ class MaxComputeSource(Source):
         table: str,
         features: Iterable[str],
         endpoint: str,
-        options: MutableMapping[str, str],
+        options: MutableMapping[str, str] = None,
     ):
         """
 
