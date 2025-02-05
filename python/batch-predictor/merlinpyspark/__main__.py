@@ -118,12 +118,6 @@ def local_spark_session():
     return spark
 
 
-# Define the identity function
-@pandas_udf(DoubleType())
-def multiply_by_two(column):
-    return column * 2
-
-
 def start(spec_path, spark):
     print(f"loading prediction job spec from: {spec_path}")
     job_spec = load(spec_path)

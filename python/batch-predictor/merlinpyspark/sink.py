@@ -109,7 +109,7 @@ class MaxComputeSink(Sink):
         from py4j.java_gateway import java_import
         cfg = self._config
 
-        gw = self._spark.sparkContext._gateway
+        gw = self._spark.sparkContext._gateway # type: ignore
         java_import(gw.jvm, self._get_custom_dialect_class())
         gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
             gw.jvm.dev.caraml.spark.odps.CustomDialect()
