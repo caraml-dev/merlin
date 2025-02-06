@@ -211,6 +211,22 @@ export const JobFormContextProvider = ({ job: initJob, ...props }) => {
     [setJob],
   );
 
+  const setSecrets = useCallback(
+    (newSecrets) => {
+      setJob((j) => ({
+        ...j,
+        config: {
+          ...j.config,
+          secrets:
+            JSON.stringify(newSecrets) !== JSON.stringify(j.config.secrets)
+              ? newSecrets
+              : j.config.secrets,
+        },
+      }));
+    },
+    [setJob],
+  );
+
   // TODO refactor the job form to use FormContextProvider and FormContext for simplicity and consistency
   // This port partial of the FormContextProvider that most of the other forms are using,
   // so that the similiar/future section using onChangeHandler can be reused and
@@ -255,6 +271,7 @@ export const JobFormContextProvider = ({ job: initJob, ...props }) => {
         setBigquerySink,
         setBigquerySinkOptions,
         setEnvVars,
+        setSecrets,
         onChange: onChange,
         onChangeHandler: onChangeHandler,
       }}

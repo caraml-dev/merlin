@@ -1,5 +1,6 @@
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { EnvVarsConfigTable } from "../../../components/EnvVarsConfigTable";
+import { SecretsConfigTable } from "../../../components/SecretsConfigTable";
 import {
   ConfigSection,
   ConfigSectionPanel,
@@ -35,10 +36,20 @@ const JobConfig = ({ job }) => {
           <EuiFlexGroup gutterSize="xl">
             <EuiFlexItem>
               <ConfigSectionPanel>
-                <ConfigSectionPanelTitle title="Environment Variables" />
-                <EnvVarsConfigTable
-                  variables={job.config.env_vars ? job.config.env_vars : []}
-                />
+                <EuiFlexGroup direction="column" gutterSize="m">
+                  <EuiFlexItem>
+                    <ConfigSectionPanelTitle title="Environment Variables" />
+                    <EnvVarsConfigTable
+                      variables={job.config.env_vars ? job.config.env_vars : []}
+                    />
+                  </EuiFlexItem>
+                  <EuiFlexItem>
+                    <ConfigSectionPanelTitle title="Secrets" />
+                    <SecretsConfigTable
+                      variables={job.config.secrets ? job.config.secrets : []}
+                    />
+                  </EuiFlexItem>
+                </EuiFlexGroup>
               </ConfigSectionPanel>
             </EuiFlexItem>
 

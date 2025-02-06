@@ -36,6 +36,7 @@ export class VersionEndpoint {
     }
 
     this.env_vars = [];
+    this.secrets = [];
     this.transformer = new Transformer();
     this.logger = new Logger();
 
@@ -58,6 +59,10 @@ export class VersionEndpoint {
       versionEndpoint.env_vars = versionEndpoint.env_vars.filter(
         e => e.name !== "MODEL_NAME" && e.name !== "MODEL_DIR"
       );
+    }
+
+    if (!versionEndpoint.secrets) {
+      versionEndpoint.secrets = [];
     }
 
     if (!versionEndpoint.image_builder_resource_request) {

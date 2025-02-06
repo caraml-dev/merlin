@@ -5,7 +5,8 @@ const cpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)$|^(\d{2,5}m)$/,
   gpuRequestRegex= /^\d+$/,
   envVariableNameRegex = /^[a-z0-9_]*$/i,
   dockerImageRegex =
-    /^([a-z0-9]+(?:[._-][a-z0-9]+)*(?::\d{2,5})?\/)?([a-z0-9]+(?:[._-][a-z0-9]+)*\/)*([a-z0-9]+(?:[._-][a-z0-9]+)*)(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)?$/i;
+    /^([a-z0-9]+(?:[._-][a-z0-9]+)*(?::\d{2,5})?\/)?([a-z0-9]+(?:[._-][a-z0-9]+)*\/)*([a-z0-9]+(?:[._-][a-z0-9]+)*)(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)?$/i,
+  configMapNameRegex = /^[-._a-zA-Z0-9]+$/;
 
 const resourceRequestSchema = (maxAllowedReplica) => yup.object().shape({
   cpu_request: yup
@@ -62,10 +63,28 @@ const environmentVariableSchema = yup.object().shape({
     .required("Variable name is required")
     .matches(
       envVariableNameRegex,
-      "The name of a variable can contain only alphanumeric character or the underscore"
+      "The name of an environment variable must contain only alphanumeric characters or '_'"
     ),
   value: yup.string(),
 });
+
+const secretSchema = yup.object().shape({
+  mlp_secret_name: yup
+    .string()
+    .required("MLP secret name is required")
+    .matches(
+      configMapNameRegex,
+      "The name of the MLP secret must contain only alphanumeric characters, '-', '_' or '.'"
+    ),
+  env_var_name: yup
+    .string()
+    .required("Environment variable name is required")
+    .matches(
+      envVariableNameRegex,
+      "The name of an environment variable must contain only alphanumeric characters or '_'"
+    ),
+});
+
 
 const stringValueSchema = (name, key) => yup.mixed().test(
   `value input schema`,
@@ -87,12 +106,14 @@ export const versionEndpointSchema = (maxAllowedReplica) => yup.object().shape({
   resource_request: resourceRequestSchema(maxAllowedReplica),
   image_builder_resource_request: imagebuilderRequestSchema,
   env_vars: yup.array(environmentVariableSchema),
+  secrets: yup.array(secretSchema),
 });
 
 export const transformerConfigSchema = (maxAllowedReplica) => yup.object().shape({
   transformer: yup.object().shape({
     resource_request: resourceRequestSchema(maxAllowedReplica),
     env_vars: yup.array(environmentVariableSchema),
+    secrets: yup.array(secretSchema),
   }),
 });
 

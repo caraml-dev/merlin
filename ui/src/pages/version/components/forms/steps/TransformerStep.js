@@ -8,6 +8,7 @@ import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui
 import React, { useContext } from "react";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
+import { SecretsPanel } from "../components/SecretsPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
@@ -70,6 +71,14 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
               variables={transformer.env_vars}
               onChangeHandler={onChange("transformer.env_vars")}
               errors={get(errors, "transformer.env_vars")}
+            />
+          </EuiFlexItem>
+
+          <EuiFlexItem grow={false}>
+            <SecretsPanel
+              variables={transformer.secrets}
+              onChangeHandler={onChange("transformer.secrets")}
+              errors={get(errors, "transformer.secrets")}
             />
           </EuiFlexItem>
         </>

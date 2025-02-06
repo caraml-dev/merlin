@@ -26,6 +26,7 @@ import PropTypes from "prop-types";
 import React, { Fragment, useContext } from "react";
 import { ImageBuilderSection } from "../../version/components/forms/components/ImageBuilderSection";
 import { EnvironmentVariablesForm } from "./components/EnvironmentVariablesForm";
+import { SecretsForm } from "./components/SecretsForm";
 import { ModelVersionSelect } from "./components/ModelVersionsSelect";
 import { ResourceRequestForm } from "./components/ResourceRequestForm";
 import { ServiceAccountSelect } from "./components/ServiceAccountSelect";
@@ -38,6 +39,7 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
     setServiceAccountName,
     setResourceRequest,
     setEnvVars,
+    setSecrets,
     onChangeHandler,
   } = useContext(JobFormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -49,7 +51,7 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
           <EuiFlexItem>
             <ModelVersionSelect
               isDisabled={isSelectVersionDisabled}
-              selected={job.version_id}
+              selected={job.version_id.toString()}
               versions={versions}
               onChange={(selected) => {
                 setVersionId(selected);
@@ -77,11 +79,19 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
       />
 
       <EuiSpacer size="xl" />
+
       <EuiFlexGroup>
-        <EuiFlexItem style={{ maxWidth: 400 }}>
+        <EuiFlexItem>
           <EnvironmentVariablesForm
             variables={job.config.env_vars}
             onChange={setEnvVars}
+          />
+        </EuiFlexItem>
+
+        <EuiFlexItem>
+          <SecretsForm
+            variables={job.config.secrets}
+            onChange={setSecrets}
           />
         </EuiFlexItem>
       </EuiFlexGroup>
