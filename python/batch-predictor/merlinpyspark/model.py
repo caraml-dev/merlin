@@ -79,7 +79,6 @@ def spark_udf(spark, model_uri, features, result_type="double"):
         if pdf is None:
             pdf = pandas.DataFrame(schema)
         result = model.predict(pdf)
-        print("result={}".format(result)) # TODO: remove
         if not isinstance(result, pandas.DataFrame):
             result = pandas.DataFrame(data=result)
 
