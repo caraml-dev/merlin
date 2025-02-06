@@ -1,4 +1,4 @@
-import { EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { EnvVarsConfigTable } from "../../../components/EnvVarsConfigTable";
 import { SecretsConfigTable } from "../../../components/SecretsConfigTable";
 import {
