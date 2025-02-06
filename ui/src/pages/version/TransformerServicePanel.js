@@ -93,47 +93,6 @@ export const TransformerServicePanel = ({ endpoint }) => {
               )}
             </EuiFlexGroup>
           </ConfigSectionPanel>
-
-          {/*<ConfigSectionPanel>*/}
-          {/*  <EuiFlexGroup direction="column" gutterSize="m">*/}
-          {/*    <EuiFlexItem>*/}
-          {/*      <ConfigSectionPanelTitle title="Container" />*/}
-          {/*      <ContainerConfigTable config={endpoint.transformer} />*/}
-          {/*    </EuiFlexItem>*/}
-          {/*  </EuiFlexGroup>*/}
-          {/*</ConfigSectionPanel>*/}
-
-          {/*<EuiSpacer/>*/}
-
-          {/*<ConfigSectionPanel>*/}
-          {/*  <EuiFlexGroup direction="column" gutterSize="m">*/}
-          {/*    {endpoint.transformer.env_vars && (*/}
-          {/*      <EuiFlexItem>*/}
-          {/*        <ConfigSectionPanelTitle title="Environment Variables" />*/}
-          {/*        <EnvVarsConfigTable*/}
-          {/*          variables={endpoint.transformer.env_vars}*/}
-          {/*        />*/}
-          {/*      </EuiFlexItem>*/}
-          {/*    )}*/}
-          {/*  </EuiFlexGroup>*/}
-          {/*</ConfigSectionPanel>*/}
-
-          {/*<EuiSpacer/>*/}
-
-          {/*<ConfigSectionPanel>*/}
-          {/*  <EuiFlexGroup direction="column" gutterSize="m">*/}
-          {/*    {endpoint.transformer.secrets && (*/}
-          {/*      <EuiFlexItem>*/}
-          {/*        <ConfigSectionPanelTitle title="Secrets" />*/}
-          {/*        <SecretsConfigTable*/}
-          {/*          variables={endpoint.transformer.secrets}*/}
-          {/*        />*/}
-          {/*      </EuiFlexItem>*/}
-          {/*    )}*/}
-          {/*  </EuiFlexGroup>*/}
-          {/*</ConfigSectionPanel>*/}
-
-
         </EuiFlexItem>
 
         <EuiFlexItem grow={1} className="euiFlexItem--smallPanel">
