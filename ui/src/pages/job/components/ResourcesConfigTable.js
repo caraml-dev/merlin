@@ -38,7 +38,7 @@ export const ResourcesConfigTable = ({
       compressed
       type="responsiveColumn"
       listItems={items}
-      columnWidths={[1, 1]}
+      columnWidths={[2, 4]}
     />
   );
 };

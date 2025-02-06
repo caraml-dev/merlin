@@ -21,12 +21,15 @@ import {
   EuiFieldText,
   EuiInMemoryTable,
   EuiTitle,
+  EuiSuperSelect
 } from "@elastic/eui";
 import PropTypes from "prop-types";
+import { useParams  } from "react-router-dom";
+import { useMerlinApi } from "../../../../hooks/useMerlinApi";
 
-require("../../../../assets/scss/EnvironmentVariables.scss");
+require("../../../../assets/scss/Secrets.scss");
 
-export const EnvironmentVariablesForm = ({ variables, onChange }) => {
+export const SecretsForm = ({ variables, onChange }) => {
   const [items, setItems] = useState([
     ...variables.map((v, idx) => ({ idx, ...v })),
     { idx: variables.length },
@@ -38,7 +41,7 @@ export const EnvironmentVariablesForm = ({ variables, onChange }) => {
     const trimmedVars = [
       ...items
         .slice(0, items.length - 1)
-        .map((item) => ({ name: item.name.trim(), value: item.value })),
+        .map((item) => ({ mlp_secret_name: item.mlp_secret_name.trim(), env_var_name: item.env_var_name })),
     ];
     if (JSON.stringify(variables) !== JSON.stringify(trimmedVars)) {
       setVars(trimmedVars);
@@ -50,46 +53,80 @@ export const EnvironmentVariablesForm = ({ variables, onChange }) => {
     setItems([...items.map((v, idx) => ({ ...v, idx }))]);
   };
 
-  const onChangeRow = (idx, field) => {
+  const onChangeMLPSecretName = (idx) => {
     return (e) => {
-      items[idx] = { ...items[idx], [field]: e.target.value };
+      items[idx] = { ...items[idx], mlp_secret_name: e };
 
       setItems((_) =>
-        field === "name" &&
-        items[items.length - 1].name &&
-        items[items.length - 1].name.trim()
+        items[items.length - 1].mlp_secret_name &&
+        items[items.length - 1].mlp_secret_name.trim()
           ? [...items, { idx: items.length }]
           : [...items],
       );
     };
   };
 
+  const onChangeEnvironmentVariableName = (idx) => {
+    return (e) => {
+      items[idx] = { ...items[idx], env_var_name: e.target.value };
+      setItems((_) => [...items]);
+    };
+  };
+
+  const { projectId } = useParams();
+  const [options, setOptions] = useState([]);
+
+  const [{ data: secrets }] = useMerlinApi(
+    `/projects/${projectId}/secrets`,
+    {},
+    [],
+  );
+
+  useEffect(() => {
+    if (secrets) {
+      const options = [];
+      secrets
+        .sort((a, b) => (a.name > b.name ? -1 : 1))
+        .forEach((secret) => {
+          options.push({
+            value: secret.name,
+            inputDisplay: secret.name,
+            textWrap: "truncate",
+          });
+        });
+      setOptions(options);
+    }
+  }, [secrets]);
+
   const columns = [
     {
-      name: "Name",
-      field: "name",
+      name: "MLP Secret Name",
+      field: "mlp_secret_name",
       width: "45%",
+      // isExpander: true,
+      textOnly: false,
       render: (name, item) => (
-        <EuiFieldText
-          controlOnly
-          className="inlineTableInput"
-          placeholder="Name"
-          value={name || ""}
-          onChange={onChangeRow(item.idx, "name")}
+        <EuiSuperSelect
+          placeholder={"Select MLP secret"}
+          compressed={true}
+          options={options}
+          valueOfSelected={name}
+          onChange={onChangeMLPSecretName(item.idx)}
+          hasDividers
         />
       ),
     },
     {
-      name: "Value",
-      field: "value",
+      name: "Environment Variable Name",
+      field: "env_var_name",
       width: "45%",
       render: (value, item) => (
         <EuiFieldText
           controlOnly
           className="inlineTableInput"
-          placeholder="Value"
+          placeholder="Environment Variable Name"
           value={value || ""}
-          onChange={onChangeRow(item.idx, "value")}
+          onChange={onChangeEnvironmentVariableName(item.idx)}
         />
       ),
     },
@@ -118,11 +155,11 @@ export const EnvironmentVariablesForm = ({ variables, onChange }) => {
   return (
     <Fragment>
       <EuiTitle size="xs">
-        <h4>Environment Variables</h4>
+        <h4>Secrets</h4>
       </EuiTitle>
 
       <EuiInMemoryTable
-        className="EnvVariables"
+        className="Secrets"
         columns={columns}
         items={items}
       />
@@ -130,7 +167,7 @@ export const EnvironmentVariablesForm = ({ variables, onChange }) => {
   );
 };
 
-EnvironmentVariablesForm.propTypes = {
+SecretsForm.propTypes = {
   variables: PropTypes.array,
   onChange: PropTypes.func,
 };
