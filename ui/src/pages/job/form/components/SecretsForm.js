@@ -103,7 +103,6 @@ export const SecretsForm = ({ variables, onChange }) => {
       name: "MLP Secret Name",
       field: "mlp_secret_name",
       width: "45%",
-      // isExpander: true,
       textOnly: false,
       render: (name, item) => (
         <EuiSuperSelect
