@@ -38,8 +38,7 @@ ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-de
 
 # Add ODPS driver jar for accessing Alibaba Cloud MaxCompute.
 ADD https://github.com/aliyun/aliyun-odps-jdbc/releases/download/v3.8.2/odps-jdbc-3.8.2-jar-with-dependencies.jar $SPARK_HOME/jars
-# TODO: update version once released
-ADD https://github.com/caraml-dev/caraml-store/releases/download/caraml-store-spark/odps/v0.0.1-test/custom-dialect.jar $SPARK_HOME/jars 
+ADD https://github.com/caraml-dev/caraml-store/releases/download/caraml-store-spark/odps/v0.0.1/custom-dialect.jar $SPARK_HOME/jars 
 
 RUN chmod 644 -R $SPARK_HOME/jars/*
 
