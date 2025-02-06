@@ -705,7 +705,6 @@ const VersionListTable = ({
         itemId="id"
         itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
         isExpandable={true}
-        hasActions={true}
         message={loadingView}
         search={search}
         sorting={{ sort: { field: "Version", direction: "desc" } }}

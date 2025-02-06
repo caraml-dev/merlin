@@ -24,6 +24,7 @@ import {
 } from "../../components/section";
 import { ContainerConfigTable } from "../../components/ContainerConfigTable";
 import { EnvVarsConfigTable } from "../../components/EnvVarsConfigTable";
+import { SecretsConfigTable } from "../../components/SecretsConfigTable";
 import { ResourcesConfigTable } from "../../components/ResourcesConfigTable";
 import {
   Config,
@@ -81,8 +82,58 @@ export const TransformerServicePanel = ({ endpoint }) => {
                   />
                 </EuiFlexItem>
               )}
+
+              {endpoint.transformer.secrets && (
+                <EuiFlexItem>
+                  <ConfigSectionPanelTitle title="Secrets" />
+                  <SecretsConfigTable
+                    variables={endpoint.transformer.secrets}
+                  />
+                </EuiFlexItem>
+              )}
             </EuiFlexGroup>
           </ConfigSectionPanel>
+
+          {/*<ConfigSectionPanel>*/}
+          {/*  <EuiFlexGroup direction="column" gutterSize="m">*/}
+          {/*    <EuiFlexItem>*/}
+          {/*      <ConfigSectionPanelTitle title="Container" />*/}
+          {/*      <ContainerConfigTable config={endpoint.transformer} />*/}
+          {/*    </EuiFlexItem>*/}
+          {/*  </EuiFlexGroup>*/}
+          {/*</ConfigSectionPanel>*/}
+
+          {/*<EuiSpacer/>*/}
+
+          {/*<ConfigSectionPanel>*/}
+          {/*  <EuiFlexGroup direction="column" gutterSize="m">*/}
+          {/*    {endpoint.transformer.env_vars && (*/}
+          {/*      <EuiFlexItem>*/}
+          {/*        <ConfigSectionPanelTitle title="Environment Variables" />*/}
+          {/*        <EnvVarsConfigTable*/}
+          {/*          variables={endpoint.transformer.env_vars}*/}
+          {/*        />*/}
+          {/*      </EuiFlexItem>*/}
+          {/*    )}*/}
+          {/*  </EuiFlexGroup>*/}
+          {/*</ConfigSectionPanel>*/}
+
+          {/*<EuiSpacer/>*/}
+
+          {/*<ConfigSectionPanel>*/}
+          {/*  <EuiFlexGroup direction="column" gutterSize="m">*/}
+          {/*    {endpoint.transformer.secrets && (*/}
+          {/*      <EuiFlexItem>*/}
+          {/*        <ConfigSectionPanelTitle title="Secrets" />*/}
+          {/*        <SecretsConfigTable*/}
+          {/*          variables={endpoint.transformer.secrets}*/}
+          {/*        />*/}
+          {/*      </EuiFlexItem>*/}
+          {/*    )}*/}
+          {/*  </EuiFlexGroup>*/}
+          {/*</ConfigSectionPanel>*/}
+
+
         </EuiFlexItem>
 
         <EuiFlexItem grow={1} className="euiFlexItem--smallPanel">

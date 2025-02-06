@@ -27,6 +27,7 @@ export class Transformer {
     };
 
     this.env_vars = [];
+    this.secrets = [];
 
     this.config = undefined; // Config
 
@@ -53,6 +54,10 @@ export class Transformer {
       if (transformer.config.transformerConfig.feast !== undefined) {
         transformer.type_on_ui = "feast";
       }
+    }
+
+    if (!transformer.secrets) {
+      transformer.secrets = [];
     }
 
     return transformer;
