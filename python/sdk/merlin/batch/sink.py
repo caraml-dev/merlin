@@ -18,6 +18,7 @@ from typing import MutableMapping, Mapping, Any, Optional
 
 import client
 from merlin.batch.big_query_util import valid_table_id, valid_column
+from merlin.batch.maxcompute_util import mc_valid_table_id, mc_valid_columns
 
 
 class Sink(ABC):
@@ -143,6 +144,112 @@ class BigQuerySink(Sink):
         return client.PredictionJobConfigBigquerySink(
             table=self._table,
             staging_bucket=self._staging_bucket,
+            result_column=self._result_column,
+            save_mode=client.SaveMode(self._save_mode.value),
+            options=opts
+        )
+
+class MaxComputeSink(Sink):
+    """
+        Sink contract for MaxCompute to create prediction job
+    """
+
+    def __init__(self, endpoint: str,
+                 table: str,
+                 result_column: str,
+                 save_mode: SaveMode = SaveMode.ERRORIFEXISTS,
+                 options: MutableMapping[str, str] = None):
+        """
+        :param endpoint: MaxCompute endpoint
+        :param table: table name in MaxCompute, in the format of `project_name.schema.table_name`
+        :param result_column: column name that will be used to store prediction result.
+        :param save_mode: save mode. Default to SaveMode.ERRORIFEXISTS. Which will fail if destination table already exists
+        :param options: additional sink option to configure the prediction job.
+        """
+        self._endpoint = endpoint
+        self._table = table
+        self._result_column = result_column
+        self._save_mode = save_mode
+        self._options = options
+
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
+
+    @endpoint.setter
+    def endpoint(self, endpoint):
+        self._endpoint = endpoint
+
+    @property
+    def table(self) -> str:
+        return self._table
+
+    @table.setter
+    def table(self, table):
+        self._table = table
+
+    @property
+    def result_column(self) -> str:
+        return self._result_column
+
+    @result_column.setter
+    def result_column(self, result_column):
+        self._result_column = result_column
+
+    @property
+    def options(self) -> Optional[MutableMapping[str, str]]:
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        self._options = options
+
+    def _valid_types(self):
+        if not isinstance(self._endpoint, str):
+            return False
+        if not isinstance(self._table, str):
+            return False
+        if not isinstance(self._result_column, str):
+            return False
+        if not isinstance(self._save_mode, SaveMode):
+            return False
+        if self._options is not None and not isinstance(self._options, MutableMapping):
+            return False
+
+        return
+
+
+    def _validate(self):
+        if not self._valid_types():
+            raise ValueError("invalid input type")
+        if not mc_valid_table_id(self.table):
+            raise ValueError(f"invalid table: {self.table}")
+        if not mc_valid_columns(self.features):
+            raise ValueError(f"invalid features column: {self.features}")
+
+    def to_dict(self) -> Mapping[str, Any]:
+        self._validate()
+
+        opts = self._options
+        if opts is None:
+            opts = {}
+        return {
+            'endpoint': self._endpoint,
+            'table': self._table,
+            'result_column': self._result_column,
+            'save_mode': self._save_mode.value,
+            'options': opts
+        }
+
+    def to_client_config(self) -> client.PredictionJobConfigMaxcomputeSink:
+        opts = {}
+        if self.options is not None:
+            for k, v in self.options.items():
+                opts[k] = v
+
+        return client.PredictionJobConfigMaxcomputeSink(
+            endpoint=self._endpoint,
+            table=self._table,
             result_column=self._result_column,
             save_mode=client.SaveMode(self._save_mode.value),
             options=opts

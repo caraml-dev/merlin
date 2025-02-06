@@ -44,8 +44,8 @@ from merlin.autoscaling import (
 )
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
-from merlin.batch.sink import BigQuerySink
-from merlin.batch.source import BigQuerySource
+from merlin.batch.sink import BigQuerySink, MaxComputeSink
+from merlin.batch.source import BigQuerySource, MaxComputeSource
 from merlin.deployment_mode import DeploymentMode
 from merlin.docker.docker import copy_standard_dockerfile, wait_build_complete
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
@@ -1508,11 +1508,15 @@ class ModelVersion:
 
         if isinstance(job_config.source, BigQuerySource):
             job_cfg.bigquery_source = job_config.source.to_client_bq_source()
+        elif isinstance(job_config.source, MaxComputeSource):
+            job_cfg.maxcompute_source = job_config.source.to_client_maxcompute_source()
         else:
             raise ValueError(f"source type is not supported {type(job_config.source)}")
 
         if isinstance(job_config.sink, BigQuerySink):
             job_cfg.bigquery_sink = job_config.sink.to_client_config()
+        elif isinstance(job_config.sink, MaxComputeSink):
+            job_cfg.maxcompute_sink = job_config.sink.to_client_config()
         else:
             raise ValueError(f"sink type is not supported {type(job_config.sink)}")
 
