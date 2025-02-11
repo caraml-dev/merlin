@@ -314,6 +314,185 @@ class BigQuerySink(ObservationSink):
         print(f"Failed to write to BigQuery after {self.retry.retry_attempts} attempts")
 
 
+@dataclass_json
+@dataclass
+class MaxComputeRetryConfig:
+    """
+    Configuration for retrying failed write attempts. Write could fail due to Maxcompute
+    taking time to update the table schema / create new table.
+    Attributes:
+        enabled: Whether to retry failed write attempts
+        retry_attempts: Number of retry attempts
+        retry_interval_seconds: Interval between retry attempts
+    """
+
+    enabled: bool = False
+    retry_attempts: int = 4
+    retry_interval_seconds: int = 30
+
+
+@dataclass_json
+@dataclass
+class MaxComputeConfig:
+    """
+    Configuration for writing to MaxCompute
+    Attributes:
+        project: MaxCompute project id
+        dataset: MaxCompute dataset name
+        ttl_days: Time to live for the date partition
+        retry: Configuration for retrying failed write attempts
+    """
+
+    project: str
+    dataset: str
+    ttl_days: int
+    retry: MaxComputeRetryConfig = MaxComputeRetryConfig()
+
+
+class MaxComputeSink(ObservationSink):
+    """
+    Writes prediction logs to MaxComputeSink. If the destination table doesn't exist, it will be created based on the inference schema.
+    """
+
+    def __init__(
+        self,
+        project: str,
+        inference_schema: InferenceSchema,
+        model_id: str,
+        model_version: str,
+        config: MaxComputeConfig,
+    ):
+        """
+        :param project: CaraML project
+        :param inference_schema: Inference schema for the ingested model
+        :param model_id: Merlin model id
+        :param model_version: Merlin model version
+        :param config: Configuration to write to maxcompute sink
+        """
+        super().__init__(project, inference_schema, model_id, model_version)
+        self._client = BigQueryClient() # TODO change to maxcompute client
+        self._config = config
+        self._table = self.create_or_update_table()
+
+    @property
+    def bq_project(self) -> str:
+        return self._config.project
+
+    @property
+    def dataset(self) -> str:
+        return self._config.dataset
+
+    @property
+    def retry(self) -> MaxComputeRetryConfig:
+        return self._config.retry
+
+    def create_or_update_table(self) -> Table:
+        try:
+            # original_table = self._client.get_table(self.write_location)
+            # original_schema = original_table.schema
+            # migrated_schema = original_schema[:]
+            # for field in self.schema_fields:
+            #     if field not in original_schema:
+            #         migrated_schema.append(field)
+            # if migrated_schema == original_schema:
+            #     return original_table
+            # original_table.schema = migrated_schema
+            # return self._client.update_table(original_table, ["schema"])
+            return
+        except NotFound:
+            # table = Table(self.write_location, schema=self.schema_fields)
+            # table.time_partitioning = TimePartitioning(
+            #     type_=TimePartitioningType.DAY,
+            #     field=PREDICTION_LOG_TIMESTAMP_COLUMN,
+            #     expiration_ms=self._config.ttl_days * 24 * 60 * 60 * 1000,
+            # )
+            # return self._client.create_table(table=table)
+            return
+
+    @property
+    def schema_fields(self) -> List[SchemaField]:
+        value_type_to_bq_type = {
+            ValueType.INT64: "INT",
+            ValueType.FLOAT64: "FLOAT",
+            ValueType.BOOLEAN: "BOOLEAN",
+            ValueType.STRING: "STRING",
+        }
+
+        schema_fields = [
+            SchemaField(
+                name=self._inference_schema.session_id_column,
+                field_type="STRING",
+            ),
+            SchemaField(
+                name=self._inference_schema.row_id_column,
+                field_type="STRING",
+            ),
+            SchemaField(
+                name=PREDICTION_LOG_TIMESTAMP_COLUMN,
+                field_type="TIMESTAMP",
+            ),
+            SchemaField(
+                name=PREDICTION_LOG_MODEL_VERSION_COLUMN,
+                field_type="STRING",
+            ),
+        ]
+        for feature, feature_type in self._inference_schema.feature_types.items():
+            schema_fields.append(
+                SchemaField(
+                    name=feature, field_type=value_type_to_bq_type[feature_type]
+                )
+            )
+        for (
+            prediction,
+            prediction_type,
+        ) in self._inference_schema.model_prediction_output.prediction_types().items():
+            schema_fields.append(
+                SchemaField(
+                    name=prediction, field_type=value_type_to_bq_type[prediction_type]
+                )
+            )
+
+        return schema_fields
+
+    @property
+    def write_location(self) -> str:
+        """
+        Returns the MaxCompute table location to write the prediction logs, which will be unique
+        for each CaraML project / model pair. Different versions of a model share the same table.
+        :return:
+        """
+        table_name = f"prediction_log_{self._project}_{self._model_id}".replace("-", "_").replace(
+            ".", "_"
+        )
+        return f"{self.bq_project}.{self.dataset}.{table_name}"
+
+    def write(self, dataframe: pd.DataFrame):
+        for i in range(0, self.retry.retry_attempts + 1):
+            try:
+                # response = self._client.insert_rows_from_dataframe(
+                #     dataframe=dataframe, table=self._table
+                # ) TODO modify insert logic
+                # errors = [error for error_chunk in response for error in error_chunk]
+                # if len(errors) > 0:
+                #     if not self.retry.enabled:
+                #         print("Errors when inserting rows to BigQuery")
+                #         return
+                #     else:
+                #         print(
+                #             f"Errors when inserting rows to BigQuery, retrying attempt {i}/{self.retry.retry_attempts}"
+                #         )
+                #         time.sleep(self.retry.retry_interval_seconds)
+                # else:
+                #     return
+                return 
+            except NotFound as e:
+                print(
+                    f"Table not found: {e}, retrying attempt {i}/{self.retry.retry_attempts}"
+                )
+                time.sleep(self.retry.retry_interval_seconds)
+        print(f"Failed to write to MaxCompute after {self.retry.retry_attempts} attempts")
+
+
 def new_observation_sink(
     sink_config: ObservationSinkConfig,
     project: str,
@@ -344,5 +523,7 @@ def new_observation_sink(
                 model_version=model_version,
                 arize_client=client,
             )
+        case ObservationSink.MAXCOMPUTE:
+            return 
         case _:
             raise ValueError(f"Unknown observability backend type: {sink_config.type}")
