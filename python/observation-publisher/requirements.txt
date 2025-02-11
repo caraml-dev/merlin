@@ -4,7 +4,7 @@
 #
 #    pip-compile
 #
--e file:../sdk
+# -e file:../sdk
     # via -r requirements.in
 alembic==1.13.1
     # via mlflow
