@@ -282,6 +282,14 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 					TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
 				},
 			},
+			{
+				Type: MaxCompute,
+				Config: MaxComputeSink{
+					Project: c.consumerConfig.MaxComputeSink.Project,
+					Dataset: c.consumerConfig.MaxComputeSink.Dataset,
+					TTLDays: c.consumerConfig.MaxComputeSink.TTLDays,
+				},
+			},
 		},
 		ObservationSource: &ObserVationSource{
 			Type: Kafka,

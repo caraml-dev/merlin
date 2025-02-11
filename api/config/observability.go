@@ -6,6 +6,7 @@ import "time"
 type ObservabilityPublisher struct {
 	ArizeSink                ArizeSink
 	BigQuerySink             BigQuerySink
+	MaxComputeSink           MaxComputeSink
 	KafkaConsumer            KafkaConsumer
 	ImageName                string
 	DefaultResources         ResourceRequestsLimits
@@ -32,6 +33,13 @@ type ArizeSink struct {
 
 // BigQuerySink
 type BigQuerySink struct {
+	Project string
+	Dataset string
+	TTLDays int
+}
+
+// MaxComputeSink
+type MaxComputeSink struct {
 	Project string
 	Dataset string
 	TTLDays int
