@@ -2,6 +2,11 @@ import abc
 import time
 from dataclasses import dataclass
 from typing import List, Tuple
+from odps import ODPS
+from odps.df import DataFrame as ODPSDataFrame
+from odps.models import TableSchema, Column, Partition
+from odps.errors import NoSuchObject
+import os
 
 import pandas as pd
 from arize.pandas.logger import Client as ArizeClient
@@ -347,6 +352,9 @@ class MaxComputeConfig:
     dataset: str
     ttl_days: int
     retry: MaxComputeRetryConfig = MaxComputeRetryConfig()
+    access_key_id: str
+    access_key_secret: str
+    access_url: str
 
 
 class MaxComputeSink(ObservationSink):
@@ -370,12 +378,17 @@ class MaxComputeSink(ObservationSink):
         :param config: Configuration to write to maxcompute sink
         """
         super().__init__(project, inference_schema, model_id, model_version)
-        self._client = BigQueryClient() # TODO change to maxcompute client
         self._config = config
+        self._client = ODPS(
+            os.getenv(config.access_key_id),
+            os.getenv(config.access_key_secret),
+            project=config.project,
+            endpoint=os.getenv(config.access_url)
+        )
         self._table = self.create_or_update_table()
 
     @property
-    def bq_project(self) -> str:
+    def max_compute_project(self) -> str:
         return self._config.project
 
     @property
@@ -388,30 +401,29 @@ class MaxComputeSink(ObservationSink):
 
     def create_or_update_table(self) -> Table:
         try:
-            # original_table = self._client.get_table(self.write_location)
-            # original_schema = original_table.schema
-            # migrated_schema = original_schema[:]
-            # for field in self.schema_fields:
-            #     if field not in original_schema:
-            #         migrated_schema.append(field)
-            # if migrated_schema == original_schema:
-            #     return original_table
-            # original_table.schema = migrated_schema
-            # return self._client.update_table(original_table, ["schema"])
-            return
-        except NotFound:
-            # table = Table(self.write_location, schema=self.schema_fields)
-            # table.time_partitioning = TimePartitioning(
-            #     type_=TimePartitioningType.DAY,
-            #     field=PREDICTION_LOG_TIMESTAMP_COLUMN,
-            #     expiration_ms=self._config.ttl_days * 24 * 60 * 60 * 1000,
-            # )
-            # return self._client.create_table(table=table)
-            return
+            original_table = self._client.get_table(self.write_location)
+            original_schema = original_table.table_schema
+            migrated_schema = original_schema[:]
+            for field in self.schema_fields:
+                if field not in original_schema:
+                    migrated_schema.append(field)
+            if migrated_schema == original_schema:
+                return original_table
+            original_table.table_schema = migrated_schema
+            return self._client.update_table(original_table)
+            
+        except NoSuchObject:
+            return self._client.create_table(self.write_location, self.schema_fields)
+            table.time_partitioning = TimePartitioning(
+                type_=TimePartitioningType.DAY,
+                field=PREDICTION_LOG_TIMESTAMP_COLUMN,
+                expiration_ms=self._config.ttl_days * 24 * 60 * 60 * 1000,
+            )
+            return self._client.create_table(table=table)
 
     @property
-    def schema_fields(self) -> List[SchemaField]:
-        value_type_to_bq_type = {
+    def schema_fields(self) -> List[Column]:
+        value_type_to_maxcompute_type = {
             ValueType.INT64: "INT",
             ValueType.FLOAT64: "FLOAT",
             ValueType.BOOLEAN: "BOOLEAN",
@@ -419,27 +431,27 @@ class MaxComputeSink(ObservationSink):
         }
 
         schema_fields = [
-            SchemaField(
+            Column(
                 name=self._inference_schema.session_id_column,
-                field_type="STRING",
+                type="STRING",
             ),
-            SchemaField(
+            Column(
                 name=self._inference_schema.row_id_column,
-                field_type="STRING",
+                type="STRING",
             ),
-            SchemaField(
+            Column(
                 name=PREDICTION_LOG_TIMESTAMP_COLUMN,
-                field_type="TIMESTAMP",
+                type="TIMESTAMP",
             ),
-            SchemaField(
+            Column(
                 name=PREDICTION_LOG_MODEL_VERSION_COLUMN,
-                field_type="STRING",
+                type="STRING",
             ),
         ]
         for feature, feature_type in self._inference_schema.feature_types.items():
             schema_fields.append(
-                SchemaField(
-                    name=feature, field_type=value_type_to_bq_type[feature_type]
+                Column(
+                    name=feature, type=value_type_to_maxcompute_type[feature_type]
                 )
             )
         for (
@@ -447,8 +459,8 @@ class MaxComputeSink(ObservationSink):
             prediction_type,
         ) in self._inference_schema.model_prediction_output.prediction_types().items():
             schema_fields.append(
-                SchemaField(
-                    name=prediction, field_type=value_type_to_bq_type[prediction_type]
+                Column(
+                    name=prediction, type=value_type_to_maxcompute_type[prediction_type]
                 )
             )
 
@@ -464,32 +476,28 @@ class MaxComputeSink(ObservationSink):
         table_name = f"prediction_log_{self._project}_{self._model_id}".replace("-", "_").replace(
             ".", "_"
         )
-        return f"{self.bq_project}.{self.dataset}.{table_name}"
+        return f"{self.max_compute_project}.{self.dataset}.{table_name}"
 
     def write(self, dataframe: pd.DataFrame):
         for i in range(0, self.retry.retry_attempts + 1):
-            try:
-                # response = self._client.insert_rows_from_dataframe(
-                #     dataframe=dataframe, table=self._table
-                # ) TODO modify insert logic
-                # errors = [error for error_chunk in response for error in error_chunk]
-                # if len(errors) > 0:
-                #     if not self.retry.enabled:
-                #         print("Errors when inserting rows to BigQuery")
-                #         return
-                #     else:
-                #         print(
-                #             f"Errors when inserting rows to BigQuery, retrying attempt {i}/{self.retry.retry_attempts}"
-                #         )
-                #         time.sleep(self.retry.retry_interval_seconds)
-                # else:
-                #     return
-                return 
-            except NotFound as e:
-                print(
-                    f"Table not found: {e}, retrying attempt {i}/{self.retry.retry_attempts}"
-                )
-                time.sleep(self.retry.retry_interval_seconds)
+            df = ODPSDataFrame(dataframe)
+            response = df.persist(self.write_location)
+            response = self._client.insert_rows_from_dataframe(
+                dataframe=dataframe, table=self._table
+            )
+            # errors = [error for error_chunk in response for error in error_chunk]
+            # if len(errors) > 0:
+            #     if not self.retry.enabled:
+            #         print("Errors when inserting rows to MaxCompute")
+            #         return
+            #     else:
+            #         print(
+            #             f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
+            #         )
+            #         time.sleep(self.retry.retry_interval_seconds)
+            # else:
+            #     return
+            return
         print(f"Failed to write to MaxCompute after {self.retry.retry_attempts} attempts")
 
 
@@ -524,6 +532,13 @@ def new_observation_sink(
                 arize_client=client,
             )
         case ObservationSink.MAXCOMPUTE:
-            return 
+            maxcompute_config: MaxComputeConfig = MaxComputeConfig.from_dict(sink_config.config) # type: ignore[attr-defined]
+            return MaxComputeSink(
+                project=project,
+                inference_schema=inference_schema,
+                model_id=model_id,
+                model_version=model_version,
+                config=maxcompute_config,
+            )
         case _:
             raise ValueError(f"Unknown observability backend type: {sink_config.type}")
