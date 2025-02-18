@@ -9,6 +9,7 @@ from merlin.observability.inference import InferenceSchema, ValueType, BinaryCla
 from typing_extensions import Self
 
 PREDICTION_LOG_TIMESTAMP_COLUMN = "request_timestamp"
+PREDICTION_LOG_TIMESTAMP_PARTITION_COLUMN = "request_timestamp_pt"
 PREDICTION_LOG_MODEL_VERSION_COLUMN = "model_version"
 
 
