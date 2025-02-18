@@ -17,19 +17,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { EuiInMemoryTable, EuiText } from "@elastic/eui";
-import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../services/transformer/TransformerConfig";
 
-export const EnvVarsConfigTable = ({ variables = [] }) => {
+export const SecretsConfigTable = ({ variables = [] }) => {
   const columns = [
     {
-      field: "name",
-      name: "Name",
+      field: "mlp_secret_name",
+      name: "MLP Secret Name",
       width: "40%",
       sortable: true
     },
     {
-      field: "value",
-      name: "Value",
+      field: "env_var_name",
+      name: "Environment Variable Name",
       width: "60%",
       sortable: true
     }
@@ -37,9 +36,7 @@ export const EnvVarsConfigTable = ({ variables = [] }) => {
 
   return variables.length ? (
     <EuiInMemoryTable
-      items={variables.filter(
-        v => v.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME
-      )}
+      items={variables}
       columns={columns}
       itemId="name"
     />
@@ -50,6 +47,6 @@ export const EnvVarsConfigTable = ({ variables = [] }) => {
   );
 };
 
-EnvVarsConfigTable.propTypes = {
+SecretsConfigTable.propTypes = {
   variables: PropTypes.array.isRequired
 };

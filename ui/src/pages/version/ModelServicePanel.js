@@ -23,6 +23,7 @@ import {
   ConfigSectionPanelTitle
 } from "../../components/section";
 import { EnvVarsConfigTable } from "../../components/EnvVarsConfigTable";
+import { SecretsConfigTable } from "../../components/SecretsConfigTable";
 import { ResourcesConfigTable } from "../../components/ResourcesConfigTable";
 import { ContainerConfigTable } from "../../components/ContainerConfigTable";
 
@@ -43,6 +44,14 @@ export const ModelServicePanel = ({ endpoint, version }) => {
                 <ConfigSectionPanelTitle title="Environment Variables" />
                 {endpoint.env_vars ? (
                   <EnvVarsConfigTable variables={endpoint.env_vars} />
+                ) : (
+                  <EuiText>Not available</EuiText>
+                )}
+              </EuiFlexItem>
+              <EuiFlexItem>
+                <ConfigSectionPanelTitle title="Secrets" />
+                {endpoint.secrets ? (
+                  <SecretsConfigTable variables={endpoint.secrets} />
                 ) : (
                   <EuiText>Not available</EuiText>
                 )}

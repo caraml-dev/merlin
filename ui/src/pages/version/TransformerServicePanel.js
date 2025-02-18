@@ -24,6 +24,7 @@ import {
 } from "../../components/section";
 import { ContainerConfigTable } from "../../components/ContainerConfigTable";
 import { EnvVarsConfigTable } from "../../components/EnvVarsConfigTable";
+import { SecretsConfigTable } from "../../components/SecretsConfigTable";
 import { ResourcesConfigTable } from "../../components/ResourcesConfigTable";
 import {
   Config,
@@ -78,6 +79,15 @@ export const TransformerServicePanel = ({ endpoint }) => {
                   <ConfigSectionPanelTitle title="Environment Variables" />
                   <EnvVarsConfigTable
                     variables={endpoint.transformer.env_vars}
+                  />
+                </EuiFlexItem>
+              )}
+
+              {endpoint.transformer.secrets && (
+                <EuiFlexItem>
+                  <ConfigSectionPanelTitle title="Secrets" />
+                  <SecretsConfigTable
+                    variables={endpoint.transformer.secrets}
                   />
                 </EuiFlexItem>
               )}

@@ -9,6 +9,7 @@ import React, { useContext } from "react";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
+import { SecretsPanel } from "../components/SecretsPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
@@ -76,6 +77,14 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
           variables={data.env_vars}
           onChangeHandler={onChange("env_vars")}
           errors={get(errors, "env_vars")}
+        />
+      </EuiFlexItem>
+
+      <EuiFlexItem grow={false}>
+        <SecretsPanel
+          variables={data.secrets}
+          onChangeHandler={onChange("secrets")}
+          errors={get(errors, "secrets")}
         />
       </EuiFlexItem>
     </EuiFlexGroup>
