@@ -44,7 +44,7 @@ type WorkerData struct {
 }
 
 func (wd *WorkerData) GetModelSerial() string {
-	return fmt.Sprintf("%s_%s_%s", wd.Project, wd.ModelName, wd.ModelVersion)
+	return fmt.Sprintf("%s_%s", wd.Project, wd.ModelName)
 }
 
 func NewWorkerData(modelVersion *Version, model *Model, observabilityPublisher *ObservabilityPublisher, resourceRequest *WorkerResourceRequest) *WorkerData {
