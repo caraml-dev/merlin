@@ -39,6 +39,8 @@ export class Job {
 
       env_vars: [],
 
+      secrets: [],
+
       job_config: {
         model: {
           type: "",
@@ -86,6 +88,10 @@ export class Job {
   static from(json) {
     if (!json.config.env_vars) {
       json.config.env_vars = [];
+    }
+
+    if (!json.config.secrets) {
+      json.config.secrets = [];
     }
 
     return objectAssignDeep(new Job(), json);
