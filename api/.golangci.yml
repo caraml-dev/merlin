@@ -1,9 +1,6 @@
 run:
   timeout: 10m
   modules-download-mode: readonly
-  skip-dirs:
-  - client
-  - '.*/mocks/.*'
 
 linters:
 # See https://golangci-lint.run/usage/linters/
@@ -17,3 +14,6 @@ issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-dirs:
+    - client
+    - '.*/mocks/.*'
