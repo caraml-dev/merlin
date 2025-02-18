@@ -351,10 +351,10 @@ class MaxComputeConfig:
     project: str
     dataset: str
     ttl_days: int
-    retry: MaxComputeRetryConfig = MaxComputeRetryConfig()
     access_key_id: str
     access_key_secret: str
     access_url: str
+    retry: MaxComputeRetryConfig = MaxComputeRetryConfig()
 
 
 class MaxComputeSink(ObservationSink):
@@ -378,12 +378,13 @@ class MaxComputeSink(ObservationSink):
         :param config: Configuration to write to maxcompute sink
         """
         super().__init__(project, inference_schema, model_id, model_version)
+        print(inference_schema)
         self._config = config
         self._client = ODPS(
-            os.getenv(config.access_key_id),
-            os.getenv(config.access_key_secret),
+            access_id=config.access_key_id,
+            secret_access_key=config.access_key_secret,
             project=config.project,
-            endpoint=os.getenv(config.access_url)
+            endpoint=config.access_url
         )
         self._table = self.create_or_update_table()
 
@@ -398,31 +399,49 @@ class MaxComputeSink(ObservationSink):
     @property
     def retry(self) -> MaxComputeRetryConfig:
         return self._config.retry
+    
+    def get_column_values_for_query(self, schema_fields) -> str:
+        first_instance = True
+        column_query = ""
+        for column in schema_fields:
+            if not first_instance:
+                column_query += ", "
+            column_query += str(column.name) + " " + str(column.type)
+            first_instance = False
+        return column_query
 
     def create_or_update_table(self) -> Table:
         try:
             original_table = self._client.get_table(self.write_location)
             original_schema = original_table.table_schema
-            migrated_schema = original_schema[:]
-            for field in self.schema_fields:
-                if field not in original_schema:
-                    migrated_schema.append(field)
-            if migrated_schema == original_schema:
+            schema_diff = []
+            for schema_field in self.schema_fields:
+                is_field_in_original_schema = any(
+                    original_schema_field.name == schema_field.name and original_schema_field.type == schema_field.type 
+                    for original_schema_field in original_schema
+                )
+                if not is_field_in_original_schema:
+                    schema_diff.append(schema_field)
+            if not schema_diff:
                 return original_table
-            original_table.table_schema = migrated_schema
-            return self._client.update_table(original_table)
+            alter_table_query = "alter table {table_name} add columns ( {cols} )".format(
+                table_name=self.table_name_with_dataset,
+                cols=self.get_column_values_for_query(schema_fields=schema_diff),
+            )
+            print(alter_table_query)
+            return self._client.execute_sql(alter_table_query)
             
         except NoSuchObject:
-            return self._client.create_table(self.write_location, self.schema_fields)
-            table.time_partitioning = TimePartitioning(
-                type_=TimePartitioningType.DAY,
-                field=PREDICTION_LOG_TIMESTAMP_COLUMN,
-                expiration_ms=self._config.ttl_days * 24 * 60 * 60 * 1000,
+            create_table_query = "create table {table_name} ( {cols} )  auto partitioned by (trunc_time({timestamp_column}, 'day') as pt)".format(
+                table_name=self.table_name_with_dataset,
+                cols=self.get_column_values_for_query(schema_fields=self.schema_fields),
+                timestamp_column=PREDICTION_LOG_TIMESTAMP_COLUMN
             )
-            return self._client.create_table(table=table)
+            self._client.execute_sql(create_table_query)
 
     @property
     def schema_fields(self) -> List[Column]:
+        print(self._inference_schema.model_prediction_output.prediction_types().items())
         value_type_to_maxcompute_type = {
             ValueType.INT64: "INT",
             ValueType.FLOAT64: "FLOAT",
@@ -477,27 +496,35 @@ class MaxComputeSink(ObservationSink):
             ".", "_"
         )
         return f"{self.max_compute_project}.{self.dataset}.{table_name}"
+    
+    @property
+    def table_name_with_dataset(self) -> str:
+        """
+        Returns the MaxCompute table location with the dataset prefix
+        for instance, the returned table name will be {dataset}.{table_name}
+        :return:
+        """
+        table_name = f"prediction_log_{self._project}_{self._model_id}".replace("-", "_").replace(
+            ".", "_"
+        )
+        return f"{self.dataset}.{table_name}"
 
     def write(self, dataframe: pd.DataFrame):
         for i in range(0, self.retry.retry_attempts + 1):
             df = ODPSDataFrame(dataframe)
-            response = df.persist(self.write_location)
-            response = self._client.insert_rows_from_dataframe(
-                dataframe=dataframe, table=self._table
-            )
-            # errors = [error for error_chunk in response for error in error_chunk]
-            # if len(errors) > 0:
-            #     if not self.retry.enabled:
-            #         print("Errors when inserting rows to MaxCompute")
-            #         return
-            #     else:
-            #         print(
-            #             f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
-            #         )
-            #         time.sleep(self.retry.retry_interval_seconds)
-            # else:
-            #     return
-            return
+            try:
+                response = df.persist(self.write_location, partition="pt=pt", overwrite=False)
+                return
+            except:
+                if not self.retry.enabled:
+                    print("Errors when inserting rows to MaxCompute")
+                    return
+                else:
+                    print(
+                        f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
+                    )
+                    time.sleep(self.retry.retry_interval_seconds)
+            
         print(f"Failed to write to MaxCompute after {self.retry.retry_attempts} attempts")
 
 
