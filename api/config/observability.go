@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // ObservabilityPublisher
 type ObservabilityPublisher struct {
@@ -26,8 +29,19 @@ type KafkaConsumer struct {
 
 // ArizeSink
 type ArizeSink struct {
-	APIKey   string
-	SpaceKey string
+	APIKey              string
+	SpaceKey            string
+	EnabledModelSerials string
+}
+
+func (az ArizeSink) IsEnabled(modelSerial string) bool {
+	for _, ems := range strings.Split(az.EnabledModelSerials, ",") {
+		if ems == modelSerial {
+			return true
+		}
+	}
+
+	return false
 }
 
 // BigQuerySink
