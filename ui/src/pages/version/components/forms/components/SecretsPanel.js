@@ -30,7 +30,6 @@ export const SecretsPanel = ({
           options.push({
             value: secret.name,
             inputDisplay: secret.name,
-            textwrap: "truncate"
           });
         });
       setOptions(options);

@@ -91,7 +91,6 @@ export const SecretsForm = ({ variables, onChange }) => {
           options.push({
             value: secret.name,
             inputDisplay: secret.name,
-            textwrap: "truncate",
           });
         });
       setOptions(options);
