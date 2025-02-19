@@ -242,7 +242,6 @@ jobs:
     needs:
       - create-version
       - build-ui
-      - test-api
     steps:
       - uses: actions/checkout@v4
       - name: Download UI Dist
