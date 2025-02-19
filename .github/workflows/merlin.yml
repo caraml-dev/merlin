@@ -370,7 +370,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - create-version
-      - test-observation-publisher
     env:
       DOCKER_REGISTRY: ghcr.io
       DOCKER_IMAGE_TAG: "ghcr.io/${{ github.repository }}/merlin-observation-publisher:${{ needs.create-version.outputs.version }}"
