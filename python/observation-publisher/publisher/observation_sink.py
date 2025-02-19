@@ -513,7 +513,7 @@ class MaxComputeSink(ObservationSink):
         for i in range(0, self.retry.retry_attempts + 1):
             df = ODPSDataFrame(dataframe)
             try:
-                response = df.persist(self.write_location, partition="pt=pt", overwrite=False)
+                response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False)
                 return
             except:
                 if not self.retry.enabled:
