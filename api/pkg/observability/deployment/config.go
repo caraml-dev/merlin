@@ -56,7 +56,10 @@ type BigQuerySink struct {
 }
 
 type MaxComputeSink struct {
-	Project string `yaml:"project"`
-	Dataset string `yaml:"dataset"`
-	TTLDays int    `yaml:"ttl_days"`
+	Project         string `yaml:"project"`
+	Dataset         string `yaml:"dataset"`
+	TTLDays         int    `yaml:"ttl_days"`
+	AccessKeyID     string `yaml:"access_key_id"`
+	AccessKeySecret string `yaml:"access_key_secret"`
+	AccessUrl       string `yaml:"access_url"`
 }
