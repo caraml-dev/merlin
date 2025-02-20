@@ -517,7 +517,7 @@ class MaxComputeSink(ObservationSink):
                 return
             except Exception as e:
                 if not self.retry.enabled:
-                    print("Errors when inserting rows to MaxCompute", e)
+                    print("Exception when inserting rows to MaxCompute", e)
                     return
                 else:
                     print(
