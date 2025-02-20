@@ -432,7 +432,7 @@ class MaxComputeSink(ObservationSink):
             return self._client.execute_sql(alter_table_query)
             
         except NoSuchObject:
-            create_table_query = "create table {table_name} ( {cols} )  auto partitioned by (trunc_time({timestamp_column}, 'day') as pt)".format(
+            create_table_query = "create table {table_name} ( {cols} )  auto partitioned by (trunc_time({timestamp_column}, 'day') as request_timestamp_pt)".format(
                 table_name=self.table_name_with_dataset,
                 cols=self.get_column_values_for_query(schema_fields=self.schema_fields),
                 timestamp_column=PREDICTION_LOG_TIMESTAMP_COLUMN
@@ -515,9 +515,9 @@ class MaxComputeSink(ObservationSink):
             try:
                 response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False)
                 return
-            except:
+            except Exception as e:
                 if not self.retry.enabled:
-                    print("Errors when inserting rows to MaxCompute")
+                    print("Errors when inserting rows to MaxCompute", e)
                     return
                 else:
                     print(
