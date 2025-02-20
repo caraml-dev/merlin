@@ -269,6 +269,17 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 				Dataset: c.consumerConfig.BigQuerySink.Dataset,
 				TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
 			},
+			{
+				Type: MaxCompute,
+				Config: MaxComputeSink{
+					Project:         c.consumerConfig.MaxComputeSink.Project,
+					Dataset:         c.consumerConfig.MaxComputeSink.Dataset,
+					TTLDays:         c.consumerConfig.MaxComputeSink.TTLDays,
+					AccessKeyID:     c.consumerConfig.MaxComputeSink.AccessKeyID,
+					AccessKeySecret: c.consumerConfig.MaxComputeSink.AccessKeySecret,
+					AccessUrl:       c.consumerConfig.MaxComputeSink.AccessUrl,
+				},
+			},
 		},
 	}
 
