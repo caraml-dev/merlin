@@ -4,7 +4,7 @@
 #
 #    pip-compile
 #
-# -e file:../sdk
+-e file:../sdk
     # via -r requirements.in
 alembic==1.13.1
     # via mlflow
@@ -15,7 +15,7 @@ antlr4-python3-runtime==4.9.3
     #   hydra-core
     #   omegaconf
 arize==7.10.2
-    # via -r requirements.in,
+    # via -r requirements.in
 arrow==1.3.0
     # via cookiecutter
 binaryornot==0.4.4
@@ -297,4 +297,4 @@ zipp==3.17.0
 pyodps==0.12.2
 
 # The following packages are considered to be unsafe in a requirements file:
-# setuptools
+setuptools
