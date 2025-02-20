@@ -558,7 +558,8 @@ def new_observation_sink(
                 model_version=model_version,
                 arize_client=client,
             )
-        case ObservationSink.MAXCOMPUTE:
+        case ObservationSinkType.MAXCOMPUTE:
+            print(sink_config)
             maxcompute_config: MaxComputeConfig = MaxComputeConfig.from_dict(sink_config.config) # type: ignore[attr-defined]
             return MaxComputeSink(
                 project=project,
