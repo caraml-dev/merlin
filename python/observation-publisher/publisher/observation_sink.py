@@ -510,20 +510,23 @@ class MaxComputeSink(ObservationSink):
         return f"{self.dataset}.{table_name}"
 
     def write(self, dataframe: pd.DataFrame):
-        for i in range(0, self.retry.retry_attempts + 1):
-            df = ODPSDataFrame(dataframe)
-            try:
-                response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False)
-                return
-            except Exception as e:
-                if not self.retry.enabled:
-                    print("Exception when inserting rows to MaxCompute", e)
-                    return
-                else:
-                    print(
-                        f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
-                    )
-                    time.sleep(self.retry.retry_interval_seconds)
+        df = ODPSDataFrame(dataframe)
+            # try:
+        response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False)
+        # for i in range(0, self.retry.retry_attempts + 1):
+        #     df = ODPSDataFrame(dataframe)
+        #     try:
+        #         response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False)
+        #         return
+        #     except Exception as e:
+        #         if not self.retry.enabled:
+        #             print("Exception when inserting rows to MaxCompute", e)
+        #             return
+        #         else:
+        #             print(
+        #                 f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
+        #             )
+        #             time.sleep(self.retry.retry_interval_seconds)
             
         print(f"Failed to write to MaxCompute after {self.retry.retry_attempts} attempts")
 
