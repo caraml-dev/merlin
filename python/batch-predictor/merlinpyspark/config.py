@@ -126,7 +126,6 @@ class MaxComputeSourceConfig(SourceConfig):
         self._proto = mc_src_proto
         self._project, self._schema, self._table = self._proto.table.split(".")
         
-
     def source_type(self) -> str:
         return self.TYPE
 

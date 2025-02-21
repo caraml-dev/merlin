@@ -225,7 +225,7 @@ class MaxComputeSink(Sink):
             raise ValueError("invalid input type")
         if not mc_valid_table_id(self.table):
             raise ValueError(f"invalid table: {self.table}")
-        if not mc_valid_columns(self.features):
+        if not mc_valid_columns(self.result_column):
             raise ValueError(f"invalid features column: {self.features}")
 
     def to_dict(self) -> Mapping[str, Any]:
