@@ -154,7 +154,8 @@ class MaxComputeSink(Sink):
         Sink contract for MaxCompute to create prediction job
     """
 
-    def __init__(self, endpoint: str,
+    def __init__(self, 
+                 endpoint: str,
                  table: str,
                  result_column: str,
                  save_mode: SaveMode = SaveMode.ERRORIFEXISTS,
