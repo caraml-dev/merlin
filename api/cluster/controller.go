@@ -536,7 +536,7 @@ func (c *controller) createSecrets(ctx context.Context, modelService *models.Ser
 		return fmt.Errorf("failed creating secret for model %s in namespace %s: %w", modelService.Name, modelService.Namespace, err)
 	}
 
-	if modelService.Transformer != nil {
+	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		transformerSecretName := fmt.Sprintf("%s-transformer", modelService.Name)
 		err = c.createSecretForComponent(ctx, transformerSecretName, modelService.Transformer.Secrets, modelService.Namespace, projectID)
 		if err != nil {

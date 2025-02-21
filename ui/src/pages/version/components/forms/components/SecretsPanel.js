@@ -1,15 +1,40 @@
-import React from "react";
-import { EuiButtonIcon, EuiFieldText, EuiSpacer } from "@elastic/eui";
+import React, { useEffect, useState } from "react";
+import { EuiButtonIcon, EuiFieldText, EuiSpacer, EuiSuperSelect } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "./Panel";
-import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../../../../../services/transformer/TransformerConfig";
+import { useMerlinApi } from "../../../../../hooks/useMerlinApi";
+import { useParams } from "react-router-dom";
+import "./SecretsPanel.scss"
 
-export const EnvVariablesPanel = ({
+export const SecretsPanel = ({
   variables,
   onChangeHandler,
   errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
+  const { projectId } = useParams();
+  const [options, setOptions] = useState([]);
+
+  const [{ data: secrets }] = useMerlinApi(
+    `/projects/${projectId}/secrets`,
+    {},
+    [],
+  );
+
+  useEffect(() => {
+    if (secrets) {
+      const options = [];
+      secrets
+        .sort((a, b) => (a.name > b.name ? -1 : 1))
+        .forEach((secret) => {
+          options.push({
+            value: secret.name,
+            inputDisplay: secret.name,
+          });
+        });
+      setOptions(options);
+    }
+  }, [secrets]);
 
   const items = [
     ...variables.map((v, idx) => ({ idx, ...v })),
@@ -32,30 +57,31 @@ export const EnvVariablesPanel = ({
 
   const columns = [
     {
-      name: "Name",
-      field: "name",
+      name: "MLP Secret Name",
+      field: "mlp_secret_name",
       width: "45%",
       render: (name, item) => (
-        <EuiFieldText
-          controlOnly
-          className="inlineTableInput"
-          placeholder="Name"
-          value={name || ""}
-          onChange={e => onChange(`${item.idx}.name`)(e.target.value)}
+        <EuiSuperSelect
+          placeholder={"Select MLP secret"}
+          compressed={true}
+          options={options}
+          valueOfSelected={name}
+          onChange={e => onChange(`${item.idx}.mlp_secret_name`)(e)}
+          hasDividers
         />
       )
     },
     {
-      name: "Value",
-      field: "value",
+      name: "Environment Variable Name",
+      field: "env_var_name",
       width: "45%",
       render: (value, item) => (
         <EuiFieldText
           controlOnly
           className="inlineTableInput"
-          placeholder="Value"
+          placeholder="Environment Variable Name"
           value={value || ""}
-          onChange={e => onChange(`${item.idx}.value`)(e.target.value)}
+          onChange={e => onChange(`${item.idx}.env_var_name`)(e.target.value)}
         />
       )
     },
@@ -81,17 +107,13 @@ export const EnvVariablesPanel = ({
   ];
 
   return (
-    <Panel title="Environment Variables">
+    <Panel title="Secrets">
       <EuiSpacer size="xs" />
       <InMemoryTableForm
         columns={columns}
         rowProps={getRowProps}
-        items={items.filter(
-          v =>
-            v.name !== "MODEL_NAME" &&
-            v.name !== "MODEL_DIR" &&
-            v.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME
-        )}
+        className={"Secrets"}
+        items={items}
         errors={errors}
         renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
       />

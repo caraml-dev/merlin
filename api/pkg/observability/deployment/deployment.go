@@ -261,28 +261,33 @@ func (c *deployer) applySecret(ctx context.Context, data *models.WorkerData) (se
 }
 
 func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, error) {
-	consumerCfg := &ConsumerConfig{
-		Project:         data.Project,
-		ModelID:         data.ModelName,
-		ModelVersion:    data.ModelVersion,
-		InferenceSchema: data.ModelSchemaSpec,
-		ObservationSinks: []ObservationSink{
-			{
-				Type: Arize,
-				Config: ArizeSink{
-					APIKey:   c.consumerConfig.ArizeSink.APIKey,
-					SpaceKey: c.consumerConfig.ArizeSink.SpaceKey,
-				},
-			},
-			{
-				Type: BQ,
-				Config: BigQuerySink{
-					Project: c.consumerConfig.BigQuerySink.Project,
-					Dataset: c.consumerConfig.BigQuerySink.Dataset,
-					TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
-				},
+	observationSinks := []ObservationSink{
+		{
+			Type: BQ,
+			Config: BigQuerySink{
+				Project: c.consumerConfig.BigQuerySink.Project,
+				Dataset: c.consumerConfig.BigQuerySink.Dataset,
+				TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
 			},
 		},
+	}
+
+	if c.consumerConfig.ArizeSink.IsEnabled(data.GetModelSerial()) {
+		observationSinks = append(observationSinks, ObservationSink{
+			Type: Arize,
+			Config: ArizeSink{
+				APIKey:   c.consumerConfig.ArizeSink.APIKey,
+				SpaceKey: c.consumerConfig.ArizeSink.SpaceKey,
+			},
+		})
+	}
+
+	consumerCfg := &ConsumerConfig{
+		Project:          data.Project,
+		ModelID:          data.ModelName,
+		ModelVersion:     data.ModelVersion,
+		InferenceSchema:  data.ModelSchemaSpec,
+		ObservationSinks: observationSinks,
 		ObservationSource: &ObserVationSource{
 			Type: Kafka,
 			Config: &KafkaSource{
