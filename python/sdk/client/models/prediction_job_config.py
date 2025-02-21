@@ -24,6 +24,8 @@ from client.models.prediction_job_config_bigquery_sink import PredictionJobConfi
 from client.models.prediction_job_config_bigquery_source import PredictionJobConfigBigquerySource
 from client.models.prediction_job_config_gcs_sink import PredictionJobConfigGcsSink
 from client.models.prediction_job_config_gcs_source import PredictionJobConfigGcsSource
+from client.models.prediction_job_config_maxcompute_sink import PredictionJobConfigMaxcomputeSink
+from client.models.prediction_job_config_maxcompute_source import PredictionJobConfigMaxcomputeSource
 from client.models.prediction_job_config_model import PredictionJobConfigModel
 try:
     from typing import Self
@@ -39,10 +41,12 @@ class PredictionJobConfig(BaseModel):
     name: Optional[StrictStr] = None
     bigquery_source: Optional[PredictionJobConfigBigquerySource] = None
     gcs_source: Optional[PredictionJobConfigGcsSource] = None
+    maxcompute_source: Optional[PredictionJobConfigMaxcomputeSource] = None
     model: Optional[PredictionJobConfigModel] = None
     bigquery_sink: Optional[PredictionJobConfigBigquerySink] = None
     gcs_sink: Optional[PredictionJobConfigGcsSink] = None
-    __properties: ClassVar[List[str]] = ["version", "kind", "name", "bigquery_source", "gcs_source", "model", "bigquery_sink", "gcs_sink"]
+    maxcompute_sink: Optional[PredictionJobConfigMaxcomputeSink] = None
+    __properties: ClassVar[List[str]] = ["version", "kind", "name", "bigquery_source", "gcs_source", "maxcompute_source", "model", "bigquery_sink", "gcs_sink", "maxcompute_sink"]
 
     model_config = {
         "populate_by_name": True,
@@ -86,6 +90,9 @@ class PredictionJobConfig(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of gcs_source
         if self.gcs_source:
             _dict['gcs_source'] = self.gcs_source.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of maxcompute_source
+        if self.maxcompute_source:
+            _dict['maxcompute_source'] = self.maxcompute_source.to_dict()
         # override the default output from pydantic by calling `to_dict()` of model
         if self.model:
             _dict['model'] = self.model.to_dict()
@@ -95,6 +102,9 @@ class PredictionJobConfig(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of gcs_sink
         if self.gcs_sink:
             _dict['gcs_sink'] = self.gcs_sink.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of maxcompute_sink
+        if self.maxcompute_sink:
+            _dict['maxcompute_sink'] = self.maxcompute_sink.to_dict()
         return _dict
 
     @classmethod
@@ -112,9 +122,11 @@ class PredictionJobConfig(BaseModel):
             "name": obj.get("name"),
             "bigquery_source": PredictionJobConfigBigquerySource.from_dict(obj.get("bigquery_source")) if obj.get("bigquery_source") is not None else None,
             "gcs_source": PredictionJobConfigGcsSource.from_dict(obj.get("gcs_source")) if obj.get("gcs_source") is not None else None,
+            "maxcompute_source": PredictionJobConfigMaxcomputeSource.from_dict(obj.get("maxcompute_source")) if obj.get("maxcompute_source") is not None else None,
             "model": PredictionJobConfigModel.from_dict(obj.get("model")) if obj.get("model") is not None else None,
             "bigquery_sink": PredictionJobConfigBigquerySink.from_dict(obj.get("bigquery_sink")) if obj.get("bigquery_sink") is not None else None,
-            "gcs_sink": PredictionJobConfigGcsSink.from_dict(obj.get("gcs_sink")) if obj.get("gcs_sink") is not None else None
+            "gcs_sink": PredictionJobConfigGcsSink.from_dict(obj.get("gcs_sink")) if obj.get("gcs_sink") is not None else None,
+            "maxcompute_sink": PredictionJobConfigMaxcomputeSink.from_dict(obj.get("maxcompute_sink")) if obj.get("maxcompute_sink") is not None else None
         })
         return _obj
 

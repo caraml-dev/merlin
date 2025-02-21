@@ -1,12 +1,16 @@
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
+PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
+PROTOC_GEN_GO_VERSION="v1.26"
+PROTOC_PATH ?= protoc  # Default to 'protoc' if PROTOC_PATH is not set
+
 .PHONY: setup
 setup:
 	@pipenv install --skip-lock -e .[test]
 
 .PHONY: type_check
 type_check:
-	@pipenv run mypy --ignore-missing-imports --allow-untyped-globals  merlinpyspark
+	@pipenv run mypy --ignore-missing-imports --allow-untyped-globals merlinpyspark
 
 .PHONY: test
 test: type_check
@@ -20,5 +24,13 @@ unit-test: type_check
 
 .PHONY: proto
 proto:
-	go get github.com/mitchellh/protoc-gen-go-json
-	protoc -I=. --python_out=merlinpyspark --mypy_out=merlinpyspark --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto
+	@echo "Checking libprotoc version..."
+	@echo "protocPath=$(PROTOC_PATH)"
+	@PROTOC_VERSION=$$($(PROTOC_PATH) --version | grep -o '[0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?'); \
+	if [ "$$PROTOC_VERSION" != "25.6" ]; then \
+		echo "Error: libprotoc version 25.6 is required. Found version $$PROTOC_VERSION."; \
+		echo "Download protoc version from https://repo1.maven.org/maven2/com/google/protobuf/protoc/3.25.6/"; \
+		exit 1; \
+	fi
+	go install github.com/mitchellh/protoc-gen-go-json@${PROTOC_GEN_GO_JSON_VERSION}
+	@$(PROTOC_PATH) -I=. --python_out=merlinpyspark --mypy_out=merlinpyspark --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto

@@ -34,7 +34,7 @@ def valid_dataset(dataset: str) -> bool:
     return validate_text(dataset, WORD_CHARACTER_EXPRESSION, DEFAULT_CHARACTER_LIMIT)
 
 
-def valid_column(column_name: str) -> bool:
+def bq_valid_column(column_name: str) -> bool:
     """
     Validate BigQuery column name
 
@@ -69,7 +69,7 @@ def valid_table_name(table_name: str) -> bool:
     return validate_text(table_name, WORD_CHARACTER_EXPRESSION, DEFAULT_CHARACTER_LIMIT)
 
 
-def validate_text(text: str, pattern: str, max_length: int) -> bool:
+def validate_text(text: str, pattern: str, max_length: int, min_length: int = 1) -> bool:
     """
     Validate text based on regex pattern and maximum length allowed
 
@@ -78,6 +78,8 @@ def validate_text(text: str, pattern: str, max_length: int) -> bool:
     :param max_length: Maximum length allowed
     :return: boolean
     """
+    if len(text) < min_length:
+        return False
     if len(text) > max_length:
         return False
     if re.search(pattern, text):
@@ -85,7 +87,7 @@ def validate_text(text: str, pattern: str, max_length: int) -> bool:
     return False
 
 
-def valid_table_id(table_id: str) -> bool:
+def bq_valid_table_id(table_id: str) -> bool:
     """
     Validate BigQuery source_table which satisfied this format project_id.dataset.table
 
@@ -116,6 +118,6 @@ def valid_columns(columns) -> bool:
     :return: boolean
     """
     for column in columns:
-        if not valid_column(column):
+        if not bq_valid_column(column):
             return False
     return True

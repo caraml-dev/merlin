@@ -20,7 +20,7 @@ from google.protobuf import json_format
 from pyspark.sql.types import ArrayType, DataType, DoubleType, FloatType, \
     IntegerType, LongType, StringType
 
-from merlinpyspark.spec.prediction_job_pb2 import BigQuerySink, BigQuerySource, Model, \
+from merlinpyspark.spec.prediction_job_pb2 import BigQuerySink, BigQuerySource, MaxComputeSink, MaxComputeSource, Model, \
     PredictionJob, ResultType, ModelType, SaveMode
 
 
@@ -53,6 +53,8 @@ class JobConfig:
     BIGQUERY_SINK = "bigquery_sink"
     GCS_SOURCE = "gcs_source"
     GCS_SINK = "gcs_sink"
+    MAXCOMPUTE_SOURCE = "maxcompute_source"
+    MAXCOMPUTE_SINK = "maxcompute_sink"
 
     def __init__(self, config: PredictionJob):
         self._config = config
@@ -64,6 +66,8 @@ class JobConfig:
 
         if src == self.BIGQUERY_SOURCE:
             return BigQuerySourceConfig(self._config.bigquery_source)
+        elif src == self.MAXCOMPUTE_SOURCE:
+            return MaxComputeSourceConfig(self._config.maxcompute_source)
         else:
             raise ValueError(f"{src} is not implemented")
 
@@ -77,6 +81,8 @@ class JobConfig:
 
         if sink == self.BIGQUERY_SINK:
             return BigQuerySinkConfig(self._config.bigquery_sink)
+        elif sink == self.MAXCOMPUTE_SINK:
+            return MaxComputeSinkConfig(self._config.maxcompute_sink)
         else:
             raise ValueError(f"{sink} is not implemented")
 
@@ -113,6 +119,33 @@ class BigQuerySourceConfig(SourceConfig):
     def table(self) -> str:
         return self._proto.table
 
+class MaxComputeSourceConfig(SourceConfig):
+    TYPE = "maxcompute"
+
+    def __init__(self, mc_src_proto: MaxComputeSource):
+        self._proto = mc_src_proto
+        self._project, self._schema, self._table = self._proto.table.split(".")
+        
+    def source_type(self) -> str:
+        return self.TYPE
+
+    def options(self) -> MutableMapping[str, str]:
+        return self._proto.options
+
+    def features(self) -> Iterable[str]:
+        return self._proto.features
+
+    def table(self) -> str:
+        return self._table
+    
+    def project(self) -> str:
+        return self._project
+    
+    def schema(self) -> str:
+        return self._schema
+        
+    def endpoint(self) -> str:
+        return self._proto.endpoint
 
 class ModelConfig:
     PRIMITIVE_TYPE_MAP = {
@@ -191,3 +224,39 @@ class BigQuerySinkConfig(SinkConfig):
 
     def staging_bucket(self) -> str:
         return self._proto.staging_bucket
+
+
+class MaxComputeSinkConfig(SinkConfig):
+    TYPE = "maxcompute"
+    DEFAULT_RESULT_COLUMN = "prediction"
+
+    def __init__(self, mc_sink_proto: MaxComputeSink):
+        self._proto = mc_sink_proto
+        self._project, self._schema, self._table = self._proto.table.split(".")
+    
+    def sink_type(self) -> str:
+        return self.TYPE
+    
+    def result_column(self) -> str:
+        col = self._proto.result_column
+        if col == "":
+            return self.DEFAULT_RESULT_COLUMN
+        return col
+    
+    def options(self) -> MutableMapping[str, str]:
+        return self._proto.options
+    
+    def save_mode(self) -> str:
+        return SaveMode.Name(self._proto.save_mode).lower()
+    
+    def table(self) -> str:
+        return self._table
+
+    def project(self) -> str:
+        return self._project
+    
+    def schema(self) -> str:
+        return self._schema
+
+    def endpoint(self) -> str:
+        return self._proto.endpoint
