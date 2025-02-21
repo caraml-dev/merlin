@@ -89,21 +89,22 @@ class MaxComputeSink(Sink):
         return os.environ.get("ODPS_JDBC_DRIVER", "com.aliyun.odps.jdbc.OdpsDriver")
 
     def get_access_id(self):
-        # NOTE: access id and key will not be part of the PredictionConfig
-        # since these are mounted from a configmap
+        # NOTE: access id and key will not be part of the Prediction Job proto message
         # these should be passed in via environment variable
         return os.environ.get("ODPS_ACCESS_ID")
 
     def get_access_key(self):
-        # NOTE: access id and key will not be part of the PredictionConfig
-        # since these are mounted from a configmap
+        # NOTE: access id and key will not be part of the Prediction Job proto message
         # these should be passed in via environment variable
         return os.environ.get("ODPS_SECRET_KEY")
     
     def _get_custom_dialect_class(self):
-        return os.environ.get(
-            "ODPS_CUSTOM_DIALECT_CLASS", "dev.caraml.spark.odps.CustomDialect"
-        )
+        # NOTE: this is hardcoded because the gateway function that registers the dialect
+        # cannot be passed in at runtime:
+        # gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
+        #    gw.jvm.dev.caraml.spark.odps.CustomDialect()
+        # )
+        return "dev.caraml.spark.odps.CustomDialect"
 
     def save(self, df: DataFrame):
         from py4j.java_gateway import java_import

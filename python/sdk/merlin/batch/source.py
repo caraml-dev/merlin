@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractmethod
 from typing import Iterable, MutableMapping, Mapping, Any, Optional
-from merlin.batch.big_query_util import valid_table_id, valid_columns
+from merlin.batch.big_query_util import bq_valid_table_id, valid_columns
 from merlin.batch.maxcompute_util import mc_valid_table_id, mc_valid_columns
 import client
 
@@ -73,7 +73,7 @@ class BigQuerySource(Source):
     def _validate(self):
         if not self._valid_types():
             raise ValueError("invalid input type")
-        if not valid_table_id(self.table):
+        if not bq_valid_table_id(self.table):
             raise ValueError(f"invalid table: {self.table}")
         if not valid_columns(self.features):
             raise ValueError(f"invalid features column: {self.features}")
@@ -176,9 +176,10 @@ class MaxComputeSource(Source):
             return False
         if not isinstance(self._endpoint, str):
             return False
-        for feature in self._features:
-            if not isinstance(feature, str):
-                return False
+        if not isinstance(self._features, list) or not all(
+            [isinstance(f, str) for f in self._features]
+        ):
+            return False
         return True
 
     def to_dict(self):

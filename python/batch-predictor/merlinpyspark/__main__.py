@@ -24,9 +24,6 @@ from mlflow import pyfunc
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 
-from pyspark.sql.functions import pandas_udf
-from pyspark.sql.types import DoubleType
-
 try:
     import pyspark
 except ImportError:

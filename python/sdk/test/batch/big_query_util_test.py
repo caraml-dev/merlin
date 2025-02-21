@@ -14,7 +14,7 @@
 
 import pytest
 
-from merlin.batch.big_query_util import valid_column, valid_dataset, valid_table_name, valid_table_id, valid_columns
+from merlin.batch.big_query_util import bq_valid_column, valid_dataset, valid_table_name, bq_valid_table_id, valid_columns
 
 
 @pytest.mark.parametrize(
@@ -83,7 +83,7 @@ def test_valid_dataset(dataset_name, expected):
     ]
 )
 def test_valid_column(column_name, expected):
-    valid = valid_column(column_name)
+    valid = bq_valid_column(column_name)
     assert expected == valid
 
 
@@ -153,7 +153,7 @@ def test_valid_table(table_name, expected):
     ]
 )
 def test_valid_source_table(source_table, expected):
-    valid = valid_table_id(source_table)
+    valid = bq_valid_table_id(source_table)
     assert expected == valid
 
 

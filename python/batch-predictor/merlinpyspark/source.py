@@ -174,6 +174,5 @@ class MaxComputeSource(Source):
         return os.environ.get("ODPS_SECRET_KEY")
 
     def _get_custom_dialect_class(self):
-        return os.environ.get(
-            "ODPS_CUSTOM_DIALECT_CLASS", "dev.caraml.spark.odps.CustomDialect"
-        )
+        # NOTE: this is hardcoded because of how it should be imported in the spark context
+        return "dev.caraml.spark.odps.CustomDialect"

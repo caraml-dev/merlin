@@ -17,7 +17,7 @@ from enum import Enum
 from typing import MutableMapping, Mapping, Any, Optional
 
 import client
-from merlin.batch.big_query_util import valid_table_id, valid_column
+from merlin.batch.big_query_util import bq_valid_table_id, bq_valid_column
 from merlin.batch.maxcompute_util import mc_valid_table_id, mc_valid_columns
 
 
@@ -101,9 +101,9 @@ class BigQuerySink(Sink):
     def _validate(self):
         if not self._valid_types():
             raise ValueError("invalid types")
-        if not valid_table_id(self._table):
+        if not bq_valid_table_id(self._table):
             raise ValueError(f"invalid table id: {self.table}")
-        if not valid_column(self._result_column):
+        if not bq_valid_column(self._result_column):
             raise ValueError(f"invalid result column: {self.result_column}")
         return True
 
