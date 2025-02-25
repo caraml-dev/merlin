@@ -381,7 +381,6 @@ class MaxComputeSink(ObservationSink):
         :param config: Configuration to write to maxcompute sink
         """
         super().__init__(project, inference_schema, model_id, model_version)
-        print(inference_schema)
         self._config = config
         self._client = ODPS(
             access_id=config.access_key_id,
@@ -431,7 +430,6 @@ class MaxComputeSink(ObservationSink):
                 table_name=self.table_name_with_dataset,
                 cols=self.get_column_values_for_query(schema_fields=schema_diff),
             )
-            print(alter_table_query)
             return self._client.execute_sql(alter_table_query)
             
         except NoSuchObject:
@@ -444,7 +442,6 @@ class MaxComputeSink(ObservationSink):
 
     @property
     def schema_fields(self) -> List[Column]:
-        print(self._inference_schema.model_prediction_output.prediction_types().items())
         value_type_to_maxcompute_type = {
             ValueType.INT64: "INT",
             ValueType.FLOAT64: "FLOAT",
@@ -515,9 +512,8 @@ class MaxComputeSink(ObservationSink):
     def write(self, dataframe: pd.DataFrame):
         df = ODPSDataFrame(dataframe)
         for i in range(0, self.retry.retry_attempts + 1):
-            df = ODPSDataFrame(dataframe)
             try:
-                response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False)
+                response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False, create_partition=True)
                 return
             except Exception as e:
                 if not self.retry.enabled:
@@ -563,7 +559,6 @@ def new_observation_sink(
                 arize_client=client,
             )
         case ObservationSinkType.MAXCOMPUTE:
-            print(sink_config)
             maxcompute_config: MaxComputeConfig = MaxComputeConfig.from_dict(sink_config.config) # type: ignore[attr-defined]
             return MaxComputeSink(
                 project=project,
