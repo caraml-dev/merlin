@@ -303,7 +303,11 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 		ObservationSource: &ObserVationSource{
 			Type: Kafka,
 			Config: &KafkaSource{
-				Topic:                    data.TopicSource,
+				/*
+					Models in tencent cluster ingest to kafka in tencent. The publiser-observer (consumer) in alicloud reads the mirrored kafka
+					topic. The kafka mirrored from tencent in alicloud has a prefix
+				*/
+				Topic:                    fmt.Sprintf("%s%s", c.consumerConfig.KafkaConsumer.MirroredTopicPrefix, data.TopicSource),
 				BootstrapServers:         c.consumerConfig.KafkaConsumer.Brokers,
 				GroupID:                  c.consumerConfig.KafkaConsumer.GroupID,
 				BatchSize:                c.consumerConfig.KafkaConsumer.BatchSize,
