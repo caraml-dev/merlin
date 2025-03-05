@@ -134,6 +134,10 @@ func (ve *VersionEndpoint) IsServing() bool {
 }
 
 func (ve *VersionEndpoint) IsModelMonitoringEnabled() bool {
+	if ve == nil {
+		return false
+	}
+
 	return ve.ModelObservability.IsEnabled()
 }
 

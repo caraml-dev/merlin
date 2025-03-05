@@ -34,11 +34,6 @@ func NewEventProducer(jobProducer queue.Producer, observabilityPublisherStorage 
 }
 
 func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndpoint, model *models.Model) error {
-	versionEndpoint := modelEndpoint.GetVersionEndpoint()
-	if versionEndpoint == nil || !versionEndpoint.IsModelMonitoringEnabled() {
-		return nil
-	}
-
 	ctx := context.Background()
 	publisher, err := e.observabilityPublisherStorage.GetByModelID(ctx, model.ID)
 	if err != nil {
@@ -67,6 +62,11 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 		}
 
 		return e.enqueueJob(version, model, publisher, models.UndeployPublisher, nil)
+	}
+
+	versionEndpoint := modelEndpoint.GetVersionEndpoint()
+	if !versionEndpoint.IsModelMonitoringEnabled() {
+		return nil
 	}
 
 	version, err := e.findVersionWithModelSchema(ctx, versionEndpoint.VersionID, model.ID)
