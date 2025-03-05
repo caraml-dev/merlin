@@ -104,6 +104,11 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
+				eventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(upiV1Model, upiV1ModelEndpointRequest1)

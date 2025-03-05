@@ -144,7 +144,6 @@ func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *model
 	}
 
 	// publish model endpoint change event to trigger consumer deployment
-
 	if err := s.observabilityEventProducer.ModelEndpointChangeEvent(endpoint, model); err != nil {
 		return nil, err
 	}
