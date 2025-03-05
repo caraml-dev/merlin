@@ -181,6 +181,21 @@ func (ve *VersionEndpoint) ParsedURL() (*url.URL, error) {
 	return parsedURL, nil
 }
 
+// [TODO]: deprecate this after deprecating VersionEndpoint.EnableModelObservability
+func (ve *VersionEndpoint) SetModelObservabilityEnabledWithEnableModelObservabilityIfNil() {
+	if ve == nil {
+		return
+	}
+
+	if ve.ModelObservability != nil {
+		return
+	}
+
+	ve.ModelObservability = &ModelObservability{
+		Enabled: ve.EnableModelObservability,
+	}
+}
+
 type EndpointMonitoringURLParams struct {
 	Cluster      string
 	Project      string

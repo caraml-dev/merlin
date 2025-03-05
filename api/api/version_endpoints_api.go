@@ -154,6 +154,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		}
 
 		newEndpoint.EnvironmentName = env.Name
+		newEndpoint.SetModelObservabilityEnabledWithEnableModelObservabilityIfNil()
 	}
 
 	validationRules := []requestValidator{
@@ -209,6 +210,8 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	if !ok {
 		return BadRequest("Unable to parse body as version endpoint resource")
 	}
+
+	newEndpoint.SetModelObservabilityEnabledWithEnableModelObservabilityIfNil()
 
 	env, err := c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 	if err != nil {
