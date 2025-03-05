@@ -144,10 +144,9 @@ func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *model
 	}
 
 	// publish model endpoint change event to trigger consumer deployment
-	if model.ObservabilitySupported {
-		if err := s.observabilityEventProducer.ModelEndpointChangeEvent(endpoint, model); err != nil {
-			return nil, err
-		}
+
+	if err := s.observabilityEventProducer.ModelEndpointChangeEvent(endpoint, model); err != nil {
+		return nil, err
 	}
 
 	return endpoint, nil
@@ -195,10 +194,8 @@ func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *model
 	}
 
 	// publish model endpoint change event to trigger consumer deployment
-	if model.ObservabilitySupported {
-		if err := s.observabilityEventProducer.ModelEndpointChangeEvent(newEndpoint, model); err != nil {
-			return nil, err
-		}
+	if err := s.observabilityEventProducer.ModelEndpointChangeEvent(newEndpoint, model); err != nil {
+		return nil, err
 	}
 
 	return newEndpoint, nil
@@ -226,10 +223,8 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 	}
 
 	// publish model endpoint change event to trigger consumer undeployment
-	if model.ObservabilitySupported {
-		if err := s.observabilityEventProducer.ModelEndpointChangeEvent(nil, model); err != nil {
-			return nil, err
-		}
+	if err := s.observabilityEventProducer.ModelEndpointChangeEvent(nil, model); err != nil {
+		return nil, err
 	}
 
 	return endpoint, nil

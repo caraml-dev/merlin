@@ -86,7 +86,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 	// Need to reassign destionationURL because it is ignored when marshalled and unmarshalled
 	if endpoint.Logger != nil {
-		if model.ObservabilitySupported {
+		if endpoint.ModelObservability.IsEnabled() {
 			endpoint.Logger.DestinationURL = depl.MLObsLoggerDestinationURL
 		} else {
 			endpoint.Logger.DestinationURL = depl.LoggerDestinationURL
@@ -204,7 +204,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 	}
 
-	if model.ObservabilitySupported {
+	if endpoint.ModelObservability.IsEnabled() {
 		if err := depl.ObservabilityEventProducer.VersionEndpointChangeEvent(endpoint, model); err != nil {
 			log.Errorf("error publishing event for observability deployment for model: %s, version: %s with error: %w", model.Name, version.ID, err)
 		}

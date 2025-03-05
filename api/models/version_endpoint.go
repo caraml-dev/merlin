@@ -134,10 +134,7 @@ func (ve *VersionEndpoint) IsServing() bool {
 }
 
 func (ve *VersionEndpoint) IsModelMonitoringEnabled() bool {
-	if ve.ModelObservability == nil {
-		return ve.EnableModelObservability
-	}
-	return ve.ModelObservability.Enabled
+	return ve.ModelObservability.IsEnabled()
 }
 
 func (ve *VersionEndpoint) Hostname() string {
