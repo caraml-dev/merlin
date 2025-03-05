@@ -244,38 +244,20 @@ func TestVersionEndpoint_IsModelMonitoringEnabled(t *testing.T) {
 		want            bool
 	}{
 		{
-			name: "model observability is nil but enable model observability is true",
-			versionEndpoint: &VersionEndpoint{
-				ModelObservability:       nil,
-				EnableModelObservability: true,
-			},
-			want: true,
-		},
-		{
-			name: "model observability is nil and enable model observability is false",
-			versionEndpoint: &VersionEndpoint{
-				ModelObservability:       nil,
-				EnableModelObservability: false,
-			},
-			want: false,
-		},
-		{
-			name: "model observability is not nil and enabled is true",
+			name: "model observability enabled is true",
 			versionEndpoint: &VersionEndpoint{
 				ModelObservability: &ModelObservability{
 					Enabled: true,
 				},
-				EnableModelObservability: true,
 			},
 			want: true,
 		},
 		{
-			name: "model observability is not nil and enabled is false",
+			name: "model observability enabled is false",
 			versionEndpoint: &VersionEndpoint{
 				ModelObservability: &ModelObservability{
 					Enabled: false,
 				},
-				EnableModelObservability: false,
 			},
 			want: false,
 		},
