@@ -204,10 +204,8 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 	}
 
-	if endpoint.ModelObservability.IsEnabled() {
-		if err := depl.ObservabilityEventProducer.VersionEndpointChangeEvent(endpoint, model); err != nil {
-			log.Errorf("error publishing event for observability deployment for model: %s, version: %s with error: %w", model.Name, version.ID, err)
-		}
+	if err := depl.ObservabilityEventProducer.VersionEndpointChangeEvent(endpoint, model); err != nil {
+		log.Errorf("error publishing event for observability deployment for model: %s, version: %s with error: %w", model.Name, version.ID, err)
 	}
 
 	// trigger webhook call
