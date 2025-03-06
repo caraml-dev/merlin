@@ -1,4 +1,5 @@
 import abc
+import random
 import time
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -443,7 +444,7 @@ class MaxComputeSink(ObservationSink):
     @property
     def schema_fields(self) -> List[Column]:
         value_type_to_maxcompute_type = {
-            ValueType.INT64: "INT",
+            ValueType.INT64: "BIGINT",
             ValueType.FLOAT64: "FLOAT",
             ValueType.BOOLEAN: "BOOLEAN",
             ValueType.STRING: "STRING",
@@ -508,12 +509,33 @@ class MaxComputeSink(ObservationSink):
             ".", "_"
         )
         return f"{self.dataset}.{table_name}"
+    
+    def get_schema_fields(self, schema) -> List[str]:
+        fields = []
+        for field in schema:
+            fields.append(field.name)
+
+        return fields
+
 
     def write(self, dataframe: pd.DataFrame):
         df = ODPSDataFrame(dataframe)
         for i in range(0, self.retry.retry_attempts + 1):
             try:
-                response = df.persist(self.write_location, partition="pt=request_timestamp_pt", overwrite=False, create_partition=True)
+                temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
+                df.persist(temp_table_id, create_table=True, lifecycle=1)
+                schema_fields = self.get_schema_fields(df.schema)
+                column_names_original_table = ','.join(schema_fields)
+                cast_datetime_field_to_timestamp = ["cast(" + PREDICTION_LOG_TIMESTAMP_COLUMN + " as timestamp)" if column_name == PREDICTION_LOG_TIMESTAMP_COLUMN else column_name for column_name in schema_fields]
+                column_values_from_temp_table = ','.join(cast_datetime_field_to_timestamp)
+                insert_into_query = "insert into {table_name} ( {cols} ) select {values} from {temp_table}".format(
+                    table_name=self.table_name_with_dataset,
+                    cols=column_names_original_table,
+                    values=column_values_from_temp_table,
+                    temp_table=temp_table_id,
+                )
+                self._client.execute_sql(insert_into_query)
+                self._client.execute_sql("drop table {temp_table_id}".format(temp_table_id=temp_table_id))
                 return
             except Exception as e:
                 if not self.retry.enabled:
