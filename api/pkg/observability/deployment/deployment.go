@@ -270,6 +270,17 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 				TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
 			},
 		},
+		{
+			Type: MaxCompute,
+			Config: MaxComputeSink{
+				Project:         c.consumerConfig.MaxComputeSink.Project,
+				Dataset:         c.consumerConfig.MaxComputeSink.Dataset,
+				TTLDays:         c.consumerConfig.MaxComputeSink.TTLDays,
+				AccessKeyID:     c.consumerConfig.MaxComputeSink.AccessKeyID,
+				AccessKeySecret: c.consumerConfig.MaxComputeSink.AccessKeySecret,
+				AccessUrl:       c.consumerConfig.MaxComputeSink.AccessUrl,
+			},
+		},
 	}
 
 	if c.consumerConfig.ArizeSink.IsEnabled(data.GetModelSerial()) {
@@ -281,18 +292,6 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 			},
 		})
 	}
-
-	observationSinks = append(observationSinks, ObservationSink{
-		Type: MaxCompute,
-		Config: MaxComputeSink{
-			Project:         c.consumerConfig.MaxComputeSink.Project,
-			Dataset:         c.consumerConfig.MaxComputeSink.Dataset,
-			TTLDays:         c.consumerConfig.MaxComputeSink.TTLDays,
-			AccessKeyID:     c.consumerConfig.MaxComputeSink.AccessKeyID,
-			AccessKeySecret: c.consumerConfig.MaxComputeSink.AccessKeySecret,
-			AccessUrl:       c.consumerConfig.MaxComputeSink.AccessUrl,
-		},
-	})
 
 	consumerCfg := &ConsumerConfig{
 		Project:          data.Project,
