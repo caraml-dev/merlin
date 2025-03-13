@@ -8,17 +8,9 @@ PROTOC_PATH ?= protoc  # Default to 'protoc' if PROTOC_PATH is not set
 
 .PHONY: setup
 setup:
+	$(MAKE) install_sdk
 	@pip install pipenv
 	@pipenv install --skip-lock -e .[test]
-
-SDK_VER = $(subst v,,$(SDK_VERSION))
-
-.PHONY: build-install-sdk
-build-install-sdk:
-	cd ../sdk && pip install setuptools setuptools_scm twine wheel
-	cd ../sdk && sed -i -e "s|VERSION = \".*\"|VERSION = \"$(SDK_VER)\"|g" ./merlin/version.py
-	cd ../sdk && python setup.py sdist bdist_wheel
-	pip install ../sdk/dist/merlin_sdk-$(SDK_VER)-py3-none-any.whl
 
 .PHONY: type_check
 type_check:
@@ -46,3 +38,21 @@ proto:
 	fi
 	go install github.com/mitchellh/protoc-gen-go-json@${PROTOC_GEN_GO_JSON_VERSION}
 	@$(PROTOC_PATH) -I=. --python_out=merlinpyspark --mypy_out=merlinpyspark --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto
+
+
+.PHONY: depp build_install_sdk
+
+SDK_VER := $(shell grep '^merlin-sdk' requirements.txt | awk -F '[=<>]+' '{print $$2}')
+# check if installation of merlin-sdk  from pypi is succesful, if not build from local (latest / unreleased version)
+install_sdk:
+	@if pip install merlin-sdk==${SDK_VER}; then \
+		echo "Installation successful!"; \
+	else \
+		$(MAKE) build_install_sdk; \
+	fi
+
+build_install_sdk:
+	cd ../sdk && pip install setuptools setuptools_scm twine wheel
+	cd ../sdk && sed -i -e "s|VERSION = \".*\"|VERSION = \"${SDK_VER}\"|g" ./merlin/version.py
+	cd ../sdk && python setup.py sdist bdist_wheel
+	pip install ../sdk/dist/merlin_sdk-${SDK_VER}-py3-none-any.whl
