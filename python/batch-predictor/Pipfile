@@ -7,4 +7,4 @@ verify_ssl = true
 merlin-batch-predictor = {editable = true,extras = ["test"],path = "."}
 
 [packages]
-merlin-batch-predictor = {editable = true, extras = ["test"], path = "."}
+merlin-batch-predictor = {extras = ["test"], file = ".", editable = true}

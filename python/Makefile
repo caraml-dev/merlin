@@ -14,6 +14,5 @@ upgrade-sdk-version:
 	sed -i -e "s|merlin-sdk.*|merlin-sdk==$(SDK_VER)|g" ./batch-predictor/requirements.txt
 	sed -i -e "s|merlin-sdk.*|merlin-sdk==$(SDK_VER)|g" ./pyfunc-server/requirements.txt
 	cd sdk && sed -i -e "s|VERSION = \".*\"|VERSION = \"$(SDK_VER)\"|g" ./merlin/version.py
-	cd sdk && pip install setuptools wheel twine
 	cd sdk && python setup.py sdist bdist_wheel
 	pip install sdk/dist/merlin_sdk-$(SDK_VER)-py3-none-any.whl
