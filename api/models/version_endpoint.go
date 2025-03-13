@@ -186,7 +186,11 @@ func (ve *VersionEndpoint) ParsedURL() (*url.URL, error) {
 }
 
 // [TODO]: deprecate this after deprecating VersionEndpoint.EnableModelObservability
-func (ve *VersionEndpoint) SetModelObservabilityEnabledWithEnableModelObservabilityIfNil() {
+// perviously we only have VersionEndpoint.EnableModelObservability and now we want to deprecate it
+// and only read/write to VersionEndpoint.ModelObservability instead. to allow backward compatibility if the user
+// only set VersionEndpoint.EnableModelObservability but not VersionEndpoint.ModelObservability we will use the
+// VersionEndpoint.EnableModelObservability value as VersionEndpoint.ModelObservability.EnableModelObservability
+func (ve *VersionEndpoint) SetModeObservabilityIfNil() {
 	if ve == nil {
 		return
 	}
