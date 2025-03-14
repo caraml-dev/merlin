@@ -137,7 +137,6 @@ func (ve *VersionEndpoint) IsModelMonitoringEnabled() bool {
 	if ve == nil {
 		return false
 	}
-
 	return ve.ModelObservability.IsEnabled()
 }
 
@@ -194,11 +193,9 @@ func (ve *VersionEndpoint) SetModeObservabilityIfNil() {
 	if ve == nil {
 		return
 	}
-
 	if ve.ModelObservability != nil {
 		return
 	}
-
 	ve.ModelObservability = &ModelObservability{
 		Enabled: ve.EnableModelObservability,
 	}
