@@ -205,6 +205,10 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		return InternalServerError(fmt.Sprintf("Error getting endpoint: %v", err))
 	}
 
+	if endpoint.IsPending() {
+		return BadRequest(fmt.Sprintf("Version Endpoint %s is still pending and cannot be redeployed", endpointID))
+	}
+
 	newEndpoint, ok := body.(*models.VersionEndpoint)
 	if !ok {
 		return BadRequest("Unable to parse body as version endpoint resource")
@@ -311,6 +315,10 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 
 	if endpoint.IsServing() {
 		return BadRequest(fmt.Sprintf("Version Endpoints %s is still serving traffic. Please route the traffic to another model version first", rawEndpointID))
+	}
+
+	if endpoint.IsPending() {
+		return BadRequest(fmt.Sprintf("Version Endpoint %s is still pending and cannot be undeployed", rawEndpointID))
 	}
 
 	_, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
