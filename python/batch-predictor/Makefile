@@ -4,8 +4,6 @@ PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
 PROTOC_GEN_GO_VERSION="v1.26"
 PROTOC_PATH ?= protoc  # Default to 'protoc' if PROTOC_PATH is not set
 
-# @pip install pipenv==2023.7.23
-
 .PHONY: setup
 setup:
 	@pip install pipenv
