@@ -45,11 +45,7 @@ proto:
 SDK_VER := $(shell grep '^merlin-sdk' requirements.txt | awk -F '[=<>]+' '{print $$2}')
 # check if installation of merlin-sdk  from pypi is succesful, if not build from local (latest / unreleased version)
 install_sdk:
-	@if pip install merlin-sdk==${SDK_VER}; then \
-		echo "Installation successful!"; \
-	else \
-		$(MAKE) build_install_sdk; \
-	fi
+	pip install merlin-sdk==${SDK_VER} || $(MAKE) build_install_sdk
 
 build_install_sdk:
 	cd ../sdk && pip install setuptools setuptools_scm twine wheel
