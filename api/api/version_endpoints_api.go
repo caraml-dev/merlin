@@ -205,10 +205,6 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		return InternalServerError(fmt.Sprintf("Error getting endpoint: %v", err))
 	}
 
-	if endpoint.IsPending() {
-		return BadRequest(fmt.Sprintf("Version Endpoint %s is still pending and cannot be redeployed", endpointID))
-	}
-
 	newEndpoint, ok := body.(*models.VersionEndpoint)
 	if !ok {
 		return BadRequest("Unable to parse body as version endpoint resource")
