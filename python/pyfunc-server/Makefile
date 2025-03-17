@@ -1,7 +1,7 @@
 .PHONY: setup
 setup:
 	pip install pipenv
-	$(MAKE) install_sdk
+	$(MAKE) build_install_sdk
 	pipenv install --skip-lock -e .[test]
 
 .PHONY: test
@@ -16,12 +16,9 @@ type_check:
 benchmark:
 	cd benchmark && ./benchmark.sh
 
-.PHONY: depp build_install_sdk
+.PHONY: build_install_sdk
 
 SDK_VER := $(shell grep '^merlin-sdk' requirements.txt | awk -F '[=<>]+' '{print $$2}')
-# check if installation of merlin-sdk  from pypi is succesful, if not build from local (latest / unreleased version)
-install_sdk:
-	pip install merlin-sdk==${SDK_VER} || $(MAKE) build_install_sdk
 
 build_install_sdk:
 	cd ../sdk && pip install setuptools setuptools_scm twine wheel

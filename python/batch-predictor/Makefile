@@ -7,7 +7,7 @@ PROTOC_PATH ?= protoc  # Default to 'protoc' if PROTOC_PATH is not set
 .PHONY: setup
 setup:
 	@pip install pipenv
-	$(MAKE) install_sdk
+	$(MAKE) build_install_sdk
 	@pipenv install --skip-lock -e .[test]
 
 .PHONY: type_check
@@ -38,12 +38,9 @@ proto:
 	@$(PROTOC_PATH) -I=. --python_out=merlinpyspark --mypy_out=merlinpyspark --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto
 
 
-.PHONY: depp build_install_sdk
+.PHONY: build_install_sdk
 
 SDK_VER := $(shell grep '^merlin-sdk' requirements.txt | awk -F '[=<>]+' '{print $$2}')
-# check if installation of merlin-sdk  from pypi is succesful, if not build from local (latest / unreleased version)
-install_sdk:
-	pip install merlin-sdk==${SDK_VER} || $(MAKE) build_install_sdk
 
 build_install_sdk:
 	cd ../sdk && pip install setuptools setuptools_scm twine wheel
