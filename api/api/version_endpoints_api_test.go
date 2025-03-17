@@ -3899,8 +3899,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4075,8 +4075,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4303,8 +4303,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4416,8 +4416,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4539,8 +4539,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4652,8 +4652,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4767,8 +4767,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4872,8 +4872,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -4985,8 +4985,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -5162,8 +5162,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -5337,8 +5337,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -5482,8 +5482,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -5660,8 +5660,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -5775,8 +5775,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -5890,8 +5890,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -6004,8 +6004,8 @@ func TestUpdateEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -6203,8 +6203,8 @@ func TestDeleteEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -6490,8 +6490,8 @@ func TestDeleteEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -6581,8 +6581,8 @@ func TestDeleteEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -6703,8 +6703,8 @@ func TestDeleteEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
@@ -6825,8 +6825,8 @@ func TestDeleteEndpoint(t *testing.T) {
 						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
-					Message:            "",
-					ResourceRequest:    nil,
+					Message:         "",
+					ResourceRequest: nil,
 					EnvVars: models.EnvVars([]models.EnvVar{
 						{
 							Name:  "WORKER",
