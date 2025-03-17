@@ -134,10 +134,10 @@ func (ve *VersionEndpoint) IsServing() bool {
 }
 
 func (ve *VersionEndpoint) IsModelMonitoringEnabled() bool {
-	if ve.ModelObservability == nil {
-		return ve.EnableModelObservability
+	if ve == nil {
+		return false
 	}
-	return ve.ModelObservability.Enabled
+	return ve.ModelObservability.IsEnabled()
 }
 
 func (ve *VersionEndpoint) Hostname() string {
@@ -182,6 +182,23 @@ func (ve *VersionEndpoint) ParsedURL() (*url.URL, error) {
 	}
 
 	return parsedURL, nil
+}
+
+// [TODO]: deprecate this after deprecating VersionEndpoint.EnableModelObservability
+// perviously we only have VersionEndpoint.EnableModelObservability and now we want to deprecate it
+// and only read/write to VersionEndpoint.ModelObservability instead. to allow backward compatibility if the user
+// only set VersionEndpoint.EnableModelObservability but not VersionEndpoint.ModelObservability we will use the
+// VersionEndpoint.EnableModelObservability value as VersionEndpoint.ModelObservability.EnableModelObservability
+func (ve *VersionEndpoint) SetModeObservabilityIfNil() {
+	if ve == nil {
+		return
+	}
+	if ve.ModelObservability != nil {
+		return
+	}
+	ve.ModelObservability = &ModelObservability{
+		Enabled: ve.EnableModelObservability,
+	}
 }
 
 type EndpointMonitoringURLParams struct {

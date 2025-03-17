@@ -179,13 +179,11 @@ func modelObservabilityValidation(endpoint *models.VersionEndpoint, model *model
 		if !endpoint.IsModelMonitoringEnabled() {
 			return nil
 		}
+
 		if !slices.Contains(supportedObservabilityModelTypes, model.Type) {
 			return fmt.Errorf("%s: %w", model.Type, ErrUnsupportedObservabilityModelType)
 		}
 
-		if !model.ObservabilitySupported {
-			return fmt.Errorf("model observability is not supported for this model")
-		}
 		return nil
 	})
 }

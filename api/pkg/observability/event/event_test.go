@@ -76,43 +76,6 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 		expectedError                 error
 	}{
 		{
-			name: "do nothing if model doesn't support model observability",
-			jobProducer: func() *queueMock.Producer {
-				producer := &queueMock.Producer{}
-				return producer
-			}(),
-			observabilityPublisherStorage: func() *storageMock.ObservabilityPublisherStorage {
-				mockStorage := &storageMock.ObservabilityPublisherStorage{}
-				return mockStorage
-			}(),
-			versionStorage: func() *storageMock.VersionStorage {
-				mockStorage := &storageMock.VersionStorage{}
-				return mockStorage
-			}(),
-			model: &models.Model{
-				ID:                     models.ID(2),
-				ObservabilitySupported: false,
-			},
-			modelEndpoint: &models.ModelEndpoint{
-				ID:      models.ID(1),
-				ModelID: model.ID,
-				Model:   model,
-				Status:  models.EndpointServing,
-				Rule: &models.ModelEndpointRule{
-					Destination: []*models.ModelEndpointRuleDestination{
-						{
-							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(2),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: true,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
 			name: "no deployment; version endpoint model observability is disabled and never been deployed before",
 			jobProducer: func() *queueMock.Producer {
 				producer := &queueMock.Producer{}
@@ -137,10 +100,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(2),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: false,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(2),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: false,
+								},
 							},
 						},
 					},
@@ -222,10 +187,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(2),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: true,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(2),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: true,
+								},
 							},
 						},
 					},
@@ -263,10 +230,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(3),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: true,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(3),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: true,
+								},
 							},
 						},
 					},
@@ -359,10 +328,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(3),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: true,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(3),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: true,
+								},
 							},
 						},
 					},
@@ -401,10 +372,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(4),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: true,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(4),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: true,
+								},
 							},
 						},
 					},
@@ -571,10 +544,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(2),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: false,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(2),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: false,
+								},
 							},
 						},
 					},
@@ -612,10 +587,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(3),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: false,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(3),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: false,
+								},
 							},
 						},
 					},
@@ -655,10 +632,12 @@ func Test_eventProducer_ModelEndpointChangeEvent(t *testing.T) {
 					Destination: []*models.ModelEndpointRuleDestination{
 						{
 							VersionEndpoint: &models.VersionEndpoint{
-								ID:                       uuid.UUID{},
-								VersionID:                models.ID(2),
-								Status:                   models.EndpointServing,
-								EnableModelObservability: false,
+								ID:        uuid.UUID{},
+								VersionID: models.ID(2),
+								Status:    models.EndpointServing,
+								ModelObservability: &models.ModelObservability{
+									Enabled: false,
+								},
 							},
 						},
 					},
@@ -741,16 +720,6 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 		expectedError                 error
 	}{
 		{
-			name:                          "do nothing if model not supported observability",
-			jobProducer:                   &queueMock.Producer{},
-			observabilityPublisherStorage: &storageMock.ObservabilityPublisherStorage{},
-			versionStorage:                &storageMock.VersionStorage{},
-			model: &models.Model{
-				ID:                     models.ID(1),
-				ObservabilitySupported: false,
-			},
-		},
-		{
 			name: "no deployment; version endpoint model observability is disabled and never been deployed before",
 			jobProducer: func() *queueMock.Producer {
 				producer := &queueMock.Producer{}
@@ -764,10 +733,12 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			versionStorage: &storageMock.VersionStorage{},
 			model:          model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(2),
-				Status:                   models.EndpointServing,
-				EnableModelObservability: false,
+				ID:        uuid.UUID{},
+				VersionID: models.ID(2),
+				Status:    models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: false,
+				},
 			},
 		},
 		{
@@ -837,11 +808,13 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			}(),
 			model: model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(2),
-				VersionModelID:           model.ID,
-				Status:                   models.EndpointServing,
-				EnableModelObservability: true,
+				ID:             uuid.UUID{},
+				VersionID:      models.ID(2),
+				VersionModelID: model.ID,
+				Status:         models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: true,
+				},
 			},
 		},
 		{
@@ -867,11 +840,13 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			}(),
 			model: model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(3),
-				VersionModelID:           model.ID,
-				Status:                   models.EndpointServing,
-				EnableModelObservability: true,
+				ID:             uuid.UUID{},
+				VersionID:      models.ID(3),
+				VersionModelID: model.ID,
+				Status:         models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: true,
+				},
 			},
 			expectedError: fmt.Errorf("versionID: 3 in modelID: 1 doesn't have model schema"),
 		},
@@ -952,11 +927,13 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			}(),
 			model: model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(3),
-				VersionModelID:           model.ID,
-				Status:                   models.EndpointServing,
-				EnableModelObservability: true,
+				ID:             uuid.UUID{},
+				VersionID:      models.ID(3),
+				VersionModelID: model.ID,
+				Status:         models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: true,
+				},
 			},
 		},
 		{
@@ -1034,11 +1011,13 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			}(),
 			model: model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(2),
-				VersionModelID:           model.ID,
-				Status:                   models.EndpointServing,
-				EnableModelObservability: false,
+				ID:             uuid.UUID{},
+				VersionID:      models.ID(2),
+				VersionModelID: model.ID,
+				Status:         models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: false,
+				},
 			},
 		},
 		{
@@ -1064,11 +1043,13 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			}(),
 			model: model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(3),
-				VersionModelID:           model.ID,
-				Status:                   models.EndpointServing,
-				EnableModelObservability: false,
+				ID:             uuid.UUID{},
+				VersionID:      models.ID(3),
+				VersionModelID: model.ID,
+				Status:         models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: false,
+				},
 			},
 		},
 		{
@@ -1096,11 +1077,13 @@ func Test_eventProducer_VersionEndpointChangeEvent(t *testing.T) {
 			}(),
 			model: model,
 			versionEndpoint: &models.VersionEndpoint{
-				ID:                       uuid.UUID{},
-				VersionID:                models.ID(2),
-				VersionModelID:           model.ID,
-				Status:                   models.EndpointServing,
-				EnableModelObservability: false,
+				ID:             uuid.UUID{},
+				VersionID:      models.ID(2),
+				VersionModelID: model.ID,
+				Status:         models.EndpointServing,
+				ModelObservability: &models.ModelObservability{
+					Enabled: false,
+				},
 			},
 			expectedError: fmt.Errorf("connection error"),
 		},

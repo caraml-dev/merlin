@@ -16,6 +16,14 @@ type ModelObservability struct {
 	PredictionLogIngestionResourceRequest *WorkerResourceRequest `json:"prediction_log_ingestion_resource_request"`
 }
 
+func (mo *ModelObservability) IsEnabled() bool {
+	if mo == nil {
+		return false
+	}
+
+	return mo.Enabled
+}
+
 // GroundTruthSource represents the source configuration for ground truth data.
 type GroundTruthSource struct {
 	TableURN             string `json:"table_urn"`

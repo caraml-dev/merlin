@@ -125,6 +125,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: Default - Model Observability Supported",
@@ -240,6 +245,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success eventhough error when produce event",
@@ -363,6 +373,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: Latest deployment entry in storage not in pending state",
@@ -420,6 +435,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: Pytorch Model",
@@ -469,6 +489,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: empty pyfunc model",
@@ -520,6 +545,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: pytorch model with transformer",
@@ -571,6 +601,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: Default With GPU",
@@ -634,6 +669,11 @@ func TestExecuteDeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:      "Failed: deployment failed",
@@ -675,6 +715,11 @@ func TestExecuteDeployment(t *testing.T) {
 			webhook: func() *webhookMock.Client {
 				return webhookMock.NewClient(t)
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:      "Failed: image builder failed",
@@ -715,6 +760,11 @@ func TestExecuteDeployment(t *testing.T) {
 			webhook: func() *webhookMock.Client {
 				return webhookMock.NewClient(t)
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 	}
 	for _, tt := range tests {
@@ -843,6 +893,7 @@ func TestExecuteRedeployment(t *testing.T) {
 		controller             func() *clusterMock.Controller
 		imageBuilder           func() *imageBuilderMock.ImageBuilder
 		webhook                func() *webhookMock.Client
+		eventProducer          *eventMock.EventProducer
 	}{
 		{
 			name:    "Success: Redeploy running endpoint",
@@ -920,6 +971,11 @@ func TestExecuteRedeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: Redeploy serving endpoint",
@@ -997,6 +1053,11 @@ func TestExecuteRedeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:    "Success: Redeploy failed endpoint",
@@ -1074,6 +1135,11 @@ func TestExecuteRedeployment(t *testing.T) {
 				w.On("TriggerWebhooks", mock.Anything, webhook.OnVersionEndpointDeployed, mock.Anything).Return(nil)
 				return w
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 		{
 			name:      "Failed to redeploy running endpoint",
@@ -1139,6 +1205,11 @@ func TestExecuteRedeployment(t *testing.T) {
 			webhook: func() *webhookMock.Client {
 				return webhookMock.NewClient(t)
 			},
+			eventProducer: func() *eventMock.EventProducer {
+				eProducer := &eventMock.EventProducer{}
+				eProducer.On("VersionEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+				return eProducer
+			}(),
 		},
 	}
 	for _, tt := range tests {
@@ -1161,12 +1232,13 @@ func TestExecuteRedeployment(t *testing.T) {
 				},
 			}
 			svc := &ModelServiceDeployment{
-				ClusterControllers:   controllers,
-				ImageBuilder:         imgBuilder,
-				Storage:              mockStorage,
-				DeploymentStorage:    mockDeploymentStorage,
-				LoggerDestinationURL: loggerDestinationURL,
-				Webhook:              mockWebhook,
+				ClusterControllers:         controllers,
+				ImageBuilder:               imgBuilder,
+				Storage:                    mockStorage,
+				DeploymentStorage:          mockDeploymentStorage,
+				LoggerDestinationURL:       loggerDestinationURL,
+				Webhook:                    mockWebhook,
+				ObservabilityEventProducer: tt.eventProducer,
 			}
 
 			err := svc.Deploy(job)

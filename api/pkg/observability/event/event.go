@@ -34,10 +34,6 @@ func NewEventProducer(jobProducer queue.Producer, observabilityPublisherStorage 
 }
 
 func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndpoint, model *models.Model) error {
-	if !model.ObservabilitySupported {
-		return nil
-	}
-
 	ctx := context.Background()
 	publisher, err := e.observabilityPublisherStorage.GetByModelID(ctx, model.ID)
 	if err != nil {
@@ -69,6 +65,10 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 	}
 
 	versionEndpoint := modelEndpoint.GetVersionEndpoint()
+	if !versionEndpoint.IsModelMonitoringEnabled() {
+		return nil
+	}
+
 	version, err := e.findVersionWithModelSchema(ctx, versionEndpoint.VersionID, model.ID)
 	if err != nil {
 		return err
@@ -93,10 +93,6 @@ func (e *eventProducer) ModelEndpointChangeEvent(modelEndpoint *models.ModelEndp
 }
 
 func (e *eventProducer) VersionEndpointChangeEvent(versionEndpoint *models.VersionEndpoint, model *models.Model) error {
-	if !model.ObservabilitySupported {
-		return nil
-	}
-
 	// check if version endpoint is used by the model endpoint
 	// if version endpoint is not serving skipping deployment
 	if versionEndpoint.Status != models.EndpointServing {
