@@ -1068,7 +1068,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				}),
-				EnableModelObservability: true,
+				ModelObservability: &models.ModelObservability{
+					Enabled: true,
+				},
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
@@ -1198,105 +1200,6 @@ func TestCreateEndpoint(t *testing.T) {
 					}),
 					CreatedUpdated: models.CreatedUpdated{},
 				},
-			},
-		},
-		{
-			desc: "Fail when try to enable model observability but the model is not supported yet",
-			vars: map[string]string{
-				"model_id":   "1",
-				"version_id": "1",
-			},
-			requestBody: &models.VersionEndpoint{
-				ID:              uuid,
-				VersionID:       models.ID(1),
-				VersionModelID:  models.ID(1),
-				ServiceName:     "sample",
-				Namespace:       "sample",
-				EnvironmentName: "dev",
-				Message:         "",
-				ResourceRequest: &models.ResourceRequest{
-					MinReplica:    1,
-					MaxReplica:    4,
-					CPURequest:    resource.MustParse("1"),
-					MemoryRequest: resource.MustParse("1Gi"),
-				},
-				EnvVars: models.EnvVars([]models.EnvVar{
-					{
-						Name:  "WORKER",
-						Value: "1",
-					},
-				}),
-				EnableModelObservability: true,
-			},
-			modelService: func() *mocks.ModelsService {
-				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
-					ID:                     models.ID(1),
-					Name:                   "model-1",
-					ProjectID:              models.ID(1),
-					Project:                mlp.Project{},
-					ExperimentID:           1,
-					Type:                   "pyfunc",
-					MlflowURL:              "",
-					Endpoints:              nil,
-					ObservabilitySupported: false,
-				}, nil)
-				return svc
-			},
-			versionService: func() *mocks.VersionsService {
-				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
-					ID:      models.ID(1),
-					ModelID: models.ID(1),
-					Model: &models.Model{
-						ID:           models.ID(1),
-						Name:         "model-1",
-						ProjectID:    models.ID(1),
-						Project:      mlp.Project{},
-						ExperimentID: 1,
-						Type:         "pyfunc",
-						MlflowURL:    "",
-						Endpoints:    nil,
-					},
-				}, nil)
-				return svc
-			},
-			envService: func() *mocks.EnvironmentService {
-				svc := &mocks.EnvironmentService{}
-				svc.On("GetDefaultEnvironment").Return(&models.Environment{
-					ID:         models.ID(1),
-					Name:       "dev",
-					Cluster:    "dev",
-					IsDefault:  &trueBoolean,
-					Region:     "id",
-					GcpProject: "dev-proj",
-					MaxCPU:     "1",
-					MaxMemory:  "1Gi",
-				}, nil)
-				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					ID:         models.ID(1),
-					Name:       "dev",
-					Cluster:    "dev",
-					IsDefault:  &trueBoolean,
-					Region:     "id",
-					GcpProject: "dev-proj",
-					MaxCPU:     "1",
-					MaxMemory:  "1Gi",
-				}, nil)
-				return svc
-			},
-			endpointService: func() *mocks.EndpointsService {
-				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
-				return svc
-			},
-			monitoringConfig: config.MonitoringConfig{},
-			feastCoreMock: func() *feastmocks.CoreServiceClient {
-				return &feastmocks.CoreServiceClient{}
-			},
-			expected: &Response{
-				code: http.StatusBadRequest,
-				data: Error{Message: "Request validation failed: model observability is not supported for this model"},
 			},
 		},
 		{
@@ -4004,7 +3907,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				}),
-				EnableModelObservability: true,
+				ModelObservability: &models.ModelObservability{
+					Enabled: true,
+				},
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
@@ -4083,7 +3988,9 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					EnableModelObservability: false,
+					ModelObservability: &models.ModelObservability{
+						Enabled: false,
+					},
 				}, nil)
 				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
@@ -4114,8 +4021,10 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					CreatedUpdated:           models.CreatedUpdated{},
-					EnableModelObservability: true,
+					CreatedUpdated: models.CreatedUpdated{},
+					ModelObservability: &models.ModelObservability{
+						Enabled: true,
+					},
 				}, nil)
 				return svc
 			},
@@ -4150,8 +4059,10 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					CreatedUpdated:           models.CreatedUpdated{},
-					EnableModelObservability: true,
+					CreatedUpdated: models.CreatedUpdated{},
+					ModelObservability: &models.ModelObservability{
+						Enabled: true,
+					},
 				},
 			},
 		},
@@ -4696,7 +4607,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				}),
-				EnableModelObservability: true,
+				ModelObservability: &models.ModelObservability{
+					Enabled: true,
+				},
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
@@ -4775,7 +4688,9 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					EnableModelObservability: false,
+					ModelObservability: &models.ModelObservability{
+						Enabled: false,
+					},
 				}, nil)
 				return svc
 			},

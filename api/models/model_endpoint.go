@@ -38,6 +38,10 @@ type ModelEndpoint struct {
 }
 
 func (me *ModelEndpoint) GetVersionEndpoint() *VersionEndpoint {
+	if me == nil {
+		return nil
+	}
+
 	if me.Rule == nil || len(me.Rule.Destination) == 0 {
 		return nil
 	}

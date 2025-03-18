@@ -104,6 +104,11 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
+				eventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(upiV1Model, upiV1ModelEndpointRequest1)
@@ -277,6 +282,11 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            testEnvironmentName,
+				observabilityEventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, updatedModelEndpointReq)
@@ -306,6 +316,11 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
+				observabilityEventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, updatedUpiV1ModelEndpointReq)
@@ -335,6 +350,11 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            testEnvironmentName,
+				observabilityEventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequestWrongEnvironment)
@@ -405,6 +425,11 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            testEnvironmentName,
+				observabilityEventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
