@@ -6544,6 +6544,128 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 		},
 		{
+			desc: "Should return 400 if endpoint is currently pending",
+			vars: map[string]string{
+				"model_id":    "1",
+				"version_id":  "1",
+				"endpoint_id": uuid.String(),
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointPending,
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					URL:                  "http://endpoint.svc",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					}, EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+				}, nil)
+				svc.On("UndeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointTerminated,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					CreatedUpdated: models.CreatedUpdated{},
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: fmt.Sprintf("Version Endpoint %s is still pending and cannot be undeployed", uuid)},
+			},
+		},
+		{
 			desc: "Should return 500 if failed undeploy endpoint",
 			vars: map[string]string{
 				"model_id":    "1",
