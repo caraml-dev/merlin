@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Placeholder. To be overriden with tag version by Github Actions pipeline.
 VERSION = "0.0.0"

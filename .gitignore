@@ -187,3 +187,6 @@ Temporary Items
 bin/
 
 .vscode/
+
+# SED command backups / residue
+*-e

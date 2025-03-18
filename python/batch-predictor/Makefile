@@ -6,6 +6,8 @@ PROTOC_PATH ?= protoc  # Default to 'protoc' if PROTOC_PATH is not set
 
 .PHONY: setup
 setup:
+	@pip install pipenv
+	$(MAKE) build_install_sdk
 	@pipenv install --skip-lock -e .[test]
 
 .PHONY: type_check
@@ -34,3 +36,10 @@ proto:
 	fi
 	go install github.com/mitchellh/protoc-gen-go-json@${PROTOC_GEN_GO_JSON_VERSION}
 	@$(PROTOC_PATH) -I=. --python_out=merlinpyspark --mypy_out=merlinpyspark --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto
+
+
+.PHONY: build_install_sdk
+build_install_sdk:
+	cd ../sdk && pip install setuptools setuptools_scm twine wheel
+	cd ../sdk && python setup.py sdist bdist_wheel
+	pipenv run pip install ../sdk/dist/merlin_sdk-0.0.0-py3-none-any.whl

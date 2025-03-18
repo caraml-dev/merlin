@@ -1,10 +1,8 @@
-
-.PHONY: dev_install
-dev_install:
-	pipenv install --skip-lock -e .[test] --verbose
-
 .PHONY: setup
-setup: dev_install
+setup:
+	pip install pipenv
+	$(MAKE) build_install_sdk
+	pipenv install --skip-lock -e .[test]
 
 .PHONY: test
 test: type_check
@@ -17,3 +15,9 @@ type_check:
 .PHONY: benchmark
 benchmark:
 	cd benchmark && ./benchmark.sh
+
+.PHONY: build_install_sdk
+build_install_sdk:
+	cd ../sdk && pip install setuptools setuptools_scm twine wheel
+	cd ../sdk && python setup.py sdist bdist_wheel
+	pipenv run pip install ../sdk/dist/merlin_sdk-0.0.0-py3-none-any.whl

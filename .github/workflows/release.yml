@@ -43,6 +43,8 @@ jobs:
   publish-merlin-pyfunc-server:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
+    needs:
+      - publish-python-sdk
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,6 +63,7 @@ jobs:
         working-directory: ./python/pyfunc-server
         run: |
           tag=$(python -m setuptools_scm -r ../.. | sed 's/\+.*//')
+          sed -i -e "s|merlin-sdk.*|merlin-sdk==${tag}|g" ./requirements.txt
           sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag}"`\"|g" ./pyfuncserver/version.py
           python setup.py sdist bdist_wheel
           twine upload dist/*
@@ -68,6 +71,8 @@ jobs:
   publish-merlin-batch-predictor:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
+    needs:
+      - publish-python-sdk
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,6 +91,7 @@ jobs:
         working-directory: ./python/batch-predictor
         run: |
           tag=$(python -m setuptools_scm -r ../.. | sed 's/\+.*//')
+          sed -i -e "s|merlin-sdk.*|merlin-sdk==${tag}|g" ./requirements.txt
           sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag}"`\"|g" ./merlinpyspark/version.py
           python setup.py sdist bdist_wheel
           twine upload dist/*
