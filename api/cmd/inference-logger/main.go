@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
@@ -32,13 +33,14 @@ import (
 )
 
 var (
-	logUrl           = flag.String("log-url", "localhost:8002", "The URL to send request/response logs to")
-	port             = flag.String("port", "9081", "Logger port")
-	componentPort    = flag.String("component-port", "8080", "Component port")
-	workers          = flag.Int("workers", 5, "Number of workers")
-	logMode          = flag.String("log-mode", string(merlinlogger.LogModeAll), "Whether to log 'request', 'response' or 'all'")
-	inferenceService = flag.String("inference-service", "my-model-1", "The InferenceService name to add as header to log events")
-	namespace        = flag.String("namespace", "my-project", "The namespace to add as header to log events")
+	logUrl                = flag.String("log-url", "localhost:8002", "The URL to send request/response logs to")
+	additionalKafkaConfig = flag.String("kafka-config-extra", "", "Additional Kafka configuration. This should be path to a file containing the configuration")
+	port                  = flag.String("port", "9081", "Logger port")
+	componentPort         = flag.String("component-port", "8080", "Component port")
+	workers               = flag.Int("workers", 5, "Number of workers")
+	logMode               = flag.String("log-mode", string(merlinlogger.LogModeAll), "Whether to log 'request', 'response' or 'all'")
+	inferenceService      = flag.String("inference-service", "my-model-1", "The InferenceService name to add as header to log events")
+	namespace             = flag.String("namespace", "my-project", "The namespace to add as header to log events")
 
 	// These flags are not needed by our logger but provided by Kserve, hence we need to parse it to avoid error.
 	sourceUri     = flag.String("source-uri", "", "The source URI to use when publishing cloudevents")
@@ -338,14 +340,18 @@ func getLogSink(
 	case merlinlogger.Kafka:
 		// Initialize the producer
 		var kafkaProducer merlinlogger.KafkaProducer
+		kafkaCfg := &kafka.ConfigMap{
+			"bootstrap.servers": url,
+			"message.max.bytes": merlinlogger.MaxMessageBytes,
+			"compression.type":  merlinlogger.CompressionType,
+		}
+
+		if additionalKafkaConfig != nil && *additionalKafkaConfig != "" {
+			addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+		}
+
 		// Create Kafka Producer
-		kafkaProducer, err := kafka.NewProducer(
-			&kafka.ConfigMap{
-				"bootstrap.servers": url,
-				"message.max.bytes": merlinlogger.MaxMessageBytes,
-				"compression.type":  merlinlogger.CompressionType,
-			},
-		)
+		kafkaProducer, err := kafka.NewProducer(kafkaCfg)
 		if err != nil {
 			log.Info(err)
 			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
@@ -363,14 +369,18 @@ func getLogSink(
 	case merlinlogger.MLObs:
 		// Initialize kafka clients
 		var kafkaProducer merlinlogger.KafkaProducer
+		kafkaCfg := &kafka.ConfigMap{
+			"bootstrap.servers": url,
+			"message.max.bytes": merlinlogger.MaxMessageBytes,
+			"compression.type":  merlinlogger.CompressionType,
+		}
+
+		if additionalKafkaConfig != nil && *additionalKafkaConfig != "" {
+			addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+		}
+
 		// Create Kafka Producer
-		kafkaProducer, err := kafka.NewProducer(
-			&kafka.ConfigMap{
-				"bootstrap.servers": url,
-				"message.max.bytes": merlinlogger.MaxMessageBytes,
-				"compression.type":  merlinlogger.CompressionType,
-			},
-		)
+		kafkaProducer, err := kafka.NewProducer(kafkaCfg)
 		if err != nil {
 			log.Info(err)
 			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
@@ -388,4 +398,33 @@ func getLogSink(
 	default:
 		return merlinlogger.NewConsoleSink(log), nil
 	}
+}
+
+func addKafkaConfig(cfg *kafka.ConfigMap, kafkaConfig string) (*kafka.ConfigMap, error) {
+	file, err := os.Open(kafkaConfig)
+	if err != nil {
+		return &kafka.ConfigMap{}, fmt.Errorf("failed to open kafka config file: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+		cfg.SetKey(key, value)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return &kafka.ConfigMap{}, fmt.Errorf("failed to open kafka config file: %w", err)
+	}
+
+	return cfg, nil
 }
