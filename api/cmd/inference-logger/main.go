@@ -347,7 +347,10 @@ func getLogSink(
 		}
 
 		if additionalKafkaConfig != nil && *additionalKafkaConfig != "" {
-			addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+			err := addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// Create Kafka Producer
@@ -376,7 +379,10 @@ func getLogSink(
 		}
 
 		if additionalKafkaConfig != nil && *additionalKafkaConfig != "" {
-			addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+			err := addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// Create Kafka Producer
@@ -400,10 +406,10 @@ func getLogSink(
 	}
 }
 
-func addKafkaConfig(cfg *kafka.ConfigMap, kafkaConfig string) (*kafka.ConfigMap, error) {
+func addKafkaConfig(cfg *kafka.ConfigMap, kafkaConfig string) error {
 	file, err := os.Open(kafkaConfig)
 	if err != nil {
-		return &kafka.ConfigMap{}, fmt.Errorf("failed to open kafka config file: %w", err)
+		return fmt.Errorf("failed to open kafka config file: %w", err)
 	}
 	defer file.Close()
 
@@ -423,8 +429,8 @@ func addKafkaConfig(cfg *kafka.ConfigMap, kafkaConfig string) (*kafka.ConfigMap,
 	}
 
 	if err := scanner.Err(); err != nil {
-		return &kafka.ConfigMap{}, fmt.Errorf("failed to open kafka config file: %w", err)
+		return fmt.Errorf("failed to open kafka config file: %w", err)
 	}
 
-	return cfg, nil
+	return nil
 }
