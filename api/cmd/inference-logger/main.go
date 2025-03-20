@@ -33,14 +33,14 @@ import (
 )
 
 var (
-	logUrl                = flag.String("log-url", "localhost:8002", "The URL to send request/response logs to")
-	additionalKafkaConfig = flag.String("kafka-config-extra", "", "Additional Kafka configuration. This should be path to a file containing the configuration")
-	port                  = flag.String("port", "9081", "Logger port")
-	componentPort         = flag.String("component-port", "8080", "Component port")
-	workers               = flag.Int("workers", 5, "Number of workers")
-	logMode               = flag.String("log-mode", string(merlinlogger.LogModeAll), "Whether to log 'request', 'response' or 'all'")
-	inferenceService      = flag.String("inference-service", "my-model-1", "The InferenceService name to add as header to log events")
-	namespace             = flag.String("namespace", "my-project", "The namespace to add as header to log events")
+	logUrl           = flag.String("log-url", "localhost:8002", "The URL to send request/response logs to")
+	kafkaConfigPath  = flag.String("kafka-config-path", "", "Additional Kafka configuration. This should be path to a file containing the configuration")
+	port             = flag.String("port", "9081", "Logger port")
+	componentPort    = flag.String("component-port", "8080", "Component port")
+	workers          = flag.Int("workers", 5, "Number of workers")
+	logMode          = flag.String("log-mode", string(merlinlogger.LogModeAll), "Whether to log 'request', 'response' or 'all'")
+	inferenceService = flag.String("inference-service", "my-model-1", "The InferenceService name to add as header to log events")
+	namespace        = flag.String("namespace", "my-project", "The namespace to add as header to log events")
 
 	// These flags are not needed by our logger but provided by Kserve, hence we need to parse it to avoid error.
 	sourceUri     = flag.String("source-uri", "", "The source URI to use when publishing cloudevents")
@@ -346,8 +346,8 @@ func getLogSink(
 			"compression.type":  merlinlogger.CompressionType,
 		}
 
-		if additionalKafkaConfig != nil && *additionalKafkaConfig != "" {
-			err := addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+		if kafkaConfigPath != nil && *kafkaConfigPath != "" {
+			err := addKafkaConfig(kafkaCfg, *kafkaConfigPath)
 			if err != nil {
 				return nil, err
 			}
@@ -378,8 +378,8 @@ func getLogSink(
 			"compression.type":  merlinlogger.CompressionType,
 		}
 
-		if additionalKafkaConfig != nil && *additionalKafkaConfig != "" {
-			err := addKafkaConfig(kafkaCfg, *additionalKafkaConfig)
+		if kafkaConfigPath != nil && *kafkaConfigPath != "" {
+			err := addKafkaConfig(kafkaCfg, *kafkaConfigPath)
 			if err != nil {
 				return nil, err
 			}
