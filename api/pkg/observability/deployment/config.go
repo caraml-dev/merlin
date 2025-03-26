@@ -30,8 +30,9 @@ type SinkType string
 type SourceType string
 
 const (
-	Arize SinkType = "ARIZE"
-	BQ    SinkType = "BIGQUERY"
+	Arize      SinkType = "ARIZE"
+	BQ         SinkType = "BIGQUERY"
+	MaxCompute SinkType = "MAXCOMPUTE"
 
 	Kafka SourceType = "KAFKA"
 
@@ -52,4 +53,13 @@ type BigQuerySink struct {
 	Project string `yaml:"project"`
 	Dataset string `yaml:"dataset"`
 	TTLDays int    `yaml:"ttl_days"`
+}
+
+type MaxComputeSink struct {
+	Project         string `yaml:"project"`
+	Dataset         string `yaml:"dataset"`
+	TTLDays         int    `yaml:"ttl_days"`
+	AccessKeyID     string `yaml:"access_key_id"`
+	AccessKeySecret string `yaml:"access_key_secret"`
+	AccessUrl       string `yaml:"access_url"`
 }
