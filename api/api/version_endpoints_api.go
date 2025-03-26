@@ -316,6 +316,10 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 		return BadRequest(fmt.Sprintf("Version Endpoints %s is still serving traffic. Please route the traffic to another model version first", rawEndpointID))
 	}
 
+	if endpoint.IsPending() {
+		return BadRequest(fmt.Sprintf("Version Endpoint %s is still pending and cannot be undeployed", rawEndpointID))
+	}
+
 	_, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s: %v", rawEndpointID, err))

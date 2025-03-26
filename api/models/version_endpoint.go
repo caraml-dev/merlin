@@ -133,6 +133,10 @@ func (ve *VersionEndpoint) IsServing() bool {
 	return ve.Status == EndpointServing
 }
 
+func (ve *VersionEndpoint) IsPending() bool {
+	return ve.Status == EndpointPending
+}
+
 func (ve *VersionEndpoint) IsModelMonitoringEnabled() bool {
 	if ve == nil {
 		return false
