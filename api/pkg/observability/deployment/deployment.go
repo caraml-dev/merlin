@@ -261,16 +261,19 @@ func (c *deployer) applySecret(ctx context.Context, data *models.WorkerData) (se
 }
 
 func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, error) {
-	observationSinks := []ObservationSink{
-		{
+	observationSinks := []ObservationSink{}
+	if c.consumerConfig.BigQuerySink.Enabled {
+		observationSinks = append(observationSinks, ObservationSink{
 			Type: BQ,
 			Config: BigQuerySink{
 				Project: c.consumerConfig.BigQuerySink.Project,
 				Dataset: c.consumerConfig.BigQuerySink.Dataset,
 				TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
 			},
-		},
-		{
+		})
+	}
+	if c.consumerConfig.MaxComputeSink.Enabled {
+		observationSinks = append(observationSinks, ObservationSink{
 			Type: MaxCompute,
 			Config: MaxComputeSink{
 				Project:         c.consumerConfig.MaxComputeSink.Project,
@@ -280,7 +283,7 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 				AccessKeySecret: c.consumerConfig.MaxComputeSink.AccessKeySecret,
 				AccessUrl:       c.consumerConfig.MaxComputeSink.AccessUrl,
 			},
-		},
+		})
 	}
 
 	if c.consumerConfig.ArizeSink.IsEnabled(data.GetModelSerial()) {

@@ -51,6 +51,7 @@ type BigQuerySink struct {
 	Project string
 	Dataset string
 	TTLDays int
+	Enabled bool
 }
 
 // MaxComputeSink
@@ -61,4 +62,5 @@ type MaxComputeSink struct {
 	AccessKeyID     string
 	AccessKeySecret string
 	AccessUrl       string
+	Enabled         bool
 }
