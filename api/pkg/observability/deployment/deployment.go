@@ -261,15 +261,29 @@ func (c *deployer) applySecret(ctx context.Context, data *models.WorkerData) (se
 }
 
 func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, error) {
-	observationSinks := []ObservationSink{
-		{
+	observationSinks := []ObservationSink{}
+	if c.consumerConfig.BigQuerySink.Enabled {
+		observationSinks = append(observationSinks, ObservationSink{
 			Type: BQ,
 			Config: BigQuerySink{
 				Project: c.consumerConfig.BigQuerySink.Project,
 				Dataset: c.consumerConfig.BigQuerySink.Dataset,
 				TTLDays: c.consumerConfig.BigQuerySink.TTLDays,
 			},
-		},
+		})
+	}
+	if c.consumerConfig.MaxComputeSink.Enabled {
+		observationSinks = append(observationSinks, ObservationSink{
+			Type: MaxCompute,
+			Config: MaxComputeSink{
+				Project:         c.consumerConfig.MaxComputeSink.Project,
+				Dataset:         c.consumerConfig.MaxComputeSink.Dataset,
+				TTLDays:         c.consumerConfig.MaxComputeSink.TTLDays,
+				AccessKeyID:     c.consumerConfig.MaxComputeSink.AccessKeyID,
+				AccessKeySecret: c.consumerConfig.MaxComputeSink.AccessKeySecret,
+				AccessUrl:       c.consumerConfig.MaxComputeSink.AccessUrl,
+			},
+		})
 	}
 
 	if c.consumerConfig.ArizeSink.IsEnabled(data.GetModelSerial()) {
@@ -291,7 +305,7 @@ func (c *deployer) createSecretSpec(data *models.WorkerData) (*corev1.Secret, er
 		ObservationSource: &ObserVationSource{
 			Type: Kafka,
 			Config: &KafkaSource{
-				Topic:                    data.TopicSource,
+				Topic:                    fmt.Sprintf("%s%s", c.consumerConfig.KafkaConsumer.TopicPrefix, data.TopicSource),
 				BootstrapServers:         c.consumerConfig.KafkaConsumer.Brokers,
 				GroupID:                  c.consumerConfig.KafkaConsumer.GroupID,
 				BatchSize:                c.consumerConfig.KafkaConsumer.BatchSize,
