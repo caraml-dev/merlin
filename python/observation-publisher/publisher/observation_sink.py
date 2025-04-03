@@ -404,14 +404,10 @@ class MaxComputeSink(ObservationSink):
         return self._config.retry
     
     def _get_column_values_for_query(self, schema_fields) -> str:
-        first_instance = True
-        column_query = ""
+        column_queries = []
         for column in schema_fields:
-            if not first_instance:
-                column_query += ", "
-            column_query += str(column.name) + " " + str(column.type)
-            first_instance = False
-        return column_query
+            column_queries.append(str(column.name) + " " + str(column.type))
+        return ",".join(column_queries)
 
     def create_or_update_table(self) -> Table:
         try:
