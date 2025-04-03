@@ -26,7 +26,7 @@ type KafkaConsumer struct {
 	BatchSize                int
 	GroupID                  string
 	AdditionalConsumerConfig map[string]string
-	MirroredTopicPrefix      string `default:""`
+	TopicPrefix              string `default:""`
 }
 
 // ArizeSink

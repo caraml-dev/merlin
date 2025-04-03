@@ -403,7 +403,7 @@ class MaxComputeSink(ObservationSink):
     def retry(self) -> MaxComputeRetryConfig:
         return self._config.retry
     
-    def get_column_values_for_query(self, schema_fields) -> str:
+    def _get_column_values_for_query(self, schema_fields) -> str:
         first_instance = True
         column_query = ""
         for column in schema_fields:
@@ -429,14 +429,14 @@ class MaxComputeSink(ObservationSink):
                 return original_table
             alter_table_query = "alter table {table_name} add columns ( {cols} )".format(
                 table_name=self.table_name_with_dataset,
-                cols=self.get_column_values_for_query(schema_fields=schema_diff),
+                cols=self._get_column_values_for_query(schema_fields=schema_diff),
             )
             return self._client.execute_sql(alter_table_query)
             
         except NoSuchObject:
             create_table_query = "create table {table_name} ( {cols} )  auto partitioned by (trunc_time({timestamp_column}, 'day') as request_timestamp_pt)".format(
                 table_name=self.table_name_with_dataset,
-                cols=self.get_column_values_for_query(schema_fields=self.schema_fields),
+                cols=self._get_column_values_for_query(schema_fields=self.schema_fields),
                 timestamp_column=PREDICTION_LOG_TIMESTAMP_COLUMN
             )
             self._client.execute_sql(create_table_query)
@@ -510,7 +510,7 @@ class MaxComputeSink(ObservationSink):
         )
         return f"{self.dataset}.{table_name}"
     
-    def get_schema_fields(self, schema) -> List[str]:
+    def _get_schema_fields(self, schema) -> List[str]:
         fields = []
         for field in schema:
             fields.append(field.name)
@@ -524,7 +524,7 @@ class MaxComputeSink(ObservationSink):
             try:
                 temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
                 df.persist(temp_table_id, create_table=True, lifecycle=1)
-                schema_fields = self.get_schema_fields(df.schema)
+                schema_fields = self._get_schema_fields(df.schema)
                 column_names_original_table = ','.join(schema_fields)
                 cast_datetime_field_to_timestamp = ["cast(" + PREDICTION_LOG_TIMESTAMP_COLUMN + " as timestamp)" if column_name == PREDICTION_LOG_TIMESTAMP_COLUMN else column_name for column_name in schema_fields]
                 column_values_from_temp_table = ','.join(cast_datetime_field_to_timestamp)
