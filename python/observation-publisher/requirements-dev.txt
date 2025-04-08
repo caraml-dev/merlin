@@ -6,3 +6,4 @@ types-jmespath==1.0.2.7
 mypy==1.7.1
 mypy-extensions==1.0.0
 db-dtypes==1.2.0
+pyodps==0.12.2

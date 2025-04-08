@@ -8,6 +8,7 @@ from hydra.core.config_store import ConfigStore
 class ObservationSinkType(Enum):
     ARIZE = "arize"
     BIGQUERY = "bigquery"
+    MAXCOMPUTE = "maxcompute"
 
 
 @dataclass

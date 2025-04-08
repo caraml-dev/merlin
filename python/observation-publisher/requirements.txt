@@ -294,6 +294,7 @@ werkzeug==3.0.1
     # via flask
 zipp==3.17.0
     # via importlib-metadata
+pyodps==0.12.2
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
