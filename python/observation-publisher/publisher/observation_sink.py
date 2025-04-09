@@ -29,6 +29,11 @@ from publisher.config import ObservationSinkConfig, ObservationSinkType
 from publisher.prediction_log_parser import (PREDICTION_LOG_MODEL_VERSION_COLUMN,
                                              PREDICTION_LOG_TIMESTAMP_COLUMN)
 
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='myapp.log', level=logging.DEBUG)
+
 
 class ObservationSink(abc.ABC):
     """
@@ -374,6 +379,7 @@ class MaxComputeSink(ObservationSink):
         model_version: str,
         config: MaxComputeConfig,
     ):
+        print(":init")
         """
         :param project: CaraML project
         :param inference_schema: Inference schema for the ingested model
@@ -515,35 +521,27 @@ class MaxComputeSink(ObservationSink):
 
 
     def write(self, dataframe: pd.DataFrame):
+        logger.info("received request to write")
         df = ODPSDataFrame(dataframe)
-        for i in range(0, self.retry.retry_attempts + 1):
-            try:
-                temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
-                df.persist(temp_table_id, create_table=True, lifecycle=1)
-                schema_fields = self._get_schema_fields(df.schema)
-                column_names_original_table = ','.join(schema_fields)
-                cast_datetime_field_to_timestamp = ["cast(" + PREDICTION_LOG_TIMESTAMP_COLUMN + " as timestamp)" if column_name == PREDICTION_LOG_TIMESTAMP_COLUMN else column_name for column_name in schema_fields]
-                column_values_from_temp_table = ','.join(cast_datetime_field_to_timestamp)
-                insert_into_query = "insert into {table_name} ( {cols} ) select {values} from {temp_table}".format(
-                    table_name=self.table_name_with_dataset,
-                    cols=column_names_original_table,
-                    values=column_values_from_temp_table,
-                    temp_table=temp_table_id,
-                )
-                self._client.execute_sql(insert_into_query)
-                self._client.execute_sql("drop table {temp_table_id}".format(temp_table_id=temp_table_id))
-                return
-            except Exception as e:
-                if not self.retry.enabled:
-                    print("Exception when inserting rows to MaxCompute", e)
-                    return
-                else:
-                    print(
-                        f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
-                    )
-                    time.sleep(self.retry.retry_interval_seconds)
-            
-        print(f"Failed to write to MaxCompute after {self.retry.retry_attempts} attempts")
+        temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
+        logger.info("temp table created %s", temp_table_id)
+        df.persist(temp_table_id, create_table=True, lifecycle=1)
+        schema_fields = self._get_schema_fields(df.schema)
+        column_names_original_table = ','.join(schema_fields)
+        cast_datetime_field_to_timestamp = ["cast(" + PREDICTION_LOG_TIMESTAMP_COLUMN + " as timestamp)" if column_name == PREDICTION_LOG_TIMESTAMP_COLUMN else column_name for column_name in schema_fields]
+        column_values_from_temp_table = ','.join(cast_datetime_field_to_timestamp)
+        logger.info("before insert")
+        insert_into_query = "insert into {table_name} ( {cols} ) select {values} from {temp_table}".format(
+            table_name=self.table_name_with_dataset,
+            cols=column_names_original_table,
+            values=column_values_from_temp_table,
+            temp_table=temp_table_id,
+        )
+        logger.info("before insert")
+        insert_query_result = self._client.execute_sql(insert_into_query)
+        logger.info("the query result %s", insert_query_result)
+        drop_table_result = self._client.execute_sql("drop table {temp_table_id}".format(temp_table_id=temp_table_id))
+        logger.info("after table is deleted %s", drop_table_result)
 
 
 def new_observation_sink(
@@ -553,6 +551,7 @@ def new_observation_sink(
     model_id: str,
     model_version: str,
 ) -> ObservationSink:
+    print(":new obser")
     match sink_config.type:
         case ObservationSinkType.BIGQUERY:
             bq_config: BigQueryConfig = BigQueryConfig.from_dict(sink_config.config)  # type: ignore[attr-defined]
