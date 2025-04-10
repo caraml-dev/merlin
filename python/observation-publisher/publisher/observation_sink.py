@@ -542,6 +542,7 @@ class MaxComputeSink(ObservationSink):
                         f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
                     )
                     time.sleep(self.retry.retry_interval_seconds)
+        print(f"Failed to write to MaxCompute after {self.retry.retry_attempts} attempts")
 
 
 def new_observation_sink(
