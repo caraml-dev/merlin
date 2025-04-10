@@ -515,6 +515,7 @@ class MaxComputeSink(ObservationSink):
 
 
     def write(self, dataframe: pd.DataFrame):
+        print("inside write")
         df = ODPSDataFrame(dataframe)
         temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
         df.persist(temp_table_id, create_table=True, lifecycle=1)
