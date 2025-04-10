@@ -409,12 +409,6 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 						ReadOnly:  true,
 					},
 				},
-				Env: []corev1.EnvVar{
-					{
-						Name:  "PYTHONUNBUFFERED",
-						Value: "1",
-					},
-				},
 				Ports: []corev1.ContainerPort{
 					{
 						Name:          "prom-metric",
