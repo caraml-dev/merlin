@@ -495,7 +495,6 @@ jobs:
       - build-pyfunc-server-base-image
       - build-observation-publisher
       - test-python-sdk
-      - e2e-test
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:
