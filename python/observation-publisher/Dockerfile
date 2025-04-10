@@ -9,4 +9,5 @@ RUN rm requirements.txt
 WORKDIR /mlobs
 COPY observation-publisher ./observation-publisher
 WORKDIR /mlobs/observation-publisher
+ENV PYTHONUNBUFFERED 1
 ENTRYPOINT ["python", "-m", "publisher"]
