@@ -242,7 +242,7 @@ jobs:
     needs:
       - create-version
       - build-ui
-      # - test-api
+      - test-api
     steps:
       - uses: actions/checkout@v4
       - name: Download UI Dist
@@ -495,6 +495,7 @@ jobs:
       - build-pyfunc-server-base-image
       - build-observation-publisher
       - test-python-sdk
+      - e2e-test
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:

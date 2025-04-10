@@ -515,22 +515,33 @@ class MaxComputeSink(ObservationSink):
 
 
     def write(self, dataframe: pd.DataFrame):
-        print("inside write")
         df = ODPSDataFrame(dataframe)
-        temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
-        df.persist(temp_table_id, create_table=True, lifecycle=1)
-        schema_fields = self._get_schema_fields(df.schema)
-        column_names_original_table = ','.join(schema_fields)
-        cast_datetime_field_to_timestamp = ["cast(" + PREDICTION_LOG_TIMESTAMP_COLUMN + " as timestamp)" if column_name == PREDICTION_LOG_TIMESTAMP_COLUMN else column_name for column_name in schema_fields]
-        column_values_from_temp_table = ','.join(cast_datetime_field_to_timestamp)
-        insert_into_query = "insert into {table_name} ( {cols} ) select {values} from {temp_table}".format(
-            table_name=self.table_name_with_dataset,
-            cols=column_names_original_table,
-            values=column_values_from_temp_table,
-            temp_table=temp_table_id,
-        )
-        insert_query_result = self._client.execute_sql(insert_into_query)
-        drop_table_result = self._client.execute_sql("drop table {temp_table_id}".format(temp_table_id=temp_table_id))
+        for i in range(0, self.retry.retry_attempts + 1):
+            try:
+                temp_table_id = f"{self.write_location}_{random.randint(10000, 99999)}"
+                df.persist(temp_table_id, create_table=True, lifecycle=1)
+                schema_fields = self._get_schema_fields(df.schema)
+                column_names_original_table = ','.join(schema_fields)
+                cast_datetime_field_to_timestamp = ["cast(" + PREDICTION_LOG_TIMESTAMP_COLUMN + " as timestamp)" if column_name == PREDICTION_LOG_TIMESTAMP_COLUMN else column_name for column_name in schema_fields]
+                column_values_from_temp_table = ','.join(cast_datetime_field_to_timestamp)
+                insert_into_query = "insert into {table_name} ( {cols} ) select {values} from {temp_table}".format(
+                    table_name=self.table_name_with_dataset,
+                    cols=column_names_original_table,
+                    values=column_values_from_temp_table,
+                    temp_table=temp_table_id,
+                )
+                self._client.execute_sql(insert_into_query)
+                self._client.execute_sql("drop table {temp_table_id}".format(temp_table_id=temp_table_id))
+                return
+            except Exception as e:
+                if not self.retry.enabled:
+                    print("Exception when inserting rows to MaxCompute", e)
+                    return
+                else:
+                    print(
+                        f"Errors when inserting rows to MaxCompute, retrying attempt {i}/{self.retry.retry_attempts}"
+                    )
+                    time.sleep(self.retry.retry_interval_seconds)
 
 
 def new_observation_sink(
