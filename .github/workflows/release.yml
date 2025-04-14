@@ -12,6 +12,7 @@ on:
         required: true
       pypi_password:
         required: true
+  workflow_dispatch:
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -101,9 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-    needs:
-      - publish-python-sdk
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to the Container registry
@@ -112,6 +111,9 @@ jobs:
           registry: ${{ env.DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        working-directory: ./python/sdk
+        run: pip install "setuptools>=64,<75" "setuptools_scm>=8" "twine" "wheel"
       - name: Build Merlin SDK Docker py${{ matrix.python-version }}
         env:
           CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
