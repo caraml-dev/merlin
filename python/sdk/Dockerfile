@@ -10,5 +10,7 @@ RUN apt-get update && apt-get install build-essential curl vim wget -y
 
 COPY . .${WORKDIR}
 
+RUN pip install "setuptools>=64,<75" "setuptools_scm>=8" "twine" "wheel"
+
 RUN pip install .
 RUN pip install ".[test]"
