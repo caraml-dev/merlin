@@ -6,5 +6,6 @@ verify_ssl = true
 [packages]
 pyfuncserver = {editable = true, extras = ["test"], path = "."}
 merlin-pyfunc-server = {extras = ["test"], file = ".", editable = true}
+cython = "*"
 
 [dev-packages]

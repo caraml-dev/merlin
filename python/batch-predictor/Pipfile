@@ -8,3 +8,4 @@ merlin-batch-predictor = {editable = true,extras = ["test"],path = "."}
 
 [packages]
 merlin-batch-predictor = {extras = ["test"], file = ".", editable = true}
+cython = "*"
