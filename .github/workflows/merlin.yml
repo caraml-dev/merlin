@@ -99,7 +99,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
-          pip install 
+          pip install pipenv==2023.7.23
           pip install "setuptools>=64,<75" "setuptools_scm>=8" "twine" "wheel"
           make setup
       - name: Run pyfunc-server test

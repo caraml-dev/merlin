@@ -35,6 +35,7 @@ TESTS_REQUIRE = [
     "types-protobuf",
     "types-requests",
     "xgboost==1.6.2",
+    "Cython"
 ]
 
 setup(
