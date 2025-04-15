@@ -12,14 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+import importlib.util
 import os
 
 from setuptools import find_packages, setup
 
-version = imp.load_source(
-    "pyfuncserver.version", os.path.join("pyfuncserver", "version.py")
-).VERSION
+# get version from version.py
+spec = importlib.util.spec_from_file_location(
+    "pyfuncserver.version", os.path.join("pyfuncserver","version.py")
+)
+
+v_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(v_module)
+
+version = v_module.VERSION
 
 with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
@@ -44,7 +50,7 @@ setup(
     description="Model Server implementation for Merlin PyFunc model",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    python_requires=">=3.8,<=3.13",
+    python_requires=">=3.8,<3.14",
     packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
     tests_require=TESTS_REQUIRE,
