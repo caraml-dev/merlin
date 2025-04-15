@@ -1,8 +1,8 @@
-pytest
+pytest>=8.1
 pytest-cov
 mypy
 google-cloud-bigquery
-scikit-learn>=1.1.2
-joblib>=0.13.0,<1.2.0  # >=1.2.0 upon upgrade of kserve's version
+scikit-learn>=1.3.1
+joblib>=1.2.0
 mypy-protobuf>=1.19
 types-PyYAML
