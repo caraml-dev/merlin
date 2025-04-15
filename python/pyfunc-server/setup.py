@@ -25,16 +25,16 @@ with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
 
 TESTS_REQUIRE = [
-    "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
+    "joblib>=1.2.0",
     "mypy",
+    "pytest>=7.0",
     "pytest-benchmark",
     "pytest-tornasync",
-    "pytest",
     "requests",
-    "scikit-learn>=1.1.2",
+    "scikit-learn>=1.3.1",
     "types-protobuf",
     "types-requests",
-    "xgboost==1.6.2",
+    "xgboost>=1.7.6",
 ]
 
 setup(
