@@ -67,7 +67,6 @@ jobs:
         working-directory: ./python/batch-predictor
         run: |
           pip install pipenv==2023.7.23
-          pip install "setuptools>=64,<75" "setuptools_scm>=8" "twine" "wheel"
           make setup
       - name: Run batch-predictor test
         working-directory: ./python/batch-predictor
@@ -100,7 +99,6 @@ jobs:
         working-directory: ./python/pyfunc-server
         run: |
           pip install pipenv==2023.7.23
-          pip install "setuptools>=64,<75" "setuptools_scm>=8" "twine" "wheel"
           make setup
       - name: Run pyfunc-server test
         working-directory: ./python/pyfunc-server

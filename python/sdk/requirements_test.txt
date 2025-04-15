@@ -16,4 +16,3 @@ types-protobuf
 urllib3-mock>=0.3.3
 xarray
 xgboost==1.6.2
-Cython
