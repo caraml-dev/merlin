@@ -82,7 +82,7 @@ def serialize_datetime(obj):
 def test_get_project(mock_url, mock_oauth, use_google_oauth, mock_responses):
     mock_responses.add(
         "GET",
-        "/api/v1/projects",
+        f"{mock_url}/v1/projects?name=my-project",
         body=f"""[{{
                         "id": 0,
                         "name": "my-project",
@@ -98,7 +98,7 @@ def test_get_project(mock_url, mock_oauth, use_google_oauth, mock_responses):
     p = m.get_project("my-project")
 
     assert mock_responses.calls[-1].request.method == "GET"
-    assert mock_responses.calls[-1].request.url == "/api/v1/projects?name=my-project"
+    assert mock_responses.calls[-1].request.url == f"{mock_url}/v1/projects?name=my-project"
     assert mock_responses.calls[-1].request.host == "merlin.dev"
 
     assert p.id == 0
@@ -131,14 +131,14 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_r
 
     mock_responses.add(
         "GET",
-        f"/api/v1/projects/{project_id}/models",
+        f"{mock_url}/v1/projects/{project_id}/models",
         body="[]",
         status=200,
         content_type="application/json",
     )
     mock_responses.add(
         "POST",
-        f"/api/v1/projects/{project_id}/models",
+        f"{mock_url}/v1/projects/{project_id}/models",
         body=f"""{{
                         "id": 0,
                         "project_id": {project_id},
@@ -216,7 +216,7 @@ def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_resp
 
     mock_responses.add(
         "GET",
-        f"/api/v1/projects/{project_id}/models",
+        f"{mock_url}/v1/projects/{project_id}/models",
         body=f"""[{{
                         "id": 1,
                         "project_id": {project_id},
@@ -234,7 +234,7 @@ def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_resp
 
     mock_responses.add(
         "GET",
-        f"/api/v1/models/1/endpoints",
+        f"{mock_url}/v1/models/1/endpoints",
         body=json.dumps([mdl_endpoint_1.to_dict()], default=serialize_datetime),
         status=200,
         content_type="application/json",
@@ -284,7 +284,7 @@ def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
 
     mock_responses.add(
         "POST",
-        f"/api/v1/models/{model_id}/versions",
+        f"{mock_url}/v1/models/{model_id}/versions",
         body=f"""{{
                         "id": {version_id},
                         "model_id": {model_id},
@@ -338,7 +338,7 @@ def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
 def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
     mock_responses.add(
         "GET",
-        "/api/v1/environments",
+        f"{mock_url}/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -358,7 +358,7 @@ def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
 def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     mock_responses.add(
         "GET",
-        "/api/v1/environments",
+        f"{mock_url}/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -378,7 +378,7 @@ def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth, moc
 def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     mock_responses.add(
         "GET",
-        "/api/v1/environments",
+        f"{mock_url}/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -394,7 +394,7 @@ def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oa
 
     mock_responses.add(
         "GET",
-        "/api/v1/environments",
+        f"{mock_url}/v1/environments",
         body=json.dumps([env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -408,7 +408,7 @@ def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oa
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     mock_responses.add(
         "GET",
-        "/api/v1/environments",
+        f"{mock_url}/v1/environments",
         body=json.dumps([env_2.to_dict()]),
         status=200,
         content_type="application/json",
