@@ -150,7 +150,7 @@ mlflow==1.26.1
     # via merlin-sdk
 mypy-extensions==1.0.0
     # via typing-inspect
-numpy==1.23.5
+numpy>=1.26.4,<2.0
     # via
     #   merlin-sdk
     #   mlflow
