@@ -19,22 +19,18 @@ import pytest
 import uuid
 import requests as requests_lib
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-from urllib3_mock import Responses
+import pytest
+import responses
+from urllib3.util.retry import Retry
 
 import client as cl
 from client import ApiClient, Configuration
 from merlin.model import Model, ModelType, ModelVersion, Project
 
-
-# From the documentation (https://docs.pytest.org/en/7.1.x/reference/reference.html#pytest.hookspec.pytest_configure):
-# Allow plugins and conftest files to perform initial configuration.
-# This hook is called for every plugin and initial conftest file after command line options have been parsed.
-# After that, the hook is called for other conftest files as they are imported.
-def pytest_configure():
-    # share mock responses as global variable so it can be reused and called as decorator on other files.
-    pytest.responses = Responses("requests.packages.urllib3")
-
+@pytest.fixture
+def mock_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 @pytest.fixture
 def url():

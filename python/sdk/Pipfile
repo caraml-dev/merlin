@@ -12,3 +12,4 @@ pytest-xdist = "*"
 [packages]
 merlin-sdk = {extras = ["test"],path = "."}
 cookiecutter = '==2.1.1'
+responses = ">=0.25,<1.0"
