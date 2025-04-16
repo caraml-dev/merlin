@@ -18,7 +18,6 @@ from sys import version_info
 from unittest import mock
 
 import pytest
-import responses
 
 import client as cl
 from client import ApiClient, Configuration
@@ -27,6 +26,9 @@ from merlin.endpoint import Status
 from merlin.model import Model, ModelType, Project
 from merlin.util import guess_mlp_ui_url
 from merlin.version import VERSION
+
+# get global mock responses that configured in conftest
+responses = pytest.responses
 
 
 @pytest.fixture
@@ -79,10 +81,11 @@ def serialize_datetime(obj):
         return obj.isoformat()
     raise TypeError("Type is not serializable")
 
-def test_get_project(mock_url, mock_oauth, use_google_oauth, mock_responses):
-    mock_responses.add(
+@responses.activate
+def test_get_project(mock_url, mock_oauth, use_google_oauth):
+    responses.add(
         "GET",
-        f"{mock_url}/v1/projects?name=my-project",
+        "/api/v1/projects",
         body=f"""[{{
                         "id": 0,
                         "name": "my-project",
@@ -97,9 +100,9 @@ def test_get_project(mock_url, mock_oauth, use_google_oauth, mock_responses):
     m = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     p = m.get_project("my-project")
 
-    assert mock_responses.calls[-1].request.method == "GET"
-    assert mock_responses.calls[-1].request.url == f"{mock_url}/v1/projects?name=my-project"
-    assert mock_responses.calls[-1].request.host == "merlin.dev"
+    assert responses.calls[-1].request.method == "GET"
+    assert responses.calls[-1].request.url == "/api/v1/projects?name=my-project"
+    assert responses.calls[-1].request.host == "merlin.dev"
 
     assert p.id == 0
     assert p.name == "my-project"
@@ -109,6 +112,7 @@ def test_get_project(mock_url, mock_oauth, use_google_oauth, mock_responses):
     assert isinstance(p.updated_at, datetime.datetime)
 
 
+@responses.activate
 def test_create_invalid_project_name(
     mock_url, api_client, mock_oauth, use_google_oauth
 ):
@@ -121,7 +125,8 @@ def test_create_invalid_project_name(
         assert client.get_project(project_name)
 
 
-def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
+@responses.activate
+def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = 1010
     mlflow_experiment_id = 1
     model_name = "my-model"
@@ -129,16 +134,16 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_r
     model_type = ModelType.XGBOOST
     mlflow_url = "http://mlflow.api.merlin.dev"
 
-    mock_responses.add(
+    responses.add(
         "GET",
-        f"{mock_url}/v1/projects/{project_id}/models",
+        f"/api/v1/projects/{project_id}/models",
         body="[]",
         status=200,
         content_type="application/json",
     )
-    mock_responses.add(
+    responses.add(
         "POST",
-        f"{mock_url}/v1/projects/{project_id}/models",
+        f"/api/v1/projects/{project_id}/models",
         body=f"""{{
                         "id": 0,
                         "project_id": {project_id},
@@ -168,7 +173,7 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_r
             "my-model", project_name=project_name, model_type=model_type
         )
 
-        assert json.loads(mock_responses.calls[-1].request.body) == json.loads(
+        assert json.loads(responses.calls[-1].request.body) == json.loads(
             f"""
         {{
             "name" : "{model_name}",
@@ -186,14 +191,15 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_r
         assert isinstance(model.updated_at, datetime.datetime)
         assert model.project == project
         assert (
-            f"merlin-sdk/{VERSION}" in mock_responses.calls[-1].request.headers["User-Agent"]
+            f"merlin-sdk/{VERSION}" in responses.calls[-1].request.headers["User-Agent"]
         )
         assert (
             f"python/{version_info.major}.{version_info.minor}.{version_info.micro}"
-            in mock_responses.calls[-1].request.headers["User-Agent"]
+            in responses.calls[-1].request.headers["User-Agent"]
         )
 
 
+@responses.activate
 def test_create_invalid_model_name(mock_url, api_client, mock_oauth, use_google_oauth):
     model_name = "invalidModelName"
     project_name = "my-project"
@@ -206,7 +212,8 @@ def test_create_invalid_model_name(mock_url, api_client, mock_oauth, use_google_
         assert client.get_or_create_model(model_name, project_name, model_type)
 
 
-def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
+@responses.activate
+def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = 1010
     mlflow_experiment_id = 1
     model_name = "my-model"
@@ -214,9 +221,9 @@ def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_resp
     model_type = ModelType.XGBOOST
     mlflow_url = "http://mlflow.api.merlin.dev"
 
-    mock_responses.add(
+    responses.add(
         "GET",
-        f"{mock_url}/v1/projects/{project_id}/models",
+        f"/api/v1/projects/{project_id}/models",
         body=f"""[{{
                         "id": 1,
                         "project_id": {project_id},
@@ -232,9 +239,9 @@ def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_resp
         content_type="application/json",
     )
 
-    mock_responses.add(
+    responses.add(
         "GET",
-        f"{mock_url}/v1/models/1/endpoints",
+        f"/api/v1/models/1/endpoints",
         body=json.dumps([mdl_endpoint_1.to_dict()], default=serialize_datetime),
         status=200,
         content_type="application/json",
@@ -268,6 +275,7 @@ def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_resp
         assert default_model_endpoint.environment_name == env_1.name
 
 
+@responses.activate
 def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = 1
     model_id = 1
@@ -282,9 +290,9 @@ def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
     created_at = "2019-09-04T03:09:13.842Z"
     updated_at = "2019-09-04T03:09:13.843Z"
 
-    mock_responses.add(
+    responses.add(
         "POST",
-        f"{mock_url}/v1/models/{model_id}/versions",
+        f"/api/v1/models/{model_id}/versions",
         body=f"""{{
                         "id": {version_id},
                         "model_id": {model_id},
@@ -335,10 +343,11 @@ def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
         assert mv.url == f"{ui_url}/projects/1/models/{model_id}/versions"
 
 
+@responses.activate
 def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
-    mock_responses.add(
+    responses.add(
         "GET",
-        f"{mock_url}/v1/environments",
+        "/api/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -355,10 +364,11 @@ def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
     assert envs[1].is_default == env_2.is_default
 
 
-def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
-    mock_responses.add(
+@responses.activate
+def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth):
+    responses.add(
         "GET",
-        f"{mock_url}/v1/environments",
+        "/api/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -375,10 +385,11 @@ def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth, moc
     assert env is None
 
 
-def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
-    mock_responses.add(
+@responses.activate
+def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth):
+    responses.add(
         "GET",
-        f"{mock_url}/v1/environments",
+        "/api/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -390,11 +401,11 @@ def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oa
     assert env.cluster == env_1.cluster
     assert env.is_default == env_1.is_default
 
-    mock_responses.reset()
+    responses.reset()
 
-    mock_responses.add(
+    responses.add(
         "GET",
-        f"{mock_url}/v1/environments",
+        "/api/v1/environments",
         body=json.dumps([env_2.to_dict()]),
         status=200,
         content_type="application/json",
@@ -404,11 +415,12 @@ def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oa
     assert env is None
 
 
-def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
+@responses.activate
+def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth):
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
-    mock_responses.add(
+    responses.add(
         "GET",
-        f"{mock_url}/v1/environments",
+        "/api/v1/environments",
         body=json.dumps([env_2.to_dict()]),
         status=200,
         content_type="application/json",

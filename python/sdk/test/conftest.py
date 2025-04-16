@@ -19,18 +19,22 @@ import pytest
 import uuid
 import requests as requests_lib
 from requests.adapters import HTTPAdapter
-import pytest
-import responses
-from urllib3.util.retry import Retry
+from requests.packages.urllib3.util.retry import Retry
+from urllib3_mock import Responses
 
 import client as cl
 from client import ApiClient, Configuration
 from merlin.model import Model, ModelType, ModelVersion, Project
 
-@pytest.fixture
-def mock_responses():
-    with responses.RequestsMock() as rsps:
-        yield rsps
+
+# From the documentation (https://docs.pytest.org/en/7.1.x/reference/reference.html#pytest.hookspec.pytest_configure):
+# Allow plugins and conftest files to perform initial configuration.
+# This hook is called for every plugin and initial conftest file after command line options have been parsed.
+# After that, the hook is called for other conftest files as they are imported.
+def pytest_configure():
+    # share mock responses as global variable so it can be reused and called as decorator on other files.
+    pytest.responses = Responses("requests.packages.urllib3")
+
 
 @pytest.fixture
 def url():
@@ -154,8 +158,10 @@ def gpu_config():
 
 
 @pytest.fixture
-def mock_oauth(mock_responses):
-    mock_responses.add(
+def mock_oauth():
+    responses = pytest.responses
+
+    responses.add(
         "GET",
         "/computeMetadata/v1/instance/service-accounts/default/",
         body="""
@@ -169,7 +175,7 @@ def mock_oauth(mock_responses):
         content_type="application/json",
     )
 
-    mock_responses.add(
+    responses.add(
         "GET",
         "/computeMetadata/v1/instance/service-accounts/computeengine@google.com/token",
         body="""
@@ -185,7 +191,7 @@ def mock_oauth(mock_responses):
         content_type="application/json",
     )
 
-    mock_responses.add(
+    responses.add(
         "GET",
         "/computeMetadata/v1/instance/service-accounts/default/?recursive=true",
         body="""
@@ -199,7 +205,7 @@ def mock_oauth(mock_responses):
         content_type="application/json",
     )
 
-    mock_responses.add(
+    responses.add(
         "GET",
         "/computeMetadata/v1/instance/service-accounts/default/identity?audience=sdk.caraml&format=full",
         body="""eyJhbGciOiJSUzI1NiIsImtpZCI6IjFlOWdkazcifQ.ewogImlzcyI6ICJodHRwOi8vc2VydmVyLmV4YW1wbGUuY29tIiwKICJzdWIiOiAiMjQ4Mjg5NzYxMDAxIiwKICJhdWQiOiAiczZCaGRSa3F0MyIsCiAibm9uY2UiOiAibi0wUzZfV3pBMk1qIiwKICJleHAiOiAxMzExMjgxOTcwLAogImlhdCI6IDEzMTEyODA5NzAKfQ.ggW8hZ1EuVLuxNuuIJKX_V8a_OMXzR0EHR9R6jgdqrOOF4daGU96Sr_P6qJp6IcmD3HP99Obi1PRs-cwh3LO-p146waJ8IhehcwL7F09JdijmBqkvPeB2T9CJNqeGpe-gccMg4vfKjkM8FcGvnzZUN4_KSP0aAp1tOJ1zZwgjxqGByKHiOtX7TpdQyHE5lcMiKPXfEIQILVq0pc_E2DzL7emopWoaoZTF_m0_N0YzFC6g6EJbOEoRoSK5hoDalrcvRYLSrQAZZKflyuVCyixEoV9GfNQC3_osjzw2PAithfubEEBLuVVk4XUVrWOLrLl0nx7RkKU8NXNHq-rvKMzqg""",
@@ -208,7 +214,7 @@ def mock_oauth(mock_responses):
         match_querystring=True,
     )
 
-    mock_responses.add(
+    responses.add(
         "GET",
         "/computeMetadata/api/v1/instance/service-accounts/default/",
         body="""
@@ -222,7 +228,7 @@ def mock_oauth(mock_responses):
         content_type="application/json",
     )
 
-    mock_responses.add(
+    responses.add(
         "GET",
         "/computeMetadata/api/v1/instance/service-accounts/computeengine@google.com/token",
         body="""
@@ -238,7 +244,7 @@ def mock_oauth(mock_responses):
         content_type="application/json",
     )
 
-    mock_responses.add(
+    responses.add(
         "POST",
         "/token",
         body="""
