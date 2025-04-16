@@ -79,7 +79,7 @@ def serialize_datetime(obj):
         return obj.isoformat()
     raise TypeError("Type is not serializable")
 
-def test_get_project(mock_url, mock_oauth, use_google_oauth):
+def test_get_project(mock_url, mock_oauth, use_google_oauth, mock_responses):
     mock_responses.add(
         "GET",
         "/api/v1/projects",
@@ -121,7 +121,7 @@ def test_create_invalid_project_name(
         assert client.get_project(project_name)
 
 
-def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
+def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     project_id = 1010
     mlflow_experiment_id = 1
     model_name = "my-model"
@@ -206,7 +206,7 @@ def test_create_invalid_model_name(mock_url, api_client, mock_oauth, use_google_
         assert client.get_or_create_model(model_name, project_name, model_type)
 
 
-def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth):
+def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     project_id = 1010
     mlflow_experiment_id = 1
     model_name = "my-model"
@@ -355,7 +355,7 @@ def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
     assert envs[1].is_default == env_2.is_default
 
 
-def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth):
+def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     mock_responses.add(
         "GET",
         "/api/v1/environments",
@@ -375,7 +375,7 @@ def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth):
     assert env is None
 
 
-def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth):
+def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     mock_responses.add(
         "GET",
         "/api/v1/environments",
@@ -404,7 +404,7 @@ def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oa
     assert env is None
 
 
-def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth):
+def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth, mock_responses):
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     mock_responses.add(
         "GET",

@@ -316,7 +316,7 @@ class TestProject:
     secret_1 = cl.Secret(id=1, name="secret-1", data="secret-data-1")
     secret_2 = cl.Secret(id=2, name="secret-2", data="secret-data-2")
 
-    def test_create_secret(self, project):
+    def test_create_secret(self, project, mock_responses):
         mock_responses.add(
             "POST",
             "/v1/projects/1/secrets",
@@ -330,7 +330,7 @@ class TestProject:
         assert actual_body["name"] == self.secret_1.name
         assert actual_body["data"] == self.secret_1.data
 
-    def test_update_secret(self, project):
+    def test_update_secret(self, project, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
@@ -369,7 +369,7 @@ class TestProject:
         ):
             project.update_secret(self.secret_2.name, "new-data")
 
-    def test_delete_secret(self, project):
+    def test_delete_secret(self, project, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
@@ -404,7 +404,7 @@ class TestProject:
             project.delete_secret(self.secret_2.name)
 
     
-    def test_list_secret(self, project):
+    def test_list_secret(self, project, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
@@ -419,7 +419,7 @@ class TestProject:
 
 class TestModelVersion:
     
-    def test_list_endpoint(self, version):
+    def test_list_endpoint(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
@@ -434,7 +434,7 @@ class TestModelVersion:
         assert endpoints[1].id == ep2.id
 
     
-    def test_deploy(self, version):
+    def test_deploy(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -484,7 +484,7 @@ class TestModelVersion:
         assert endpoint.protocol == Protocol.HTTP_JSON
 
     
-    def test_deploy_upiv1(self, version):
+    def test_deploy_upiv1(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -534,7 +534,7 @@ class TestModelVersion:
         assert endpoint.protocol == Protocol.UPI_V1
 
     
-    def test_deploy_using_raw_deployment_mode(self, version):
+    def test_deploy_using_raw_deployment_mode(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -585,7 +585,7 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy == RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
 
     
-    def test_deploy_with_autoscaling_policy(self, version):
+    def test_deploy_with_autoscaling_policy(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -640,7 +640,7 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy.target_value == 10
 
     
-    def test_deploy_default_env(self, version):
+    def test_deploy_default_env(self, version, mock_responses):
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         mock_responses.add(
             "GET",
@@ -708,7 +708,7 @@ class TestModelVersion:
         assert endpoint.environment.name == env_1.name
 
     
-    def test_redeploy_model(self, version):
+    def test_redeploy_model(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -764,7 +764,7 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy.target_value == 10
 
     
-    def test_deploy_with_gpu(self, version):
+    def test_deploy_with_gpu(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -817,7 +817,7 @@ class TestModelVersion:
         )
 
     
-    def test_deploy_with_model_observability_enabled(self, version):
+    def test_deploy_with_model_observability_enabled(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -869,7 +869,7 @@ class TestModelVersion:
 
 
     
-    def test_deploy_with_more_granular_model_observability_cfg(self, version):
+    def test_deploy_with_more_granular_model_observability_cfg(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/environments",
@@ -921,7 +921,7 @@ class TestModelVersion:
         assert endpoint.model_observability == model_observability
 
     
-    def test_undeploy(self, version):
+    def test_undeploy(self, version, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
@@ -953,7 +953,7 @@ class TestModelVersion:
         assert len(mock_responses.calls) == 2
 
     
-    def test_undeploy_default_env(self, version):
+    def test_undeploy_default_env(self, version, mock_responses):
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         mock_responses.add(
             "GET",
@@ -1020,7 +1020,7 @@ class TestModelVersion:
         assert len(mock_responses.calls) == 3
 
     
-    def test_list_prediction_job(self, version):
+    def test_list_prediction_job(self, version, mock_responses):
         mock_responses.add(
             method="GET",
             url="/v1/models/1/versions/1/jobs-by-page?page=1",
@@ -1064,7 +1064,7 @@ class TestModelVersion:
         assert jobs[1].error == job_2.error
 
     
-    def test_create_prediction_job(self, version):
+    def test_create_prediction_job(self, version, mock_responses):
         job_1.status = "completed"
         mock_responses.add(
             "POST",
@@ -1121,7 +1121,7 @@ class TestModelVersion:
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
     
-    def test_create_prediction_job_with_retry_failed(self, version):
+    def test_create_prediction_job_with_retry_failed(self, version, mock_responses):
         job_1.status = "pending"
         mock_responses.add(
             "POST",
@@ -1171,7 +1171,7 @@ class TestModelVersion:
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
     
-    def test_create_prediction_job_with_retry_success(self, version):
+    def test_create_prediction_job_with_retry_success(self, version, mock_responses):
         job_1.status = "pending"
         mock_responses.add(
             "POST",
@@ -1274,7 +1274,7 @@ class TestModelVersion:
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
     
-    def test_create_prediction_job_with_retry_pending_then_failed(self, version):
+    def test_create_prediction_job_with_retry_pending_then_failed(self, version, mock_responses):
         job_1.status = "pending"
         mock_responses.add(
             "POST",
@@ -1367,7 +1367,7 @@ class TestModelVersion:
         assert len(mock_responses.calls) == 10
 
     
-    def test_stop_prediction_job(self, version):
+    def test_stop_prediction_job(self, version, mock_responses):
         job_1.status = "pending"
         mock_responses.add(
             "POST",
@@ -1422,7 +1422,7 @@ class TestModelVersion:
         assert j.name == job_1.name
 
     
-    def test_model_version_deletion(self, version):
+    def test_model_version_deletion(self, version, mock_responses):
         mock_responses.add(
             "DELETE",
             "/v1/models/1/versions/1",
@@ -1487,7 +1487,7 @@ class TestModel:
     )
 
     
-    def test_list_version(self, model):
+    def test_list_version(self, model, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/models/1/versions?limit=50&cursor=&search=",
@@ -1511,7 +1511,7 @@ class TestModel:
         assert versions[1].id == 2
 
     
-    def test_list_version_with_labels(self, model):
+    def test_list_version_with_labels(self, model, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/models/1/versions?limit=50&cursor=&search=labels%3Amodel+in+%28T-800%29",
@@ -1526,7 +1526,7 @@ class TestModel:
         assert versions[0].labels["model"] == "T-800"
 
     
-    def test_list_endpoint(self, model):
+    def test_list_endpoint(self, model, mock_responses):
         mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
@@ -1541,7 +1541,7 @@ class TestModel:
         assert endpoints[1].id == mdl_endpoint_2.id
 
     
-    def test_new_model_version(self, model):
+    def test_new_model_version(self, model, mock_responses):
         mock_responses.add(
             "POST",
             "/v1/models/1/versions",
@@ -1560,7 +1560,7 @@ class TestModel:
         assert mv._model_schema == self.merlin_model_schema
 
     
-    def test_serve_traffic(self, model):
+    def test_serve_traffic(self, model, mock_responses):
         ve = VersionEndpoint(ep1)
         with pytest.raises(ValueError):
             model.serve_traffic([ve], environment_name=env_1.name)
@@ -1629,7 +1629,7 @@ class TestModel:
         )
 
     
-    def test_stop_serving_traffic(self, model):
+    def test_stop_serving_traffic(self, model, mock_responses):
         ve = VersionEndpoint(ep1)
         with pytest.raises(ValueError):
             model.serve_traffic([ve], environment_name=env_1.name)
@@ -1694,7 +1694,7 @@ class TestModel:
         assert len(mock_responses.calls) == 2
 
     
-    def test_serve_traffic_default_env(self, model):
+    def test_serve_traffic_default_env(self, model, mock_responses):
         ve = VersionEndpoint(ep1)
 
         # no default environment
@@ -1776,7 +1776,7 @@ class TestModel:
         )
 
     
-    def test_serve_traffic_upi(self, model):
+    def test_serve_traffic_upi(self, model, mock_responses):
         ve = VersionEndpoint(upi_ep)
         # test create
         mock_responses.add(
@@ -1832,7 +1832,7 @@ class TestModel:
         assert endpoint.protocol == Protocol.UPI_V1
 
     
-    def test_model_deletion(self, model):
+    def test_model_deletion(self, model, mock_responses):
         mock_responses.add(
             "DELETE",
             "/v1/projects/1/models/1",
