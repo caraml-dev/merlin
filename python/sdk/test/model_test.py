@@ -20,6 +20,7 @@ from unittest.mock import patch
 import client
 import client as cl
 import pytest
+import responses
 from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
 from merlin.autoscaling import (
     RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
@@ -34,9 +35,6 @@ from merlin.model import ModelType
 from merlin.model_schema import InferenceSchema, ModelSchema, RankingOutput, ValueType
 from merlin.protocol import Protocol
 from merlin.model_observability import ModelObservability
-from urllib3_mock import Responses
-
-responses = Responses("requests.packages.urllib3")
 
 default_resource_request = cl.ResourceRequest(
     min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi"
@@ -318,9 +316,8 @@ class TestProject:
     secret_1 = cl.Secret(id=1, name="secret-1", data="secret-data-1")
     secret_2 = cl.Secret(id=2, name="secret-2", data="secret-data-2")
 
-    @responses.activate
     def test_create_secret(self, project):
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/projects/1/secrets",
             body=json.dumps(self.secret_1.to_dict()),
@@ -329,20 +326,19 @@ class TestProject:
         )
 
         project.create_secret(self.secret_1.name, self.secret_1.data)
-        actual_body = json.loads(responses.calls[0].request.body)
+        actual_body = json.loads(mock_responses.calls[0].request.body)
         assert actual_body["name"] == self.secret_1.name
         assert actual_body["data"] == self.secret_1.data
 
-    @responses.activate
     def test_update_secret(self, project):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
             body=json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "PATCH",
             "/v1/projects/1/secrets/1",
             body=json.dumps(self.secret_1.to_dict()),
@@ -352,14 +348,14 @@ class TestProject:
 
         project.update_secret(self.secret_1.name, "new-data")
 
-        actual_body = json.loads(responses.calls[1].request.body)
+        actual_body = json.loads(mock_responses.calls[1].request.body)
         assert actual_body["name"] == self.secret_1.name
         assert actual_body["data"] == "new-data"
 
-        responses.reset()
+        mock_responses.reset()
 
         # test secret not found
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
             body=json.dumps([self.secret_1.to_dict()]),
@@ -373,16 +369,15 @@ class TestProject:
         ):
             project.update_secret(self.secret_2.name, "new-data")
 
-    @responses.activate
     def test_delete_secret(self, project):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
             body=json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "DELETE",
             "/v1/projects/1/secrets/1",
             status=204,
@@ -391,10 +386,10 @@ class TestProject:
 
         project.delete_secret(self.secret_1.name)
 
-        responses.reset()
+        mock_responses.reset()
 
         # test secret not found
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
             body=json.dumps([self.secret_1.to_dict()]),
@@ -408,9 +403,9 @@ class TestProject:
         ):
             project.delete_secret(self.secret_2.name)
 
-    @responses.activate
+    
     def test_list_secret(self, project):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/projects/1/secrets",
             body=json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]),
@@ -423,9 +418,9 @@ class TestProject:
 
 
 class TestModelVersion:
-    @responses.activate
+    
     def test_list_endpoint(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
@@ -438,9 +433,9 @@ class TestModelVersion:
         assert endpoints[0].id == ep1.id
         assert endpoints[1].id == ep2.id
 
-    @responses.activate
+    
     def test_deploy(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -448,28 +443,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep1.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep1.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict()]),
@@ -488,9 +483,9 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
         assert endpoint.protocol == Protocol.HTTP_JSON
 
-    @responses.activate
+    
     def test_deploy_upiv1(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -498,28 +493,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(upi_ep.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(upi_ep.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([upi_ep.to_dict()]),
@@ -538,9 +533,9 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
         assert endpoint.protocol == Protocol.UPI_V1
 
-    @responses.activate
+    
     def test_deploy_using_raw_deployment_mode(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -548,28 +543,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep3.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep3.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep3.to_dict()]),
@@ -589,9 +584,9 @@ class TestModelVersion:
         assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
         assert endpoint.autoscaling_policy == RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
 
-    @responses.activate
+    
     def test_deploy_with_autoscaling_policy(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -599,28 +594,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep4.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep4.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep4.to_dict()]),
@@ -644,10 +639,10 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
         assert endpoint.autoscaling_policy.target_value == 10
 
-    @responses.activate
+    
     def test_deploy_default_env(self, version):
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
@@ -655,7 +650,7 @@ class TestModelVersion:
             content_type="application/json",
         )
         # no default environment
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_2.to_dict()]),
@@ -666,8 +661,8 @@ class TestModelVersion:
             version.deploy()
 
         # default environment exists
-        responses.reset()
-        responses.add(
+        mock_responses.reset()
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -675,28 +670,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep1.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep1.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict()]),
@@ -712,9 +707,9 @@ class TestModelVersion:
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
 
-    @responses.activate
+    
     def test_redeploy_model(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -722,28 +717,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep3.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "PUT",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep4.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep4.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep4.to_dict()]),
@@ -768,9 +763,9 @@ class TestModelVersion:
         assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
         assert endpoint.autoscaling_policy.target_value == 10
 
-    @responses.activate
+    
     def test_deploy_with_gpu(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_3.to_dict()]),
@@ -778,28 +773,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(ep5.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/789",
             body=json.dumps(ep5.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep5.to_dict()]),
@@ -821,9 +816,9 @@ class TestModelVersion:
             == resource_request_with_gpu.gpu_request
         )
 
-    @responses.activate
+    
     def test_deploy_with_model_observability_enabled(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_3.to_dict()]),
@@ -831,28 +826,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(observability_enabled_ep.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([observability_enabled_ep.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/7899",
             body=json.dumps(observability_enabled_ep.to_dict()),
@@ -873,9 +868,9 @@ class TestModelVersion:
         assert endpoint.enable_model_observability == True
 
 
-    @responses.activate
+    
     def test_deploy_with_more_granular_model_observability_cfg(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_3.to_dict()]),
@@ -883,28 +878,28 @@ class TestModelVersion:
             content_type="application/json",
         )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps(more_granular_observability_cfg_ep.to_dict()),
             status=201,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([more_granular_observability_cfg_ep.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint/8000",
             body=json.dumps(more_granular_observability_cfg_ep.to_dict()),
@@ -925,9 +920,9 @@ class TestModelVersion:
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
         assert endpoint.model_observability == model_observability
 
-    @responses.activate
+    
     def test_undeploy(self, version):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep2.to_dict()]),
@@ -936,17 +931,17 @@ class TestModelVersion:
         )
 
         version.undeploy(environment_name=env_1.name)
-        assert len(responses.calls) == 1
+        assert len(mock_responses.calls) == 1
 
-        responses.reset()
-        responses.add(
+        mock_responses.reset()
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "DELETE",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep1.to_dict()),
@@ -955,12 +950,12 @@ class TestModelVersion:
         )
 
         version.undeploy(environment_name=env_1.name)
-        assert len(responses.calls) == 2
+        assert len(mock_responses.calls) == 2
 
-    @responses.activate
+    
     def test_undeploy_default_env(self, version):
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
@@ -968,7 +963,7 @@ class TestModelVersion:
             content_type="application/json",
         )
         # no default environment
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_2.to_dict()]),
@@ -978,8 +973,8 @@ class TestModelVersion:
         with pytest.raises(ValueError):
             version.deploy()
 
-        responses.reset()
-        responses.add(
+        mock_responses.reset()
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
@@ -987,7 +982,7 @@ class TestModelVersion:
             content_type="application/json",
         )
 
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep2.to_dict()]),
@@ -996,24 +991,24 @@ class TestModelVersion:
         )
 
         version.undeploy()
-        assert len(responses.calls) == 2
+        assert len(mock_responses.calls) == 2
 
-        responses.reset()
-        responses.add(
+        mock_responses.reset()
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "DELETE",
             "/v1/models/1/versions/1/endpoint/1234",
             body=json.dumps(ep1.to_dict()),
@@ -1022,11 +1017,11 @@ class TestModelVersion:
         )
 
         version.undeploy()
-        assert len(responses.calls) == 3
+        assert len(mock_responses.calls) == 3
 
-    @responses.activate
+    
     def test_list_prediction_job(self, version):
-        responses.add(
+        mock_responses.add(
             method="GET",
             url="/v1/models/1/versions/1/jobs-by-page?page=1",
             body=json.dumps({
@@ -1041,7 +1036,7 @@ class TestModelVersion:
             content_type="application/json",
             match_querystring=True,
         )
-        responses.add(
+        mock_responses.add(
             method="GET",
             url="/v1/models/1/versions/1/jobs-by-page?page=2",
             body=json.dumps({
@@ -1068,10 +1063,10 @@ class TestModelVersion:
         assert jobs[1].status == JobStatus(job_2.status)
         assert jobs[1].error == job_2.error
 
-    @responses.activate
+    
     def test_create_prediction_job(self, version):
         job_1.status = "completed"
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1106,7 +1101,7 @@ class TestModelVersion:
         assert j.error == job_1.error
         assert j.name == job_1.name
 
-        actual_req = json.loads(responses.calls[0].request.body)
+        actual_req = json.loads(mock_responses.calls[0].request.body)
         assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
         assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
         assert (
@@ -1125,10 +1120,10 @@ class TestModelVersion:
 
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
-    @responses.activate
+    
     def test_create_prediction_job_with_retry_failed(self, version):
         job_1.status = "pending"
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1137,7 +1132,7 @@ class TestModelVersion:
         )
 
         for i in range(5):
-            responses.add(
+            mock_responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
                 body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1171,14 +1166,14 @@ class TestModelVersion:
             assert j.id == job_1.id
             assert j.error == job_1.error
             assert j.name == job_1.name
-            assert len(responses.calls) == 6
+            assert len(mock_responses.calls) == 6
 
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
-    @responses.activate
+    
     def test_create_prediction_job_with_retry_success(self, version):
         job_1.status = "pending"
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1208,10 +1203,10 @@ class TestModelVersion:
                     else:
                         return match
 
-        responses._find_match = types.MethodType(_find_match_patched, responses)
+        mock_responses._find_match = types.MethodType(_find_match_patched, responses)
 
         for i in range(4):
-            responses.add(
+            mock_responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
                 body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1220,7 +1215,7 @@ class TestModelVersion:
             )
 
         job_1.status = "completed"
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/jobs/1",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1255,7 +1250,7 @@ class TestModelVersion:
         assert j.error == job_1.error
         assert j.name == job_1.name
 
-        actual_req = json.loads(responses.calls[0].request.body)
+        actual_req = json.loads(mock_responses.calls[0].request.body)
         assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
         assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
         assert (
@@ -1271,17 +1266,17 @@ class TestModelVersion:
             == ModelType.PYFUNC_V2.value.upper()
         )
         assert actual_req["config"]["service_account_name"] == "my-service-account"
-        assert len(responses.calls) == 6
+        assert len(mock_responses.calls) == 6
 
         # unpatch
-        responses._find_match = types.MethodType(_find_match, responses)
+        mock_responses._find_match = types.MethodType(_find_match, responses)
 
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
-    @responses.activate
+    
     def test_create_prediction_job_with_retry_pending_then_failed(self, version):
         job_1.status = "pending"
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1311,10 +1306,10 @@ class TestModelVersion:
                     else:
                         return match
 
-        responses._find_match = types.MethodType(_find_match_patched, responses)
+        mock_responses._find_match = types.MethodType(_find_match_patched, responses)
 
         for i in range(3):
-            responses.add(
+            mock_responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
                 body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1322,7 +1317,7 @@ class TestModelVersion:
                 content_type="application/json",
             )
 
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/jobs/1",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1332,7 +1327,7 @@ class TestModelVersion:
 
         job_1.status = "failed"
         for i in range(5):
-            responses.add(
+            mock_responses.add(
                 "GET",
                 "/v1/models/1/versions/1/jobs/1",
                 body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1368,13 +1363,13 @@ class TestModelVersion:
             assert j.name == job_1.name
 
         # unpatch
-        responses._find_match = types.MethodType(_find_match, responses)
-        assert len(responses.calls) == 10
+        mock_responses._find_match = types.MethodType(_find_match, responses)
+        assert len(mock_responses.calls) == 10
 
-    @responses.activate
+    
     def test_stop_prediction_job(self, version):
         job_1.status = "pending"
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions/1/jobs",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1382,7 +1377,7 @@ class TestModelVersion:
             content_type="application/json",
         )
 
-        responses.add(
+        mock_responses.add(
             "PUT",
             "/v1/models/1/versions/1/jobs/1/stop",
             status=204,
@@ -1390,7 +1385,7 @@ class TestModelVersion:
         )
 
         job_1.status = "terminated"
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions/1/jobs/1",
             body=json.dumps(job_1.to_dict(), default=serialize_datetime),
@@ -1426,9 +1421,9 @@ class TestModelVersion:
         assert j.error == job_1.error
         assert j.name == job_1.name
 
-    @responses.activate
+    
     def test_model_version_deletion(self, version):
-        responses.add(
+        mock_responses.add(
             "DELETE",
             "/v1/models/1/versions/1",
             body=json.dumps(1),
@@ -1491,9 +1486,9 @@ class TestModel:
         model_schema=schema,
     )
 
-    @responses.activate
+    
     def test_list_version(self, model):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions?limit=50&cursor=&search=",
             match_querystring=True,
@@ -1502,7 +1497,7 @@ class TestModel:
             adding_headers={"Next-Cursor": "abcdef"},
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions?limit=50&cursor=abcdef&search=",
             match_querystring=True,
@@ -1515,9 +1510,9 @@ class TestModel:
         assert versions[0].id == 1
         assert versions[1].id == 2
 
-    @responses.activate
+    
     def test_list_version_with_labels(self, model):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/versions?limit=50&cursor=&search=labels%3Amodel+in+%28T-800%29",
             body=json.dumps([self.v3.to_dict()]),
@@ -1530,9 +1525,9 @@ class TestModel:
         assert versions[0].id == 3
         assert versions[0].labels["model"] == "T-800"
 
-    @responses.activate
+    
     def test_list_endpoint(self, model):
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([mdl_endpoint_1.to_dict(), mdl_endpoint_2.to_dict()]),
@@ -1545,9 +1540,9 @@ class TestModel:
         assert endpoints[0].id == mdl_endpoint_1.id
         assert endpoints[1].id == mdl_endpoint_2.id
 
-    @responses.activate
+    
     def test_new_model_version(self, model):
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/versions",
             body=json.dumps(self.v4.to_dict()),
@@ -1564,7 +1559,7 @@ class TestModel:
         assert mv._labels == {"model": "T-800"}
         assert mv._model_schema == self.merlin_model_schema
 
-    @responses.activate
+    
     def test_serve_traffic(self, model):
         ve = VersionEndpoint(ep1)
         with pytest.raises(ValueError):
@@ -1582,14 +1577,14 @@ class TestModel:
             )
 
         # test create
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
@@ -1603,24 +1598,24 @@ class TestModel:
         )
         assert endpoint.protocol == Protocol.HTTP_JSON
 
-        responses.reset()
+        mock_responses.reset()
 
         # test update
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([mdl_endpoint_1.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_1.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "PUT",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_1.to_dict()),
@@ -1633,7 +1628,7 @@ class TestModel:
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
 
-    @responses.activate
+    
     def test_stop_serving_traffic(self, model):
         ve = VersionEndpoint(ep1)
         with pytest.raises(ValueError):
@@ -1651,14 +1646,14 @@ class TestModel:
             )
 
         # test create
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
@@ -1671,39 +1666,39 @@ class TestModel:
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
 
-        responses.reset()
+        mock_responses.reset()
 
         # test DELETE
-        responses.reset()
-        responses.add(
+        mock_responses.reset()
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([mdl_endpoint_1.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_1.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "DELETE",
             "/v1/models/1/endpoints/1",
             status=200,
             content_type="application/json",
         )
         model.stop_serving_traffic(endpoint.environment_name)
-        assert len(responses.calls) == 2
+        assert len(mock_responses.calls) == 2
 
-    @responses.activate
+    
     def test_serve_traffic_default_env(self, model):
         ve = VersionEndpoint(ep1)
 
         # no default environment
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_2.to_dict()]),
@@ -1713,24 +1708,24 @@ class TestModel:
         with pytest.raises(ValueError):
             model.serve_traffic({ve: 100})
 
-        responses.reset()
+        mock_responses.reset()
 
         # test create
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_1.to_dict()),
@@ -1743,31 +1738,31 @@ class TestModel:
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
 
-        responses.reset()
+        mock_responses.reset()
 
         # test update
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([mdl_endpoint_1.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_1.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "PUT",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_1.to_dict()),
@@ -1780,18 +1775,18 @@ class TestModel:
             endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
         )
 
-    @responses.activate
+    
     def test_serve_traffic_upi(self, model):
         ve = VersionEndpoint(upi_ep)
         # test create
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "POST",
             "/v1/models/1/endpoints",
             body=json.dumps(mdl_endpoint_upi.to_dict()),
@@ -1805,24 +1800,24 @@ class TestModel:
         )
         assert endpoint.protocol == Protocol.UPI_V1
 
-        responses.reset()
+        mock_responses.reset()
 
         # test update
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints",
             body=json.dumps([mdl_endpoint_upi.to_dict()]),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "GET",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_upi.to_dict()),
             status=200,
             content_type="application/json",
         )
-        responses.add(
+        mock_responses.add(
             "PUT",
             "/v1/models/1/endpoints/1",
             body=json.dumps(mdl_endpoint_upi.to_dict()),
@@ -1836,9 +1831,9 @@ class TestModel:
         )
         assert endpoint.protocol == Protocol.UPI_V1
 
-    @responses.activate
+    
     def test_model_deletion(self, model):
-        responses.add(
+        mock_responses.add(
             "DELETE",
             "/v1/projects/1/models/1",
             body=json.dumps(1),
