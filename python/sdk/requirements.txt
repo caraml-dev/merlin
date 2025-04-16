@@ -19,4 +19,4 @@ numpy>=1.26.4
 caraml-auth-google==0.0.0.post16.dev0
 pydantic==2.5.3
 grpcio-tools>=1.50.0,<1.63
-grpcio==1.71.0
+grpcio>=1.60.1
