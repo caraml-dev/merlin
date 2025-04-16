@@ -356,7 +356,7 @@ def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
 
 
 def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth):
-    mock_responses..add(
+    mock_responses.add(
         "GET",
         "/api/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
