@@ -16,13 +16,11 @@ import json
 
 import mlflow
 import pytest
+import responses
 
 import client as cl
 import merlin
 from merlin.model import ModelVersion
-
-# get global mock responses that configured in conftest
-responses = pytest.responses
 
 default_resource_request = cl.ResourceRequest(min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi")
 env_1 = cl.Environment(
@@ -46,7 +44,6 @@ def test_set_url(url, use_google_oauth):
     assert url == merlin.get_url()
 
 
-@responses.activate
 def test_set_project(url, project, mock_oauth, use_google_oauth):
     # expect exception when setting project but client is not set
     with pytest.raises(Exception):
@@ -62,7 +59,6 @@ def test_set_project(url, project, mock_oauth, use_google_oauth):
     assert merlin.active_project().mlflow_tracking_url == project.mlflow_tracking_url
 
 
-@responses.activate
 def test_set_model(url, project, model, mock_oauth, use_google_oauth):
     # expect exception when setting model but client and project is not set
     with pytest.raises(Exception):
@@ -85,7 +81,6 @@ def test_set_model(url, project, model, mock_oauth, use_google_oauth):
     assert merlin.active_model().mlflow_experiment_id == model.mlflow_experiment_id
 
 
-@responses.activate
 def test_new_model_version(url, project, model, version, mock_oauth, use_google_oauth):
     # expect exception when creating new model  version but client and
     # project is not set
@@ -117,7 +112,6 @@ def test_new_model_version(url, project, model, version, mock_oauth, use_google_
         assert v.mlflow_run_id == version.mlflow_run_id
 
 
-@responses.activate
 def test_new_model_version_with_labels(
     url, project, model, version, mock_oauth, use_google_oauth
 ):
@@ -140,7 +134,6 @@ def test_new_model_version_with_labels(
             assert labels[key] == value
 
 
-@responses.activate
 def test_list_environment(url, mock_oauth, use_google_oauth):
     merlin.set_url(url, use_google_oauth=use_google_oauth)
 
@@ -153,7 +146,6 @@ def test_list_environment(url, mock_oauth, use_google_oauth):
     assert envs[1].name == env_2.name
 
 
-@responses.activate
 def test_get_environment(url, mock_oauth, use_google_oauth):
     merlin.set_url(url, use_google_oauth=use_google_oauth)
 
@@ -167,7 +159,6 @@ def test_get_environment(url, mock_oauth, use_google_oauth):
     assert env is None
 
 
-@responses.activate
 def test_get_default_environment(url, mock_oauth, use_google_oauth):
     merlin.set_url(url, use_google_oauth=use_google_oauth)
 
@@ -180,7 +171,6 @@ def test_get_default_environment(url, mock_oauth, use_google_oauth):
     assert env.is_default
 
 
-@responses.activate
 def test_mlflow_methods(url, project, model, version, mock_oauth, use_google_oauth):
     _mock_get_project_call(project)
     _mock_get_model_call(project, model)
@@ -202,7 +192,7 @@ def test_mlflow_methods(url, project, model, version, mock_oauth, use_google_oau
 
 
 def _mock_get_project_call(project):
-    responses.add(
+    mock_responses.add(
         "GET",
         "/v1/projects",
         body=f"""[{{
@@ -218,7 +208,7 @@ def _mock_get_project_call(project):
 
 
 def _mock_get_model_call(project, model):
-    responses.add(
+    mock_responses.add(
         "GET",
         f"/v1/projects/{project.id}/models",
         body=f"""[{{
@@ -247,7 +237,7 @@ def _mock_new_model_version_call(model, version, labels=None):
     if labels is not None:
         body["labels"] = labels
 
-    responses.add(
+    mock_responses.add(
         "POST",
         f"/v1/models/{model.id}/versions",
         body=json.dumps(body),
@@ -257,7 +247,7 @@ def _mock_new_model_version_call(model, version, labels=None):
 
 
 def _mock_list_environment_call():
-    responses.add(
+    mock_responses.add(
         "GET",
         "/v1/environments",
         body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
