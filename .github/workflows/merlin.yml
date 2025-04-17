@@ -46,6 +46,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
+      PIPENV_VENV_IN_PROJECT: true
     steps:
       - uses: actions/checkout@v4
       - name: Set up Google Cloud SDK
@@ -80,6 +81,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
+      PIPENV_VENV_IN_PROJECT: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -112,6 +114,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
+      PIPENV_VENV_IN_PROJECT: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
