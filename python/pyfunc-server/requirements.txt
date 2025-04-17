@@ -1,7 +1,7 @@
 argparse>=1.4.0
 caraml-upi-protos>=0.3.4
 cloudpickle==2.0.0
-confluent-kafka==2.3.0
+confluent-kafka>=2.6.0
 grpcio-health-checking
 grpcio-reflection
 merlin-sdk==0.0.0

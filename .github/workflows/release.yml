@@ -12,6 +12,7 @@ on:
         required: true
       pypi_password:
         required: true
+  workflow_dispatch:
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -101,7 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     needs:
       - publish-python-sdk
     steps:
