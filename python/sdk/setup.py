@@ -13,14 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+import importlib.util
 import os
 
 from setuptools import find_packages, setup
 
-version = imp.load_source(
-    "merlin.version", os.path.join("merlin", "version.py")
-).VERSION
+# get version from version.py
+spec = importlib.util.spec_from_file_location(
+    "sdk.version", os.path.join("merlin/version.py")
+)
+
+v_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(v_module)
+
+version = v_module.VERSION
 
 with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
