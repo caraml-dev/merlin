@@ -341,7 +341,7 @@ def test_new_model_version(mock_url, api_client, use_google_oauth):
         mdl = Model(mdl, project, api_client)
         with mock.patch.object(client, "get_model", return_value=mdl):
             mv = client.new_model_version(model_name, project_name)
-    
+
             assert mv.id == version_id
             assert mv.mlflow_run_id == mlflow_run_id
             assert mv.mlflow_url == mlflow_url
@@ -351,3 +351,28 @@ def test_new_model_version(mock_url, api_client, use_google_oauth):
             assert mv.model == mdl
             ui_url = guess_mlp_ui_url(mock_url)
             assert mv.url == f"{ui_url}/projects/1/models/{model_id}/versions"
+            
+def test_list_environments(mock_url, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        mock_response = MagicMock()
+        mock_response.method = "GET"
+        mock_response.status = 200
+        mock_response.path = "/api/v1/environments"
+        mock_response.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+        mock_response.headers = {
+            'content-type': 'application/json',
+            'charset': 'utf-8'
+        }
+        
+        mock_request.return_value = mock_response
+        
+        client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+        envs = client.list_environment()
+
+        assert len(envs) == 2
+        assert envs[0].name == env_1.name
+        assert envs[0].cluster == env_1.cluster
+        assert envs[0].is_default == env_1.is_default
+        assert envs[1].name == env_2.name
+        assert envs[1].cluster == env_2.cluster
+        assert envs[1].is_default == env_2.is_default
