@@ -376,3 +376,28 @@ def test_list_environments(mock_url, use_google_oauth):
         assert envs[1].name == env_2.name
         assert envs[1].cluster == env_2.cluster
         assert envs[1].is_default == env_2.is_default
+
+def test_get_environment(mock_url, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        mock_response = MagicMock()
+        mock_response.method = "GET"
+        mock_response.status = 200
+        mock_response.path = "/api/v1/environments"
+        mock_response.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+        mock_response.headers = {
+            'content-type': 'application/json',
+            'charset': 'utf-8'
+        }
+        
+        mock_request.return_value = mock_response
+
+        client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+        env = client.get_environment(env_1.name)
+
+        assert env is not None
+        assert env.name == env_1.name
+        assert env.cluster == env_1.cluster
+        assert env.is_default == env_1.is_default
+
+        env = client.get_environment("undefined_env")
+        assert env is None
