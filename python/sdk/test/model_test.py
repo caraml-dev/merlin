@@ -1085,7 +1085,7 @@ class TestModelVersion:
             endpoint = version.deploy(
                 environment_name=env_3.name, model_observability=model_observability
             )
-    
+
             assert endpoint.id == more_granular_observability_cfg_ep.id
             assert endpoint.status.value == more_granular_observability_cfg_ep.status
             assert endpoint.environment_name == more_granular_observability_cfg_ep.environment_name
@@ -1093,3 +1093,47 @@ class TestModelVersion:
             assert endpoint.environment.name == env_3.name
             assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
             assert endpoint.model_observability == model_observability
+
+    def test_undeploy(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/endpoint"
+            mock_response.data = json.dumps([ep2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            mock_request.side_effect = [mock_response]
+
+            version.undeploy(environment_name=env_1.name)
+            assert mock_request.call_count == 1
+            
+            mock_request.reset_mock()
+            
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_1.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "DELETE"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_2.data = json.dumps(ep1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+
+            version.undeploy(environment_name=env_1.name)
+            assert mock_request.call_count == 2
