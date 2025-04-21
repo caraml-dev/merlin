@@ -99,6 +99,10 @@ def test_get_project(mock_url, use_google_oauth):
     
         m = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
         p = m.get_project("my-project")
+        
+        args, _ = mock_request.call_args
+        assert args[0] == "GET"
+        assert args[1] == "http://merlin.dev/api/v1/projects?name=my-project"
     
         assert p.id == 0
         assert p.name == "my-project"
@@ -106,3 +110,14 @@ def test_get_project(mock_url, use_google_oauth):
         assert p.url == mock_url
         assert isinstance(p.created_at, datetime.datetime)
         assert isinstance(p.updated_at, datetime.datetime)
+        
+def test_create_invalid_project_name(
+    mock_url, use_google_oauth
+):
+    project_name = "invalidProjectName"
+
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+
+    # Try to create project with invalid name. It must be fail
+    with pytest.raises(Exception):
+        assert client.get_project(project_name)
