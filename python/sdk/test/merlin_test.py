@@ -85,6 +85,39 @@ def test_set_model(url, project, model, use_google_oauth):
         assert merlin.active_model().type == model.type
         assert merlin.active_model().id == model.id
         assert merlin.active_model().mlflow_experiment_id == model.mlflow_experiment_id
+        
+def test_new_model_version(url, project, model, version, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        # expect exception when creating new model  version but client and
+        # project is not set
+        mock_request.return_value = _mock_get_model_call_empty_result(project, model)
+        with pytest.raises(Exception):
+            with merlin.new_model_version() as v:
+                print(v)
+
+        merlin.set_url(url, use_google_oauth=use_google_oauth)
+
+        with pytest.raises(Exception):
+            with merlin.new_model_version() as v:
+                print(v)
+
+        mock_request.return_value = _mock_get_project_call(project)
+        merlin.set_project(project.name)
+
+        mock_request.return_value = _mock_get_model_call_empty_result(project, model)
+        with pytest.raises(Exception):
+            with merlin.new_model_version() as v:
+                print(v)
+
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model)]
+        merlin.set_model(model.name, model.type)
+
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model), _mock_new_model_version_call(model, version)]
+        with merlin.new_model_version() as v:
+            assert v is not None
+            assert isinstance(v, ModelVersion)
+
+            assert v.mlflow_run_id == version.mlflow_run_id
 
 def _mock_get_project_call_empty_result(project) -> MagicMock:
     mock_response = MagicMock()
@@ -132,6 +165,43 @@ def _mock_get_model_call(project, model) -> MagicMock:
                         "created_at": "2019-09-04T03:09:13.842Z",
                         "updated_at": "2019-09-04T03:09:13.842Z"
                       }}]""", 'utf-8')
+    mock_response.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    return mock_response
+
+def _mock_get_model_call_empty_result(project, model) -> MagicMock:
+    mock_response = MagicMock()
+    mock_response.method = "GET"
+    mock_response.status = 200
+    mock_response.path = f"/v1/projects/{project.id}/models"
+    mock_response.data = bytes("[]", 'utf-8')
+    mock_response.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    return mock_response
+
+def _mock_new_model_version_call(model, version, labels=None) -> MagicMock:
+    body = {
+        "id": version.id,
+        "mlflow_run_id": version.mlflow_run_id,
+        "is_serving": False,
+        "mlflow_url": version.mlflow_url,
+        "created_at": "2019-09-04T03:09:13.842Z",
+        "updated_at": "2019-09-04T03:09:13.842Z",
+    }
+    if labels is not None:
+        body["labels"] = labels
+
+    mock_response = MagicMock()
+    mock_response.method = "POST"
+    mock_response.status = 201
+    mock_response.path = f"/v1/models/{model.id}/versions"
+    mock_response.data = json.dumps(body).encode('utf-8')
     mock_response.headers = {
         'content-type': 'application/json',
         'charset': 'utf-8'
