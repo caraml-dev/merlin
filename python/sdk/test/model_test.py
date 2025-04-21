@@ -401,8 +401,6 @@ class TestProject:
                 'charset': 'utf-8'
             }
             
-            print(mock_response_1.data)
-            
             mock_response_2 = MagicMock()
             mock_response_2.method = "DELETE"
             mock_response_2.status = 204
@@ -433,3 +431,20 @@ class TestProject:
                 match=f"unable to find secret {self.secret_2.name} in project {project.name}",
             ):
                 project.delete_secret(self.secret_2.name)
+                
+    def test_list_secret(self, project):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/projects/1/secrets"
+            mock_response.data = json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+    
+            secret_names = project.list_secret()
+            assert secret_names == [self.secret_1.name, self.secret_2.name]
