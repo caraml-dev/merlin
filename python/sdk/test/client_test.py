@@ -280,3 +280,74 @@ def test_get_model(mock_url, api_client, use_google_oauth):
             assert default_model_endpoint is not None
             assert default_model_endpoint.status == Status.SERVING
             assert default_model_endpoint.environment_name == env_1.name
+            
+def test_new_model_version(mock_url, api_client, use_google_oauth):
+    project_id = 1
+    model_id = 1
+    version_id = 2
+    model_name = "my-model"
+    project_name = "my-project"
+    mlflow_experiment_id = 1
+    mlflow_run_id = "c5c3b6b220b34c7496de8c0400b7c793"
+    model_type = ModelType.TENSORFLOW
+    mlflow_url = "http://mlflow.api.merlin.dev"
+    artifact_uri = "gs://zltest/model"
+    created_at = "2019-09-04T03:09:13.842Z"
+    updated_at = "2019-09-04T03:09:13.843Z"
+
+    with patch("urllib3.PoolManager.request") as mock_request:
+        mock_response = MagicMock()
+        mock_response.method = "POST"
+        mock_response.status = 201
+        mock_response.path = f"/api/v1/models/{model_id}/versions"
+        mock_response.data = bytes(f"""{{
+                                "id": {version_id},
+                                "model_id": {model_id},
+                                "mlflow_run_id": "{mlflow_run_id}",
+                                "mlflow_url": "{mlflow_url}",
+                                "artifact_uri": "{artifact_uri}",
+                                "endpoints": [],
+                                "mlflow_url": "{mlflow_url}",
+                                "created_at": "{created_at}",
+                                "updated_at": "{updated_at}"
+                            }}""", 'utf-8')
+        mock_response.headers = {
+            'content-type': 'application/json',
+            'charset': 'utf-8'
+        }
+        
+        mock_request.return_value = mock_response
+
+        client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+        prj = cl.Project(
+            id=project_id, 
+            name=project_name, 
+            mlflow_tracking_url=mlflow_tracking_url, 
+            created_at=created_at, 
+            updated_at=updated_at
+        )
+        project = Project(prj, mock_url, api_client)
+        mdl = cl.Model(
+            id=model_id,
+            project_id=project_id,
+            mlflow_experiment_id=mlflow_experiment_id,
+            name=model_name,
+            type=model_type.value,
+            mlflow_url=mlflow_url,
+            endpoints=None,
+            created_at=created_at,
+            updated_at=updated_at,
+        )
+        mdl = Model(mdl, project, api_client)
+        with mock.patch.object(client, "get_model", return_value=mdl):
+            mv = client.new_model_version(model_name, project_name)
+    
+            assert mv.id == version_id
+            assert mv.mlflow_run_id == mlflow_run_id
+            assert mv.mlflow_url == mlflow_url
+            assert mv.properties is None
+            assert isinstance(mv.created_at, datetime.datetime)
+            assert isinstance(mv.updated_at, datetime.datetime)
+            assert mv.model == mdl
+            ui_url = guess_mlp_ui_url(mock_url)
+            assert mv.url == f"{ui_url}/projects/1/models/{model_id}/versions"
