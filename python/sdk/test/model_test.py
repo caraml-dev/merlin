@@ -381,10 +381,55 @@ class TestProject:
                 'content-type': 'application/json',
                 'charset': 'utf-8'
             }
-            mock_request.side_effect = [mock_response_3, mock_response_2]
+            mock_request.side_effect = [mock_response_3]
 
             with pytest.raises(
                 ValueError,
                 match=f"unable to find secret {self.secret_2.name} in project {project.name}",
             ):
                 project.update_secret(self.secret_2.name, "new-data")
+                
+    def test_delete_secret(self, project):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/projects/1/secrets"
+            mock_response_1.data = json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            print(mock_response_1.data)
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "DELETE"
+            mock_response_2.status = 204
+            mock_response_2.path = "/v1/projects/1/secrets/1"
+            mock_response_2.data = json.dumps({}).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+
+            project.delete_secret(self.secret_1.name)
+
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "GET"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/projects/1/secrets"
+            mock_response_3.data = json.dumps([self.secret_1.to_dict()]).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            mock_request.side_effect = [mock_response_3]
+
+            with pytest.raises(
+                ValueError,
+                match=f"unable to find secret {self.secret_2.name} in project {project.name}",
+            ):
+                project.delete_secret(self.secret_2.name)
