@@ -855,7 +855,7 @@ class TestModelVersion:
             }
             
             mock_response_4 = MagicMock()
-            mock_response_4.method = "get"
+            mock_response_4.method = "GET"
             mock_response_4.status = 200
             mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
             mock_response_4.data = json.dumps(ep4.to_dict()).encode('utf-8')
@@ -865,7 +865,7 @@ class TestModelVersion:
             }
             
             mock_response_5 = MagicMock()
-            mock_response_5.method = "get"
+            mock_response_5.method = "GET"
             mock_response_5.status = 200
             mock_response_5.path = "/v1/models/1/versions/1/endpoint"
             mock_response_5.data = json.dumps([ep4.to_dict()]).encode('utf-8')
@@ -926,7 +926,7 @@ class TestModelVersion:
             }
             
             mock_response_4 = MagicMock()
-            mock_response_4.method = "get"
+            mock_response_4.method = "GET"
             mock_response_4.status = 200
             mock_response_4.path = "/v1/models/1/versions/1/endpoint/789"
             mock_response_4.data = json.dumps(ep5.to_dict()).encode('utf-8')
@@ -936,7 +936,7 @@ class TestModelVersion:
             }
             
             mock_response_5 = MagicMock()
-            mock_response_5.method = "get"
+            mock_response_5.method = "GET"
             mock_response_5.status = 200
             mock_response_5.path = "/v1/models/1/versions/1/endpoint"
             mock_response_5.data = json.dumps([ep5.to_dict()]).encode('utf-8')
@@ -960,3 +960,69 @@ class TestModelVersion:
                 endpoint.resource_request.gpu_request
                 == resource_request_with_gpu.gpu_request
             )
+    
+    def test_deploy_with_model_observability_enabled(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_3.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(observability_enabled_ep.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/7899"
+            mock_response_4.data = json.dumps(observability_enabled_ep.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([observability_enabled_ep.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
+
+            endpoint = version.deploy(
+                environment_name=env_3.name, enable_model_observability=True
+            )
+
+            assert endpoint.id == observability_enabled_ep.id
+            assert endpoint.status.value == observability_enabled_ep.status
+            assert endpoint.environment_name == observability_enabled_ep.environment_name
+            assert endpoint.environment.cluster == env_3.cluster
+            assert endpoint.environment.name == env_3.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.enable_model_observability == True
