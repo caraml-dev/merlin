@@ -176,6 +176,28 @@ def test_get_default_environment(url, use_google_oauth):
         assert env is not None
         assert env.name == env_1.name
         assert env.is_default
+        
+def test_mlflow_methods(url, project, model, version, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        merlin.set_url(url, use_google_oauth=use_google_oauth)
+        
+        mock_request.return_value = _mock_get_project_call(project)
+        merlin.set_project(project.name)
+        
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model)]
+        merlin.set_model(model.name, model.type)
+        
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model), _mock_new_model_version_call(model, version)]
+        with merlin.new_model_version() as v:
+            merlin.log_metric("metric", 0.1)
+            merlin.log_param("param", "value")
+            merlin.set_tag("tag", "value")
+        run_id = v.mlflow_run_id
+        run = mlflow.get_run(run_id=run_id)
+
+        assert run.data.metrics["metric"] == 0.1
+        assert run.data.params["param"] == "value"
+        assert run.data.tags["tag"] == "value"
 
 def _mock_get_project_call_empty_result() -> MagicMock:
     mock_response = MagicMock()
