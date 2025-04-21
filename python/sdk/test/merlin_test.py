@@ -157,14 +157,25 @@ def test_list_environment(url, use_google_oauth):
 def test_get_environment(url, use_google_oauth):
     with patch("urllib3.PoolManager.request") as mock_request:
         merlin.set_url(url, use_google_oauth=use_google_oauth)
-        mock_request.return_value = _mock_list_environment_call()
 
+        mock_request.return_value = _mock_list_environment_call()
         env = merlin.get_environment(env_1.name)
         assert env is not None
         assert env.name == env_1.name
 
         env = merlin.get_environment("undefined_env")
         assert env is None
+        
+def test_get_default_environment(url, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        merlin.set_url(url, use_google_oauth=use_google_oauth)
+        
+        mock_request.return_value = _mock_list_environment_call()
+        env = merlin.get_default_environment()
+
+        assert env is not None
+        assert env.name == env_1.name
+        assert env.is_default
 
 def _mock_get_project_call_empty_result() -> MagicMock:
     mock_response = MagicMock()
