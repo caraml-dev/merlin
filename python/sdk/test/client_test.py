@@ -201,3 +201,82 @@ def test_create_model(mock_url, api_client, use_google_oauth):
                 f"python/{version_info.major}.{version_info.minor}.{version_info.micro}"
                 in last_call_kwargs.get("headers", {}).get("User-Agent")
             )
+            
+def test_create_invalid_model_name(mock_url, use_google_oauth):
+    model_name = "invalidModelName"
+    project_name = "my-project"
+    model_type = ModelType.XGBOOST
+
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+
+    # Try to create model with invalid name. It must be fail
+    with pytest.raises(Exception):
+        assert client.get_or_create_model(model_name, project_name, model_type)
+        
+def test_get_model(mock_url, api_client, use_google_oauth):
+    project_id = 1010
+    mlflow_experiment_id = 1
+    model_name = "my-model"
+    project_name = "my-project"
+    model_type = ModelType.XGBOOST
+    mlflow_url = "http://mlflow.api.merlin.dev"
+
+    mock_response_1 = MagicMock()
+    mock_response_1.method = "GET"
+    mock_response_1.status = 200
+    mock_response_1.path = f"/api/v1/projects/{project_id}/models"
+    mock_response_1.data = bytes(f"""[{{
+                        "id": 1,
+                        "project_id": {project_id},
+                        "mlflow_experiment_id": {mlflow_experiment_id},
+                        "name": "{model_name}",
+                        "type": "{model_type.value}",
+                        "mlflow_url": "{mlflow_url}",
+                        "endpoints": [],
+                        "created_at": "{created_at}",
+                        "updated_at": "{updated_at}"
+                      }}]""", 'utf-8')
+    mock_response_1.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    mock_response_2 = MagicMock()
+    mock_response_2.method = "GET"
+    mock_response_2.status = 200
+    mock_response_2.path = f"/api/v1/models/1/endpoints"
+    mock_response_2.data = json.dumps([mdl_endpoint_1.to_dict()], default=serialize_datetime).encode('utf-8')
+    mock_response_2.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    with patch("urllib3.PoolManager.request") as mock_request:
+        mock_request.side_effect = [mock_response_1, mock_response_2]
+        
+        client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+        prj = cl.Project(
+            id=project_id, 
+            name=project_name, 
+            mlflow_tracking_url=mlflow_tracking_url, 
+            created_at=created_at, 
+            updated_at=updated_at
+        )
+        project = Project(prj, mock_url, api_client)
+        with mock.patch.object(client, "get_project", return_value=project):
+            model = client.get_or_create_model(
+                "my-model", project_name=project_name, model_type=model_type
+            )
+            assert model.id == 1
+            assert model.name == model_name
+            assert model.type == model_type
+            assert model.mlflow_url == mlflow_tracking_url
+            assert model.mlflow_experiment_id == mlflow_experiment_id
+            assert isinstance(model.created_at, datetime.datetime)
+            assert isinstance(model.updated_at, datetime.datetime)
+            assert model.project == project
+
+            default_model_endpoint = model.endpoint
+            assert default_model_endpoint is not None
+            assert default_model_endpoint.status == Status.SERVING
+            assert default_model_endpoint.environment_name == env_1.name
