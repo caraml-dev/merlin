@@ -118,6 +118,30 @@ def test_new_model_version(url, project, model, version, use_google_oauth):
             assert isinstance(v, ModelVersion)
 
             assert v.mlflow_run_id == version.mlflow_run_id
+            
+def test_new_model_version_with_labels(
+    url, project, model, version, use_google_oauth
+):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        merlin.set_url(url, use_google_oauth=use_google_oauth)
+        
+        mock_request.return_value = _mock_get_project_call(project)
+        merlin.set_project(project.name)
+        
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model)]
+        merlin.set_model(model.name, model.type)
+
+        # # Insert labels
+        labels = {"model": "T-800", "software": "skynet"}
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model), _mock_new_model_version_call(model, version, labels)]
+
+        with merlin.new_model_version(labels=labels) as v:
+            assert v is not None
+            assert isinstance(v, ModelVersion)
+
+            assert v.mlflow_run_id == version.mlflow_run_id
+            for key, value in v.labels.items():
+                assert labels[key] == value
 
 def _mock_get_project_call_empty_result(project) -> MagicMock:
     mock_response = MagicMock()
