@@ -664,3 +664,73 @@ class TestModelVersion:
             assert endpoint.environment.name == env_1.name
             assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
             assert endpoint.autoscaling_policy == RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+            
+    def test_deploy_with_autoscaling_policy(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(ep4.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(ep4.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep4.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
+
+            endpoint = version.deploy(
+                environment_name=env_1.name,
+                autoscaling_policy=AutoscalingPolicy(
+                    metrics_type=MetricsType.CPU_UTILIZATION, target_value=10
+                ),
+            )
+
+            assert endpoint.id == ep4.id
+            assert endpoint.status.value == ep4.status
+            assert endpoint.environment_name == ep4.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+            assert endpoint.autoscaling_policy.target_value == 10
