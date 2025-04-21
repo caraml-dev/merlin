@@ -50,7 +50,7 @@ def test_set_url(url, use_google_oauth):
 def test_set_project(url, project, use_google_oauth):
     with patch("urllib3.PoolManager.request") as mock_request:
         # expect exception when setting project but client is not set
-        mock_request.return_value = _mock_get_project_call_empty_result(project)
+        mock_request.return_value = _mock_get_project_call_empty_result()
         with pytest.raises(Exception):
             merlin.set_project(project.name)
             
@@ -66,7 +66,7 @@ def test_set_project(url, project, use_google_oauth):
 def test_set_model(url, project, model, use_google_oauth):
     with patch("urllib3.PoolManager.request") as mock_request:
         # expect exception when setting model but client and project is not set
-        mock_request.return_value = _mock_get_project_call_empty_result(project)
+        mock_request.return_value = _mock_get_project_call_empty_result()
         with pytest.raises(Exception):
             merlin.set_model(model.name, model.type)
 
@@ -90,7 +90,7 @@ def test_new_model_version(url, project, model, version, use_google_oauth):
     with patch("urllib3.PoolManager.request") as mock_request:
         # expect exception when creating new model  version but client and
         # project is not set
-        mock_request.return_value = _mock_get_model_call_empty_result(project, model)
+        mock_request.return_value = _mock_get_model_call_empty_result(project)
         with pytest.raises(Exception):
             with merlin.new_model_version() as v:
                 print(v)
@@ -104,7 +104,7 @@ def test_new_model_version(url, project, model, version, use_google_oauth):
         mock_request.return_value = _mock_get_project_call(project)
         merlin.set_project(project.name)
 
-        mock_request.return_value = _mock_get_model_call_empty_result(project, model)
+        mock_request.return_value = _mock_get_model_call_empty_result(project)
         with pytest.raises(Exception):
             with merlin.new_model_version() as v:
                 print(v)
@@ -143,7 +143,18 @@ def test_new_model_version_with_labels(
             for key, value in v.labels.items():
                 assert labels[key] == value
 
-def _mock_get_project_call_empty_result(project) -> MagicMock:
+def test_list_environment(url, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        merlin.set_url(url, use_google_oauth=use_google_oauth)
+
+        mock_request.return_value = _mock_list_environment_call()
+        envs = merlin.list_environment()
+
+        assert len(envs) == 2
+        assert envs[0].name == env_1.name
+        assert envs[1].name == env_2.name
+
+def _mock_get_project_call_empty_result() -> MagicMock:
     mock_response = MagicMock()
     mock_response.method = "GET"
     mock_response.status = 200
@@ -196,7 +207,7 @@ def _mock_get_model_call(project, model) -> MagicMock:
     
     return mock_response
 
-def _mock_get_model_call_empty_result(project, model) -> MagicMock:
+def _mock_get_model_call_empty_result(project) -> MagicMock:
     mock_response = MagicMock()
     mock_response.method = "GET"
     mock_response.status = 200
@@ -226,6 +237,19 @@ def _mock_new_model_version_call(model, version, labels=None) -> MagicMock:
     mock_response.status = 201
     mock_response.path = f"/v1/models/{model.id}/versions"
     mock_response.data = json.dumps(body).encode('utf-8')
+    mock_response.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    return mock_response
+
+def _mock_list_environment_call() -> MagicMock:
+    mock_response = MagicMock()
+    mock_response.method = "GET"
+    mock_response.status = 200
+    mock_response.path =  "/v1/environments"
+    mock_response.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
     mock_response.headers = {
         'content-type': 'application/json',
         'charset': 'utf-8'
