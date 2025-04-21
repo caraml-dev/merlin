@@ -48,13 +48,13 @@ def test_set_url(url, use_google_oauth):
 
 
 def test_set_project(url, project, use_google_oauth):
-    # expect exception when setting project but client is not set
-    with pytest.raises(Exception):
-        merlin.set_project(project.name)
-
     with patch("urllib3.PoolManager.request") as mock_request:
-        mock_response = _mock_get_project_call(project)
-        mock_request.return_value = mock_response
+        # expect exception when setting project but client is not set
+        mock_request.return_value = _mock_get_project_call_empty_result(project)
+        with pytest.raises(Exception):
+            merlin.set_project(project.name)
+            
+        mock_request.return_value = _mock_get_project_call(project)
 
         merlin.set_url(url, use_google_oauth=use_google_oauth)
         merlin.set_project(project.name)
@@ -62,6 +62,42 @@ def test_set_project(url, project, use_google_oauth):
         assert merlin.active_project().name == project.name
         assert merlin.active_project().id == project.id
         assert merlin.active_project().mlflow_tracking_url == project.mlflow_tracking_url
+        
+def test_set_model(url, project, model, use_google_oauth):
+    with patch("urllib3.PoolManager.request") as mock_request:
+        # expect exception when setting model but client and project is not set
+        mock_request.return_value = _mock_get_project_call_empty_result(project)
+        with pytest.raises(Exception):
+            merlin.set_model(model.name, model.type)
+
+        merlin.set_url(url, use_google_oauth=use_google_oauth)
+
+        with pytest.raises(Exception):
+            merlin.set_model(model.name, model.type)
+        
+        mock_request.return_value = _mock_get_project_call(project)
+        merlin.set_project(project.name)
+
+        mock_request.side_effect = [_mock_get_project_call(project), _mock_get_model_call(project, model)]
+        merlin.set_model(model.name, model.type)
+
+        assert merlin.active_model().name == model.name
+        assert merlin.active_model().type == model.type
+        assert merlin.active_model().id == model.id
+        assert merlin.active_model().mlflow_experiment_id == model.mlflow_experiment_id
+
+def _mock_get_project_call_empty_result(project) -> MagicMock:
+    mock_response = MagicMock()
+    mock_response.method = "GET"
+    mock_response.status = 200
+    mock_response.path = "/v1/projects"
+    mock_response.data = bytes("[]", 'utf-8')
+    mock_response.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    return mock_response
 
 def _mock_get_project_call(project) -> MagicMock:
     mock_response = MagicMock()
@@ -74,6 +110,27 @@ def _mock_get_project_call(project) -> MagicMock:
                         "mlflow_tracking_url": "{project.mlflow_tracking_url}",
                         "created_at": "{project.created_at}",
                         "updated_at": "{project.updated_at}"
+                      }}]""", 'utf-8')
+    mock_response.headers = {
+        'content-type': 'application/json',
+        'charset': 'utf-8'
+    }
+    
+    return mock_response
+
+def _mock_get_model_call(project, model) -> MagicMock:
+    mock_response = MagicMock()
+    mock_response.method = "GET"
+    mock_response.status = 200
+    mock_response.path = f"/v1/projects/{project.id}/models"
+    mock_response.data = bytes(f"""[{{
+                        "id": {model.id},
+                        "mlflow_experiment_id": {model.mlflow_experiment_id},
+                        "name": "{model.name}",
+                        "type": "{model.type.value}",
+                        "mlflow_url": "{model.mlflow_url}",
+                        "created_at": "2019-09-04T03:09:13.842Z",
+                        "updated_at": "2019-09-04T03:09:13.842Z"
                       }}]""", 'utf-8')
     mock_response.headers = {
         'content-type': 'application/json',
