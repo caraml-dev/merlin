@@ -443,8 +443,28 @@ class TestProject:
                 'content-type': 'application/json',
                 'charset': 'utf-8'
             }
-            
+
             mock_request.return_value = mock_response
-    
+
             secret_names = project.list_secret()
             assert secret_names == [self.secret_1.name, self.secret_2.name]
+            
+class TestModelVersion:
+    def test_list_endpoint(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/endpoint"
+            mock_response.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+
+            endpoints = version.list_endpoint()
+            assert len(endpoints) == 2
+            assert endpoints[0].id == ep1.id
+            assert endpoints[1].id == ep2.id
