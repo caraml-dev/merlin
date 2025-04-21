@@ -319,7 +319,7 @@ class TestProject:
     secret_2 = cl.Secret(id=2, name="secret-2", data="secret-data-2")
 
     def test_create_secret(self, project):
-         with patch("urllib3.PoolManager.request") as mock_request:
+        with patch("urllib3.PoolManager.request") as mock_request:
             mock_response = MagicMock()
             mock_response.method = "POST"
             mock_response.status = 200
@@ -339,3 +339,52 @@ class TestProject:
             
             assert actual_body["name"] == self.secret_1.name
             assert actual_body["data"] == self.secret_1.data
+
+    def test_update_secret(self, project):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/projects/1/secrets"
+            mock_response_1.data = json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "PATCH"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/projects/1/secrets/1"
+            mock_response_2.data = json.dumps(self.secret_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+
+            project.update_secret(self.secret_1.name, "new-data")
+
+            _, last_call_kwargs = mock_request.call_args_list[-1]
+            actual_body = json.loads(last_call_kwargs.get("body"))
+            
+            assert actual_body["name"] == self.secret_1.name
+            assert actual_body["data"] == "new-data"
+
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "GET"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/projects/1/secrets"
+            mock_response_3.data = json.dumps([self.secret_1.to_dict()]).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            mock_request.side_effect = [mock_response_3, mock_response_2]
+
+            with pytest.raises(
+                ValueError,
+                match=f"unable to find secret {self.secret_2.name} in project {project.name}",
+            ):
+                project.update_secret(self.secret_2.name, "new-data")

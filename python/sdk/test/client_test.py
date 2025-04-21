@@ -175,7 +175,7 @@ def test_create_model(mock_url, api_client, use_google_oauth):
                 "my-model", project_name=project_name, model_type=model_type
             )
             
-            last_call_arg, last_call_kwargs = mock_request.call_args_list[-1]
+            _, last_call_kwargs = mock_request.call_args_list[-1]
 
             assert json.loads(last_call_kwargs.get("body")) == json.loads(
                 f"""
