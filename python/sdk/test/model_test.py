@@ -1738,3 +1738,22 @@ class TestModel:
             assert len(versions) == 2
             assert versions[0].id == 1
             assert versions[1].id == 2
+            
+    def test_list_version_with_labels(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions?limit=50&cursor=&search=labels%3Amodel+in+%28T-800%29"
+            mock_response.data = json.dumps([self.v3.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+        
+            versions = model.list_version({"model": ["T-800"]})
+            assert len(versions) == 1
+            assert versions[0].id == 3
+            assert versions[0].labels["model"] == "T-800"
