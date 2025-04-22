@@ -1564,3 +1564,79 @@ class TestModelVersion:
                 assert j.name == job_1.name
     
             assert mock_request.call_count == 6
+            
+    def test_stop_prediction_job(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
+
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "POST"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs"
+            mock_response_1.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_2.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 204
+            mock_response_3.path = "/v1/models/1/versions/1/jobs/1/stop"
+            mock_response_3.data = json.dumps({}).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            job_1.status = "terminated"
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_4.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
+
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
+
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4]
+
+            j = version.create_prediction_job(job_config=job_config, sync=False)
+            j = j.stop()
+            assert j.status == JobStatus.TERMINATED
+            assert j.id == job_1.id
+            assert j.error == job_1.error
+            assert j.name == job_1.name
