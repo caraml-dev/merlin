@@ -1640,3 +1640,20 @@ class TestModelVersion:
             assert j.id == job_1.id
             assert j.error == job_1.error
             assert j.name == job_1.name
+            
+    def test_model_version_deletion(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "DELETE"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1"
+            mock_response.data = json.dumps(1).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+            
+            response = version.delete_model_version()
+            assert response == 1
