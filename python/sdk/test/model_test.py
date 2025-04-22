@@ -1227,3 +1227,53 @@ class TestModelVersion:
 
             version.undeploy()
             assert mock_request.call_count == 3
+
+    def test_list_prediction_job(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs-by-page?page=1"
+            mock_response_1.data = json.dumps({
+                "results": [job_1.to_dict()],
+                "paging": {
+                    "page": 1,
+                    "pages": 2,
+                    "total": 2,
+                },
+            }, default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs-by-page?page=2"
+            mock_response_2.data = json.dumps({
+                "results": [job_2.to_dict()],
+                "paging": {
+                    "page": 2,
+                    "pages": 2,
+                    "total": 2,
+                },
+            }, default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+        
+            jobs = version.list_prediction_job()
+            assert len(jobs) == 2
+            assert jobs[0].id == job_1.id
+            assert jobs[0].name == job_1.name
+            assert jobs[0].status == JobStatus(job_1.status)
+            assert jobs[0].error == job_1.error
+
+            assert jobs[1].id == job_2.id
+            assert jobs[1].name == job_2.name
+            assert jobs[1].status == JobStatus(job_2.status)
+            assert jobs[1].error == job_2.error
