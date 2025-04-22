@@ -1776,3 +1776,26 @@ class TestModel:
             assert len(endpoints) == 2
             assert endpoints[0].id == mdl_endpoint_1.id
             assert endpoints[1].id == mdl_endpoint_2.id
+            
+    def test_new_model_version(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 201
+            mock_response.path = "/v1/models/1/versions"
+            mock_response.data = json.dumps(self.v4.to_dict()).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+
+            mv = model.new_model_version(
+                labels={"model": "T-800"}, model_schema=self.merlin_model_schema
+            )
+            assert mv._python_version == "3.10.*"
+            assert mv._id == 4
+            assert mv._model._id == 1
+            assert mv._labels == {"model": "T-800"}
+            assert mv._model_schema == self.merlin_model_schema
