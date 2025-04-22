@@ -2155,3 +2155,20 @@ class TestModel:
                 endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
             )
             assert endpoint.protocol == Protocol.UPI_V1
+            
+    def test_model_deletion(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "DELETE"
+            mock_response.status = 200
+            mock_response.path = "/v1/projects/1/models/1"
+            mock_response.data = json.dumps(1).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            mock_request.return_value = mock_response
+            response = model.delete_model()
+    
+            assert response == 1
