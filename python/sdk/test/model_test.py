@@ -1106,7 +1106,7 @@ class TestModelVersion:
                 'charset': 'utf-8'
             }
 
-            mock_request.side_effect = [mock_response]
+            mock_request.return_value = mock_response
 
             version.undeploy(environment_name=env_1.name)
             assert mock_request.call_count == 1
@@ -1137,3 +1137,93 @@ class TestModelVersion:
 
             version.undeploy(environment_name=env_1.name)
             assert mock_request.call_count == 2
+            
+    def test_undeploy_default_env(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/environments"
+            mock_response_2.data = json.dumps([env_2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            with pytest.raises(ValueError):
+                version.deploy()
+                
+            mock_request.reset_mock()
+
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([ep2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+
+            version.undeploy()
+            assert mock_request.call_count == 2
+
+            mock_request.reset_mock()
+            
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "DELETE"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_3.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+
+            version.undeploy()
+            assert mock_request.call_count == 3
