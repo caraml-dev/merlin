@@ -1757,3 +1757,22 @@ class TestModel:
             assert len(versions) == 1
             assert versions[0].id == 3
             assert versions[0].labels["model"] == "T-800"
+            
+    def test_list_endpoint(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/endpoints"
+            mock_response.data = json.dumps([mdl_endpoint_1.to_dict(), mdl_endpoint_2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+
+            endpoints = model.list_endpoint()
+            assert len(endpoints) == 2
+            assert endpoints[0].id == mdl_endpoint_1.id
+            assert endpoints[1].id == mdl_endpoint_2.id
