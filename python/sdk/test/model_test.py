@@ -2082,3 +2082,76 @@ class TestModel:
             assert (
                 endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
             )
+            
+    def test_serve_traffic_upi(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(upi_ep)
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "POST"
+            mock_response_2.status = 201
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps(mdl_endpoint_upi.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+        
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_upi.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+            assert endpoint.protocol == Protocol.UPI_V1
+
+            # test update
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([mdl_endpoint_upi.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints/1"
+            mock_response_2.data = json.dumps(mdl_endpoint_upi.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps(mdl_endpoint_upi.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+        
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_upi.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
+            )
+            assert endpoint.protocol == Protocol.UPI_V1
