@@ -1799,3 +1799,92 @@ class TestModel:
             assert mv._model._id == 1
             assert mv._labels == {"model": "T-800"}
             assert mv._model_schema == self.merlin_model_schema
+            
+    def test_serve_traffic(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(ep1)
+            with pytest.raises(ValueError):
+                model.serve_traffic([ve], environment_name=env_1.name)
+
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: -1}, environment_name=env_1.name)
+
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: 101}, environment_name=env_1.name)
+
+            with pytest.raises(ValueError):
+                model.serve_traffic(
+                    {VersionEndpoint(ep2): 100}, environment_name=env_1.name
+                )
+                
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "POST"
+            mock_response_2.status = 201
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            print("aku mock_response_2",mock_response_2)
+
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+            assert endpoint.protocol == Protocol.HTTP_JSON
+    
+            # test update
+    
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([mdl_endpoint_1.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints/1"
+            mock_response_2.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+            
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
