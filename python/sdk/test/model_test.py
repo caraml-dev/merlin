@@ -1339,4 +1339,64 @@ class TestModelVersion:
                 == ModelType.PYFUNC_V2.value.upper()
             )
             assert actual_req["config"]["service_account_name"] == "my-service-account"
+            
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
+    def test_create_prediction_job_with_retry_failed(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
+
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/jobs"
+            mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses = [mock_response]
+
+            for i in range(5):
+                temp_mock_response = MagicMock()
+                temp_mock_response.method = "GET"
+                temp_mock_response.status = 200
+                temp_mock_response.path = "/v1/models/1/versions/1/jobs/1"
+                temp_mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+                temp_mock_response.headers = {
+                    'content-type': 'application/json',
+                    'charset': 'utf-8'
+                }
+                
+                mock_responses.append(temp_mock_response)
+
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
+
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
+
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+
+            mock_request.side_effect = mock_responses
+            with pytest.raises(ValueError):
+                j = version.create_prediction_job(job_config=job_config)
+                assert j.id == job_1.id
+                assert j.error == job_1.error
+                assert j.name == job_1.name
+                assert len(responses.calls) == 6
 
