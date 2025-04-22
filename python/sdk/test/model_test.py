@@ -1400,3 +1400,95 @@ class TestModelVersion:
                 assert j.name == job_1.name
                 assert len(responses.calls) == 6
 
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
+    def test_create_prediction_job_with_retry_success(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
+
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "POST"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs"
+            mock_response_1.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses = [mock_response_1]
+
+            for i in range(4):
+                temp_mock_response = MagicMock()
+                temp_mock_response.method = "GET"
+                temp_mock_response.status = 200
+                temp_mock_response.path = "/v1/models/1/versions/1/jobs/1"
+                temp_mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+                temp_mock_response.headers = {
+                    'content-type': 'application/json',
+                    'charset': 'utf-8'
+                }
+                
+                mock_responses.append(temp_mock_response)
+
+            job_1.status = "completed"
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_2.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses.append(mock_response_2)
+
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
+
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
+
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+
+            mock_request.side_effect = mock_responses
+            
+            j = version.create_prediction_job(job_config=job_config)
+            assert j.status == JobStatus.COMPLETED
+            assert j.id == job_1.id
+            assert j.error == job_1.error
+            assert j.name == job_1.name
+
+            _, last_call_kwargs = mock_request.call_args_list[0]
+            actual_req = json.loads(last_call_kwargs.get("body"))
+            
+            assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
+            assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
+            assert (
+                actual_req["config"]["job_config"]["model"]["result"]["type"]
+                == ResultType.INTEGER.value
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["uri"]
+                == f"{version.artifact_uri}/model"
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["type"]
+                == ModelType.PYFUNC_V2.value.upper()
+            )
+            assert actual_req["config"]["service_account_name"] == "my-service-account"
+            assert mock_request.call_count == 6
