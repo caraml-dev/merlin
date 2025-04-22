@@ -63,9 +63,12 @@ func NewKafkaSink(
 			ReplicationFactor: ReplicationFactor,
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 	for _, result := range topicResults {
 		if result.Error.Code() != kafka.ErrNoError && result.Error.Code() != kafka.ErrTopicAlreadyExists {
-			return nil, err
+			return nil, fmt.Errorf("failed to create topic %s: %w", result.Topic, result.Error)
 		}
 	}
 
