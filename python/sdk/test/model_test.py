@@ -1973,3 +1973,112 @@ class TestModel:
             
             model.stop_serving_traffic(endpoint.environment_name)
             assert mock_request.call_count == 2
+
+    def test_serve_traffic_default_env(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(ep1)
+            
+            # no default environment
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response_1        
+
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: 100})
+
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/endpoints"
+            mock_response_3.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+            
+            endpoint = model.serve_traffic({ve: 100})
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+
+
+            # test update
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps([mdl_endpoint_1.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "GET"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "PUT"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/endpoints/1"
+            mock_response_4.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4]
+        
+            endpoint = model.serve_traffic({ve: 100})
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
