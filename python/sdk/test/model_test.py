@@ -1277,3 +1277,66 @@ class TestModelVersion:
             assert jobs[1].name == job_2.name
             assert jobs[1].status == JobStatus(job_2.status)
             assert jobs[1].error == job_2.error
+            
+    def test_create_prediction_job(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "completed"
+            
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/jobs"
+            mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
+
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
+
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+            
+            mock_request.return_value = mock_response
+
+            j = version.create_prediction_job(job_config=job_config)
+            assert j.status == JobStatus.COMPLETED
+            assert j.id == job_1.id
+            assert j.error == job_1.error
+            assert j.name == job_1.name
+
+            _, last_call_kwargs = mock_request.call_args_list[-1]
+            actual_req = json.loads(last_call_kwargs.get("body"))
+
+            assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
+            assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
+            assert (
+                actual_req["config"]["job_config"]["model"]["result"]["type"]
+                == ResultType.INTEGER.value
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["uri"]
+                == f"{version.artifact_uri}/model"
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["type"]
+                == ModelType.PYFUNC_V2.value.upper()
+            )
+            assert actual_req["config"]["service_account_name"] == "my-service-account"
+
