@@ -1657,3 +1657,84 @@ class TestModelVersion:
             
             response = version.delete_model_version()
             assert response == 1
+
+class TestModel:
+    v1 = cl.Version(id=1, model_id=1)
+    v2 = cl.Version(id=2, model_id=1)
+    v3 = cl.Version(
+        id=3, model_id=1, labels={"model": "T-800"}, python_version="3.10.*"
+    )
+
+    schema = client.ModelSchema(
+        id=3,
+        model_id=1,
+        spec=client.SchemaSpec(
+            tag_columns=["tags", "extras"],
+            feature_types={
+                "featureA": client.ValueType.FLOAT64,
+                "featureB": client.ValueType.INT64,
+                "featureC": client.ValueType.BOOLEAN,
+                "featureD": client.ValueType.STRING,
+            },
+            model_prediction_output=client.ModelPredictionOutput(
+                client.RankingOutput(
+                    rank_score_column="score",
+                    relevance_score_column="relevance_score",
+                    output_class=client.ModelPredictionOutputClass.RANKINGOUTPUT,
+                )
+            ),
+        ),
+    )
+    merlin_model_schema = ModelSchema(
+        id=3,
+        model_id=1,
+        spec=InferenceSchema(
+            tag_columns=["tags", "extras"],
+            feature_types={
+                "featureA": ValueType.FLOAT64,
+                "featureB": ValueType.INT64,
+                "featureC": ValueType.BOOLEAN,
+                "featureD": ValueType.STRING,
+            },
+            model_prediction_output=RankingOutput(
+                rank_score_column="score", relevance_score_column="relevance_score"
+            ),
+        ),
+    )
+    v4 = cl.Version(
+        id=4,
+        model_id=1,
+        labels={"model": "T-800"},
+        python_version="3.10.*",
+        model_schema=schema,
+    )
+
+    def test_list_version(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions?limit=50&cursor=&search="
+            mock_response_1.data = json.dumps([self.v1.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8',
+                "Next-Cursor": "abcdef"
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions?limit=50&cursor=abcdef&search="
+            mock_response_2.data = json.dumps([self.v2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            
+            versions = model.list_version()
+            assert len(versions) == 2
+            assert versions[0].id == 1
+            assert versions[1].id == 2
