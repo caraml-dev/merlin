@@ -7,6 +7,7 @@ import { createMonitoringUrl } from "../utils/monitoringUrl";
 
 export const JobDetailTabNavigation = ({
   project,
+  model,
   job,
   actions,
   selectedTab,
@@ -47,6 +48,7 @@ export const JobDetailTabNavigation = ({
         href: createMonitoringUrl(
           featureToggleConfig.monitoringDashboardJobBaseURL,
           project,
+          model,
           job,
         ),
         target: "_blank",
@@ -54,7 +56,7 @@ export const JobDetailTabNavigation = ({
     }
 
     setTabs(tabs);
-  }, [project, job]);
+  }, [project, job, model]);
 
   return (
     <TabNavigation
