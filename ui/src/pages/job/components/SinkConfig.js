@@ -86,8 +86,65 @@ const BQSinkConfig = ({ job }) => {
   );
 };
 
+const MCSinkConfig = ({ job }) => {
+  const items = [
+    { title: "Sink Type", description: "MaxCompute" },
+    {
+      title: "Table Name",
+      description: job.config.job_config.maxcomputeSink.table,
+    },
+    {
+      title: "Endpoint",
+      description: job.config.job_config.maxcomputeSource.endpoint
+    },
+    {
+      title: "Result Column Name",
+      description: job.config.job_config.maxcomputeSink.resultColumn,
+    },
+    {
+      title: "Save Mode",
+      description: job.config.job_config.maxcomputeSink.saveMode,
+    },
+    {
+      title: "Result Type",
+      description: getResultType(job.config.job_config.model.result),
+    },
+    {
+      title: "Options",
+      description: job.config.job_config.maxcomputeSink.options ? (
+        <EuiCodeBlock paddingSize="s">
+          {JSON.stringify(
+            job.config.job_config.maxcomputeSink.options,
+            undefined,
+            2
+          )}
+        </EuiCodeBlock>
+      ) : (
+        "-"
+      ),
+    },
+  ];
+
+  return (
+    <Fragment>
+      <ConfigSectionPanelTitle title="Sink Config" />
+
+      <EuiDescriptionList
+        compressed
+        columnWidths={[2, 4]}
+        type="responsiveColumn"
+        listItems={items}
+      />
+    </Fragment>
+  );
+};
+
 const SinkConfig = ({ job }) => {
-  return <BQSinkConfig job={job} />;
+  return (
+      job.config.job_config.bigquerySink ?
+          <BQSinkConfig job={job} /> :
+          <MCSinkConfig job={job} />
+  );
 };
 
 export default SinkConfig;
