@@ -16,7 +16,7 @@ function isActiveJob(status) {
   return ["pending", "running"].includes(status);
 }
 
-export const JobActions = ({ project, job }) => {
+export const JobActions = ({ project, model, job }) => {
   const [isStopPredictionJobModalVisible, toggleStopPredictionJobModal] =
     useState(false);
 
@@ -39,6 +39,7 @@ export const JobActions = ({ project, job }) => {
               href={createMonitoringUrl(
                 featureToggleConfig.monitoringDashboardJobBaseURL,
                 project,
+                model,
                 job,
               )}
               target="_blank"

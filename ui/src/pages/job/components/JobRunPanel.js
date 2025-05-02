@@ -33,7 +33,7 @@ export const JobRunPanel = ({ project, model, version, job }) => {
     },
     {
       title: "Actions",
-      description: <JobActions job={job} project={project} />,
+      description: <JobActions job={job} model={model} project={project} />,
     },
   ];
 

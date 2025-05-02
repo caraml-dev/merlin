@@ -34,6 +34,7 @@ import { featureToggleConfig } from "../../../config";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 import StopPredictionJobModal from "../modals/StopPredictionJobModal";
+import { createMonitoringUrl } from "../utils/monitoringUrl";
 
 const moment = require("moment");
 
@@ -42,6 +43,7 @@ const defaultIconSize = "xs";
 
 const JobsTable = ({
   projectId,
+  modelId,
   jobs,
   isLoaded,
   error,
@@ -83,20 +85,11 @@ const JobsTable = ({
     [],
   );
 
-  function createMonitoringUrl(baseURL, project, job) {
-    const start_time_nano =
-      moment(job.created_at, "YYYY-MM-DDTHH:mm.SSZ").unix() * 1000;
-    const end_time_nano = start_time_nano + 7200000;
-    const query = {
-      from: start_time_nano,
-      to: end_time_nano,
-      "var-cluster": job.environment.cluster,
-      "var-project": project.name,
-      "var-job": job.name,
-    };
-    const queryParams = new URLSearchParams(query).toString();
-    return `${baseURL}?${queryParams}`;
-  }
+  const [{ data: model }] = useMerlinApi(
+    `/projects/${projectId}/models/${modelId}`,
+    { mock: mocks.model },
+    [],
+  );
 
   const [isStopPredictionJobModalVisible, toggleStopPredictionJobModal] =
     useState(false);
@@ -208,6 +201,7 @@ const JobsTable = ({
                 href={createMonitoringUrl(
                   featureToggleConfig.monitoringDashboardJobBaseURL,
                   project.data,
+                  model,
                   item,
                 )}
                 target="_blank"

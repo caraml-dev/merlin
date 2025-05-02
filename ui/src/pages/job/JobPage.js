@@ -100,6 +100,7 @@ const JobPage = () => {
             <EuiFlexItem>
               <JobDetailTabNavigation
                 project={project}
+                model={model}
                 job={job}
                 selectedTab={section}
               />
