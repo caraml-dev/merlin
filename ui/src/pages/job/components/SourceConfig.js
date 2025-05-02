@@ -66,8 +66,69 @@ const BQSourceConfig = ({ job }) => {
   );
 };
 
+const MCSourceConfig = ({ job }) => {
+  const items = [
+    { title: "Source Type", description: "MaxCompute" },
+    {
+      title: "Table Name",
+      description: job.config.job_config.maxcomputeSource.table,
+    },
+    {
+      title: "Endpoint",
+      description: job.config.job_config.maxcomputeSource.endpoint
+    },
+    {
+      title: "Features",
+      description: (
+        <div className="eui-yScrollWithShadows" style={{ maxHeight: 310 }}>
+          {job.config.job_config.maxcomputeSource.features &&
+            job.config.job_config.maxcomputeSource.features
+              .sort((a, b) => (a > b ? 1 : -1))
+              .map((feature) => (
+                <>
+                  {feature}
+                  <br />
+                </>
+              ))}
+        </div>
+      ),
+    },
+    {
+      title: "Options",
+      description: job.config.job_config.maxcomputeSource.options ? (
+        <EuiCodeBlock paddingSize="s">
+          {JSON.stringify(
+            job.config.job_config.maxcomputeSource.options,
+            undefined,
+            2
+          )}
+        </EuiCodeBlock>
+      ) : (
+        "-"
+      ),
+    },
+  ];
+
+  return (
+    <Fragment>
+      <ConfigSectionPanelTitle title="Source Config" />
+
+      <EuiDescriptionList
+        compressed
+        columnWidths={[2, 4]}
+        type="responsiveColumn"
+        listItems={items}
+      />
+    </Fragment>
+  );
+};
+
 const SourceConfig = ({ job }) => {
-  return <BQSourceConfig job={job} />;
+  return (
+      job.config.job_config.bigquerySource ?
+          <BQSourceConfig job={job} /> :
+          <MCSourceConfig job={job} />
+  );
 };
 
 export default SourceConfig;
