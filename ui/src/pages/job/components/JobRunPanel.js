@@ -29,7 +29,7 @@ export const JobRunPanel = ({ project, model, version, job }) => {
     },
     {
       title: "Updated At",
-      description: <DateFromNow date={job.created_at} size="s" />,
+      description: <DateFromNow date={job.updated_at} size="s" />,
     },
     {
       title: "Actions",
