@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "/merlin",
   "dependencies": {
-    "@caraml-dev/ui-lib": "^1.13.0-build.4-09c363a",
+    "@caraml-dev/ui-lib": "^1.13.2-build.2-55c610c",
     "@elastic/datemath": "^5.0.3",
     "@elastic/eui": "^94.5.2",
     "@emotion/css": "^11.11.2",
