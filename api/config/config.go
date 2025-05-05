@@ -288,6 +288,7 @@ type GitlabConfig struct {
 	DashboardBranch     string `default:"master"`
 	AlertRepository     string
 	AlertBranch         string `default:"master"`
+	AlertPathPrefix     string
 }
 
 type WardenConfig struct {

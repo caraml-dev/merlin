@@ -490,8 +490,9 @@ func TestLoad(t *testing.T) {
 							BaseURL:             "https://test.io/",
 							DashboardRepository: "dashboards/merlin",
 							DashboardBranch:     "master",
-							AlertRepository:     "alerts/merlin",
+							AlertRepository:     "alerts_repository/merlin",
 							AlertBranch:         "master",
+							AlertPathPrefix:     "alerts/merlin",
 						},
 						WardenConfig: WardenConfig{
 							APIHost: "https://test.io/",

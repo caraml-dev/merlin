@@ -44,6 +44,7 @@ type modelEndpointAlertService struct {
 	dashboardBranch     string
 	alertRepository     string
 	alertBranch         string
+	alertPathPrefix     string
 
 	dashboardBaseURL string
 }
@@ -53,7 +54,7 @@ func NewModelEndpointAlertService(
 	alertStorage storage.AlertStorage,
 	gitlabClient gitlab.Client, wardenClient warden.Client,
 	dashboardRepository, dashboardBranch,
-	alertRepository, alertBranch, dashboardBaseURL string) ModelEndpointAlertService {
+	alertRepository, alertBranch, alertPathPrefix, dashboardBaseURL string) ModelEndpointAlertService {
 	return &modelEndpointAlertService{
 		alertStorage: alertStorage,
 		gitlabClient: gitlabClient,
@@ -63,6 +64,7 @@ func NewModelEndpointAlertService(
 		dashboardBranch:     dashboardBranch,
 		alertRepository:     alertRepository,
 		alertBranch:         alertBranch,
+		alertPathPrefix:     alertPathPrefix,
 
 		dashboardBaseURL: dashboardBaseURL,
 	}
@@ -91,7 +93,7 @@ func (s *modelEndpointAlertService) CreateModelEndpointAlert(user string, alert 
 	if err != nil {
 		return nil, err
 	}
-	alertFilename := fmt.Sprintf("alerts/merlin/%s/%s_%s.yaml", alert.Model.Project.Name, alert.Model.Name, alert.EnvironmentName)
+	alertFilename := fmt.Sprintf("%s/%s/%s_%s.yaml", s.alertPathPrefix, alert.Model.Project.Name, alert.Model.Name, alert.EnvironmentName)
 
 	createAlertOpt := gitlab.CreateFileOptions{
 		Repository:    s.alertRepository,
@@ -125,7 +127,7 @@ func (s *modelEndpointAlertService) UpdateModelEndpointAlert(user string, alert 
 	if err != nil {
 		return nil, err
 	}
-	alertFilename := fmt.Sprintf("alerts/merlin/%s/%s_%s.yaml", alert.Model.Project.Name, alert.Model.Name, alert.EnvironmentName)
+	alertFilename := fmt.Sprintf("%s/%s/%s_%s.yaml", s.alertPathPrefix, alert.Model.Project.Name, alert.Model.Name, alert.EnvironmentName)
 
 	updateAlertOpt := gitlab.UpdateFileOptions{
 		Repository:    s.alertRepository,
