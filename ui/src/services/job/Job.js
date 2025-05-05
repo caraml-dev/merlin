@@ -81,37 +81,6 @@ export class Job {
             allowFieldRelaxation: "false",
           },
         },
-        maxcomputeSource: {
-          table: "",
-          features: [],
-          endpoint: "",
-          options: {
-            // parentProject: "",
-            // maxParallelism: "0",
-            viewsEnabled: "false",
-            // viewMaterializationProject: "",
-            // viewMaterializationDataset: "",
-            readDataFormat: "AVRO",
-            optimizedEmptyProjection: "true",
-            // filter: ""
-          },
-        },
-        maxcomputeSink: {
-          table: "",
-          endpoint: "",
-          resultColumn: "",
-          saveMode: "ERRORIFEXISTS",
-          options: {
-            createDisposition: "CREATE_IF_NEEDED",
-            intermediateFormat: "parquet",
-            // partitionField: "",
-            // partitionExpirationMs: "0",
-            partitionType: "DAY",
-            // clusteredFields: "",
-            allowFieldAddition: "false",
-            allowFieldRelaxation: "false",
-          },
-        },
       },
     };
   }
