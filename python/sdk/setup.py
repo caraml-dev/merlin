@@ -13,14 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+import importlib.util
 import os
 
 from setuptools import find_packages, setup
 
-version = imp.load_source(
-    "merlin.version", os.path.join("merlin", "version.py")
-).VERSION
+# get version from version.py
+spec = importlib.util.spec_from_file_location(
+    "sdk.version", os.path.join("merlin/version.py")
+)
+
+v_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(v_module)
+
+version = v_module.VERSION
 
 with open("requirements.txt") as f:
     REQUIRE = f.read().splitlines()
@@ -41,7 +47,7 @@ setup(
     setup_requires=["setuptools_scm"],
     tests_require=TESTS_REQUIRE,
     extras_require={"test": TESTS_REQUIRE},
-    python_requires=">=3.8,<3.11",
+    python_requires=">=3.9,<3.14",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     entry_points="""
