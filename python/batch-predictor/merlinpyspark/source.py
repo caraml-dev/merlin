@@ -110,7 +110,9 @@ class MaxComputeSource(Source):
     ):
         self._spark = spark_session
         self._config = maxcompute_source_config
-        self.auto_select_limit = os.environ.get("CARAML_SPARK_MAXCOMPUTE_AUTO_SELECT_LIMIT", "1000000000")
+        self.auto_select_limit = os.environ.get(
+            "CARAML_SPARK_MAXCOMPUTE_AUTO_SELECT_LIMIT", "1000000000"
+        )
 
         if maxcompute_source_config.table() is None:
             raise ValueError("table field is empty")
@@ -124,7 +126,7 @@ class MaxComputeSource(Source):
     def load(self) -> DataFrame:
         from py4j.java_gateway import java_import
 
-        gw = self._spark.sparkContext._gateway # type: ignore
+        gw = self._spark.sparkContext._gateway  # type: ignore
         java_import(gw.jvm, self._get_custom_dialect_class())
         gw.jvm.org.apache.spark.sql.jdbc.JdbcDialects.registerDialect(
             gw.jvm.dev.caraml.spark.odps.CustomDialect()
@@ -137,8 +139,9 @@ class MaxComputeSource(Source):
             .option(self.OPTION_QUERY_TIMEOUT, self.get_query_timeout())
             .option(self.OPTION_DB_TABLE, cfg.table())
             .option(self.OPTION_FETCH_SIZE, self.get_fetch_size())
-            .option(self.OPTION_SESSION_INIT_STATEMENT, "SET odps.sql.allow.fullscan=true;") # to allow fullscan table on partitioned table
-
+            .option(
+                self.OPTION_SESSION_INIT_STATEMENT, "SET odps.sql.allow.fullscan=true;"
+            )  # to allow fullscan table on partitioned table
         )
         if cfg.options() is not None:
             reader.options(**cfg.options())
@@ -151,13 +154,13 @@ class MaxComputeSource(Source):
         return self._config.features()
 
     def get_jdbc_url(self):
-        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode={self.get_interactive_mode()}&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false&autoSelectLimit={self.auto_select_limit}"
+        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode={self.get_interactive_mode()}&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false&autoSelectLimit={self.auto_select_limit}&alwaysFallback=true&enableOdpsLogger=true"
 
     def get_query_timeout(self):
         return self._config.options().get("queryTimeout", "300")
 
     def get_interactive_mode(self):
-        return self._config.options().get("interactiveMode", "true")    
+        return self._config.options().get("interactiveMode", "true")
 
     def get_fetch_size(self):
         return self._config.options().get("fetchSize", "0")
