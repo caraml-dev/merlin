@@ -438,22 +438,3 @@ def test_get_default_environment(mock_url, use_google_oauth):
         env = client.get_default_environment()
 
         assert env is None
-        
-def test_get_default_environment(mock_url, use_google_oauth):
-    with patch("urllib3.PoolManager.request") as mock_request:
-        mock_response = MagicMock()
-        mock_response.method = "GET"
-        mock_response.status = 200
-        mock_response.path = "/api/v1/environments"
-        mock_response.data = json.dumps([env_2.to_dict()]).encode('utf-8')
-        mock_response.headers = {
-            'content-type': 'application/json',
-            'charset': 'utf-8'
-        }
-        
-        mock_request.return_value = mock_response
-    
-        client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
-        env = client.get_default_environment()
-
-        assert env is None
