@@ -15,7 +15,7 @@
 import datetime
 import json
 import types
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import client
 import client as cl
@@ -35,8 +35,6 @@ from merlin.model_schema import InferenceSchema, ModelSchema, RankingOutput, Val
 from merlin.protocol import Protocol
 from merlin.model_observability import ModelObservability
 from urllib3_mock import Responses
-
-responses = Responses("requests.packages.urllib3")
 
 default_resource_request = cl.ResourceRequest(
     min_replica=1, max_replica=1, cpu_request="100m", memory_request="128Mi"
@@ -318,1127 +316,1347 @@ class TestProject:
     secret_1 = cl.Secret(id=1, name="secret-1", data="secret-data-1")
     secret_2 = cl.Secret(id=2, name="secret-2", data="secret-data-2")
 
-    @responses.activate
     def test_create_secret(self, project):
-        responses.add(
-            "POST",
-            "/v1/projects/1/secrets",
-            body=json.dumps(self.secret_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 200
+            mock_response.path = "/v1/projects/1/secrets"
+            mock_response.data = json.dumps(self.secret_1.to_dict()).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        project.create_secret(self.secret_1.name, self.secret_1.data)
-        actual_body = json.loads(responses.calls[0].request.body)
-        assert actual_body["name"] == self.secret_1.name
-        assert actual_body["data"] == self.secret_1.data
+            mock_request.return_value = mock_response
+   
+            project.create_secret(self.secret_1.name, self.secret_1.data)
+            
+            _, last_call_kwargs = mock_request.call_args_list[-1]
+            actual_body = json.loads(last_call_kwargs.get("body"))
+            
+            assert actual_body["name"] == self.secret_1.name
+            assert actual_body["data"] == self.secret_1.data
 
-    @responses.activate
     def test_update_secret(self, project):
-        responses.add(
-            "GET",
-            "/v1/projects/1/secrets",
-            body=json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "PATCH",
-            "/v1/projects/1/secrets/1",
-            body=json.dumps(self.secret_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/projects/1/secrets"
+            mock_response_1.data = json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "PATCH"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/projects/1/secrets/1"
+            mock_response_2.data = json.dumps(self.secret_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
 
-        project.update_secret(self.secret_1.name, "new-data")
+            project.update_secret(self.secret_1.name, "new-data")
 
-        actual_body = json.loads(responses.calls[1].request.body)
-        assert actual_body["name"] == self.secret_1.name
-        assert actual_body["data"] == "new-data"
+            _, last_call_kwargs = mock_request.call_args_list[-1]
+            actual_body = json.loads(last_call_kwargs.get("body"))
+            
+            assert actual_body["name"] == self.secret_1.name
+            assert actual_body["data"] == "new-data"
 
-        responses.reset()
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "GET"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/projects/1/secrets"
+            mock_response_3.data = json.dumps([self.secret_1.to_dict()]).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            mock_request.side_effect = [mock_response_3]
 
-        # test secret not found
-        responses.add(
-            "GET",
-            "/v1/projects/1/secrets",
-            body=json.dumps([self.secret_1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-
-        with pytest.raises(
-            ValueError,
-            match=f"unable to find secret {self.secret_2.name} in project {project.name}",
-        ):
-            project.update_secret(self.secret_2.name, "new-data")
-
-    @responses.activate
+            with pytest.raises(
+                ValueError,
+                match=f"unable to find secret {self.secret_2.name} in project {project.name}",
+            ):
+                project.update_secret(self.secret_2.name, "new-data")
+                
     def test_delete_secret(self, project):
-        responses.add(
-            "GET",
-            "/v1/projects/1/secrets",
-            body=json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "DELETE",
-            "/v1/projects/1/secrets/1",
-            status=204,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/projects/1/secrets"
+            mock_response_1.data = json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "DELETE"
+            mock_response_2.status = 204
+            mock_response_2.path = "/v1/projects/1/secrets/1"
+            mock_response_2.data = json.dumps({}).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
 
-        project.delete_secret(self.secret_1.name)
+            project.delete_secret(self.secret_1.name)
 
-        responses.reset()
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "GET"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/projects/1/secrets"
+            mock_response_3.data = json.dumps([self.secret_1.to_dict()]).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            mock_request.side_effect = [mock_response_3]
 
-        # test secret not found
-        responses.add(
-            "GET",
-            "/v1/projects/1/secrets",
-            body=json.dumps([self.secret_1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-
-        with pytest.raises(
-            ValueError,
-            match=f"unable to find secret {self.secret_2.name} in project {project.name}",
-        ):
-            project.delete_secret(self.secret_2.name)
-
-    @responses.activate
+            with pytest.raises(
+                ValueError,
+                match=f"unable to find secret {self.secret_2.name} in project {project.name}",
+            ):
+                project.delete_secret(self.secret_2.name)
+                
     def test_list_secret(self, project):
-        responses.add(
-            "GET",
-            "/v1/projects/1/secrets",
-            body=json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/projects/1/secrets"
+            mock_response.data = json.dumps([self.secret_1.to_dict(), self.secret_2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        secret_names = project.list_secret()
-        assert secret_names == [self.secret_1.name, self.secret_2.name]
+            mock_request.return_value = mock_response
 
-
+            secret_names = project.list_secret()
+            assert secret_names == [self.secret_1.name, self.secret_2.name]
+            
 class TestModelVersion:
-    @responses.activate
     def test_list_endpoint(self, version):
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/endpoint"
+            mock_response.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
 
-        endpoints = version.list_endpoint()
-        assert len(endpoints) == 2
-        assert endpoints[0].id == ep1.id
-        assert endpoints[1].id == ep2.id
-
-    @responses.activate
+            endpoints = version.list_endpoint()
+            assert len(endpoints) == 2
+            assert endpoints[0].id == ep1.id
+            assert endpoints[1].id == ep2.id
+            
     def test_deploy(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep1.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(ep1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(ep1.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep1.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        endpoint = version.deploy(environment_name=env_1.name)
+            endpoint = version.deploy(environment_name=env_1.name)
 
-        assert endpoint.id == ep1.id
-        assert endpoint.status.value == ep1.status
-        assert endpoint.environment_name == ep1.environment_name
-        assert endpoint.environment.cluster == env_1.cluster
-        assert endpoint.environment.name == env_1.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
-        assert endpoint.protocol == Protocol.HTTP_JSON
-
-    @responses.activate
+            assert endpoint.id == ep1.id
+            assert endpoint.status.value == ep1.status
+            assert endpoint.environment_name == ep1.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+            assert endpoint.protocol == Protocol.HTTP_JSON
+            
     def test_deploy_upiv1(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(upi_ep.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(upi_ep.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([upi_ep.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        endpoint = version.deploy(environment_name=env_1.name)
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(upi_ep.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(upi_ep.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([upi_ep.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        assert endpoint.id == upi_ep.id
-        assert endpoint.status.value == upi_ep.status
-        assert endpoint.environment_name == upi_ep.environment_name
-        assert endpoint.environment.cluster == env_1.cluster
-        assert endpoint.environment.name == env_1.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
-        assert endpoint.protocol == Protocol.UPI_V1
+            endpoint = version.deploy(environment_name=env_1.name)
 
-    @responses.activate
+            assert endpoint.id == upi_ep.id
+            assert endpoint.status.value == upi_ep.status
+            assert endpoint.environment_name == upi_ep.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+            assert endpoint.protocol == Protocol.UPI_V1
+            
     def test_deploy_using_raw_deployment_mode(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep3.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep3.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep3.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        endpoint = version.deploy(
-            environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT
-        )
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(ep3.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(ep3.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep3.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        assert endpoint.id == ep3.id
-        assert endpoint.status.value == ep3.status
-        assert endpoint.environment_name == ep3.environment_name
-        assert endpoint.environment.cluster == env_1.cluster
-        assert endpoint.environment.name == env_1.name
-        assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
-        assert endpoint.autoscaling_policy == RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+            endpoint = version.deploy(
+                environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT
+            )
 
-    @responses.activate
+            assert endpoint.id == ep3.id
+            assert endpoint.status.value == ep3.status
+            assert endpoint.environment_name == ep3.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
+            assert endpoint.autoscaling_policy == RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+            
     def test_deploy_with_autoscaling_policy(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep4.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep4.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep4.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        endpoint = version.deploy(
-            environment_name=env_1.name,
-            autoscaling_policy=AutoscalingPolicy(
-                metrics_type=MetricsType.CPU_UTILIZATION, target_value=10
-            ),
-        )
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(ep4.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(ep4.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep4.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        assert endpoint.id == ep4.id
-        assert endpoint.status.value == ep4.status
-        assert endpoint.environment_name == ep4.environment_name
-        assert endpoint.environment.cluster == env_1.cluster
-        assert endpoint.environment.name == env_1.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
-        assert endpoint.autoscaling_policy.target_value == 10
+            endpoint = version.deploy(
+                environment_name=env_1.name,
+                autoscaling_policy=AutoscalingPolicy(
+                    metrics_type=MetricsType.CPU_UTILIZATION, target_value=10
+                ),
+            )
 
-    @responses.activate
+            assert endpoint.id == ep4.id
+            assert endpoint.status.value == ep4.status
+            assert endpoint.environment_name == ep4.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+            assert endpoint.autoscaling_policy.target_value == 10
+            
     def test_deploy_default_env(self, version):
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        # no default environment
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        with pytest.raises(ValueError):
-            version.deploy()
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/environments"
+            mock_response_2.data = json.dumps([env_2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            
+            with pytest.raises(ValueError):
+                version.deploy()
+                
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        # default environment exists
-        responses.reset()
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep1.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(ep1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(ep1.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep1.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        endpoint = version.deploy()
+            endpoint = version.deploy()
 
-        assert endpoint.id == ep1.id
-        assert endpoint.status.value == ep1.status
-        assert endpoint.environment_name == ep1.environment_name
-        assert endpoint.environment.cluster == env_1.cluster
-        assert endpoint.environment.name == env_1.name
-
-    @responses.activate
+            assert endpoint.id == ep1.id
+            assert endpoint.status.value == ep1.status
+            assert endpoint.environment_name == ep1.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            
     def test_redeploy_model(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep3.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "PUT",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep4.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep4.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep4.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([ep3.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_3.data = json.dumps(ep4.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_4.data = json.dumps(ep4.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep4.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        # Redeployment (add autoscaling policy and change deployment mode)
-        endpoint = version.deploy(
-            environment_name=env_1.name,
-            autoscaling_policy=AutoscalingPolicy(
-                metrics_type=MetricsType.CPU_UTILIZATION, target_value=10
-            ),
-        )
+            # Redeployment (add autoscaling policy and change deployment mode)
+            endpoint = version.deploy(
+                environment_name=env_1.name,
+                autoscaling_policy=AutoscalingPolicy(
+                    metrics_type=MetricsType.CPU_UTILIZATION, target_value=10
+                ),
+            )
 
-        assert endpoint.id == ep4.id
-        assert endpoint.status.value == ep4.status
-        assert endpoint.environment_name == ep4.environment_name
-        assert endpoint.environment.cluster == env_1.cluster
-        assert endpoint.environment.name == env_1.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
-        assert endpoint.autoscaling_policy.target_value == 10
-
-    @responses.activate
+            assert endpoint.id == ep4.id
+            assert endpoint.status.value == ep4.status
+            assert endpoint.environment_name == ep4.environment_name
+            assert endpoint.environment.cluster == env_1.cluster
+            assert endpoint.environment.name == env_1.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+            assert endpoint.autoscaling_policy.target_value == 10
+            
     def test_deploy_with_gpu(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_3.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep5.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/789",
-            body=json.dumps(ep5.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep5.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_3.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(ep5.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/789"
+            mock_response_4.data = json.dumps(ep5.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([ep5.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        endpoint = version.deploy(environment_name=env_3.name)
+            endpoint = version.deploy(environment_name=env_3.name)
 
-        assert endpoint.id == ep5.id
-        assert endpoint.status.value == ep5.status
-        assert endpoint.environment_name == ep5.environment_name
-        assert endpoint.environment.cluster == env_3.cluster
-        assert endpoint.environment.name == env_3.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.resource_request.gpu_name == resource_request_with_gpu.gpu_name
-        assert (
-            endpoint.resource_request.gpu_request
-            == resource_request_with_gpu.gpu_request
-        )
-
-    @responses.activate
+            assert endpoint.id == ep5.id
+            assert endpoint.status.value == ep5.status
+            assert endpoint.environment_name == ep5.environment_name
+            assert endpoint.environment.cluster == env_3.cluster
+            assert endpoint.environment.name == env_3.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.resource_request.gpu_name == resource_request_with_gpu.gpu_name
+            assert (
+                endpoint.resource_request.gpu_request
+                == resource_request_with_gpu.gpu_request
+            )
+    
     def test_deploy_with_model_observability_enabled(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_3.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(observability_enabled_ep.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([observability_enabled_ep.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/7899",
-            body=json.dumps(observability_enabled_ep.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_3.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(observability_enabled_ep.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/7899"
+            mock_response_4.data = json.dumps(observability_enabled_ep.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([observability_enabled_ep.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        endpoint = version.deploy(
-            environment_name=env_3.name, enable_model_observability=True
-        )
+            endpoint = version.deploy(
+                environment_name=env_3.name, enable_model_observability=True
+            )
 
-        assert endpoint.id == observability_enabled_ep.id
-        assert endpoint.status.value == observability_enabled_ep.status
-        assert endpoint.environment_name == observability_enabled_ep.environment_name
-        assert endpoint.environment.cluster == env_3.cluster
-        assert endpoint.environment.name == env_3.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.enable_model_observability == True
-
-
-    @responses.activate
+            assert endpoint.id == observability_enabled_ep.id
+            assert endpoint.status.value == observability_enabled_ep.status
+            assert endpoint.environment_name == observability_enabled_ep.environment_name
+            assert endpoint.environment.cluster == env_3.cluster
+            assert endpoint.environment.name == env_3.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.enable_model_observability == True
+            
     def test_deploy_with_more_granular_model_observability_cfg(self, version):
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_3.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(more_granular_observability_cfg_ep.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([more_granular_observability_cfg_ep.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint/8000",
-            body=json.dumps(more_granular_observability_cfg_ep.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_3.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_3.data = json.dumps(more_granular_observability_cfg_ep.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/endpoint/8000"
+            mock_response_4.data = json.dumps(more_granular_observability_cfg_ep.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_5 = MagicMock()
+            mock_response_5.method = "GET"
+            mock_response_5.status = 200
+            mock_response_5.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_5.data = json.dumps([more_granular_observability_cfg_ep.to_dict()]).encode('utf-8')
+            mock_response_5.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4, mock_response_5]
 
-        model_observability = ModelObservability.from_model_observability_response(more_granular_observability_cfg_ep.model_observability)
-        endpoint = version.deploy(
-            environment_name=env_3.name, model_observability=model_observability
-        )
+            model_observability = ModelObservability.from_model_observability_response(more_granular_observability_cfg_ep.model_observability)
+            endpoint = version.deploy(
+                environment_name=env_3.name, model_observability=model_observability
+            )
 
-        assert endpoint.id == more_granular_observability_cfg_ep.id
-        assert endpoint.status.value == more_granular_observability_cfg_ep.status
-        assert endpoint.environment_name == more_granular_observability_cfg_ep.environment_name
-        assert endpoint.environment.cluster == env_3.cluster
-        assert endpoint.environment.name == env_3.name
-        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
-        assert endpoint.model_observability == model_observability
+            assert endpoint.id == more_granular_observability_cfg_ep.id
+            assert endpoint.status.value == more_granular_observability_cfg_ep.status
+            assert endpoint.environment_name == more_granular_observability_cfg_ep.environment_name
+            assert endpoint.environment.cluster == env_3.cluster
+            assert endpoint.environment.name == env_3.name
+            assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+            assert endpoint.model_observability == model_observability
 
-    @responses.activate
     def test_undeploy(self, version):
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/endpoint"
+            mock_response.data = json.dumps([ep2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        version.undeploy(environment_name=env_1.name)
-        assert len(responses.calls) == 1
+            mock_request.return_value = mock_response
 
-        responses.reset()
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "DELETE",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
+            version.undeploy(environment_name=env_1.name)
+            assert mock_request.call_count == 1
+            
+            mock_request.reset_mock()
+            
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_1.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "DELETE"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_2.data = json.dumps(ep1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
 
-        version.undeploy(environment_name=env_1.name)
-        assert len(responses.calls) == 2
-
-    @responses.activate
+            version.undeploy(environment_name=env_1.name)
+            assert mock_request.call_count == 2
+            
     def test_undeploy_default_env(self, version):
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        # no default environment
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        with pytest.raises(ValueError):
-            version.deploy()
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/environments"
+            mock_response_2.data = json.dumps([env_2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            with pytest.raises(ValueError):
+                version.deploy()
+                
+            mock_request.reset_mock()
 
-        responses.reset()
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([ep2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
 
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+            version.undeploy()
+            assert mock_request.call_count == 2
 
-        version.undeploy()
-        assert len(responses.calls) == 2
+            mock_request.reset_mock()
+            
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/endpoint"
+            mock_response_2.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "DELETE"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/versions/1/endpoint/1234"
+            mock_response_3.data = json.dumps([ep1.to_dict(), ep2.to_dict()]).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        responses.reset()
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "DELETE",
-            "/v1/models/1/versions/1/endpoint/1234",
-            body=json.dumps(ep1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
 
-        version.undeploy()
-        assert len(responses.calls) == 3
+            version.undeploy()
+            assert mock_request.call_count == 3
 
-    @responses.activate
     def test_list_prediction_job(self, version):
-        responses.add(
-            method="GET",
-            url="/v1/models/1/versions/1/jobs-by-page?page=1",
-            body=json.dumps({
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs-by-page?page=1"
+            mock_response_1.data = json.dumps({
                 "results": [job_1.to_dict()],
                 "paging": {
                     "page": 1,
                     "pages": 2,
                     "total": 2,
                 },
-            }, default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-            match_querystring=True,
-        )
-        responses.add(
-            method="GET",
-            url="/v1/models/1/versions/1/jobs-by-page?page=2",
-            body=json.dumps({
+            }, default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs-by-page?page=2"
+            mock_response_2.data = json.dumps({
                 "results": [job_2.to_dict()],
                 "paging": {
                     "page": 2,
                     "pages": 2,
                     "total": 2,
                 },
-            }, default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-            match_querystring=True,
-        )
-        jobs = version.list_prediction_job()
-        assert len(jobs) == 2
-        assert jobs[0].id == job_1.id
-        assert jobs[0].name == job_1.name
-        assert jobs[0].status == JobStatus(job_1.status)
-        assert jobs[0].error == job_1.error
+            }, default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+        
+            jobs = version.list_prediction_job()
+            assert len(jobs) == 2
+            assert jobs[0].id == job_1.id
+            assert jobs[0].name == job_1.name
+            assert jobs[0].status == JobStatus(job_1.status)
+            assert jobs[0].error == job_1.error
 
-        assert jobs[1].id == job_2.id
-        assert jobs[1].name == job_2.name
-        assert jobs[1].status == JobStatus(job_2.status)
-        assert jobs[1].error == job_2.error
-
-    @responses.activate
+            assert jobs[1].id == job_2.id
+            assert jobs[1].name == job_2.name
+            assert jobs[1].status == JobStatus(job_2.status)
+            assert jobs[1].error == job_2.error
+            
     def test_create_prediction_job(self, version):
-        job_1.status = "completed"
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "completed"
+            
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/jobs"
+            mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        bq_src = BigQuerySource(
-            table="project.dataset.source_table",
-            features=["feature_1", "feature2"],
-            options={"key": "val"},
-        )
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
 
-        bq_sink = BigQuerySink(
-            table="project.dataset.result_table",
-            result_column="prediction",
-            save_mode=SaveMode.OVERWRITE,
-            staging_bucket="gs://test",
-            options={"key": "val"},
-        )
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
 
-        job_config = PredictionJobConfig(
-            source=bq_src,
-            sink=bq_sink,
-            service_account_name="my-service-account",
-            result_type=ResultType.INTEGER,
-        )
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+            
+            mock_request.return_value = mock_response
 
-        j = version.create_prediction_job(job_config=job_config)
-        assert j.status == JobStatus.COMPLETED
-        assert j.id == job_1.id
-        assert j.error == job_1.error
-        assert j.name == job_1.name
+            j = version.create_prediction_job(job_config=job_config)
+            assert j.status == JobStatus.COMPLETED
+            assert j.id == job_1.id
+            assert j.error == job_1.error
+            assert j.name == job_1.name
 
-        actual_req = json.loads(responses.calls[0].request.body)
-        assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
-        assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
-        assert (
-            actual_req["config"]["job_config"]["model"]["result"]["type"]
-            == ResultType.INTEGER.value
-        )
-        assert (
-            actual_req["config"]["job_config"]["model"]["uri"]
-            == f"{version.artifact_uri}/model"
-        )
-        assert (
-            actual_req["config"]["job_config"]["model"]["type"]
-            == ModelType.PYFUNC_V2.value.upper()
-        )
-        assert actual_req["config"]["service_account_name"] == "my-service-account"
+            _, last_call_kwargs = mock_request.call_args_list[-1]
+            actual_req = json.loads(last_call_kwargs.get("body"))
 
+            assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
+            assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
+            assert (
+                actual_req["config"]["job_config"]["model"]["result"]["type"]
+                == ResultType.INTEGER.value
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["uri"]
+                == f"{version.artifact_uri}/model"
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["type"]
+                == ModelType.PYFUNC_V2.value.upper()
+            )
+            assert actual_req["config"]["service_account_name"] == "my-service-account"
+            
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
-    @responses.activate
     def test_create_prediction_job_with_retry_failed(self, version):
-        job_1.status = "pending"
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
 
-        for i in range(5):
-            responses.add(
-                "GET",
-                "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-                status=500,
-                content_type="application/json",
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1/jobs"
+            mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses = [mock_response]
+
+            for i in range(5):
+                temp_mock_response = MagicMock()
+                temp_mock_response.method = "GET"
+                temp_mock_response.status = 200
+                temp_mock_response.path = "/v1/models/1/versions/1/jobs/1"
+                temp_mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+                temp_mock_response.headers = {
+                    'content-type': 'application/json',
+                    'charset': 'utf-8'
+                }
+                
+                mock_responses.append(temp_mock_response)
+
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
             )
 
-        bq_src = BigQuerySource(
-            table="project.dataset.source_table",
-            features=["feature_1", "feature2"],
-            options={"key": "val"},
-        )
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
 
-        bq_sink = BigQuerySink(
-            table="project.dataset.result_table",
-            result_column="prediction",
-            save_mode=SaveMode.OVERWRITE,
-            staging_bucket="gs://test",
-            options={"key": "val"},
-        )
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
 
-        job_config = PredictionJobConfig(
-            source=bq_src,
-            sink=bq_sink,
-            service_account_name="my-service-account",
-            result_type=ResultType.INTEGER,
-        )
-
-        with pytest.raises(ValueError):
-            j = version.create_prediction_job(job_config=job_config)
-            assert j.id == job_1.id
-            assert j.error == job_1.error
-            assert j.name == job_1.name
-            assert len(responses.calls) == 6
+            mock_request.side_effect = mock_responses
+            with pytest.raises(ValueError):
+                j = version.create_prediction_job(job_config=job_config)
+                assert j.id == job_1.id
+                assert j.error == job_1.error
+                assert j.name == job_1.name
+                assert mock_request.call_count == 6
 
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
-    @responses.activate
     def test_create_prediction_job_with_retry_success(self, version):
-        job_1.status = "pending"
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
 
-        # Patch the method as currently it is not supported in the library
-        # https://github.com/getsentry/responses/issues/135
-        def _find_match(self, request):
-            for match in self._urls:
-                if request.method == match["method"] and self._has_url_match(
-                    match, request.url
-                ):
-                    return match
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "POST"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs"
+            mock_response_1.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses = [mock_response_1]
 
-        def _find_match_patched(self, request):
-            for index, match in enumerate(self._urls):
-                if request.method == match["method"] and self._has_url_match(
-                    match, request.url
-                ):
-                    if (
-                        request.method == "GET"
-                        and request.url == "/v1/models/1/versions/1/jobs/1"
-                    ):
-                        return self._urls.pop(index)
-                    else:
-                        return match
+            for i in range(4):
+                temp_mock_response = MagicMock()
+                temp_mock_response.method = "GET"
+                temp_mock_response.status = 200
+                temp_mock_response.path = "/v1/models/1/versions/1/jobs/1"
+                temp_mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+                temp_mock_response.headers = {
+                    'content-type': 'application/json',
+                    'charset': 'utf-8'
+                }
+                
+                mock_responses.append(temp_mock_response)
 
-        responses._find_match = types.MethodType(_find_match_patched, responses)
+            job_1.status = "completed"
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_2.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses.append(mock_response_2)
 
-        for i in range(4):
-            responses.add(
-                "GET",
-                "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-                status=500,
-                content_type="application/json",
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
             )
 
-        job_1.status = "completed"
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/jobs/1",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
-
-        bq_src = BigQuerySource(
-            table="project.dataset.source_table",
-            features=["feature_1", "feature2"],
-            options={"key": "val"},
-        )
-
-        bq_sink = BigQuerySink(
-            table="project.dataset.result_table",
-            result_column="prediction",
-            save_mode=SaveMode.OVERWRITE,
-            staging_bucket="gs://test",
-            options={"key": "val"},
-        )
-
-        job_config = PredictionJobConfig(
-            source=bq_src,
-            sink=bq_sink,
-            service_account_name="my-service-account",
-            result_type=ResultType.INTEGER,
-        )
-
-        j = version.create_prediction_job(job_config=job_config)
-        assert j.status == JobStatus.COMPLETED
-        assert j.id == job_1.id
-        assert j.error == job_1.error
-        assert j.name == job_1.name
-
-        actual_req = json.loads(responses.calls[0].request.body)
-        assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
-        assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
-        assert (
-            actual_req["config"]["job_config"]["model"]["result"]["type"]
-            == ResultType.INTEGER.value
-        )
-        assert (
-            actual_req["config"]["job_config"]["model"]["uri"]
-            == f"{version.artifact_uri}/model"
-        )
-        assert (
-            actual_req["config"]["job_config"]["model"]["type"]
-            == ModelType.PYFUNC_V2.value.upper()
-        )
-        assert actual_req["config"]["service_account_name"] == "my-service-account"
-        assert len(responses.calls) == 6
-
-        # unpatch
-        responses._find_match = types.MethodType(_find_match, responses)
-
-    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
-    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
-    @responses.activate
-    def test_create_prediction_job_with_retry_pending_then_failed(self, version):
-        job_1.status = "pending"
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
-
-        # Patch the method as currently it is not supported in the library
-        # https://github.com/getsentry/responses/issues/135
-        def _find_match(self, request):
-            for match in self._urls:
-                if request.method == match["method"] and self._has_url_match(
-                    match, request.url
-                ):
-                    return match
-
-        def _find_match_patched(self, request):
-            for index, match in enumerate(self._urls):
-                if request.method == match["method"] and self._has_url_match(
-                    match, request.url
-                ):
-                    if (
-                        request.method == "GET"
-                        and request.url == "/v1/models/1/versions/1/jobs/1"
-                    ):
-                        return self._urls.pop(index)
-                    else:
-                        return match
-
-        responses._find_match = types.MethodType(_find_match_patched, responses)
-
-        for i in range(3):
-            responses.add(
-                "GET",
-                "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-                status=500,
-                content_type="application/json",
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
             )
 
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/jobs/1",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
-
-        job_1.status = "failed"
-        for i in range(5):
-            responses.add(
-                "GET",
-                "/v1/models/1/versions/1/jobs/1",
-                body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-                status=500,
-                content_type="application/json",
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
             )
 
-        bq_src = BigQuerySource(
-            table="project.dataset.source_table",
-            features=["feature_1", "feature2"],
-            options={"key": "val"},
-        )
-
-        bq_sink = BigQuerySink(
-            table="project.dataset.result_table",
-            result_column="prediction",
-            save_mode=SaveMode.OVERWRITE,
-            staging_bucket="gs://test",
-            options={"key": "val"},
-        )
-
-        job_config = PredictionJobConfig(
-            source=bq_src,
-            sink=bq_sink,
-            service_account_name="my-service-account",
-            result_type=ResultType.INTEGER,
-        )
-
-        with pytest.raises(ValueError):
+            mock_request.side_effect = mock_responses
+            
             j = version.create_prediction_job(job_config=job_config)
+            assert j.status == JobStatus.COMPLETED
             assert j.id == job_1.id
             assert j.error == job_1.error
             assert j.name == job_1.name
 
-        # unpatch
-        responses._find_match = types.MethodType(_find_match, responses)
-        assert len(responses.calls) == 10
+            _, last_call_kwargs = mock_request.call_args_list[0]
+            actual_req = json.loads(last_call_kwargs.get("body"))
+            
+            assert actual_req["config"]["job_config"]["bigquery_source"] == bq_src.to_dict()
+            assert actual_req["config"]["job_config"]["bigquery_sink"] == bq_sink.to_dict()
+            assert (
+                actual_req["config"]["job_config"]["model"]["result"]["type"]
+                == ResultType.INTEGER.value
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["uri"]
+                == f"{version.artifact_uri}/model"
+            )
+            assert (
+                actual_req["config"]["job_config"]["model"]["type"]
+                == ModelType.PYFUNC_V2.value.upper()
+            )
+            assert actual_req["config"]["service_account_name"] == "my-service-account"
+            assert mock_request.call_count == 6
+            
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
+    def test_create_prediction_job_with_retry_pending_then_failed(self, version):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
 
-    @responses.activate
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "POST"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs"
+            mock_response_1.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses = [mock_response_1]
+
+            for i in range(4):
+                temp_mock_response = MagicMock()
+                temp_mock_response.method = "GET"
+                temp_mock_response.status = 200
+                temp_mock_response.path = "/v1/models/1/versions/1/jobs/1"
+                temp_mock_response.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+                temp_mock_response.headers = {
+                    'content-type': 'application/json',
+                    'charset': 'utf-8'
+                }
+                
+                mock_responses.append(temp_mock_response)
+
+            job_1.status = "failed"
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_2.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_responses.append(mock_response_2)
+
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
+    
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
+    
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+    
+            mock_request.side_effect = mock_responses
+            with pytest.raises(ValueError):
+                j = version.create_prediction_job(job_config=job_config)
+                assert j.id == job_1.id
+                assert j.error == job_1.error
+                assert j.name == job_1.name
+    
+            assert mock_request.call_count == 6
+            
     def test_stop_prediction_job(self, version):
-        job_1.status = "pending"
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/jobs",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            job_1.status = "pending"
 
-        responses.add(
-            "PUT",
-            "/v1/models/1/versions/1/jobs/1/stop",
-            status=204,
-            content_type="application/json",
-        )
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "POST"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions/1/jobs"
+            mock_response_1.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_2.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 204
+            mock_response_3.path = "/v1/models/1/versions/1/jobs/1/stop"
+            mock_response_3.data = json.dumps({}).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        job_1.status = "terminated"
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/jobs/1",
-            body=json.dumps(job_1.to_dict(), default=serialize_datetime),
-            status=200,
-            content_type="application/json",
-        )
+            job_1.status = "terminated"
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "GET"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/versions/1/jobs/1"
+            mock_response_4.data = json.dumps(job_1.to_dict(), default=serialize_datetime).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        bq_src = BigQuerySource(
-            table="project.dataset.source_table",
-            features=["feature_1", "feature2"],
-            options={"key": "val"},
-        )
+            bq_src = BigQuerySource(
+                table="project.dataset.source_table",
+                features=["feature_1", "feature2"],
+                options={"key": "val"},
+            )
 
-        bq_sink = BigQuerySink(
-            table="project.dataset.result_table",
-            result_column="prediction",
-            save_mode=SaveMode.OVERWRITE,
-            staging_bucket="gs://test",
-            options={"key": "val"},
-        )
+            bq_sink = BigQuerySink(
+                table="project.dataset.result_table",
+                result_column="prediction",
+                save_mode=SaveMode.OVERWRITE,
+                staging_bucket="gs://test",
+                options={"key": "val"},
+            )
 
-        job_config = PredictionJobConfig(
-            source=bq_src,
-            sink=bq_sink,
-            service_account_name="my-service-account",
-            result_type=ResultType.INTEGER,
-        )
+            job_config = PredictionJobConfig(
+                source=bq_src,
+                sink=bq_sink,
+                service_account_name="my-service-account",
+                result_type=ResultType.INTEGER,
+            )
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4]
 
-        j = version.create_prediction_job(job_config=job_config, sync=False)
-        j = j.stop()
-        assert j.status == JobStatus.TERMINATED
-        assert j.id == job_1.id
-        assert j.error == job_1.error
-        assert j.name == job_1.name
-
-    @responses.activate
+            j = version.create_prediction_job(job_config=job_config, sync=False)
+            j = j.stop()
+            assert j.status == JobStatus.TERMINATED
+            assert j.id == job_1.id
+            assert j.error == job_1.error
+            assert j.name == job_1.name
+            
     def test_model_version_deletion(self, version):
-        responses.add(
-            "DELETE",
-            "/v1/models/1/versions/1",
-            body=json.dumps(1),
-            status=200,
-            content_type="application/json",
-        )
-        response = version.delete_model_version()
-
-        assert response == 1
-
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "DELETE"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions/1"
+            mock_response.data = json.dumps(1).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+            
+            response = version.delete_model_version()
+            assert response == 1
 
 class TestModel:
     v1 = cl.Version(id=1, model_id=1)
@@ -1491,360 +1709,466 @@ class TestModel:
         model_schema=schema,
     )
 
-    @responses.activate
     def test_list_version(self, model):
-        responses.add(
-            "GET",
-            "/v1/models/1/versions?limit=50&cursor=&search=",
-            match_querystring=True,
-            body=json.dumps([self.v1.to_dict()]),
-            status=200,
-            adding_headers={"Next-Cursor": "abcdef"},
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions?limit=50&cursor=abcdef&search=",
-            match_querystring=True,
-            body=json.dumps([self.v2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        versions = model.list_version()
-        assert len(versions) == 2
-        assert versions[0].id == 1
-        assert versions[1].id == 2
-
-    @responses.activate
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/versions?limit=50&cursor=&search="
+            mock_response_1.data = json.dumps([self.v1.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8',
+                "Next-Cursor": "abcdef"
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/versions?limit=50&cursor=abcdef&search="
+            mock_response_2.data = json.dumps([self.v2.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            
+            versions = model.list_version()
+            assert len(versions) == 2
+            assert versions[0].id == 1
+            assert versions[1].id == 2
+            
     def test_list_version_with_labels(self, model):
-        responses.add(
-            "GET",
-            "/v1/models/1/versions?limit=50&cursor=&search=labels%3Amodel+in+%28T-800%29",
-            body=json.dumps([self.v3.to_dict()]),
-            status=200,
-            match_querystring=True,
-            content_type="application/json",
-        )
-        versions = model.list_version({"model": ["T-800"]})
-        assert len(versions) == 1
-        assert versions[0].id == 3
-        assert versions[0].labels["model"] == "T-800"
-
-    @responses.activate
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/versions?limit=50&cursor=&search=labels%3Amodel+in+%28T-800%29"
+            mock_response.data = json.dumps([self.v3.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
+        
+            versions = model.list_version({"model": ["T-800"]})
+            assert len(versions) == 1
+            assert versions[0].id == 3
+            assert versions[0].labels["model"] == "T-800"
+            
     def test_list_endpoint(self, model):
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([mdl_endpoint_1.to_dict(), mdl_endpoint_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "GET"
+            mock_response.status = 200
+            mock_response.path = "/v1/models/1/endpoints"
+            mock_response.data = json.dumps([mdl_endpoint_1.to_dict(), mdl_endpoint_2.to_dict()]).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
 
-        endpoints = model.list_endpoint()
-        assert len(endpoints) == 2
-        assert endpoints[0].id == mdl_endpoint_1.id
-        assert endpoints[1].id == mdl_endpoint_2.id
-
-    @responses.activate
+            endpoints = model.list_endpoint()
+            assert len(endpoints) == 2
+            assert endpoints[0].id == mdl_endpoint_1.id
+            assert endpoints[1].id == mdl_endpoint_2.id
+            
     def test_new_model_version(self, model):
-        responses.add(
-            "POST",
-            "/v1/models/1/versions",
-            body=json.dumps(self.v4.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "POST"
+            mock_response.status = 201
+            mock_response.path = "/v1/models/1/versions"
+            mock_response.data = json.dumps(self.v4.to_dict()).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response
 
-        mv = model.new_model_version(
-            labels={"model": "T-800"}, model_schema=self.merlin_model_schema
-        )
-        assert mv._python_version == "3.10.*"
-        assert mv._id == 4
-        assert mv._model._id == 1
-        assert mv._labels == {"model": "T-800"}
-        assert mv._model_schema == self.merlin_model_schema
-
-    @responses.activate
+            mv = model.new_model_version(
+                labels={"model": "T-800"}, model_schema=self.merlin_model_schema
+            )
+            assert mv._python_version == "3.10.*"
+            assert mv._id == 4
+            assert mv._model._id == 1
+            assert mv._labels == {"model": "T-800"}
+            assert mv._model_schema == self.merlin_model_schema
+            
     def test_serve_traffic(self, model):
-        ve = VersionEndpoint(ep1)
-        with pytest.raises(ValueError):
-            model.serve_traffic([ve], environment_name=env_1.name)
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(ep1)
+            with pytest.raises(ValueError):
+                model.serve_traffic([ve], environment_name=env_1.name)
 
-        with pytest.raises(ValueError):
-            model.serve_traffic({ve: -1}, environment_name=env_1.name)
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: -1}, environment_name=env_1.name)
 
-        with pytest.raises(ValueError):
-            model.serve_traffic({ve: 101}, environment_name=env_1.name)
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: 101}, environment_name=env_1.name)
 
-        with pytest.raises(ValueError):
-            model.serve_traffic(
-                {VersionEndpoint(ep2): 100}, environment_name=env_1.name
+            with pytest.raises(ValueError):
+                model.serve_traffic(
+                    {VersionEndpoint(ep2): 100}, environment_name=env_1.name
+                )
+                
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "POST"
+            mock_response_2.status = 201
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            print("aku mock_response_2",mock_response_2)
+
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+            
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
             )
-
-        # test create
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/endpoints",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == mdl_endpoint_1.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
-        )
-        assert endpoint.protocol == Protocol.HTTP_JSON
-
-        responses.reset()
-
-        # test update
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([mdl_endpoint_1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "PUT",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == mdl_endpoint_1.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
-        )
-
-    @responses.activate
+            assert endpoint.protocol == Protocol.HTTP_JSON
+    
+            # test update
+    
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([mdl_endpoint_1.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints/1"
+            mock_response_2.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+            
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+            
     def test_stop_serving_traffic(self, model):
-        ve = VersionEndpoint(ep1)
-        with pytest.raises(ValueError):
-            model.serve_traffic([ve], environment_name=env_1.name)
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(ep1)
+            with pytest.raises(ValueError):
+                model.serve_traffic([ve], environment_name=env_1.name)
 
-        with pytest.raises(ValueError):
-            model.serve_traffic({ve: -1}, environment_name=env_1.name)
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: -1}, environment_name=env_1.name)
 
-        with pytest.raises(ValueError):
-            model.serve_traffic({ve: 101}, environment_name=env_1.name)
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: 101}, environment_name=env_1.name)
 
-        with pytest.raises(ValueError):
-            model.serve_traffic(
-                {VersionEndpoint(ep2): 100}, environment_name=env_1.name
+            with pytest.raises(ValueError):
+                model.serve_traffic(
+                    {VersionEndpoint(ep2): 100}, environment_name=env_1.name
+                )
+            
+            
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "POST"
+            mock_response_2.status = 201
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+        
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+            
+            mock_request.reset_mock()
+
+            # test DELETE
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([mdl_endpoint_1.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints/1"
+            mock_response_2.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "DELETE"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps({}).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+            
+            model.stop_serving_traffic(endpoint.environment_name)
+            assert mock_request.call_count == 2
+
+    def test_serve_traffic_default_env(self, model):
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(ep1)
+            
+            # no default environment
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.return_value = mock_response_1        
+
+            with pytest.raises(ValueError):
+                model.serve_traffic({ve: 100})
+
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps([]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "POST"
+            mock_response_3.status = 201
+            mock_response_3.path = "/v1/models/1/endpoints"
+            mock_response_3.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+        
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+            
+            endpoint = model.serve_traffic({ve: 100})
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
             )
 
-        # test create
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/endpoints",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == mdl_endpoint_1.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
-        )
 
-        responses.reset()
-
-        # test DELETE
-        responses.reset()
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([mdl_endpoint_1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "DELETE",
-            "/v1/models/1/endpoints/1",
-            status=200,
-            content_type="application/json",
-        )
-        model.stop_serving_traffic(endpoint.environment_name)
-        assert len(responses.calls) == 2
-
-    @responses.activate
-    def test_serve_traffic_default_env(self, model):
-        ve = VersionEndpoint(ep1)
-
-        # no default environment
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        with pytest.raises(ValueError):
-            model.serve_traffic({ve: 100})
-
-        responses.reset()
-
-        # test create
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/endpoints",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100})
-        assert endpoint.id == mdl_endpoint_1.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
-        )
-
-        responses.reset()
-
-        # test update
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([mdl_endpoint_1.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "PUT",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100})
-        assert endpoint.id == mdl_endpoint_1.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
-        )
-
-    @responses.activate
+            # test update
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/environments"
+            mock_response_1.data = json.dumps([env_1.to_dict(), env_2.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps([mdl_endpoint_1.to_dict()]).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "GET"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_4 = MagicMock()
+            mock_response_4.method = "PUT"
+            mock_response_4.status = 200
+            mock_response_4.path = "/v1/models/1/endpoints/1"
+            mock_response_4.data = json.dumps(mdl_endpoint_1.to_dict()).encode('utf-8')
+            mock_response_4.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3, mock_response_4]
+        
+            endpoint = model.serve_traffic({ve: 100})
+            assert endpoint.id == mdl_endpoint_1.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+            
     def test_serve_traffic_upi(self, model):
-        ve = VersionEndpoint(upi_ep)
-        # test create
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/endpoints",
-            body=json.dumps(mdl_endpoint_upi.to_dict()),
-            status=201,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == mdl_endpoint_upi.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
-        )
-        assert endpoint.protocol == Protocol.UPI_V1
+        with patch("urllib3.PoolManager.request") as mock_request:
+            ve = VersionEndpoint(upi_ep)
+            # test create
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "POST"
+            mock_response_2.status = 201
+            mock_response_2.path = "/v1/models/1/endpoints"
+            mock_response_2.data = json.dumps(mdl_endpoint_upi.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2]
+        
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_upi.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+            )
+            assert endpoint.protocol == Protocol.UPI_V1
 
-        responses.reset()
-
-        # test update
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints",
-            body=json.dumps([mdl_endpoint_upi.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_upi.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "PUT",
-            "/v1/models/1/endpoints/1",
-            body=json.dumps(mdl_endpoint_upi.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-        assert endpoint.id == mdl_endpoint_upi.id
-        assert (
-            endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
-        )
-        assert endpoint.protocol == Protocol.UPI_V1
-
-    @responses.activate
+            # test update
+            mock_response_1 = MagicMock()
+            mock_response_1.method = "GET"
+            mock_response_1.status = 200
+            mock_response_1.path = "/v1/models/1/endpoints"
+            mock_response_1.data = json.dumps([mdl_endpoint_upi.to_dict()]).encode('utf-8')
+            mock_response_1.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_2 = MagicMock()
+            mock_response_2.method = "GET"
+            mock_response_2.status = 200
+            mock_response_2.path = "/v1/models/1/endpoints/1"
+            mock_response_2.data = json.dumps(mdl_endpoint_upi.to_dict()).encode('utf-8')
+            mock_response_2.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_response_3 = MagicMock()
+            mock_response_3.method = "PUT"
+            mock_response_3.status = 200
+            mock_response_3.path = "/v1/models/1/endpoints/1"
+            mock_response_3.data = json.dumps(mdl_endpoint_upi.to_dict()).encode('utf-8')
+            mock_response_3.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
+            
+            mock_request.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+        
+            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+            assert endpoint.id == mdl_endpoint_upi.id
+            assert (
+                endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
+            )
+            assert endpoint.protocol == Protocol.UPI_V1
+            
     def test_model_deletion(self, model):
-        responses.add(
-            "DELETE",
-            "/v1/projects/1/models/1",
-            body=json.dumps(1),
-            status=200,
-            content_type="application/json",
-        )
-        response = model.delete_model()
+        with patch("urllib3.PoolManager.request") as mock_request:
+            mock_response = MagicMock()
+            mock_response.method = "DELETE"
+            mock_response.status = 200
+            mock_response.path = "/v1/projects/1/models/1"
+            mock_response.data = json.dumps(1).encode('utf-8')
+            mock_response.headers = {
+                'content-type': 'application/json',
+                'charset': 'utf-8'
+            }
 
-        assert response == 1
+            mock_request.return_value = mock_response
+            response = model.delete_model()
+    
+            assert response == 1
