@@ -16,7 +16,7 @@ PyYAML>=5.4
 six>=1.10
 urllib3>=1.26
 numpy>=1.26.4
-caraml-auth-google==0.0.0.post16.dev0
+caraml-auth-google==0.0.0.post9
 pydantic==2.5.3
 grpcio-tools>=1.50.0,<1.63
 grpcio>=1.60.1
