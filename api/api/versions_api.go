@@ -28,7 +28,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const DEFAULT_PYTHON_VERSION = "3.8.*"
+const DEFAULT_PYTHON_VERSION = "3.9.*"
 
 type VersionsController struct {
 	*AppContext

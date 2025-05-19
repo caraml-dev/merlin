@@ -12,7 +12,7 @@ flavors:
     env: conda.yaml
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
-    python_version: 3.8.18
+    python_version: 3.9.22
 mlflow_version: 1.26.1
 model_uuid: 126ccf3f97024b43a011b5aee072010c
 run_id: 74232b10e8064ccda29611c265921034

@@ -81,7 +81,6 @@ ImageBuilderConfig:
         provideClusterInfo: true
   SafeToEvict: false
   SupportedPythonVersions:
-    - 3.8.*
     - 3.9.*
     - 3.10.*
 BatchConfig:

@@ -230,7 +230,7 @@ type ImageBuilderConfig struct {
 	MaximumRetry  int32                 `validate:"required" default:"3"`
 	K8sConfig     *mlpcluster.K8sConfig `validate:"required" default:"-"`
 	SafeToEvict   bool                  `default:"false"`
-	// Supported Python versions for image builder. Example: ["3.8.*", "3.9.*", "3.10.*"]
+	// Supported Python versions for image builder. Example: ["3.9.*", "3.10.*"]
 	SupportedPythonVersions []string
 }
 

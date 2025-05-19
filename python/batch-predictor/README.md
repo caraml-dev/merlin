@@ -69,7 +69,7 @@ OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES python main.py --job-name iris-predictio
 
 ### Requirements
 
-- python >= 3.8.0
+- python >= 3.9.0
 - pipenv (install using `pip install pipenv`)
 - protoc (see [installation instruction](http://google.github.io/proto-lens/installing-protoc.html))
 - gcloud (see [installation instruction](https://cloud.google.com/sdk/install))

@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: pip
       - name: Install dependencies
         working-directory: ./python/sdk
@@ -51,7 +51,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: pip
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
@@ -79,7 +79,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: pip
       - name: Install dependencies
         working-directory: ./python/batch-predictor
@@ -101,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10"]
     needs:
       - publish-python-sdk
     steps:
