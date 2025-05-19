@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
       PIPENV_VENV_IN_PROJECT: true
@@ -78,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
       PIPENV_VENV_IN_PROJECT: true
