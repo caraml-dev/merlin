@@ -44,7 +44,7 @@ setup(
     description="Model Server implementation for Merlin PyFunc model",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    python_requires=">=3.8,<3.11",
+    python_requires=">=3.9,<3.11",
     packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
     tests_require=TESTS_REQUIRE,

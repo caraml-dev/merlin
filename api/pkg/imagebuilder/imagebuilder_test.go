@@ -56,7 +56,7 @@ const (
 	testArtifactURISuffix = "://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
 	testCondaEnvUrlSuffix = testArtifactURISuffix + "/model/conda.yaml"
 	testCondaEnvContent   = `dependencies:
-- python=3.8.*
+- python=3.9.*
 - pip:
 	- mlflow
 	- joblib
@@ -121,7 +121,7 @@ var (
 		"--use-new-run",
 	}
 
-	defaultSupportedPythonVersions = []string{"3.8.*", "3.9.*", "3.10.*"}
+	defaultSupportedPythonVersions = []string{"3.9.*", "3.10.*"}
 
 	configWithGCRPushRegistry = Config{
 		BuildNamespace: testBuildNamespace,

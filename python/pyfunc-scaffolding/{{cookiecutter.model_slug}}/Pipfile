@@ -7,4 +7,4 @@ verify_ssl = true
 merlin-sdk = "=={{ cookiecutter.merlin_sdk_version }}"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

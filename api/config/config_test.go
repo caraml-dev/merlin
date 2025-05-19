@@ -449,7 +449,7 @@ func TestLoad(t *testing.T) {
 						Name: "dev-server",
 					},
 					SafeToEvict:             false,
-					SupportedPythonVersions: []string{"3.8.*", "3.9.*", "3.10.*"},
+					SupportedPythonVersions: []string{"3.9.*", "3.10.*"},
 				},
 				BatchConfig: BatchConfig{
 					Tolerations: []v1.Toleration{
