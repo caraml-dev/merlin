@@ -140,6 +140,11 @@ class MaxComputeSourceConfig(SourceConfig):
     
     def project(self) -> str:
         return self._project
+
+    def execute_project(self) -> str:
+        if self.options() is not None and "execute_project" in self.options():
+            return self.options()["execute_project"]
+        return ""
     
     def schema(self) -> str:
         return self._schema
@@ -246,6 +251,11 @@ class MaxComputeSinkConfig(SinkConfig):
     def options(self) -> MutableMapping[str, str]:
         return self._proto.options
     
+    def execute_project(self) -> str:
+        if self.options() is not None and "execute_project" in self.options():
+            return self.options()["execute_project"]
+        return ""
+
     def save_mode(self) -> str:
         return SaveMode.Name(self._proto.save_mode).lower()
     
