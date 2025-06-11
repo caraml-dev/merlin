@@ -124,7 +124,8 @@ class MaxComputeSourceConfig(SourceConfig):
 
     def __init__(self, mc_src_proto: MaxComputeSource):
         self._proto = mc_src_proto
-        self._project, self._schema, self._table = self._proto.table.split(".")
+        self._project, self._schema, _ = self._proto.table.split(".")
+        self._table = self._proto.table
         
     def source_type(self) -> str:
         return self.TYPE
@@ -237,7 +238,8 @@ class MaxComputeSinkConfig(SinkConfig):
 
     def __init__(self, mc_sink_proto: MaxComputeSink):
         self._proto = mc_sink_proto
-        self._project, self._schema, self._table = self._proto.table.split(".")
+        self._project, self._schema, _ = self._proto.table.split(".")
+        self._table = self._proto.table
     
     def sink_type(self) -> str:
         return self.TYPE
