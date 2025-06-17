@@ -238,8 +238,9 @@ class MaxComputeSinkConfig(SinkConfig):
 
     def __init__(self, mc_sink_proto: MaxComputeSink):
         self._proto = mc_sink_proto
-        self._project, self._schema, _ = self._proto.table.split(".")
-        self._table = self._proto.table
+        # NOTE: the table for the sink is not in the format of `project.schema.table`
+        # because the INSERT statement in MaxCompute only supports `table`
+        self._project, self._schema, self._table = self._proto.table.split(".")
     
     def sink_type(self) -> str:
         return self.TYPE
