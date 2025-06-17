@@ -13,11 +13,11 @@ import {
 } from "@elastic/eui";
 import React, { Fragment, useContext, useEffect, useState } from "react";
 import { LazyLog, ScrollFollow } from "react-lazylog";
-import config from "../../config";
+import config, {appConfig, featureToggleConfig} from "../../config";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
-import { createStackdriverUrl } from "../../utils/createStackdriverUrl";
 import { LogsSearchBar } from "./LogsSearchBar";
+import {createLogImageBuilderUrl, createLogModelUrl} from "../../utils/createLogUrl";
 
 const componentOrder = [
   "image_builder",
@@ -121,20 +121,19 @@ export const ContainerLogsView = ({
   };
 
   const [logUrl, setLogUrl] = useState("");
-  const [stackdriverUrls, setStackdriverUrls] = useState({});
+  const [podLogUrls, setPodLogUrls] = useState({});
   useEffect(
     () => {
       if (projectLoaded) {
         // set image builder url
-        let stackdriverQuery = {
-          job_name: project.name + "-" + model.name + "-" + versionId,
-          start_time: model.updated_at,
-        };
-        setStackdriverUrls({
-          ...stackdriverUrls,
-          image_builder: createStackdriverUrl(
-            stackdriverQuery,
-            "image_builder",
+        setPodLogUrls({
+          ...podLogUrls,
+          image_builder: createLogImageBuilderUrl(
+            featureToggleConfig.logImageBuilderURL,
+            appConfig.imagebuilder.cluster,
+            appConfig.imagebuilder.namespace,
+            project.name + "-" + model.name + "-" + versionId,
+            model.updated_at,
           ),
         });
 
@@ -165,22 +164,19 @@ export const ContainerLogsView = ({
 
             const pods = [
               ...new Set(
-                activeContainers.map((container) => `"${container.pod_name}"`),
+                activeContainers.map((container) => `${container.pod_name}`),
               ),
             ];
-            let stackdriverQuery = {
-              gcp_project: activeContainers[0].gcp_project,
-              cluster: activeContainers[0].cluster,
-              namespace: activeContainers[0].namespace,
-              pod_name: pods.join(" OR "),
-              start_time: model.updated_at,
-            };
+
             if (params.component_type !== "image_builder") {
-              setStackdriverUrls({
-                ...stackdriverUrls,
-                [params.component_type]: createStackdriverUrl(
-                  stackdriverQuery,
-                  params.component_type,
+              setPodLogUrls({
+                ...podLogUrls,
+                [params.component_type]: createLogModelUrl(
+                  featureToggleConfig.logModelURL,
+                  activeContainers[0].cluster,
+                  activeContainers[0].namespace,
+                  pods,
+                  model.updated_at,
                 ),
               });
             }
@@ -199,7 +195,7 @@ export const ContainerLogsView = ({
           <EuiTextColor color="success">&nbsp; Logs</EuiTextColor>
         </span>
       </EuiTitle>
-      {Object.keys(stackdriverUrls).length !== 0 && (
+      {Object.keys(podLogUrls).length !== 0 && (
         <Fragment>
           <EuiSpacer size="s" />
           <EuiPanel>
@@ -209,10 +205,10 @@ export const ContainerLogsView = ({
                 grow={false}
               >
                 <EuiText style={{ fontSize: "14px", fontWeight: "bold" }}>
-                  Stackdriver Logs
+                  Pod Logs
                 </EuiText>
               </EuiFlexItem>
-              {Object.entries(stackdriverUrls).map(([component, url]) => (
+              {Object.entries(podLogUrls).map(([component, url]) => (
                 <EuiFlexItem
                   style={{
                     marginTop: 0,
