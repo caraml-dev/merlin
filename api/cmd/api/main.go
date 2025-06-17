@@ -171,6 +171,9 @@ func main() {
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
 
+		LogImageBuilderURL: cfg.FeatureToggleConfig.LogConfig.LogImageBuilderURL,
+		LogModelURL:        cfg.FeatureToggleConfig.LogConfig.LogModelURL,
+
 		ModelDeletionEnabled: cfg.FeatureToggleConfig.ModelDeletionConfig.Enabled,
 
 		ImageBuilderCluster:    cfg.ImageBuilderConfig.ClusterName,
