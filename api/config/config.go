@@ -263,6 +263,7 @@ type FeatureToggleConfig struct {
 	MonitoringConfig    MonitoringConfig
 	AlertConfig         AlertConfig
 	ModelDeletionConfig ModelDeletionConfig
+	LogConfig           LogConfig
 }
 
 type MonitoringConfig struct {
@@ -279,6 +280,11 @@ type AlertConfig struct {
 
 type ModelDeletionConfig struct {
 	Enabled bool `default:"false"`
+}
+
+type LogConfig struct {
+	LogModelURL        string
+	LogImageBuilderURL string
 }
 
 type GitlabConfig struct {

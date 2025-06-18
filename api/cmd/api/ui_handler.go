@@ -19,6 +19,9 @@ type uiEnvHandler struct {
 	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
 	MonitoringPredictionJobBaseURL string `json:"REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"`
 
+	LogImageBuilderURL string `json:"REACT_APP_LOG_IMAGE_BUILDER_URL"`
+	LogModelURL        string `json:"REACT_APP_LOG_MODEL_URL"`
+
 	AlertEnabled bool `json:"REACT_APP_ALERT_ENABLED"`
 
 	ModelDeletionEnabled bool `json:"REACT_APP_MODEL_DELETION_ENABLED"`
