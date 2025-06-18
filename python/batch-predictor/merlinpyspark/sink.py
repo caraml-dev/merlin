@@ -74,7 +74,6 @@ class MaxComputeSink(Sink):
 
     def get_jdbc_url(self):
         url = f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode={self.get_interactive_mode()}&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false&alwaysFallback=true&enableOdpsLogger=true"
-        # NOTE: Intentionally omit this to see if this is the problem
         if self._config.execute_project() is not None:
             url += f"&executeProject={self._config.execute_project()}"
         return url
