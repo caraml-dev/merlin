@@ -124,7 +124,8 @@ class MaxComputeSourceConfig(SourceConfig):
 
     def __init__(self, mc_src_proto: MaxComputeSource):
         self._proto = mc_src_proto
-        self._project, self._schema, self._table = self._proto.table.split(".")
+        self._project, self._schema, _ = self._proto.table.split(".")
+        self._table = self._proto.table
         
     def source_type(self) -> str:
         return self.TYPE
@@ -140,6 +141,11 @@ class MaxComputeSourceConfig(SourceConfig):
     
     def project(self) -> str:
         return self._project
+
+    def execute_project(self) -> str:
+        if self.options() is not None and "execute_project" in self.options():
+            return self.options()["execute_project"]
+        return ""
     
     def schema(self) -> str:
         return self._schema
@@ -232,6 +238,8 @@ class MaxComputeSinkConfig(SinkConfig):
 
     def __init__(self, mc_sink_proto: MaxComputeSink):
         self._proto = mc_sink_proto
+        # NOTE: the table for the sink is not in the format of `project.schema.table`
+        # because the INSERT statement in MaxCompute only supports `table`
         self._project, self._schema, self._table = self._proto.table.split(".")
     
     def sink_type(self) -> str:
@@ -246,6 +254,11 @@ class MaxComputeSinkConfig(SinkConfig):
     def options(self) -> MutableMapping[str, str]:
         return self._proto.options
     
+    def execute_project(self) -> str:
+        if self.options() is not None and "execute_project" in self.options():
+            return self.options()["execute_project"]
+        return ""
+
     def save_mode(self) -> str:
         return SaveMode.Name(self._proto.save_mode).lower()
     

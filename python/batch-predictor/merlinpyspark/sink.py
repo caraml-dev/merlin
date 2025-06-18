@@ -73,7 +73,10 @@ class MaxComputeSink(Sink):
         self._spark = spark_session
 
     def get_jdbc_url(self):
-        return f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode={self.get_interactive_mode()}&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false"
+        url = f"jdbc:odps:{self._config.endpoint()}?project={self._config.project()}&accessId={self.get_access_id()}&accessKey={self.get_access_key()}&interactiveMode={self.get_interactive_mode()}&odpsNamespaceSchema=true&schema={self._config.schema()}&enableLimit=false&alwaysFallback=true&enableOdpsLogger=true"
+        if self._config.execute_project() is not None:
+            url += f"&executeProject={self._config.execute_project()}"
+        return url
 
     def get_query_timeout(self):
         return self._config.options().get("queryTimeout", "300")
