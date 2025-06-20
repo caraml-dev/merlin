@@ -429,7 +429,7 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 			},
 		},
 	}
-	// podSpecWithIdentity := enrichIdentityToPod(podSpec, c.consumerConfig.ServiceAccountSecretName, []string{workerContainer})
+
 	numReplicas := c.consumerConfig.Replicas
 	if data.ResourceRequest != nil && data.ResourceRequest.Replica > 0 {
 		numReplicas = data.ResourceRequest.Replica
