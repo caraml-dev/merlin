@@ -458,7 +458,6 @@ func (c *deployer) createDeploymentSpec(data *models.WorkerData, secretName stri
 						PublisherRevisionAnnotationKey: strconv.Itoa(data.Revision),
 					},
 				},
-				// Spec: podSpecWithIdentity,
 				Spec: podSpec,
 			},
 		},
