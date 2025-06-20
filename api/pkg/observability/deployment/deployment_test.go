@@ -102,23 +102,12 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 									MountPath: "/mlobs/observation-publisher/conf/environment",
 									ReadOnly:  true,
 								},
-								{
-									Name:      "iam-secret",
-									MountPath: fmt.Sprintf("/iam/%s", serviceAccountSecretName),
-									ReadOnly:  true,
-								},
 							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "prom-metric",
 									ContainerPort: 8000,
 									Protocol:      corev1.ProtocolTCP,
-								},
-							},
-							Env: []corev1.EnvVar{
-								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: fmt.Sprintf("/iam/%s/service-account.json", serviceAccountSecretName),
 								},
 							},
 						},
@@ -129,14 +118,6 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
 									SecretName: fmt.Sprintf("%s-%s-config", data.Project, data.ModelName),
-								},
-							},
-						},
-						{
-							Name: "iam-secret",
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: serviceAccountSecretName,
 								},
 							},
 						},
@@ -1217,10 +1198,10 @@ func prependUpsertDeploymentReactor(t *testing.T, deploymentAPI *fakeappsv1.Fake
 		}
 
 		assert.Equal(t, requestedDepl.ObjectMeta, actualReqDepl.ObjectMeta)
-		// assert.Equal(t, requestedDepl.Spec, actualReqDepl.Spec)
-		// if !reflect.DeepEqual(requestedDepl.ObjectMeta, actualReqDepl.ObjectMeta) || !reflect.DeepEqual(requestedDepl.Spec, actualReqDepl.Spec) {
-		// 	t.Fatalf("actual and expected requested deployment is different")
-		// }
+		assert.Equal(t, requestedDepl.Spec, actualReqDepl.Spec)
+		if !reflect.DeepEqual(requestedDepl.ObjectMeta, actualReqDepl.ObjectMeta) || !reflect.DeepEqual(requestedDepl.Spec, actualReqDepl.Spec) {
+			t.Fatalf("actual and expected requested deployment is different")
+		}
 
 		return true, requestedDepl, expectedErr
 	})
