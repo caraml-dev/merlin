@@ -49,12 +49,6 @@ type ArizeSink struct {
 	SpaceKey string `yaml:"space_key"`
 }
 
-type BigQuerySink struct {
-	Project string `yaml:"project"`
-	Dataset string `yaml:"dataset"`
-	TTLDays int    `yaml:"ttl_days"`
-}
-
 type MaxComputeSink struct {
 	Project         string `yaml:"project"`
 	Dataset         string `yaml:"dataset"`
