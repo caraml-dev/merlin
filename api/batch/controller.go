@@ -324,11 +324,13 @@ func (c *controller) onUpdate(old, new interface{}) {
 func (c *controller) getMLPSecrets(ctx context.Context, predictionJob *models.PredictionJob, namespace string) (map[string]string, error) {
 	secretMap := make(map[string]string)
 	// Retrieve Google Service Account secret from MLP
-	googleServiceAccountSecret, err := c.mlpAPIClient.GetSecretByName(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
-	if err != nil {
-		return nil, fmt.Errorf("service account %s is not found within %s project: %w", predictionJob.Config.ServiceAccountName, namespace, err)
+	if predictionJob.Config.ServiceAccountName != "" {
+		googleServiceAccountSecret, err := c.mlpAPIClient.GetSecretByName(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
+		if err != nil {
+			return nil, fmt.Errorf("service account %s is not found within %s project: %w", predictionJob.Config.ServiceAccountName, namespace, err)
+		}
+		secretMap[serviceAccountFileName] = googleServiceAccountSecret.Data
 	}
-	secretMap[serviceAccountFileName] = googleServiceAccountSecret.Data
 
 	// Retrieve user-configured secrets from MLP
 	for _, secret := range predictionJob.Config.Secrets {
