@@ -102,23 +102,12 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 									MountPath: "/mlobs/observation-publisher/conf/environment",
 									ReadOnly:  true,
 								},
-								{
-									Name:      "iam-secret",
-									MountPath: fmt.Sprintf("/iam/%s", serviceAccountSecretName),
-									ReadOnly:  true,
-								},
 							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "prom-metric",
 									ContainerPort: 8000,
 									Protocol:      corev1.ProtocolTCP,
-								},
-							},
-							Env: []corev1.EnvVar{
-								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: fmt.Sprintf("/iam/%s/service-account.json", serviceAccountSecretName),
 								},
 							},
 						},
@@ -129,14 +118,6 @@ func createDeploymentSpec(data *models.WorkerData, resourceRequest corev1.Resour
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
 									SecretName: fmt.Sprintf("%s-%s-config", data.Project, data.ModelName),
-								},
-							},
-						},
-						{
-							Name: "iam-secret",
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: serviceAccountSecretName,
 								},
 							},
 						},
@@ -207,12 +188,6 @@ func Test_deployer_Deploy(t *testing.T) {
 			APIKey:              "api-key",
 			SpaceKey:            "space-key",
 			EnabledModelSerials: "project-1_model-1",
-		},
-		BigQuerySink: config.BigQuerySink{
-			Project: "bq-project",
-			Dataset: "dataset",
-			TTLDays: 10,
-			Enabled: true,
 		},
 		MaxComputeSink: config.MaxComputeSink{
 			Project:         "max-project",
@@ -329,7 +304,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, false)
 				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
@@ -401,7 +376,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, fmt.Errorf("deployment control plane is down"), false)
 				return clientSet
@@ -453,7 +428,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, false)
 				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
@@ -521,7 +496,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						},
 					},
 					StringData: map[string]string{
-						"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+						"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 					},
 				}, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
@@ -539,7 +514,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}}, nil, true)
 				deploymentAPI := clientSet.AppsV1().Deployments(namespace).(*fakeappsv1.FakeDeployments)
@@ -609,7 +584,7 @@ func Test_deployer_Deploy(t *testing.T) {
 						},
 					},
 					StringData: map[string]string{
-						"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+						"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 					},
 				}, nil)
 				prependUpsertSecretReactor(t, secretAPI, []*corev1.Secret{
@@ -627,7 +602,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+							"config.yaml": "project: project-1\nmodel_id: model-1\nmodel_version: \"2\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-2-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					}, {
 						ObjectMeta: metav1.ObjectMeta{
@@ -643,7 +618,7 @@ func Test_deployer_Deploy(t *testing.T) {
 							},
 						},
 						StringData: map[string]string{
-							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+							"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 						},
 					},
 				}, nil, true)
@@ -822,7 +797,7 @@ func Test_deployer_GetDeployedManifest(t *testing.T) {
 			},
 		},
 		StringData: map[string]string{
-			"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: BIGQUERY\n  config:\n    project: bq-project\n    dataset: dataset\n    ttl_days: 10\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
+			"config.yaml": "model_id: model-1\nmodel_version: \"1\"\ninference_schema:\n  session_id_column: session_id\n  row_id_column: row_id\n  model_prediction_output:\n    actual_score_column: \"\"\n    negative_class_label: negative\n    prediction_score_column: prediction_score\n    prediction_label_column: prediction_label\n    positive_class_label: positive\n    score_threshold: null\n    output_class: BinaryClassificationOutput\n  tag_columns:\n  - tag\n  feature_types:\n    featureA: float64\n    featureB: float64\n    featureC: int64\n    featureD: boolean\n  feature_orders: []\nobservation_sinks:\n- type: ARIZE\n  config:\n    api_key: api-key\n    space_key: space-key\n- type: MAXCOMPUTE\n  config:\n    project: max-project\n    dataset: dataset\n    ttl_days: 0\n    access_key_id: key\n    access_key_secret: secret\n    access_url: url\nobservation_source:\n  type: KAFKA\n  config:\n    topic: caraml-project-1-model-1-1-prediction-log\n    bootstrap_servers: broker-1\n    group_id: group-id\n    batch_size: 100\n    additional_consumer_config:\n      auto.offset.reset: latest\n      fetch.min.bytes: \"1024000\"\n",
 		},
 	}
 	workerData := &models.WorkerData{
