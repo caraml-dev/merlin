@@ -18,6 +18,7 @@ import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
 import { LogsSearchBar } from "./LogsSearchBar";
 import {createLogImageBuilderUrl, createLogModelUrl} from "../../utils/createLogUrl";
+import {createStackdriverUrl} from "../../utils/createStackdriverUrl";
 
 const componentOrder = [
   "image_builder",
@@ -126,16 +127,31 @@ export const ContainerLogsView = ({
     () => {
       if (projectLoaded) {
         // set image builder url
-        setPodLogUrls({
-          ...podLogUrls,
-          image_builder: createLogImageBuilderUrl(
-            featureToggleConfig.logImageBuilderURL,
-            appConfig.imagebuilder.cluster,
-            appConfig.imagebuilder.namespace,
-            project.name + "-" + model.name + "-" + versionId,
-            model.updated_at,
-          ),
-        });
+        if (featureToggleConfig.logImageBuilderURL) {
+          setPodLogUrls({
+            ...podLogUrls,
+            image_builder: createLogImageBuilderUrl(
+              featureToggleConfig.logImageBuilderURL,
+              appConfig.imagebuilder.cluster,
+              appConfig.imagebuilder.namespace,
+              project.name + "-" + model.name + "-" + versionId,
+              model.updated_at,
+            ),
+          });
+        } else {
+          // backward compatible to stackdriver
+          let stackdriverQuery = {
+            job_name: project.name + "-" + model.name + "-" + versionId,
+            start_time: model.updated_at,
+          };
+          setPodLogUrls({
+            ...podLogUrls,
+            image_builder: createStackdriverUrl(
+                stackdriverQuery,
+                "image_builder",
+            ),
+          });
+        }
 
         // update active container
         if (params.component_type !== "") {
@@ -169,16 +185,34 @@ export const ContainerLogsView = ({
             ];
 
             if (params.component_type !== "image_builder") {
-              setPodLogUrls({
-                ...podLogUrls,
-                [params.component_type]: createLogModelUrl(
-                  featureToggleConfig.logModelURL,
-                  activeContainers[0].cluster,
-                  activeContainers[0].namespace,
-                  pods,
-                  model.updated_at,
-                ),
-              });
+              if (featureToggleConfig.logModelURL) {
+                setPodLogUrls({
+                  ...podLogUrls,
+                  [params.component_type]: createLogModelUrl(
+                    featureToggleConfig.logModelURL,
+                    activeContainers[0].cluster,
+                    activeContainers[0].namespace,
+                    pods,
+                    model.updated_at,
+                  ),
+                });
+              } else {
+                // backward compatible to stackdriver
+                let stackdriverQuery = {
+                  gcp_project: activeContainers[0].gcp_project,
+                  cluster: activeContainers[0].cluster,
+                  namespace: activeContainers[0].namespace,
+                  pod_name: pods.map(pod => `"${pod}"`).join(" OR "),
+                  start_time: model.updated_at,
+                };
+                setPodLogUrls({
+                  ...podLogUrls,
+                  [params.component_type]: createStackdriverUrl(
+                      stackdriverQuery,
+                      params.component_type,
+                  ),
+                });
+              }
             }
           }
         }
