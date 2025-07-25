@@ -85,6 +85,12 @@ export const featureToggleConfig = {
         "false"
       )
     : false,
+  logImageBuilderURL: getEnv(
+      "REACT_APP_LOG_IMAGE_BUILDER_URL"
+  ),
+  logModelURL: getEnv(
+      "REACT_APP_LOG_MODEL_URL"
+  ),
 };
 
 export const costEstimationConfig = {
