@@ -184,7 +184,7 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
 				mockMeStorage.On("Save", context.Background(), mock.AnythingOfType("*models.ModelEndpoint"), mock.AnythingOfType("*models.ModelEndpoint")).Return(fmt.Errorf("failed to save"))
 
-				mockIstio.On("DeleteVirtualService", context.Background(), model1.Project.Name, model1.Name).Return(nil)
+				mockIstio.On("DeleteVirtualService", context.WithoutCancel(context.Background()), model1.Project.Name, model1.Name).Return(nil)
 			},
 			args: args{
 				context.Background(),
@@ -446,7 +446,7 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
 				mockMeStorage.On("Save", context.Background(), mock.AnythingOfType("*models.ModelEndpoint"), mock.AnythingOfType("*models.ModelEndpoint")).Return(fmt.Errorf("failed to save"))
 
-				mockIstio.On("PatchVirtualService", context.Background(), "project-1", vs).Return(vs, nil).Once()
+				mockIstio.On("PatchVirtualService", context.WithoutCancel(context.Background()), "project-1", vs).Return(vs, nil).Once()
 			},
 			args: args{
 				ctx:         context.Background(),
@@ -574,7 +574,7 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
 				mockMeStorage.On("Save", context.Background(), mock.AnythingOfType("*models.ModelEndpoint"), mock.AnythingOfType("*models.ModelEndpoint")).Return(fmt.Errorf("failed to save"))
 
-				mockIstio.On("CreateVirtualService", context.Background(), "project-1", mock.AnythingOfType("*v1beta1.VirtualService")).Return(vs, nil)
+				mockIstio.On("CreateVirtualService", context.WithoutCancel(context.Background()), "project-1", mock.AnythingOfType("*v1beta1.VirtualService")).Return(vs, nil)
 			},
 			args: args{
 				context.Background(),
