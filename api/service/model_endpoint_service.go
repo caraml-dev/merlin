@@ -124,6 +124,16 @@ func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *model
 		return nil, fmt.Errorf("unable to find istio client for environment: %s", endpoint.EnvironmentName)
 	}
 
+	// if there's error during VirtualService creation, we will rollback the changes, to make sure
+	// there's no hanging state of vs and to align with the database state
+	defer func() {
+		if err != nil {
+			if err := istioClient.DeleteVirtualService(context.WithoutCancel(ctx), model.Project.Name, model.Name); err != nil {
+				log.Errorf("failed to rollback create VirtualService: %v", err)
+			}
+		}
+	}()
+
 	// Deploy Istio's VirtualService
 	vs, err = istioClient.CreateVirtualService(ctx, model.Project.Name, vs)
 	if err != nil {
@@ -159,17 +169,34 @@ func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *model
 		return nil, errors.Wrapf(err, "failed to assign version endpoint to model endpoint")
 	}
 
+	istioClient, ok := s.istioClients[newEndpoint.EnvironmentName]
+	if !ok {
+		log.Errorf("unable to find istio client for environment: %s", newEndpoint.EnvironmentName)
+		return nil, fmt.Errorf("unable to find istio client for environment: %s", newEndpoint.EnvironmentName)
+	}
+
+	// Get current VirtualService
+	currentVs, err := istioClient.GetVirtualService(ctx, model.Project.Name, model.Name)
+	if client.IgnoreNotFound(err) != nil {
+		log.Errorf("failed to get VirtualService: %v", err)
+		return nil, errors.Wrapf(err, "failed to get VirtualService resource on cluster")
+	}
+
+	// rollback to previous virtualService state if there's error during update
+	defer func() {
+		if err != nil && currentVs != nil {
+			s.cleanVirtualServiceFields(currentVs)
+			if _, err := istioClient.PatchVirtualService(context.WithoutCancel(ctx), model.Project.Name, currentVs); err != nil {
+				log.Errorf("failed to rollback update VirtualService: %v", err)
+			}
+		}
+	}()
+
 	// Patch Istio's VirtualService
 	vs, err := s.createVirtualService(model, newEndpoint)
 	if err != nil {
 		log.Errorf("failed to create VirtualService specification: %v", err)
 		return nil, errors.Wrapf(err, "failed to create VirtualService specification")
-	}
-
-	istioClient, ok := s.istioClients[newEndpoint.EnvironmentName]
-	if !ok {
-		log.Errorf("unable to find istio client for environment: %s", newEndpoint.EnvironmentName)
-		return nil, fmt.Errorf("unable to find istio client for environment: %s", newEndpoint.EnvironmentName)
 	}
 
 	// Update Istio's VirtualService
@@ -208,8 +235,24 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 		return nil, fmt.Errorf("unable to find istio client for environment: %s", endpoint.EnvironmentName)
 	}
 
+	currentVs, err := istioClient.GetVirtualService(ctx, model.Project.Name, model.Name)
+	if client.IgnoreNotFound(err) != nil {
+		log.Errorf("failed to get VirtualService: %v", err)
+		return endpoint, nil
+	}
+
+	// rollback to previous virtualService state if there's error during delete
+	defer func() {
+		if err != nil && currentVs != nil {
+			s.cleanVirtualServiceFields(currentVs)
+			if _, err := istioClient.CreateVirtualService(context.WithoutCancel(ctx), model.Project.Name, currentVs); err != nil {
+				log.Errorf("failed to rollback delete VirtualService: %v", err)
+			}
+		}
+	}()
+
 	// Delete Istio's VirtualService
-	err := istioClient.DeleteVirtualService(ctx, model.Project.Name, model.Name)
+	err = istioClient.DeleteVirtualService(ctx, model.Project.Name, model.Name)
 	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed to delete VirtualService: %v", err)
 		return nil, errors.Wrapf(err, "failed to delete VirtualService resource on cluster")
@@ -340,6 +383,19 @@ func (c *modelEndpointsService) assignVersionEndpoint(ctx context.Context, endpo
 	}
 
 	return endpoint, nil
+}
+
+// cleanVirtualServiceFields reset fields that should not be sent in update request
+// otherwise, the request will be rejected by the API server
+func (c *modelEndpointsService) cleanVirtualServiceFields(vs *v1beta1.VirtualService) {
+	vs.SetResourceVersion("")
+	vs.SetUID("")
+	vs.SetSelfLink("")
+	vs.SetCreationTimestamp(metav1.Time{})
+	vs.SetGeneration(0)
+	vs.SetManagedFields(nil)
+	vs.SetOwnerReferences(nil)
+	vs.SetFinalizers(nil)
 }
 
 func createHttpRoutes(versionEndpointPath string, httpRouteDestinations []*istiov1beta1.HTTPRouteDestination, value protocol.Protocol) []*istiov1beta1.HTTPRoute {
