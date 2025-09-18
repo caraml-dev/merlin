@@ -425,12 +425,6 @@ jobs:
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-3.10-pipenv-python-sdk
-      # istio issue with newer version of helm https://github.com/istio/istio/issues/57354
-      # workaround until istio fixes the issue
-      - name: Use specific helm version
-        uses: azure/setup-helm@v3
-        with:
-          version: '3.18.4'
       - name: Download k3d
         run: |
           curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.0 bash

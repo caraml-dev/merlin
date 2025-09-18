@@ -388,6 +388,10 @@ func (c *modelEndpointsService) assignVersionEndpoint(ctx context.Context, endpo
 // cleanVirtualServiceFields reset fields that should not be sent in update request
 // otherwise, the request will be rejected by the API server
 func (c *modelEndpointsService) cleanVirtualServiceFields(vs *v1beta1.VirtualService) {
+	if vs == nil {
+		return
+	}
+
 	vs.SetResourceVersion("")
 	vs.SetUID("")
 	vs.SetSelfLink("")
