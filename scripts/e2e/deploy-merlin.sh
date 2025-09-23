@@ -30,7 +30,7 @@ install_merlin() {
     --values values-e2e.yaml \
     --set deployment.image.registry=${DOCKER_REGISTRY} \
     --set deployment.image.repository=merlin \
-    --set deployment.image.tag=${VERSION
+    --set deployment.image.tag=${VERSION} \
     --set merlin-postgresql.image.repository=${POSTGRES_IMAGE} \
     --set merlin-postgresql.image.tag=${POSTGRES_TAG} \
     --set mlflow-postgresql.image.repository=${POSTGRES_IMAGE} \
