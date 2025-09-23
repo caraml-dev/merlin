@@ -11,6 +11,9 @@ VERSION="$3"
 GIT_REF="$4"
 MERLIN_CHART_VERSION="$5"
 
+POSTGRES_IMAGE="bitnami/postgresql"
+POSTGRES_TAG="11.16.0-debian-11-r9"
+
 TIMEOUT=300s
 
 install_merlin() {
@@ -27,7 +30,13 @@ install_merlin() {
     --values values-e2e.yaml \
     --set deployment.image.registry=${DOCKER_REGISTRY} \
     --set deployment.image.repository=merlin \
-    --set deployment.image.tag=${VERSION} \
+    --set deployment.image.tag=${VERSION
+    --set merlin-postgresql.image.repository=${POSTGRES_IMAGE} \
+    --set merlin-postgresql.image.tag=${POSTGRES_TAG} \
+    --set mlflow-postgresql.image.repository=${POSTGRES_IMAGE} \
+    --set mlflow-postgresql.image.tag=${POSTGRES_TAG} \
+    --set mlp.postgresql.image.repository=${POSTGRES_IMAGE} \
+    --set mlp.postgresql.image.tag=${POSTGRES_TAG} \
     --set rendered.overrides.StandardTransformerConfig.ImageName=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
     --set imageBuilder.dockerRegistry=${DOCKER_REGISTRY} \
     --set imageBuilder.predictionJobBaseImages."3\.7\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py37:${VERSION} \
