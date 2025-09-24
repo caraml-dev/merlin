@@ -11,7 +11,7 @@ VERSION="$3"
 GIT_REF="$4"
 MERLIN_CHART_VERSION="$5"
 
-POSTGRES_IMAGE="bitnami/postgresql"
+POSTGRES_IMAGE="bitnamilegacy/postgresql"
 POSTGRES_TAG="11.16.0-debian-11-r9"
 
 TIMEOUT=300s
