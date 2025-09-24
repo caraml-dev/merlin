@@ -16,6 +16,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/caraml-dev/merlin/cluster/labeller"
@@ -24,7 +25,6 @@ import (
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/observability/event"
 	eventMock "github.com/caraml-dev/merlin/pkg/observability/event/mocks"
-
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/storage"
 	storageMock "github.com/caraml-dev/merlin/storage/mocks"
@@ -158,6 +158,41 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 			nil,
 			true,
 		},
+		{
+			name: "failure: save to database",
+			fields: fields{
+				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
+				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
+				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
+				environment:            "staging",
+				eventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
+			},
+			mockFunc: func(s *modelEndpointsService) {
+				vs, _ := s.createVirtualService(model1, modelEndpointRequest1)
+
+				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("CreateVirtualService", context.Background(), model1.Project.Name, vs).Return(vs, nil)
+
+				mockVeStorage := s.versionEndpointStorage.(*storageMock.VersionEndpointStorage)
+				mockVeStorage.On("Get", modelEndpointRequest1.Rule.Destination[0].VersionEndpointID).Return(versionEndpoint1, nil)
+
+				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
+				mockMeStorage.On("Save", context.Background(), mock.AnythingOfType("*models.ModelEndpoint"), mock.AnythingOfType("*models.ModelEndpoint")).Return(fmt.Errorf("failed to save"))
+
+				mockIstio.On("DeleteVirtualService", context.WithoutCancel(context.Background()), model1.Project.Name, model1.Name).Return(nil)
+			},
+			args: args{
+				context.Background(),
+				model1,
+				modelEndpointRequest1,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -176,12 +211,34 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 }
 
 func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
-	newVersionEndpoint := &models.VersionEndpoint{
+	originalVersionEndpoint := &models.VersionEndpoint{
 		ID:                   uuid.New(),
 		Status:               models.EndpointRunning,
 		URL:                  "http://version-1.project-1.mlp.io/v1/models/version-1:predict",
 		ServiceName:          "version-1-abcde",
 		InferenceServiceName: "version-1",
+		Namespace:            "project-1",
+		Protocol:             protocol.HttpJson,
+	}
+	originalModelEndpoint := &models.ModelEndpoint{
+		ModelID: 1,
+		Rule: &models.ModelEndpointRule{
+			Destination: []*models.ModelEndpointRuleDestination{
+				{
+					VersionEndpointID: originalVersionEndpoint.ID,
+					VersionEndpoint:   originalVersionEndpoint,
+					Weight:            int32(100),
+				},
+			},
+		},
+		EnvironmentName: env.Name,
+	}
+	newVersionEndpoint := &models.VersionEndpoint{
+		ID:                   uuid.New(),
+		Status:               models.EndpointRunning,
+		URL:                  "http://version-2.project-1.mlp.io/v1/models/version-1:predict",
+		ServiceName:          "version-2-abcde",
+		InferenceServiceName: "version-2",
 		Namespace:            "project-1",
 		Protocol:             protocol.HttpJson,
 	}
@@ -292,6 +349,8 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				vs, _ := s.createVirtualService(model1, updatedModelEndpointReq)
 
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(vs, nil)
+
 				mockIstio.On("PatchVirtualService", context.Background(), "project-1", vs).Return(vs, nil)
 
 				mockVeStorage := s.versionEndpointStorage.(*storageMock.VersionEndpointStorage)
@@ -326,6 +385,8 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				vs, _ := s.createVirtualService(model1, updatedUpiV1ModelEndpointReq)
 
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(vs, nil)
+
 				mockIstio.On("PatchVirtualService", context.Background(), "project-1", vs).Return(vs, nil)
 
 				mockVeStorage := s.versionEndpointStorage.(*storageMock.VersionEndpointStorage)
@@ -360,6 +421,8 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequestWrongEnvironment)
 
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(vs, nil)
+
 				mockIstio.On("PatchVirtualService", context.Background(), "project-1", vs).Return(vs, nil)
 
 				mockVeStorage := s.versionEndpointStorage.(*storageMock.VersionEndpointStorage)
@@ -376,6 +439,53 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 			},
 			nil,
 			true,
+		},
+		{
+			name: "failure: save to database",
+			fields: fields{
+				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
+				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
+				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
+				environment:            testEnvironmentName,
+				observabilityEventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
+			},
+			mockFunc: func(s *modelEndpointsService) {
+				vs, _ := s.createVirtualService(model1, updatedModelEndpointReq)
+				originalVs, _ := s.createVirtualService(model1, originalModelEndpoint)
+				originalVs.SetResourceVersion(uuid.New().String())
+
+				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(originalVs, nil)
+
+				mockIstio.On("PatchVirtualService", context.Background(), "project-1", vs).Return(vs, nil).Once()
+
+				mockVeStorage := s.versionEndpointStorage.(*storageMock.VersionEndpointStorage)
+				mockVeStorage.On("Get", updatedModelEndpointReq.Rule.Destination[0].VersionEndpointID).Return(newVersionEndpoint, nil)
+
+				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
+				mockMeStorage.On("Save", context.Background(), mock.AnythingOfType("*models.ModelEndpoint"), mock.AnythingOfType("*models.ModelEndpoint")).Return(fmt.Errorf("failed to save"))
+
+				mockIstio.On("PatchVirtualService", context.WithoutCancel(context.Background()), "project-1", mock.MatchedBy(func(rolledBackVs *v1beta1.VirtualService) bool {
+					assert.Equal(t, originalVs.ObjectMeta.Name, rolledBackVs.ObjectMeta.GetName())
+					assert.Equal(t, originalVs.ObjectMeta.Namespace, rolledBackVs.ObjectMeta.GetNamespace())
+					assert.Equal(t, originalVs.Spec.Http, rolledBackVs.Spec.GetHttp())
+					assert.Equal(t, "", rolledBackVs.GetResourceVersion())
+
+					return true
+				})).Return(vs, nil).Once()
+			},
+			args: args{
+				ctx:         context.Background(),
+				model:       model1,
+				oldEndpoint: modelEndpointRequest1,
+				newEndpoint: updatedModelEndpointReq,
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -433,6 +543,8 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(nil, nil)
+
 				mockIstio.On("DeleteVirtualService", context.Background(), "project-1", "model-1").Return(nil)
 
 				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
@@ -456,6 +568,8 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 			},
 			func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(nil, nil)
+
 				mockIstio.On("DeleteVirtualService", context.Background(), "project-1", "model-1").Return(nil)
 			},
 			args{
@@ -465,6 +579,48 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 			},
 			nil,
 			true,
+		},
+		{
+			name: "failure: save to database",
+			fields: fields{
+				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
+				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
+				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
+				environment:            testEnvironmentName,
+				observabilityEventProducer: func() event.EventProducer {
+					eProducer := &eventMock.EventProducer{}
+					eProducer.On("ModelEndpointChangeEvent", mock.Anything, mock.Anything).Return(nil)
+					return eProducer
+				}(),
+			},
+			mockFunc: func(s *modelEndpointsService) {
+				vs, _ := s.createVirtualService(model1, modelEndpointRequest1)
+				vs.SetResourceVersion(uuid.New().String())
+
+				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
+				mockIstio.On("GetVirtualService", context.Background(), "project-1", "model-1").Return(vs, nil)
+
+				mockIstio.On("DeleteVirtualService", context.Background(), "project-1", "model-1").Return(nil)
+
+				mockMeStorage := s.modelEndpointStorage.(*storageMock.ModelEndpointStorage)
+				mockMeStorage.On("Save", context.Background(), mock.AnythingOfType("*models.ModelEndpoint"), mock.AnythingOfType("*models.ModelEndpoint")).Return(fmt.Errorf("failed to save"))
+
+				mockIstio.On("CreateVirtualService", context.WithoutCancel(context.Background()), "project-1", mock.MatchedBy(func(rolledBackVs *v1beta1.VirtualService) bool {
+					assert.Equal(t, vs.ObjectMeta.Name, rolledBackVs.ObjectMeta.GetName())
+					assert.Equal(t, vs.ObjectMeta.Namespace, rolledBackVs.ObjectMeta.GetNamespace())
+					assert.Equal(t, vs.Spec.Http, rolledBackVs.Spec.GetHttp())
+					assert.Equal(t, "", rolledBackVs.GetResourceVersion())
+
+					return true
+				})).Return(vs, nil)
+			},
+			args: args{
+				context.Background(),
+				model1,
+				modelEndpointResponse1,
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

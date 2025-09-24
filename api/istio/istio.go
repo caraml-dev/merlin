@@ -41,6 +41,7 @@ type Config struct {
 
 // Client interface.
 type Client interface {
+	GetVirtualService(ctx context.Context, namespace, name string) (*istiov1beta1.VirtualService, error)
 	CreateVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error)
 	PatchVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error)
 	DeleteVirtualService(ctx context.Context, namespace, name string) error
@@ -69,6 +70,10 @@ func newClient(networking networkingv1beta1.NetworkingV1beta1Interface) (*client
 	return &client{
 		networking: networking,
 	}, nil
+}
+
+func (c *client) GetVirtualService(ctx context.Context, namespace, name string) (*istiov1beta1.VirtualService, error) {
+	return c.networking.VirtualServices(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 func (c *client) CreateVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error) {

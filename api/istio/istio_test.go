@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	istionetv1beta1 "istio.io/api/networking/v1beta1"
@@ -75,6 +76,83 @@ var (
 		},
 	}
 )
+
+func Test_client_GetVirtualService(t *testing.T) {
+	clientSet := istiofake.Clientset{}
+	type fields struct {
+		networking istiocliv1beta1.NetworkingV1beta1Interface
+	}
+	type args struct {
+		ctx       context.Context
+		namespace string
+		name      string
+	}
+
+	tests := []struct {
+		name     string
+		fields   fields
+		mockFunc func(m istiocliv1beta1.NetworkingV1beta1Interface)
+		args     args
+		want     *istiov1beta1.VirtualService
+		wantErr  bool
+	}{
+		{
+			name: "success",
+			fields: fields{
+				networking: clientSet.NetworkingV1beta1(),
+			},
+			mockFunc: func(mockNetworking istiocliv1beta1.NetworkingV1beta1Interface) {
+				mockVirtualService := mockNetworking.VirtualServices("default").(*istiocliv1beta1fake.FakeVirtualServices)
+				mockVirtualService.Fake.PrependReactor("get", "virtualservices", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, validVirtualService, nil
+				})
+			},
+			args: args{
+				ctx:       context.Background(),
+				namespace: "default",
+				name:      "valid",
+			},
+			want:    validVirtualService,
+			wantErr: false,
+		},
+		{
+			name: "not found",
+			fields: fields{
+				networking: clientSet.NetworkingV1beta1(),
+			},
+			mockFunc: func(mockNetworking istiocliv1beta1.NetworkingV1beta1Interface) {
+				mockVirtualService := mockNetworking.VirtualServices("default").(*istiocliv1beta1fake.FakeVirtualServices)
+				mockVirtualService.Fake.PrependReactor("get", "virtualservices", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, nil, errors.New("virtualservice not found")
+				})
+			},
+			args: args{
+				ctx:       context.Background(),
+				namespace: "default",
+				name:      "not-exist",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, _ := newClient(tt.fields.networking)
+
+			tt.mockFunc(c.networking)
+
+			got, err := c.GetVirtualService(tt.args.ctx, tt.args.namespace, tt.args.name)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("client.GetVirtualService() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("client.GetVirtualService() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func Test_client_CreateVirtualService(t *testing.T) {
 	clientSet := istiofake.Clientset{}
