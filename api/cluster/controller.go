@@ -407,6 +407,10 @@ func (c *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceS
 			err = fmt.Errorf("%w\n\nPod container status:\n%s", err, podContainerTable)
 		}
 
+		if podLastTerminationReason != "" {
+			err = fmt.Errorf("%w\n\nPod last termination reason: %s", err, podLastTerminationReason)
+		}
+
 		if podLastTerminationMessage != "" {
 			err = fmt.Errorf("%w\n\nPod last termination message:\n%s", err, podLastTerminationMessage)
 		}

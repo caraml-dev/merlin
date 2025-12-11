@@ -156,6 +156,9 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 				prevEndpoint.Status = models.EndpointFailed
 			}
 
+			// Propagate Kubernetes error details to user via endpoint message
+			prevEndpoint.Message = deployment.Error
+
 			// record the version endpoint result if deployment
 			if err := depl.Storage.Save(prevEndpoint); err != nil {
 				log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
