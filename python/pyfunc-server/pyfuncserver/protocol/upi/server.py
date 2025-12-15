@@ -71,7 +71,9 @@ class UPIServer:
 
     def _run_server_sync(self):
         """Synchronous wrapper to run the async server in a new event loop."""
-        asyncio.run(self._run_server())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self._run_server())
 
     async def _run_server(self):
         """
