@@ -13,6 +13,7 @@ import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
+import { LivenessProbeFormGroup } from "../components/LivnessConfigFormGroup";
 
 export const TransformerStep = ({ maxAllowedReplica }) => {
   const {
@@ -48,6 +49,12 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
                   buttonContent="Advanced configurations">
                   <EuiSpacer size="s" />
                   <CPULimitsFormGroup
+                    resourcesConfig={transformer.resource_request}
+                    onChangeHandler={onChange("transformer.resource_request")}
+                    errors={get(errors, "transformer.resource_request")}
+                  />
+                  <EuiSpacer size="m" />
+                  <LivenessProbeFormGroup
                     resourcesConfig={transformer.resource_request}
                     onChangeHandler={onChange("transformer.resource_request")}
                     errors={get(errors, "transformer.resource_request")}

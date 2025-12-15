@@ -119,8 +119,8 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
-	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson, fmt.Sprintf("/v1/models/%s", modelSvc.Name), nil)
+	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1, fmt.Sprintf("/v1/models/%s", modelSvc.Name), nil)
 
 	tests := []struct {
 		name               string

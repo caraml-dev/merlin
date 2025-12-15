@@ -14,6 +14,7 @@ import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
+import { LivenessProbeFormGroup } from "../components/LivnessConfigFormGroup";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -48,6 +49,12 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
               buttonContent="Advanced configurations">
               <EuiSpacer size="s" />
               <CPULimitsFormGroup
+                resourcesConfig={data.resource_request}
+                onChangeHandler={onChange("resource_request")}
+                errors={get(errors, "resource_request")}
+              />
+              <EuiSpacer size="m" />
+              <LivenessProbeFormGroup
                 resourcesConfig={data.resource_request}
                 onChangeHandler={onChange("resource_request")}
                 errors={get(errors, "resource_request")}

@@ -37,6 +37,16 @@ type ResourceRequest struct {
 	GPUName string `json:"gpu_name,omitempty"`
 	// GPU Quantity requests
 	GPURequest resource.Quantity `json:"gpu_request,omitempty"`
+	// Liveness probe initial delay seconds
+	LivenessProbeInitialDelaySeconds *int32 `json:"liveness_probe_initial_delay_seconds,omitempty"`
+	// Liveness probe period seconds
+	LivenessProbePeriodSeconds *int32 `json:"liveness_probe_period_seconds,omitempty"`
+	// Liveness probe timeout seconds
+	LivenessProbeTimeoutSeconds *int32 `json:"liveness_probe_timeout_seconds,omitempty"`
+	// Liveness probe success threshold
+	LivenessProbeSuccessThreshold *int32 `json:"liveness_probe_success_threshold,omitempty"`
+	// Liveness probe failure threshold
+	LivenessProbeFailureThreshold *int32 `json:"liveness_probe_failure_threshold,omitempty"`
 }
 
 func (r ResourceRequest) Value() (driver.Value, error) {

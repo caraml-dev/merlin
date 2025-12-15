@@ -237,7 +237,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		}
 	}
 
-	livenessProbeConfig := getLivenessProbeConfig(modelService.PredictorProtocol(), envVars, fmt.Sprintf("/v1/models/%s", modelService.Name))
+	livenessProbeConfig := getLivenessProbeConfig(modelService.PredictorProtocol(), envVars, fmt.Sprintf("/v1/models/%s", modelService.Name), modelService.ResourceRequest)
 
 	containerPorts := createContainerPorts(modelService.PredictorProtocol(), modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
@@ -411,7 +411,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 		}
 	}
 
-	livenessProbeConfig := getLivenessProbeConfig(modelService.Protocol, envVars, "/")
+	livenessProbeConfig := getLivenessProbeConfig(modelService.Protocol, envVars, "/", transformer.ResourceRequest)
 
 	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	transformerSpec := &kservev1beta1.TransformerSpec{
@@ -515,7 +515,7 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	return envVars
 }
 
-func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
+func createHTTPGetLivenessProbe(httpPath string, port int, resourceRequest *models.ResourceRequest) *corev1.Probe {
 	return &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
@@ -526,45 +526,81 @@ func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
 				},
 			},
 		},
-		InitialDelaySeconds: liveProbeInitialDelaySec,
-		TimeoutSeconds:      liveProbeTimeoutSec,
-		PeriodSeconds:       liveProbePeriodSec,
-		SuccessThreshold:    liveProbeSuccessThreshold,
-		FailureThreshold:    liveProbeFailureThreshold,
+		InitialDelaySeconds: getLivenessProbeInitialDelaySeconds(resourceRequest),
+		TimeoutSeconds:      getLivenessProbeTimeoutSeconds(resourceRequest),
+		PeriodSeconds:       getLivenessProbePeriodSeconds(resourceRequest),
+		SuccessThreshold:    getLivenessProbeSuccessThreshold(resourceRequest),
+		FailureThreshold:    getLivenessProbeFailureThreshold(resourceRequest),
 	}
 }
 
-func createGRPCLivenessProbe(port int) *corev1.Probe {
+func createGRPCLivenessProbe(port int, resourceRequest *models.ResourceRequest) *corev1.Probe {
 	return &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
 				Command: []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", port)},
 			},
 		},
-		InitialDelaySeconds: liveProbeInitialDelaySec,
-		TimeoutSeconds:      liveProbeTimeoutSec,
-		PeriodSeconds:       liveProbePeriodSec,
-		SuccessThreshold:    liveProbeSuccessThreshold,
-		FailureThreshold:    liveProbeFailureThreshold,
+		InitialDelaySeconds: getLivenessProbeInitialDelaySeconds(resourceRequest),
+		TimeoutSeconds:      getLivenessProbeTimeoutSeconds(resourceRequest),
+		PeriodSeconds:       getLivenessProbePeriodSeconds(resourceRequest),
+		SuccessThreshold:    getLivenessProbeSuccessThreshold(resourceRequest),
+		FailureThreshold:    getLivenessProbeFailureThreshold(resourceRequest),
 	}
 }
 
-func getLivenessProbeConfig(protocol prt.Protocol, envVars []corev1.EnvVar, httpPath string) *corev1.Probe {
+func getLivenessProbeConfig(protocol prt.Protocol, envVars []corev1.EnvVar, httpPath string, resourceRequest *models.ResourceRequest) *corev1.Probe {
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := getEnvVarMap(envVars)
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe].Value, "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe].Value, "true") {
-		livenessProbeConfig = createLivenessProbeSpec(protocol, httpPath)
+		livenessProbeConfig = createLivenessProbeSpec(protocol, httpPath, resourceRequest)
 	}
 	return livenessProbeConfig
 }
 
-func createLivenessProbeSpec(protocol prt.Protocol, httpPath string) *corev1.Probe {
+func createLivenessProbeSpec(protocol prt.Protocol, httpPath string, resourceRequest *models.ResourceRequest) *corev1.Probe {
 	if protocol == prt.UpiV1 {
-		return createGRPCLivenessProbe(defaultGRPCPort)
+		return createGRPCLivenessProbe(defaultGRPCPort, resourceRequest)
 	}
-	return createHTTPGetLivenessProbe(httpPath, defaultHTTPPort)
+	return createHTTPGetLivenessProbe(httpPath, defaultHTTPPort, resourceRequest)
+}
+
+// Helper functions to get liveness probe values with fallback to defaults
+func getLivenessProbeInitialDelaySeconds(resourceRequest *models.ResourceRequest) int32 {
+	if resourceRequest != nil && resourceRequest.LivenessProbeInitialDelaySeconds != nil {
+		return *resourceRequest.LivenessProbeInitialDelaySeconds
+	}
+	return liveProbeInitialDelaySec
+}
+
+func getLivenessProbeTimeoutSeconds(resourceRequest *models.ResourceRequest) int32 {
+	if resourceRequest != nil && resourceRequest.LivenessProbeTimeoutSeconds != nil {
+		return *resourceRequest.LivenessProbeTimeoutSeconds
+	}
+	return liveProbeTimeoutSec
+}
+
+func getLivenessProbePeriodSeconds(resourceRequest *models.ResourceRequest) int32 {
+	if resourceRequest != nil && resourceRequest.LivenessProbePeriodSeconds != nil {
+		return *resourceRequest.LivenessProbePeriodSeconds
+	}
+	return liveProbePeriodSec
+}
+
+func getLivenessProbeSuccessThreshold(resourceRequest *models.ResourceRequest) int32 {
+	if resourceRequest != nil && resourceRequest.LivenessProbeSuccessThreshold != nil {
+		return *resourceRequest.LivenessProbeSuccessThreshold
+	}
+	return liveProbeSuccessThreshold
+}
+
+func getLivenessProbeFailureThreshold(resourceRequest *models.ResourceRequest) int32 {
+	if resourceRequest != nil && resourceRequest.LivenessProbeFailureThreshold != nil {
+		return *resourceRequest.LivenessProbeFailureThreshold
+	}
+	return liveProbeFailureThreshold
 }
 
 func createPredictorHost(modelService *models.Service) string {

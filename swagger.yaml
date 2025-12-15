@@ -2117,6 +2117,21 @@ components:
           type: string
         gpu_request:
           type: string
+        liveness_probe_initial_delay_seconds:
+          type: integer
+          description: Initial delay in seconds before liveness probe is started
+        liveness_probe_period_seconds:
+          type: integer
+          description: How often (in seconds) to perform the liveness probe
+        liveness_probe_timeout_seconds:
+          type: integer
+          description: Number of seconds after which the liveness probe times out
+        liveness_probe_success_threshold:
+          type: integer
+          description: Minimum consecutive successes for the liveness probe to be considered successful
+        liveness_probe_failure_threshold:
+          type: integer
+          description: Minimum consecutive failures for the liveness probe to be considered failed
     AutoscalingPolicy:
       type: object
       required:
