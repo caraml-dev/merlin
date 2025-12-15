@@ -57,7 +57,7 @@ class UPIServer:
             # multiprocessing based on https://github.com/grpc/grpc/tree/master/examples/python/multiprocessing
             workers = []
             for _ in range(self._config.workers - 1):
-                worker = multiprocessing.Process(target=self._run_server)
+                worker = multiprocessing.Process(target=self._run_server_sync)
                 worker.start()
                 workers.append(worker)
         
@@ -67,7 +67,13 @@ class UPIServer:
             publisher = Publisher(kafka_producer, sampler)
             self._predict_service.set_publisher(publisher)
 
-        asyncio.get_event_loop().run_until_complete(self._run_server())
+        self._run_server_sync()
+
+    def _run_server_sync(self):
+        """Synchronous wrapper to run the async server in a new event loop."""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self._run_server())
 
     async def _run_server(self):
         """
