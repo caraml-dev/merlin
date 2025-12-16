@@ -28,6 +28,11 @@ export class VersionEndpoint {
       cpu_request: "500m",
       cpu_limit: "",
       memory_request: "512Mi",
+      liveness_probe_initial_delay_seconds: undefined,
+      liveness_probe_period_seconds: undefined,
+      liveness_probe_timeout_seconds: undefined,
+      liveness_probe_success_threshold: undefined,
+      liveness_probe_failure_threshold: undefined,
     };
 
     this.image_builder_resource_request = {

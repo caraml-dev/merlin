@@ -23,7 +23,12 @@ export class Transformer {
       max_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 4 : 2,
       cpu_request: "500m",
       cpu_limit: "",
-      memory_request: "512Mi"
+      memory_request: "512Mi",
+      liveness_probe_initial_delay_seconds: undefined,
+      liveness_probe_period_seconds: undefined,
+      liveness_probe_timeout_seconds: undefined,
+      liveness_probe_success_threshold: undefined,
+      liveness_probe_failure_threshold: undefined,
     };
 
     this.env_vars = [];

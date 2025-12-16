@@ -27,6 +27,11 @@ export const ResourcesConfigTable = ({
     max_replica,
     gpu_name,
     gpu_request,
+    liveness_probe_initial_delay_seconds,
+    liveness_probe_period_seconds,
+    liveness_probe_timeout_seconds,
+    liveness_probe_success_threshold,
+    liveness_probe_failure_threshold,
   },
 }) => {
   const items = [
@@ -65,6 +70,42 @@ export const ResourcesConfigTable = ({
     items.push({
       title: "GPU Request",
       description: gpu_request,
+    });
+  }
+
+  // Add liveness probe configuration if any value is set
+  if (liveness_probe_initial_delay_seconds !== undefined && liveness_probe_initial_delay_seconds !== null) {
+    items.push({
+      title: "Liveness Initial Delay",
+      description: `${liveness_probe_initial_delay_seconds}s`,
+    });
+  }
+
+  if (liveness_probe_period_seconds !== undefined && liveness_probe_period_seconds !== null) {
+    items.push({
+      title: "Liveness Period",
+      description: `${liveness_probe_period_seconds}s`,
+    });
+  }
+
+  if (liveness_probe_timeout_seconds !== undefined && liveness_probe_timeout_seconds !== null) {
+    items.push({
+      title: "Liveness Timeout",
+      description: `${liveness_probe_timeout_seconds}s`,
+    });
+  }
+
+  if (liveness_probe_success_threshold !== undefined && liveness_probe_success_threshold !== null) {
+    items.push({
+      title: "Liveness Success Threshold",
+      description: liveness_probe_success_threshold,
+    });
+  }
+
+  if (liveness_probe_failure_threshold !== undefined && liveness_probe_failure_threshold !== null) {
+    items.push({
+      title: "Liveness Failure Threshold",
+      description: liveness_probe_failure_threshold,
     });
   }
 
