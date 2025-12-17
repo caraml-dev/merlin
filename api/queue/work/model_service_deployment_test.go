@@ -699,6 +699,7 @@ func TestExecuteDeployment(t *testing.T) {
 					ResourceRequest: env.DefaultResourceRequest,
 					VersionID:       version.ID,
 					Namespace:       project.Name,
+					Message:         "Failed to deploy",
 				}, nil)
 				return mockStorage
 			},
@@ -745,6 +746,7 @@ func TestExecuteDeployment(t *testing.T) {
 					ResourceRequest: env.DefaultResourceRequest,
 					VersionID:       version.ID,
 					Namespace:       project.Name,
+					Message:         "Failed to build image",
 				}, nil)
 				return mockStorage
 			},
@@ -1189,6 +1191,7 @@ func TestExecuteRedeployment(t *testing.T) {
 					RevisionID:           models.ID(1),
 					InferenceServiceName: fmt.Sprintf("%s-%d-1", model.Name, version.ID),
 					Status:               models.EndpointRunning,
+					Message:              "Failed to deploy",
 				}).Return(nil)
 				return mockStorage
 			},
