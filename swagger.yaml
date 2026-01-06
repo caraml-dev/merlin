@@ -2117,6 +2117,43 @@ components:
           type: string
         gpu_request:
           type: string
+        liveness_probe:
+          "$ref": "#/components/schemas/ProbeConfig"
+        readiness_probe:
+          "$ref": "#/components/schemas/ProbeConfig"
+    ProbeConfig:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Path for HTTP probe
+        port:
+          type: integer
+          format: int32
+          description: Port for the probe
+        scheme:
+          type: string
+          description: Scheme for HTTP probe (HTTP or HTTPS)
+        initial_delay_seconds:
+          type: integer
+          format: int32
+          description: Initial delay before starting the probe (seconds)
+        timeout_seconds:
+          type: integer
+          format: int32
+          description: Timeout for the probe (seconds)
+        period_seconds:
+          type: integer
+          format: int32
+          description: Period between probe checks (seconds)
+        success_threshold:
+          type: integer
+          format: int32
+          description: Number of successes required to be considered healthy
+        failure_threshold:
+          type: integer
+          format: int32
+          description: Number of failures before considered unhealthy
     AutoscalingPolicy:
       type: object
       required:

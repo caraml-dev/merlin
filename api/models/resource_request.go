@@ -37,6 +37,30 @@ type ResourceRequest struct {
 	GPUName string `json:"gpu_name,omitempty"`
 	// GPU Quantity requests
 	GPURequest resource.Quantity `json:"gpu_request,omitempty"`
+	// Liveness probe configuration
+	LivenessProbe *ProbeConfig `json:"liveness_probe,omitempty"`
+	// Readiness probe configuration
+	ReadinessProbe *ProbeConfig `json:"readiness_probe,omitempty"`
+}
+
+// ProbeConfig represents the configuration for Kubernetes liveness/readiness probes
+type ProbeConfig struct {
+	// Path for HTTP probe (for HTTP-based probes)
+	Path string `json:"path,omitempty"`
+	// Port for the probe
+	Port int32 `json:"port,omitempty"`
+	// Scheme for HTTP probe (HTTP or HTTPS)
+	Scheme string `json:"scheme,omitempty"`
+	// Initial delay before starting the probe (seconds)
+	InitialDelaySeconds int32 `json:"initial_delay_seconds,omitempty"`
+	// Timeout for the probe (seconds)
+	TimeoutSeconds int32 `json:"timeout_seconds,omitempty"`
+	// Period between probe checks (seconds)
+	PeriodSeconds int32 `json:"period_seconds,omitempty"`
+	// Number of successes required to be considered healthy
+	SuccessThreshold int32 `json:"success_threshold,omitempty"`
+	// Number of failures before considered unhealthy
+	FailureThreshold int32 `json:"failure_threshold,omitempty"`
 }
 
 func (r ResourceRequest) Value() (driver.Value, error) {
