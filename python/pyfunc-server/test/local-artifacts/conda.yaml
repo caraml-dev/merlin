@@ -6,3 +6,4 @@ dependencies:
       - numpy<=1.23.5
       - scikit-learn>=1.1.2
       - xgboost==1.6.2
+      - merlin-sdk>=0.49.3
