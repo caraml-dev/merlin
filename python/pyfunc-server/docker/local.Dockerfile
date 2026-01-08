@@ -7,6 +7,7 @@ COPY ${MODEL_DEPENDENCIES_URL} conda.yaml
 
 ARG MERLIN_DEP_CONSTRAINT
 RUN process_conda_env.sh conda.yaml "merlin-pyfunc-server" "${MERLIN_DEP_CONSTRAINT}"
+RUN process_conda_env.sh conda.yaml "merlin-sdk" "${MERLIN_DEP_CONSTRAINT}"
 RUN conda env create --name merlin-model --file conda.yaml
 
 # Download and dry-run user model artifacts and code
