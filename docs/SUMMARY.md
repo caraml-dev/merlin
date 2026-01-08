@@ -43,3 +43,4 @@
 
 * [Installing Merlin](/maintainer/generated/00_setting_up.md)
 * [Troubleshooting Merlin](/maintainer/generated/01_troubleshooting.md)
+
