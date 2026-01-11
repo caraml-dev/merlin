@@ -28,6 +28,8 @@ export class VersionEndpoint {
       cpu_request: "500m",
       cpu_limit: "",
       memory_request: "512Mi",
+      liveness_probe: null,
+      readiness_probe: null,
     };
 
     this.image_builder_resource_request = {

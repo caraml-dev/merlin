@@ -27,6 +27,8 @@ export const ResourcesConfigTable = ({
     max_replica,
     gpu_name,
     gpu_request,
+    liveness_probe,
+    readiness_probe,
   },
 }) => {
   const items = [
@@ -66,6 +68,40 @@ export const ResourcesConfigTable = ({
       title: "GPU Request",
       description: gpu_request,
     });
+  }
+
+  // Add liveness probe info if configured
+  if (liveness_probe && Object.keys(liveness_probe).some(k => liveness_probe[k])) {
+    const probeDetails = [];
+    if (liveness_probe.initial_delay_seconds) probeDetails.push(`delay: ${liveness_probe.initial_delay_seconds}s`);
+    if (liveness_probe.timeout_seconds) probeDetails.push(`timeout: ${liveness_probe.timeout_seconds}s`);
+    if (liveness_probe.period_seconds) probeDetails.push(`period: ${liveness_probe.period_seconds}s`);
+    if (liveness_probe.failure_threshold) probeDetails.push(`failures: ${liveness_probe.failure_threshold}`);
+    if (liveness_probe.success_threshold) probeDetails.push(`successes: ${liveness_probe.success_threshold}`);
+    if (liveness_probe.path) probeDetails.push(`path: ${liveness_probe.path}`);
+    if (probeDetails.length > 0) {
+      items.push({
+        title: "Liveness Probe",
+        description: probeDetails.join(", "),
+      });
+    }
+  }
+
+  // Add readiness probe info if configured
+  if (readiness_probe && Object.keys(readiness_probe).some(k => readiness_probe[k])) {
+    const probeDetails = [];
+    if (readiness_probe.initial_delay_seconds) probeDetails.push(`delay: ${readiness_probe.initial_delay_seconds}s`);
+    if (readiness_probe.timeout_seconds) probeDetails.push(`timeout: ${readiness_probe.timeout_seconds}s`);
+    if (readiness_probe.period_seconds) probeDetails.push(`period: ${readiness_probe.period_seconds}s`);
+    if (readiness_probe.failure_threshold) probeDetails.push(`failures: ${readiness_probe.failure_threshold}`);
+    if (readiness_probe.success_threshold) probeDetails.push(`successes: ${readiness_probe.success_threshold}`);
+    if (readiness_probe.path) probeDetails.push(`path: ${readiness_probe.path}`);
+    if (probeDetails.length > 0) {
+      items.push({
+        title: "Readiness Probe",
+        description: probeDetails.join(", "),
+      });
+    }
   }
 
   return (

@@ -14,6 +14,7 @@ import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
+import { ProbesFormGroup } from "../components/ProbesFormGroup";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -52,6 +53,13 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
                 onChangeHandler={onChange("resource_request")}
                 errors={get(errors, "resource_request")}
               />
+              <EuiSpacer size="m" />
+              <ProbesFormGroup
+                resourcesConfig={data.resource_request}
+                onChangeHandler={onChange("resource_request")}
+                errors={get(errors, "resource_request")}
+              />
+              <EuiSpacer size="m" />
               <ImageBuilderSection
                 imageBuilderResourceConfig={data.image_builder_resource_request}
                 onChangeHandler={onChange("image_builder_resource_request")}
