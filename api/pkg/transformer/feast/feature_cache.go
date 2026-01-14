@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -143,6 +144,7 @@ func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, columnNames []s
 	if err != nil {
 		return err
 	}
+	log.Debugf("insert features of key %v \n value: %v", key, cacheValue)
 	return fc.cache.Insert(keyByte, dataByte, fc.ttl)
 }
 
