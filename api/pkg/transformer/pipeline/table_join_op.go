@@ -11,6 +11,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 type TableJoinOp struct {
@@ -53,6 +54,25 @@ func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) erro
 	joinColumns := []string{t.tableJoinSpec.OnColumn}
 	if len(t.tableJoinSpec.OnColumns) > 0 {
 		joinColumns = t.tableJoinSpec.OnColumns
+	}
+
+	// Log table states (shape + column names) before the join.
+	// This avoids dumping full data but is enough to debug mismatched schemas or empty tables.
+	if environment != nil {
+		if ce := environment.logger.Check(zap.DebugLevel, "table_join input tables"); ce != nil {
+			ce.Write(
+				zap.String("left_table", t.tableJoinSpec.LeftTable),
+				zap.Int("left_nrow", leftTable.NRow()),
+				zap.Int("left_ncol", len(leftTable.ColumnNames())),
+				zap.Strings("left_columns", leftTable.ColumnNames()),
+				zap.String("right_table", t.tableJoinSpec.RightTable),
+				zap.Int("right_nrow", rightTable.NRow()),
+				zap.Int("right_ncol", len(rightTable.ColumnNames())),
+				zap.Strings("right_columns", rightTable.ColumnNames()),
+				zap.String("how", t.tableJoinSpec.How.String()),
+				zap.Strings("join_columns", joinColumns),
+			)
+		}
 	}
 
 	switch t.tableJoinSpec.How {
