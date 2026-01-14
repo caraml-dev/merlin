@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -115,6 +114,10 @@ func (fc *featureCache) insertFeatureTable(featureTable *internalFeatureTable, p
 	for idx, entity := range featureTable.entities {
 		if err := fc.insertFeaturesOfEntity(entity, featureTable.columnNames, project, featureTable.valueRows[idx], featureTable.columnTypes); err != nil {
 			errorMsgs = append(errorMsgs, fmt.Sprintf("(value: %v, with message: %v)", featureTable.valueRows[idx], err.Error()))
+		} else {
+			fmt.Printf("CACHE INSERT: entity=%v, project=%s, columns=%v, values=%v\n",
+				entity, project, featureTable.columnNames, featureTable.valueRows[idx])
+
 		}
 	}
 	if len(errorMsgs) > 0 {
@@ -144,7 +147,6 @@ func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, columnNames []s
 	if err != nil {
 		return err
 	}
-	log.Debugf("insert features of key %v \n value: %v", key, cacheValue)
 	return fc.cache.Insert(keyByte, dataByte, fc.ttl)
 }
 
