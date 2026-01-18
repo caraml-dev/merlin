@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Optional
 
 import client
+from merlin.probe_config import ProbeConfig
 
 
 class ResourceRequest:
@@ -32,6 +33,8 @@ class ResourceRequest:
         memory_request: Optional[str] = None,
         gpu_request: Optional[str] = None,
         gpu_name: Optional[str] = None,
+        liveness_probe: Optional[ProbeConfig] = None,
+        readiness_probe: Optional[ProbeConfig] = None,
     ):
         self._min_replica = min_replica
         self._max_replica = max_replica
@@ -40,10 +43,21 @@ class ResourceRequest:
         self._memory_request = memory_request
         self._gpu_request = gpu_request
         self._gpu_name = gpu_name
+        self._liveness_probe = liveness_probe
+        self._readiness_probe = readiness_probe
         self.validate()
 
     @classmethod
     def from_response(cls, response: client.ResourceRequest) -> ResourceRequest:
+        liveness_probe = None
+        readiness_probe = None
+
+        if hasattr(response, 'liveness_probe') and response.liveness_probe is not None:
+            liveness_probe = ProbeConfig.from_response(response.liveness_probe)
+
+        if hasattr(response, 'readiness_probe') and response.readiness_probe is not None:
+            readiness_probe = ProbeConfig.from_response(response.readiness_probe)
+
         return ResourceRequest(
             min_replica=response.min_replica,
             max_replica=response.max_replica,
@@ -52,6 +66,8 @@ class ResourceRequest:
             memory_request=response.memory_request,
             gpu_request=response.gpu_request,
             gpu_name=response.gpu_name,
+            liveness_probe=liveness_probe,
+            readiness_probe=readiness_probe,
         )
 
     @property
@@ -109,6 +125,22 @@ class ResourceRequest:
     @gpu_name.setter
     def gpu_name(self, gpu_name):
         self._gpu_name = gpu_name
+
+    @property
+    def liveness_probe(self) -> Optional[ProbeConfig]:
+        return self._liveness_probe
+
+    @liveness_probe.setter
+    def liveness_probe(self, liveness_probe):
+        self._liveness_probe = liveness_probe
+
+    @property
+    def readiness_probe(self) -> Optional[ProbeConfig]:
+        return self._readiness_probe
+
+    @readiness_probe.setter
+    def readiness_probe(self, readiness_probe):
+        self._readiness_probe = readiness_probe
 
     def validate(self):
         if self._min_replica is None and self._max_replica is None:

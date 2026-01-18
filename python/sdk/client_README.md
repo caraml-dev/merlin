@@ -186,6 +186,7 @@ Class | Method | HTTP request | Description
  - [PredictionJobResourceRequest](client/docs/PredictionJobResourceRequest.md)
  - [PredictionLogIngestionResourceRequest](client/docs/PredictionLogIngestionResourceRequest.md)
  - [PredictionLoggerConfig](client/docs/PredictionLoggerConfig.md)
+ - [ProbeConfig](client/docs/ProbeConfig.md)
  - [Project](client/docs/Project.md)
  - [Protocol](client/docs/Protocol.md)
  - [RankingOutput](client/docs/RankingOutput.md)

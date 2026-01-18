@@ -1276,13 +1276,30 @@ class ModelVersion:
 
         if resource_request is not None:
             resource_request.validate()
+
+            # Convert probe configs to client models if present
+            liveness_probe_client = None
+            readiness_probe_client = None
+            if resource_request.liveness_probe is not None:
+                liveness_probe_client = resource_request.liveness_probe.to_client_probe_config()
+                print(f"DEBUG model.py: liveness_probe_client = {liveness_probe_client}")
+                print(f"DEBUG model.py: liveness_probe_client.to_dict() = {liveness_probe_client.to_dict()}")
+            if resource_request.readiness_probe is not None:
+                readiness_probe_client = resource_request.readiness_probe.to_client_probe_config()
+                print(f"DEBUG model.py: readiness_probe_client = {readiness_probe_client}")
+                print(f"DEBUG model.py: readiness_probe_client.to_dict() = {readiness_probe_client.to_dict()}")
+
             target_resource_request = client.ResourceRequest(
                 min_replica=resource_request.min_replica,
                 max_replica=resource_request.max_replica,
                 cpu_request=resource_request.cpu_request,
                 cpu_limit=resource_request.cpu_limit,
                 memory_request=resource_request.memory_request,
+                liveness_probe=liveness_probe_client,
+                readiness_probe=readiness_probe_client,
             )
+
+            print(f"DEBUG model.py: target_resource_request.to_dict() = {target_resource_request.to_dict()}")
 
             if target_resource_request.min_replica is None:
                 target_resource_request.min_replica = (
@@ -1870,12 +1887,23 @@ class ModelVersion:
             )
         else:
             resource_request.validate()
+
+            # Convert probe configs to client models if present
+            liveness_probe_client = None
+            readiness_probe_client = None
+            if resource_request.liveness_probe is not None:
+                liveness_probe_client = resource_request.liveness_probe.to_client_probe_config()
+            if resource_request.readiness_probe is not None:
+                readiness_probe_client = resource_request.readiness_probe.to_client_probe_config()
+
             target_resource_request = client.ResourceRequest(
                 min_replica=resource_request.min_replica,
                 max_replica=resource_request.max_replica,
                 cpu_request=resource_request.cpu_request,
                 cpu_limit=resource_request.cpu_limit,
                 memory_request=resource_request.memory_request,
+                liveness_probe=liveness_probe_client,
+                readiness_probe=readiness_probe_client,
             )
 
         target_env_vars: List[client.EnvVar] = []
