@@ -44,7 +44,7 @@ class ProbeConfig:
         self._failure_threshold = failure_threshold
 
     @classmethod
-    def from_response(cls, response: client.ProbeConfig) -> Optional["ProbeConfig"]:
+    def from_response(cls, response) -> Optional["ProbeConfig"]:
         """Create a ProbeConfig from a client.ProbeConfig response object."""
         if response is None:
             return None
@@ -59,7 +59,7 @@ class ProbeConfig:
             failure_threshold=response.failure_threshold,
         )
 
-    def to_client_probe_config(self) -> client.ProbeConfig:
+    def to_client_probe_config(self):
         """Convert to a client.ProbeConfig object for API calls."""
         return client.ProbeConfig(
             path=self._path,
