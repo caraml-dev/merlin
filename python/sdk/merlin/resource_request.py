@@ -151,3 +151,25 @@ class ResourceRequest:
 
         if self._max_replica < 1:
             raise Exception("Max replica must be greater than 0")
+
+    def to_client_resource_request(self):
+        """Convert to a client.ResourceRequest object for API calls."""
+        liveness_probe_client = None
+        readiness_probe_client = None
+        if self._liveness_probe is not None:
+            liveness_probe_client = self._liveness_probe.to_client_probe_config()
+        if self._readiness_probe is not None:
+            readiness_probe_client = self._readiness_probe.to_client_probe_config()
+
+        return client.ResourceRequest(
+            min_replica=self._min_replica,
+            max_replica=self._max_replica,
+            cpu_request=self._cpu_request,
+            cpu_limit=self._cpu_limit,
+            memory_request=self._memory_request,
+            gpu_name=self._gpu_name,
+            gpu_request=self._gpu_request,
+            liveness_probe=liveness_probe_client,
+            readiness_probe=readiness_probe_client,
+        )
+
