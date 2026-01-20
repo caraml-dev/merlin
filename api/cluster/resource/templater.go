@@ -237,7 +237,16 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		}
 	}
 
-	livenessProbeConfig := getLivenessProbeConfig(modelService.PredictorProtocol(), envVars, fmt.Sprintf("/v1/models/%s", modelService.Name))
+	// Get user-configured probe settings
+	var userLivenessConfig *models.ProbeConfig
+	var userReadinessConfig *models.ProbeConfig
+	if modelService.ResourceRequest != nil {
+		userLivenessConfig = modelService.ResourceRequest.LivenessProbe
+		userReadinessConfig = modelService.ResourceRequest.ReadinessProbe
+	}
+
+	livenessProbeConfig := getLivenessProbeConfig(modelService.PredictorProtocol(), envVars, fmt.Sprintf("/v1/models/%s", modelService.Name), userLivenessConfig)
+	readinessProbeConfig := getReadinessProbeConfig(modelService.PredictorProtocol(), fmt.Sprintf("/v1/models/%s", modelService.Name), userReadinessConfig)
 
 	containerPorts := createContainerPorts(modelService.PredictorProtocol(), modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
@@ -249,11 +258,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:          kserveconstant.InferenceServiceContainerName,
-						Resources:     resources,
-						LivenessProbe: livenessProbeConfig,
-						Ports:         containerPorts,
-						Env:           envVars,
+						Name:           kserveconstant.InferenceServiceContainerName,
+						Resources:      resources,
+						LivenessProbe:  livenessProbeConfig,
+						ReadinessProbe: readinessProbeConfig,
+						Ports:          containerPorts,
+						Env:            envVars,
 					},
 				},
 			},
@@ -264,11 +274,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:          kserveconstant.InferenceServiceContainerName,
-						Resources:     resources,
-						LivenessProbe: livenessProbeConfig,
-						Ports:         containerPorts,
-						Env:           envVars,
+						Name:           kserveconstant.InferenceServiceContainerName,
+						Resources:      resources,
+						LivenessProbe:  livenessProbeConfig,
+						ReadinessProbe: readinessProbeConfig,
+						Ports:          containerPorts,
+						Env:            envVars,
 					},
 				},
 			},
@@ -279,11 +290,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:          kserveconstant.InferenceServiceContainerName,
-						Resources:     resources,
-						LivenessProbe: livenessProbeConfig,
-						Ports:         containerPorts,
-						Env:           envVars,
+						Name:           kserveconstant.InferenceServiceContainerName,
+						Resources:      resources,
+						LivenessProbe:  livenessProbeConfig,
+						ReadinessProbe: readinessProbeConfig,
+						Ports:          containerPorts,
+						Env:            envVars,
 					},
 				},
 			},
@@ -294,11 +306,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:          kserveconstant.InferenceServiceContainerName,
-						Resources:     resources,
-						LivenessProbe: livenessProbeConfig,
-						Ports:         containerPorts,
-						Env:           envVars,
+						Name:           kserveconstant.InferenceServiceContainerName,
+						Resources:      resources,
+						LivenessProbe:  livenessProbeConfig,
+						ReadinessProbe: readinessProbeConfig,
+						Ports:          containerPorts,
+						Env:            envVars,
 					},
 				},
 			},
@@ -335,12 +348,13 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:          kserveconstant.InferenceServiceContainerName,
-						Image:         modelService.Options.PyFuncImageName,
-						Env:           envVars,
-						Resources:     resources,
-						LivenessProbe: livenessProbeConfig,
-						Ports:         containerPorts,
+						Name:           kserveconstant.InferenceServiceContainerName,
+						Image:          modelService.Options.PyFuncImageName,
+						Env:            envVars,
+						Resources:      resources,
+						LivenessProbe:  livenessProbeConfig,
+						ReadinessProbe: readinessProbeConfig,
+						Ports:          containerPorts,
 					},
 				},
 			},
@@ -411,7 +425,16 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 		}
 	}
 
-	livenessProbeConfig := getLivenessProbeConfig(modelService.Protocol, envVars, "/")
+	// Get user-configured probe settings for transformer
+	var userLivenessConfig *models.ProbeConfig
+	var userReadinessConfig *models.ProbeConfig
+	if transformer.ResourceRequest != nil {
+		userLivenessConfig = transformer.ResourceRequest.LivenessProbe
+		userReadinessConfig = transformer.ResourceRequest.ReadinessProbe
+	}
+
+	livenessProbeConfig := getLivenessProbeConfig(modelService.Protocol, envVars, "/", userLivenessConfig)
+	readinessProbeConfig := getReadinessProbeConfig(modelService.Protocol, "/", userReadinessConfig)
 
 	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	transformerSpec := &kservev1beta1.TransformerSpec{
@@ -428,10 +451,11 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 						},
 						Limits: limits,
 					},
-					Command:       transformerCommand,
-					Args:          transformerArgs,
-					LivenessProbe: livenessProbeConfig,
-					Ports:         containerPorts,
+					Command:        transformerCommand,
+					Args:           transformerArgs,
+					LivenessProbe:  livenessProbeConfig,
+					ReadinessProbe: readinessProbeConfig,
+					Ports:          containerPorts,
 				},
 			},
 		},
@@ -515,8 +539,8 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	return envVars
 }
 
-func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
-	return &corev1.Probe{
+func createHTTPGetLivenessProbe(httpPath string, port int, userConfig *models.ProbeConfig) *corev1.Probe {
+	probe := &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   httpPath,
@@ -532,10 +556,12 @@ func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
 		SuccessThreshold:    liveProbeSuccessThreshold,
 		FailureThreshold:    liveProbeFailureThreshold,
 	}
+	applyUserProbeConfig(probe, userConfig, port)
+	return probe
 }
 
-func createGRPCLivenessProbe(port int) *corev1.Probe {
-	return &corev1.Probe{
+func createGRPCLivenessProbe(port int, userConfig *models.ProbeConfig) *corev1.Probe {
+	probe := &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
 				Command: []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", port)},
@@ -547,24 +573,118 @@ func createGRPCLivenessProbe(port int) *corev1.Probe {
 		SuccessThreshold:    liveProbeSuccessThreshold,
 		FailureThreshold:    liveProbeFailureThreshold,
 	}
+	applyUserProbeConfig(probe, userConfig, port)
+	return probe
 }
 
-func getLivenessProbeConfig(protocol prt.Protocol, envVars []corev1.EnvVar, httpPath string) *corev1.Probe {
+func getLivenessProbeConfig(protocol prt.Protocol, envVars []corev1.EnvVar, httpPath string, userConfig *models.ProbeConfig) *corev1.Probe {
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := getEnvVarMap(envVars)
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe].Value, "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe].Value, "true") {
-		livenessProbeConfig = createLivenessProbeSpec(protocol, httpPath)
+		livenessProbeConfig = createLivenessProbeSpec(protocol, httpPath, userConfig)
 	}
 	return livenessProbeConfig
 }
 
-func createLivenessProbeSpec(protocol prt.Protocol, httpPath string) *corev1.Probe {
+func createLivenessProbeSpec(protocol prt.Protocol, httpPath string, userConfig *models.ProbeConfig) *corev1.Probe {
 	if protocol == prt.UpiV1 {
-		return createGRPCLivenessProbe(defaultGRPCPort)
+		return createGRPCLivenessProbe(defaultGRPCPort, userConfig)
 	}
-	return createHTTPGetLivenessProbe(httpPath, defaultHTTPPort)
+	return createHTTPGetLivenessProbe(httpPath, defaultHTTPPort, userConfig)
+}
+
+// getReadinessProbeConfig creates a readiness probe configuration based on user settings
+func getReadinessProbeConfig(protocol prt.Protocol, httpPath string, userConfig *models.ProbeConfig) *corev1.Probe {
+	if userConfig == nil {
+		return nil
+	}
+	return createReadinessProbeSpec(protocol, httpPath, userConfig)
+}
+
+func createReadinessProbeSpec(protocol prt.Protocol, httpPath string, userConfig *models.ProbeConfig) *corev1.Probe {
+	if protocol == prt.UpiV1 {
+		return createGRPCReadinessProbe(defaultGRPCPort, userConfig)
+	}
+	return createHTTPGetReadinessProbe(httpPath, defaultHTTPPort, userConfig)
+}
+
+func createHTTPGetReadinessProbe(httpPath string, port int, userConfig *models.ProbeConfig) *corev1.Probe {
+	probe := &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   httpPath,
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: int32(port),
+				},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+	applyUserProbeConfig(probe, userConfig, port)
+	return probe
+}
+
+func createGRPCReadinessProbe(port int, userConfig *models.ProbeConfig) *corev1.Probe {
+	probe := &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			Exec: &corev1.ExecAction{
+				Command: []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", port)},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+	applyUserProbeConfig(probe, userConfig, port)
+	return probe
+}
+
+// applyUserProbeConfig applies user-provided probe configuration to the probe
+func applyUserProbeConfig(probe *corev1.Probe, userConfig *models.ProbeConfig, _ int) {
+	if userConfig == nil {
+		return
+	}
+	if userConfig.InitialDelaySeconds > 0 {
+		probe.InitialDelaySeconds = userConfig.InitialDelaySeconds
+	}
+	if userConfig.TimeoutSeconds > 0 {
+		probe.TimeoutSeconds = userConfig.TimeoutSeconds
+	}
+	if userConfig.PeriodSeconds > 0 {
+		probe.PeriodSeconds = userConfig.PeriodSeconds
+	}
+	if userConfig.SuccessThreshold > 0 {
+		probe.SuccessThreshold = userConfig.SuccessThreshold
+	}
+	if userConfig.FailureThreshold > 0 {
+		probe.FailureThreshold = userConfig.FailureThreshold
+	}
+	// Apply port if specified in user config
+	if userConfig.Port > 0 {
+		if probe.ProbeHandler.HTTPGet != nil {
+			probe.ProbeHandler.HTTPGet.Port = intstr.FromInt32(userConfig.Port)
+		} else if probe.ProbeHandler.Exec != nil {
+			probe.ProbeHandler.Exec.Command = []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", userConfig.Port)}
+		}
+	}
+	// Apply path and scheme for HTTP probes
+	if probe.ProbeHandler.HTTPGet != nil {
+		if userConfig.Path != "" {
+			probe.ProbeHandler.HTTPGet.Path = userConfig.Path
+		}
+		if userConfig.Scheme != "" {
+			probe.ProbeHandler.HTTPGet.Scheme = corev1.URIScheme(userConfig.Scheme)
+		}
+	}
 }
 
 func createPredictorHost(modelService *models.Service) string {

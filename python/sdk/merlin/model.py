@@ -1276,13 +1276,7 @@ class ModelVersion:
 
         if resource_request is not None:
             resource_request.validate()
-            target_resource_request = client.ResourceRequest(
-                min_replica=resource_request.min_replica,
-                max_replica=resource_request.max_replica,
-                cpu_request=resource_request.cpu_request,
-                cpu_limit=resource_request.cpu_limit,
-                memory_request=resource_request.memory_request,
-            )
+            target_resource_request = resource_request.to_client_resource_request()
 
             if target_resource_request.min_replica is None:
                 target_resource_request.min_replica = (
@@ -1870,13 +1864,7 @@ class ModelVersion:
             )
         else:
             resource_request.validate()
-            target_resource_request = client.ResourceRequest(
-                min_replica=resource_request.min_replica,
-                max_replica=resource_request.max_replica,
-                cpu_request=resource_request.cpu_request,
-                cpu_limit=resource_request.cpu_limit,
-                memory_request=resource_request.memory_request,
-            )
+            target_resource_request = resource_request.to_client_resource_request()
 
         target_env_vars: List[client.EnvVar] = []
         if transformer.env_vars is not None:

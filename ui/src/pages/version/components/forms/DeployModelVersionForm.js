@@ -58,6 +58,19 @@ export const DeployModelVersionForm = ({
     if (versionEndpoint?.resource_request?.cpu_limit === "") {
       delete versionEndpoint.resource_request.cpu_limit;
     }
+    // Clean up empty probe configurations
+    if (versionEndpoint?.resource_request?.liveness_probe) {
+      const probe = versionEndpoint.resource_request.liveness_probe;
+      if (!Object.keys(probe).some(k => probe[k])) {
+        delete versionEndpoint.resource_request.liveness_probe;
+      }
+    }
+    if (versionEndpoint?.resource_request?.readiness_probe) {
+      const probe = versionEndpoint.resource_request.readiness_probe;
+      if (!Object.keys(probe).some(k => probe[k])) {
+        delete versionEndpoint.resource_request.readiness_probe;
+      }
+    }
     if (versionEndpoint?.image_builder_resource_request?.cpu_request === "") {
       delete versionEndpoint.image_builder_resource_request.cpu_request;
     }

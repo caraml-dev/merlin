@@ -24,6 +24,7 @@ import merlin.autoscaling
 import merlin.deployment_mode
 import merlin.fluent
 import merlin.resource_request
+import merlin.probe_config
 from merlin.version import VERSION as __version__
 
 # Merlin URL
@@ -80,6 +81,7 @@ list_model_endpoints = merlin.fluent.list_model_endpoints
 
 # Definitions
 ResourceRequest = merlin.resource_request.ResourceRequest
+ProbeConfig = merlin.probe_config.ProbeConfig
 DeploymentMode = merlin.deployment_mode.DeploymentMode
 AutoscalingPolicy = merlin.autoscaling.AutoscalingPolicy
 MetricsType = merlin.autoscaling.MetricsType
@@ -116,6 +118,7 @@ __all__ = [
     "set_traffic",
     "serve_traffic",
     "ResourceRequest",
+    "ProbeConfig",
     "DeploymentMode",
     "AutoscalingPolicy",
     "MetricsType",
