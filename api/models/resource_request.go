@@ -41,6 +41,8 @@ type ResourceRequest struct {
 	LivenessProbe *ProbeConfig `json:"liveness_probe,omitempty"`
 	// Readiness probe configuration
 	ReadinessProbe *ProbeConfig `json:"readiness_probe,omitempty"`
+	// Startup probe configuration
+	StartupProbe *ProbeConfig `json:"startup_probe,omitempty"`
 }
 
 // ProbeConfig represents the configuration for Kubernetes liveness/readiness probes

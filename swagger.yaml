@@ -2121,6 +2121,8 @@ components:
           "$ref": "#/components/schemas/ProbeConfig"
         readiness_probe:
           "$ref": "#/components/schemas/ProbeConfig"
+        startup_probe:
+          "$ref": "#/components/schemas/ProbeConfig"
     ProbeConfig:
       type: object
       properties:

@@ -240,13 +240,16 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	// Get user-configured probe settings
 	var userLivenessConfig *models.ProbeConfig
 	var userReadinessConfig *models.ProbeConfig
+	var userStartupConfig *models.ProbeConfig
 	if modelService.ResourceRequest != nil {
 		userLivenessConfig = modelService.ResourceRequest.LivenessProbe
 		userReadinessConfig = modelService.ResourceRequest.ReadinessProbe
+		userStartupConfig = modelService.ResourceRequest.StartupProbe
 	}
 
 	livenessProbeConfig := getLivenessProbeConfig(modelService.PredictorProtocol(), envVars, fmt.Sprintf("/v1/models/%s", modelService.Name), userLivenessConfig)
 	readinessProbeConfig := getReadinessProbeConfig(modelService.PredictorProtocol(), fmt.Sprintf("/v1/models/%s", modelService.Name), userReadinessConfig)
+	startupProbeConfig := getStartupProbeConfig(modelService.PredictorProtocol(), fmt.Sprintf("/v1/models/%s", modelService.Name), userStartupConfig)
 
 	containerPorts := createContainerPorts(modelService.PredictorProtocol(), modelService.DeploymentMode)
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
@@ -262,6 +265,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:      resources,
 						LivenessProbe:  livenessProbeConfig,
 						ReadinessProbe: readinessProbeConfig,
+						StartupProbe:   startupProbeConfig,
 						Ports:          containerPorts,
 						Env:            envVars,
 					},
@@ -278,6 +282,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:      resources,
 						LivenessProbe:  livenessProbeConfig,
 						ReadinessProbe: readinessProbeConfig,
+						StartupProbe:   startupProbeConfig,
 						Ports:          containerPorts,
 						Env:            envVars,
 					},
@@ -294,6 +299,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:      resources,
 						LivenessProbe:  livenessProbeConfig,
 						ReadinessProbe: readinessProbeConfig,
+						StartupProbe:   startupProbeConfig,
 						Ports:          containerPorts,
 						Env:            envVars,
 					},
@@ -310,6 +316,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:      resources,
 						LivenessProbe:  livenessProbeConfig,
 						ReadinessProbe: readinessProbeConfig,
+						StartupProbe:   startupProbeConfig,
 						Ports:          containerPorts,
 						Env:            envVars,
 					},
@@ -354,6 +361,7 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 						Resources:      resources,
 						LivenessProbe:  livenessProbeConfig,
 						ReadinessProbe: readinessProbeConfig,
+						StartupProbe:   startupProbeConfig,
 						Ports:          containerPorts,
 					},
 				},
@@ -428,13 +436,16 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	// Get user-configured probe settings for transformer
 	var userLivenessConfig *models.ProbeConfig
 	var userReadinessConfig *models.ProbeConfig
+	var userStartupConfig *models.ProbeConfig
 	if transformer.ResourceRequest != nil {
 		userLivenessConfig = transformer.ResourceRequest.LivenessProbe
 		userReadinessConfig = transformer.ResourceRequest.ReadinessProbe
+		userStartupConfig = transformer.ResourceRequest.StartupProbe
 	}
 
 	livenessProbeConfig := getLivenessProbeConfig(modelService.Protocol, envVars, "/", userLivenessConfig)
 	readinessProbeConfig := getReadinessProbeConfig(modelService.Protocol, "/", userReadinessConfig)
+	startupProbeConfig := getStartupProbeConfig(modelService.Protocol, "/", userStartupConfig)
 
 	containerPorts := createContainerPorts(modelService.Protocol, modelService.DeploymentMode)
 	transformerSpec := &kservev1beta1.TransformerSpec{
@@ -455,6 +466,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 					Args:           transformerArgs,
 					LivenessProbe:  livenessProbeConfig,
 					ReadinessProbe: readinessProbeConfig,
+					StartupProbe:   startupProbeConfig,
 					Ports:          containerPorts,
 				},
 			},
@@ -632,6 +644,59 @@ func createHTTPGetReadinessProbe(httpPath string, port int, userConfig *models.P
 }
 
 func createGRPCReadinessProbe(port int, userConfig *models.ProbeConfig) *corev1.Probe {
+	probe := &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			Exec: &corev1.ExecAction{
+				Command: []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", port)},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+	applyUserProbeConfig(probe, userConfig, port)
+	return probe
+}
+
+// getStartupProbeConfig creates a startup probe configuration based on user settings
+func getStartupProbeConfig(protocol prt.Protocol, httpPath string, userConfig *models.ProbeConfig) *corev1.Probe {
+	if userConfig == nil {
+		return nil
+	}
+	return createStartupProbeSpec(protocol, httpPath, userConfig)
+}
+
+func createStartupProbeSpec(protocol prt.Protocol, httpPath string, userConfig *models.ProbeConfig) *corev1.Probe {
+	if protocol == prt.UpiV1 {
+		return createGRPCStartupProbe(defaultGRPCPort, userConfig)
+	}
+	return createHTTPGetStartupProbe(httpPath, defaultHTTPPort, userConfig)
+}
+
+func createHTTPGetStartupProbe(httpPath string, port int, userConfig *models.ProbeConfig) *corev1.Probe {
+	probe := &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   httpPath,
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: int32(port),
+				},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+	applyUserProbeConfig(probe, userConfig, port)
+	return probe
+}
+
+func createGRPCStartupProbe(port int, userConfig *models.ProbeConfig) *corev1.Probe {
 	probe := &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
