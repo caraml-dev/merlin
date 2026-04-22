@@ -463,6 +463,8 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 			MinReplicas: &(transformer.ResourceRequest.MinReplica),
 			MaxReplicas: transformer.ResourceRequest.MaxReplica,
 			Logger:      loggerSpec,
+			Labels:      t.deploymentConfig.StandardTransformer.DefaultLabels,
+			Annotations: t.deploymentConfig.StandardTransformer.DefaultAnnotations,
 		},
 	}
 

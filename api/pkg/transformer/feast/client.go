@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/feast/bigtablestore"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast/redis"
@@ -56,14 +57,21 @@ func createFeastServingClient(feastOptions Options, featureTableMetadata []*spec
 }
 
 func newFeastGrpcClient(url string, options Options) (*GrpcClient, error) {
-	host, port, err := net.SplitHostPort(url)
-	if err != nil {
-		return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", url, err)
-	}
+	{
+		// validate
 
-	portInt, err := strconv.Atoi(port)
-	if err != nil {
-		return nil, errors.Errorf("Unable to parse Feast Serving port (%s): %s", url, err)
+		urlTmp := url
+		urlTmp = strings.TrimPrefix(urlTmp, "dns:///")
+		urlTmp = strings.TrimPrefix(urlTmp, "xds:///")
+		_, port, err := net.SplitHostPort(urlTmp)
+		if err != nil {
+			return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", url, err)
+		}
+
+		_, err = strconv.Atoi(port)
+		if err != nil {
+			return nil, errors.Errorf("Unable to parse Feast Serving port (%s): %s", url, err)
+		}
 	}
 
 	dialOpts := []grpc.DialOption{}
@@ -74,7 +82,10 @@ func newFeastGrpcClient(url string, options Options) (*GrpcClient, error) {
 		})
 		dialOpts = append(dialOpts, keepAliveOpt)
 	}
-	client, err := newInsecureGRPCClientWithDialOptions(host, portInt, options.FeastGRPCConnCount, true, dialOpts...)
+	if strings.HasPrefix(url, "dns:///") {
+		dialOpts = append(dialOpts, grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`))
+	}
+	client, err := newInsecureGRPCClientWithDialOptions(url, options.FeastGRPCConnCount, true, dialOpts...)
 	if err != nil {
 		return nil, errors.Errorf("Unable to initialize a Feast gRPC client: %s", err)
 	}

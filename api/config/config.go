@@ -345,6 +345,8 @@ type StandardTransformerConfig struct {
 	Kafka              KafkaConfig           `validate:"required"`
 	// Simulator configs
 	SimulatorFeastClientMaxConcurrentRequests int `validate:"required" default:"100"`
+	DefaultLabels                             map[string]string
+	DefaultAnnotations                        map[string]string
 }
 
 // KafkaConfig configuration for publishing prediction log
