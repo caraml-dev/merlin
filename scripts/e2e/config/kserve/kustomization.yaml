@@ -2,3 +2,7 @@ resources:
 - kserve.yaml
 patchesStrategicMerge:
 - overlay.yaml
+images:
+  - name: gcr.io/kubebuilder/kube-rbac-proxy
+    newName: kubebuilder/kube-rbac-proxy
+    newTag: v0.13.1
