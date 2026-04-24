@@ -22,7 +22,7 @@ KNATIVE_VERSION=1.10.2
 KNATIVE_NET_ISTIO_VERSION=1.10.1
 CERT_MANAGER_VERSION=1.12.2
 MINIO_VERSION=3.6.3
-KSERVE_VERSION=0.14.0
+KSERVE_VERSION=0.11.0
 TIMEOUT=180s
 
 
@@ -149,7 +149,7 @@ install_kserve() {
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
     kubectl apply --server-side -k config/kserve
     kubectl rollout status deployment/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
-    kubectl apply --server-side -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-cluster-resources.yaml
+    kubectl apply --server-side -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 
     echo "::endgroup::"
 }
