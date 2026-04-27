@@ -70,7 +70,7 @@ install_istio() {
     kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
     kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
 
-    kubectl apply -f config/istio/ingress-class.yaml
+    kubectl apply --server-side -f config/istio/ingress-class.yaml
 
     sleep 30
 
@@ -79,7 +79,7 @@ install_istio() {
 
 set_ingress_host() {
     echo "::group::Set Ingress Host"
-    if [[ -z "${INGRESS_HOST}" ]]; then
+    if [[ -z "${INGRESS_HOST:-}" ]]; then
         export INGRESS_HOST="$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}').nip.io"
     fi
     echo "INGRESS_HOST=${INGRESS_HOST}"
@@ -90,11 +90,11 @@ install_knative() {
     echo "::group::Knative Deployment"
 
     # Install CRD
-    kubectl apply -f https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-crds.yaml
+    kubectl apply --server-side -f https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-crds.yaml
 
     # Install knative serving
     wget https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-core.yaml -O config/knative/serving-core.yaml
-    kubectl apply -k config/knative
+    kubectl apply --server-side -k config/knative
 
     kubectl rollout status deployment/autoscaler -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/controller -n knative-serving -w --timeout=${TIMEOUT}
@@ -106,11 +106,11 @@ install_knative() {
     # Update knative config-deployment config map to allow resolving of the local e2e image repository
     kubectl get configmap -n knative-serving config-deployment -o yaml > temp.yaml
     yq -i '.data.registries-skipping-tag-resolving |= ("\(.),${DOCKER_REGISTRY}" | envsubst)' temp.yaml
-    kubectl apply -f temp.yaml
+    kubectl apply --server-side -f temp.yaml
     kubectl rollout restart deployment -n knative-serving controller
 
     # Install knative-istio
-    kubectl apply -f https://github.com/knative-sandbox/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
+    kubectl apply --server-side -f https://github.com/knative-sandbox/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
 
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
@@ -121,7 +121,7 @@ install_knative() {
 install_cert_manager() {
     echo "::group::Cert Manager Deployment"
 
-    kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
+    kubectl apply --server-side --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
 
     kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/cert-manager-cainjector -n cert-manager -w --timeout=${TIMEOUT}
@@ -147,9 +147,9 @@ install_kserve() {
     echo "::group::KServe Deployment"
 
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
-    kubectl apply -k config/kserve
+    kubectl apply --server-side -k config/kserve
     kubectl rollout status deployment/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
-    kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
+    kubectl apply --server-side -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 
     echo "::endgroup::"
 }

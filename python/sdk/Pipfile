@@ -8,6 +8,7 @@ ipykernel = "*"
 jupyter = "*"
 pytest = "*"
 pytest-xdist = "*"
+setuptools = "==81.0.0"
 
 [packages]
 merlin-sdk = {extras = ["test"],path = "."}

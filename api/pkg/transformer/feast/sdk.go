@@ -13,6 +13,7 @@ import (
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	_ "google.golang.org/grpc/xds"
 )
 
 // GrpcClient as wrapper of feastsdk
@@ -23,9 +24,8 @@ type GrpcClient struct {
 	waitForReady bool
 }
 
-func newInsecureGRPCClientWithDialOptions(host string, port int, numConn int, waitForReady bool, opts ...grpc.DialOption) (*GrpcClient, error) {
+func newInsecureGRPCClientWithDialOptions(addr string, numConn int, waitForReady bool, opts ...grpc.DialOption) (*GrpcClient, error) {
 	feastCli := &GrpcClient{}
-	adr := fmt.Sprintf("%s:%d", host, port)
 
 	// Compile grpc dial options from security config.
 	options := append(opts, []grpc.DialOption{grpc.WithStatsHandler(&ocgrpc.ClientHandler{}), grpc.WithTransportCredentials(insecure.NewCredentials())}...)
@@ -36,7 +36,7 @@ func newInsecureGRPCClientWithDialOptions(host string, port int, numConn int, wa
 		otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer()))
 	options = append(options, tracingInterceptor)
 
-	conn, err := grpcpool.DialContext(context.Background(), adr, uint(numConn), options...)
+	conn, err := grpcpool.DialContext(context.Background(), addr, uint(numConn), options...)
 	if err != nil {
 		return nil, err
 	}

@@ -527,7 +527,9 @@ func TestLoad(t *testing.T) {
 					IndexPath:  "index.html",
 				},
 				StandardTransformerConfig: StandardTransformerConfig{
-					FeastServingURLs: []FeastServingURL{},
+					DefaultLabels:      map[string]string{},
+					DefaultAnnotations: map[string]string{},
+					FeastServingURLs:   []FeastServingURL{},
 					FeastBigtableConfig: &FeastBigtableConfig{
 						IsUsingDirectStorage: true,
 						ServingURL:           "10.1.1.3",
