@@ -156,6 +156,23 @@ jobs:
           version: v1.58.1
           working-directory: api
 
+  check-generated-clients:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      - name: Install codegen tools
+        # generate-client-go calls goimports, installed by `make setup` into
+        # $(go env GOPATH)/bin, which must be on PATH for the bare goimports call.
+        run: |
+          make setup
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Verify generated clients are in sync with swagger.yaml
+        run: make verify-client
+
   test-api:
     runs-on: ubuntu-latest
     services:
@@ -493,6 +510,7 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
       - create-version
+      - check-generated-clients
       - build-api
       - build-batch-predictor-base-image
       - build-pyfunc-server-base-image
