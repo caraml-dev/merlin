@@ -237,6 +237,11 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 		}
 	}
 
+	// Append user-defined tolerations from ResourceRequest (merged on top of any GPU-derived tolerations)
+	if len(modelService.ResourceRequest.Tolerations) > 0 {
+		tolerations = append(tolerations, modelService.ResourceRequest.Tolerations...)
+	}
+
 	// Get user-configured probe settings
 	var userLivenessConfig *models.ProbeConfig
 	var userReadinessConfig *models.ProbeConfig
@@ -466,6 +471,11 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 			Labels:      t.deploymentConfig.StandardTransformer.DefaultLabels,
 			Annotations: t.deploymentConfig.StandardTransformer.DefaultAnnotations,
 		},
+	}
+
+	// Apply user-defined tolerations for transformer pods
+	if len(transformer.ResourceRequest.Tolerations) > 0 {
+		transformerSpec.PodSpec.Tolerations = transformer.ResourceRequest.Tolerations
 	}
 
 	return transformerSpec, nil

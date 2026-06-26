@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"golang.org/x/exp/slices"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
@@ -73,8 +74,43 @@ func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidato
 			return fmt.Errorf("max replica must be greater than 0")
 		}
 
+		if err := validateTolerations(endpoint.ResourceRequest.Tolerations); err != nil {
+			return fmt.Errorf("invalid toleration in resource request: %w", err)
+		}
+
 		return nil
 	})
+}
+
+var validTolerationEffects = []corev1.TaintEffect{
+	corev1.TaintEffectNoSchedule,
+	corev1.TaintEffectPreferNoSchedule,
+	corev1.TaintEffectNoExecute,
+	"", // empty matches all effects
+}
+
+var validTolerationOperators = []corev1.TolerationOperator{
+	corev1.TolerationOpEqual,
+	corev1.TolerationOpExists,
+	"", // empty defaults to Equal
+}
+
+func validateTolerations(tolerations []corev1.Toleration) error {
+	for i, t := range tolerations {
+		if !slices.Contains(validTolerationEffects, t.Effect) {
+			return fmt.Errorf("toleration[%d] has invalid effect %q; must be one of: NoSchedule, PreferNoSchedule, NoExecute", i, t.Effect)
+		}
+		if !slices.Contains(validTolerationOperators, t.Operator) {
+			return fmt.Errorf("toleration[%d] has invalid operator %q; must be one of: Equal, Exists", i, t.Operator)
+		}
+		if t.Operator == corev1.TolerationOpExists && t.Value != "" {
+			return fmt.Errorf("toleration[%d] with operator 'Exists' must not specify a value", i)
+		}
+		if t.TolerationSeconds != nil && t.Effect != corev1.TaintEffectNoExecute {
+			return fmt.Errorf("toleration[%d] tolerationSeconds is only valid for effect 'NoExecute'", i)
+		}
+	}
+	return nil
 }
 
 func customModelValidation(model *models.Model, version *models.Version) requestValidator {

@@ -2121,6 +2121,31 @@ components:
           "$ref": "#/components/schemas/ProbeConfig"
         readiness_probe:
           "$ref": "#/components/schemas/ProbeConfig"
+        tolerations:
+          type: array
+          description: Tolerations allow model pods to be scheduled onto nodes with matching taints
+          items:
+            "$ref": "#/components/schemas/Toleration"
+    Toleration:
+      type: object
+      description: Kubernetes toleration for scheduling pods onto tainted nodes
+      properties:
+        key:
+          type: string
+          description: The taint key the toleration applies to
+        operator:
+          type: string
+          description: "'Exists' or 'Equal' (default: Equal)"
+        value:
+          type: string
+          description: The taint value the toleration matches (only used when operator is Equal)
+        effect:
+          type: string
+          description: "'NoSchedule', 'PreferNoSchedule', or 'NoExecute'. Empty matches all effects"
+        toleration_seconds:
+          type: integer
+          format: int64
+          description: Period (seconds) the pod tolerates the taint (only for NoExecute effect)
     ProbeConfig:
       type: object
       properties:
