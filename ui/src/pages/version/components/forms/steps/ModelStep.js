@@ -15,6 +15,7 @@ import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
 import { ProbesFormGroup } from "../components/ProbesFormGroup";
+import { TolerationFormGroup } from "../components/TolerationFormGroup";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -64,6 +65,12 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
                 imageBuilderResourceConfig={data.image_builder_resource_request}
                 onChangeHandler={onChange("image_builder_resource_request")}
                 errors={get(errors, "image_builder_resource_request")}
+              />
+              <EuiSpacer size="m" />
+              <TolerationFormGroup
+                tolerations={data.resource_request?.tolerations || []}
+                onChangeHandler={onChange("resource_request.tolerations")}
+                errors={get(errors, "resource_request.tolerations")}
               />
             </EuiAccordion>
           }

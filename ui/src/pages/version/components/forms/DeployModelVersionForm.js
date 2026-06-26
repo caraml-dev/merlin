@@ -80,6 +80,42 @@ export const DeployModelVersionForm = ({
     if (_.isEmpty(versionEndpoint.image_builder_resource_request)) {
       delete versionEndpoint.image_builder_resource_request;
     }
+    // Clean up empty / incomplete tolerations before submission
+    if (versionEndpoint?.resource_request?.tolerations) {
+      const filtered = versionEndpoint.resource_request.tolerations.filter(
+        (t) => t && (t.key || t.operator || t.value || t.effect)
+      );
+      if (filtered.length === 0) {
+        delete versionEndpoint.resource_request.tolerations;
+      } else {
+        // Strip fields that are empty strings so the backend doesn't receive them
+        versionEndpoint.resource_request.tolerations = filtered.map((t) => {
+          const entry = {};
+          if (t.key) entry.key = t.key;
+          if (t.operator) entry.operator = t.operator;
+          if (t.value && t.operator !== "Exists") entry.value = t.value;
+          if (t.effect) entry.effect = t.effect;
+          return entry;
+        });
+      }
+    }
+    if (versionEndpoint?.transformer?.resource_request?.tolerations) {
+      const filtered = versionEndpoint.transformer.resource_request.tolerations.filter(
+        (t) => t && (t.key || t.operator || t.value || t.effect)
+      );
+      if (filtered.length === 0) {
+        delete versionEndpoint.transformer.resource_request.tolerations;
+      } else {
+        versionEndpoint.transformer.resource_request.tolerations = filtered.map((t) => {
+          const entry = {};
+          if (t.key) entry.key = t.key;
+          if (t.operator) entry.operator = t.operator;
+          if (t.value && t.operator !== "Exists") entry.value = t.value;
+          if (t.effect) entry.effect = t.effect;
+          return entry;
+        });
+      }
+    }
     submitForm({
       body: JSON.stringify({
         ...versionEndpoint,

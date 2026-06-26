@@ -13,6 +13,7 @@ import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
+import { TolerationFormGroup } from "../components/TolerationFormGroup";
 
 export const TransformerStep = ({ maxAllowedReplica }) => {
   const {
@@ -51,6 +52,12 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
                     resourcesConfig={transformer.resource_request}
                     onChangeHandler={onChange("transformer.resource_request")}
                     errors={get(errors, "transformer.resource_request")}
+                  />
+                  <EuiSpacer size="m" />
+                  <TolerationFormGroup
+                    tolerations={transformer.resource_request?.tolerations || []}
+                    onChangeHandler={onChange("transformer.resource_request.tolerations")}
+                    errors={get(errors, "transformer.resource_request.tolerations")}
                   />
                 </EuiAccordion>
               }

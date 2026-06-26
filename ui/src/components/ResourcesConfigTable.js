@@ -29,6 +29,7 @@ export const ResourcesConfigTable = ({
     gpu_request,
     liveness_probe,
     readiness_probe,
+    tolerations,
   },
 }) => {
   const items = [
@@ -102,6 +103,21 @@ export const ResourcesConfigTable = ({
         description: probeDetails.join(", "),
       });
     }
+  }
+
+  // Add tolerations if configured
+  if (tolerations && tolerations.length > 0) {
+    tolerations.forEach((t, idx) => {
+      const parts = [];
+      if (t.key) parts.push(`key: ${t.key}`);
+      if (t.operator) parts.push(`op: ${t.operator}`);
+      if (t.value) parts.push(`value: ${t.value}`);
+      if (t.effect) parts.push(`effect: ${t.effect}`);
+      items.push({
+        title: idx === 0 ? "Tolerations" : "",
+        description: parts.join(", ") || "—",
+      });
+    });
   }
 
   return (
