@@ -16,9 +16,11 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 )
 
@@ -61,8 +63,21 @@ func (d *deploymentStorage) ListInModelVersion(modelID, versionID, endpointUUID 
 }
 
 func (d *deploymentStorage) Save(deployment *models.Deployment) (*models.Deployment, error) {
-	err := d.db.Save(deployment).Error
-	return deployment, err
+	// Ensure the error message is valid UTF-8 before persisting to avoid
+	// Postgres rejecting invalid byte sequences (SQLSTATE 22021).
+	deployment.Error = strings.ToValidUTF8(deployment.Error, "")
+
+	if err := d.db.Save(deployment).Error; err != nil {
+		if invalid := invalidUTF8Fields(map[string]string{
+			"status": string(deployment.Status),
+			"error":  deployment.Error,
+		}); len(invalid) > 0 {
+			log.Errorf("failed to save deployment (id: %d): invalid UTF-8 in column(s) %s: %v", deployment.ID, strings.Join(invalid, ", "), err)
+		}
+		return deployment, err
+	}
+
+	return deployment, nil
 }
 
 func (d *deploymentStorage) GetLatestDeployment(modelID models.ID, versionID models.ID) (*models.Deployment, error) {
