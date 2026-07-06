@@ -23,7 +23,7 @@ KNATIVE_NET_ISTIO_VERSION=1.10.1
 CERT_MANAGER_VERSION=1.12.2
 MINIO_VERSION=3.6.3
 KSERVE_VERSION=0.11.0
-TIMEOUT=180s
+TIMEOUT=300s
 
 
 add_helm_repo() {
@@ -66,9 +66,33 @@ install_istio() {
     helm upgrade --install cluster-local-gateway istio/gateway -n istio-system --create-namespace \
         -f config/istio/clusterlocal-gateway.yaml --timeout=${TIMEOUT}
 
-    kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT}
-    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
-    kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT} || {
+        echo "::group::DEBUG istio-ingressgateway rollout failure"
+        kubectl get pods -n istio-system -o wide
+        kubectl describe pod -n istio-system -l app=istio-ingressgateway
+        kubectl logs -n istio-system -l app=istio-ingressgateway --tail=200 || true
+        kubectl get events -n istio-system --sort-by='.lastTimestamp'
+        echo "::endgroup::"
+        exit 1
+    }
+
+    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT} || {
+        echo "::group::DEBUG istiod rollout failure"
+        kubectl get pods -n istio-system -o wide
+        kubectl describe pod -n istio-system -l app=istiod
+        kubectl get events -n istio-system --sort-by='.lastTimestamp'
+        echo "::endgroup::"
+        exit 1
+    }
+
+    kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT} || {
+        echo "::group::DEBUG cluster-local-gateway rollout failure"
+        kubectl get pods -n istio-system -o wide
+        kubectl describe pod -n istio-system -l app=cluster-local-gateway
+        kubectl get events -n istio-system --sort-by='.lastTimestamp'
+        echo "::endgroup::"
+        exit 1
+    }
 
     kubectl apply --server-side -f config/istio/ingress-class.yaml
 
