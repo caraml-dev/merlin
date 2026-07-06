@@ -15,8 +15,6 @@
 package storage
 
 import (
-	"strings"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
@@ -69,10 +67,9 @@ func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
 }
 
 func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
-	message := strings.ToValidUTF8(endpoint.Message, "")
+	message := endpoint.Message
 	if len(message) > maxMessageChar {
 		message = message[:maxMessageChar]
-		message = strings.ToValidUTF8(message, "")
 	}
 	endpoint.Message = message
 }
