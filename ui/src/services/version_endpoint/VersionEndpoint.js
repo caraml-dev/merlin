@@ -30,6 +30,7 @@ export class VersionEndpoint {
       memory_request: "512Mi",
       liveness_probe: null,
       readiness_probe: null,
+      tolerations: [],
     };
 
     this.image_builder_resource_request = {
@@ -72,6 +73,10 @@ export class VersionEndpoint {
         cpu_request: "",
         memory_request: ""
       }
+    }
+
+    if (versionEndpoint.resource_request && !versionEndpoint.resource_request.tolerations) {
+      versionEndpoint.resource_request.tolerations = [];
     }
 
     if (json.transformer) {
