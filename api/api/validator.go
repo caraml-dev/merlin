@@ -62,6 +62,14 @@ func validateRequest(validators ...requestValidator) error {
 
 func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidator {
 	return newFuncValidate(func() error {
+		// Validate transformer tolerations independently: the transformer has its own
+		// resource request and may define tolerations even when the predictor's is nil.
+		if endpoint.Transformer != nil && endpoint.Transformer.ResourceRequest != nil {
+			if err := validateTolerations(endpoint.Transformer.ResourceRequest.Tolerations); err != nil {
+				return fmt.Errorf("invalid toleration in transformer resource request: %w", err)
+			}
+		}
+
 		if endpoint.ResourceRequest == nil {
 			return nil
 		}

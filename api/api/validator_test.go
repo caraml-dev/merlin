@@ -182,3 +182,68 @@ func TestResourceRequestValidation_Tolerations(t *testing.T) {
 		})
 	}
 }
+
+func TestResourceRequestValidation_TransformerTolerations(t *testing.T) {
+	tests := []struct {
+		name        string
+		endpoint    *models.VersionEndpoint
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name:     "nil transformer passes",
+			endpoint: &models.VersionEndpoint{},
+		},
+		{
+			name: "transformer with nil resource request passes",
+			endpoint: &models.VersionEndpoint{
+				Transformer: &models.Transformer{Enabled: true},
+			},
+		},
+		{
+			name: "transformer with valid tolerations passes",
+			endpoint: &models.VersionEndpoint{
+				Transformer: &models.Transformer{
+					Enabled: true,
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 1, MaxReplica: 2,
+						Tolerations: []corev1.Toleration{
+							{Key: "dedicated", Operator: corev1.TolerationOpEqual, Value: "ml", Effect: corev1.TaintEffectNoSchedule},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "transformer with invalid toleration fails even when predictor resource request is nil",
+			endpoint: &models.VersionEndpoint{
+				Transformer: &models.Transformer{
+					Enabled: true,
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 1, MaxReplica: 2,
+						Tolerations: []corev1.Toleration{
+							{Key: "k", Operator: corev1.TolerationOpExists, Value: "should-be-empty", Effect: corev1.TaintEffectNoSchedule},
+						},
+					},
+				},
+			},
+			wantErr:     true,
+			errContains: "transformer resource request",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			validator := resourceRequestValidation(tt.endpoint)
+			err := validator.validate()
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.errContains != "" {
+					assert.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

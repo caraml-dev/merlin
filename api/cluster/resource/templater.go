@@ -231,7 +231,10 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 					resources.Limits[resourceType] = resourceQuantity
 
 					nodeSelector = gpuConfig.NodeSelector
-					tolerations = gpuConfig.Tolerations
+					// Copy into a slice we own rather than aliasing the shared
+					// deploymentConfig backing array (a subsequent append must not
+					// mutate the config or leak across deployments).
+					tolerations = append(tolerations, gpuConfig.Tolerations...)
 				}
 			}
 		}
