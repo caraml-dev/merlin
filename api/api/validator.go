@@ -62,28 +62,32 @@ func validateRequest(validators ...requestValidator) error {
 
 func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidator {
 	return newFuncValidate(func() error {
-		// Validate transformer tolerations independently: the transformer has its own
-		// resource request and may define tolerations even when the predictor's is nil.
-		if endpoint.Transformer != nil && endpoint.Transformer.ResourceRequest != nil {
-			if err := validateTolerations(endpoint.Transformer.ResourceRequest.Tolerations); err != nil {
-				return fmt.Errorf("invalid toleration in transformer resource request: %w", err)
+		if endpoint.ResourceRequest != nil {
+			if endpoint.ResourceRequest.MinReplica > endpoint.ResourceRequest.MaxReplica {
+				return fmt.Errorf("min replica must be less or equal to max replica")
+			}
+
+			if endpoint.ResourceRequest.MaxReplica < 1 {
+				return fmt.Errorf("max replica must be greater than 0")
+			}
+
+			if err := validateTolerations(endpoint.ResourceRequest.Tolerations); err != nil {
+				return fmt.Errorf("invalid toleration in resource request: %w", err)
 			}
 		}
 
-		if endpoint.ResourceRequest == nil {
-			return nil
-		}
+		if endpoint.Transformer != nil && endpoint.Transformer.ResourceRequest != nil {
+			if endpoint.Transformer.ResourceRequest.MinReplica > endpoint.Transformer.ResourceRequest.MaxReplica {
+				return fmt.Errorf("transformer min replica must be less or equal to max replica")
+			}
 
-		if endpoint.ResourceRequest.MinReplica > endpoint.ResourceRequest.MaxReplica {
-			return fmt.Errorf("min replica must be less or equal to max replica")
-		}
+			if endpoint.Transformer.ResourceRequest.MaxReplica < 1 {
+				return fmt.Errorf("transformer max replica must be greater than 0")
+			}
 
-		if endpoint.ResourceRequest.MaxReplica < 1 {
-			return fmt.Errorf("max replica must be greater than 0")
-		}
-
-		if err := validateTolerations(endpoint.ResourceRequest.Tolerations); err != nil {
-			return fmt.Errorf("invalid toleration in resource request: %w", err)
+			if err := validateTolerations(endpoint.Transformer.ResourceRequest.Tolerations); err != nil {
+				return fmt.Errorf("invalid toleration in transformer resource request: %w", err)
+			}
 		}
 
 		return nil

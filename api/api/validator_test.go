@@ -142,6 +142,7 @@ func TestResourceRequestValidation_Tolerations(t *testing.T) {
 	tests := []struct {
 		name    string
 		req     *models.ResourceRequest
+		trans   *models.Transformer
 		wantErr bool
 	}{
 		{
@@ -158,6 +159,17 @@ func TestResourceRequestValidation_Tolerations(t *testing.T) {
 			},
 		},
 		{
+			name: "valid transformer resource request with tolerations passes",
+			trans: &models.Transformer{
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1, MaxReplica: 2,
+					Tolerations: []corev1.Toleration{
+						{Key: "dedicated", Operator: corev1.TolerationOpEqual, Value: "transformer", Effect: corev1.TaintEffectNoSchedule},
+					},
+				},
+			},
+		},
+		{
 			name: "resource request with invalid toleration operator fails",
 			req: &models.ResourceRequest{
 				MinReplica: 1, MaxReplica: 2,
@@ -167,11 +179,26 @@ func TestResourceRequestValidation_Tolerations(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "transformer resource request with invalid toleration operator fails",
+			trans: &models.Transformer{
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1, MaxReplica: 2,
+					Tolerations: []corev1.Toleration{
+						{Key: "k", Operator: "BadOp", Value: "v"},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			endpoint := &models.VersionEndpoint{ResourceRequest: tt.req}
+			endpoint := &models.VersionEndpoint{
+				ResourceRequest: tt.req,
+				Transformer:     tt.trans,
+			}
 			validator := resourceRequestValidation(endpoint)
 			err := validator.validate()
 			if tt.wantErr {
