@@ -15,14 +15,11 @@
 package storage
 
 import (
-	"fmt"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 )
 
@@ -61,17 +58,6 @@ func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
 	sanitizeEndpoint(endpoint)
 
 	if err := v.db.Save(&endpoint).Error; err != nil {
-		if invalid := invalidUTF8Fields(map[string]string{
-			"status":                 string(endpoint.Status),
-			"url":                    endpoint.URL,
-			"service_name":           endpoint.ServiceName,
-			"inference_service_name": endpoint.InferenceServiceName,
-			"namespace":              endpoint.Namespace,
-			"environment_name":       endpoint.EnvironmentName,
-			"message":                endpoint.Message,
-		}); len(invalid) > 0 {
-			log.Errorf("failed to save version_endpoint (id: %s): invalid UTF-8 in column(s) %s: %v", endpoint.ID, strings.Join(invalid, ", "), err)
-		}
 		return err
 	}
 
@@ -82,19 +68,6 @@ func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
 	return nil
 }
 
-// invalidUTF8Fields returns the names of the given columns whose values are not
-// valid UTF-8. Postgres reports "invalid byte sequence for encoding UTF8"
-// (SQLSTATE 22021) without naming the offending column, so this pinpoints it.
-func invalidUTF8Fields(fields map[string]string) []string {
-	var invalid []string
-	for name, value := range fields {
-		if !utf8.ValidString(value) {
-			invalid = append(invalid, fmt.Sprintf("%s (len=%d)", name, len(value)))
-		}
-	}
-	return invalid
-}
-
 func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
 	message := strings.ToValidUTF8(endpoint.Message, "")
 	if len(message) > maxMessageChar {
@@ -102,10 +75,6 @@ func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
 		message = strings.ToValidUTF8(message, "")
 	}
 	endpoint.Message = message
-
-	// Status only ever holds controlled constants, but sanitize defensively to
-	// guarantee a valid UTF-8 byte sequence is persisted (avoids SQLSTATE 22021).
-	endpoint.Status = models.EndpointStatus(strings.ToValidUTF8(string(endpoint.Status), ""))
 }
 
 func (v *versionEndpointStorage) CountEndpoints(environment *models.Environment, model *models.Model) (int, error) {
