@@ -15,6 +15,11 @@ resources:
     cpu: "1"
     memory: 1Gi
 
+securityContext:
+  runAsUser: 1337
+  runAsGroup: 1337
+  runAsNonRoot: true
+
 service:
   type: ClusterIP
   ports:

@@ -5,3 +5,8 @@ resources:
   requests:
     cpu: 50m
     memory: 64Mi
+
+securityContext:
+  runAsUser: 1337
+  runAsGroup: 1337
+  runAsNonRoot: true
