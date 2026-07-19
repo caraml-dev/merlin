@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
@@ -74,6 +75,10 @@ func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidato
 			if err := validateTolerations(endpoint.ResourceRequest.Tolerations); err != nil {
 				return fmt.Errorf("invalid toleration in resource request: %w", err)
 			}
+
+			if err := validateNodeSelector(endpoint.ResourceRequest.NodeSelector); err != nil {
+				return fmt.Errorf("invalid node selector in resource request: %w", err)
+			}
 		}
 
 		if endpoint.Transformer != nil && endpoint.Transformer.ResourceRequest != nil {
@@ -87,6 +92,10 @@ func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidato
 
 			if err := validateTolerations(endpoint.Transformer.ResourceRequest.Tolerations); err != nil {
 				return fmt.Errorf("invalid toleration in transformer resource request: %w", err)
+			}
+
+			if err := validateNodeSelector(endpoint.Transformer.ResourceRequest.NodeSelector); err != nil {
+				return fmt.Errorf("invalid node selector in transformer resource request: %w", err)
 			}
 		}
 
@@ -120,6 +129,15 @@ func validateTolerations(tolerations []corev1.Toleration) error {
 		}
 		if t.TolerationSeconds != nil && t.Effect != corev1.TaintEffectNoExecute {
 			return fmt.Errorf("toleration[%d] tolerationSeconds is only valid for effect 'NoExecute'", i)
+		}
+	}
+	return nil
+}
+
+func validateNodeSelector(nodeSelector map[string]string) error {
+	for k := range nodeSelector {
+		if strings.TrimSpace(k) == "" {
+			return fmt.Errorf("node selector must not contain an empty label key")
 		}
 	}
 	return nil

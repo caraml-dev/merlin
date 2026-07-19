@@ -5007,3 +5007,115 @@ func TestCreateInferenceServiceSpecWithTolerations(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateInferenceServiceSpecWithNodeSelector(t *testing.T) {
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
+	assert.NoError(t, err)
+	defer func() { _ = labeller.InitKubernetesLabeller("", "", "") }()
+
+	project := mlp.Project{Name: "project"}
+	userNodeSelector := map[string]string{"pool": "workload-optimized"}
+	gpuNodeSelector := map[string]string{"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"}
+
+	baseMeta := models.Metadata{App: "model", Component: models.ComponentModelVersion, Stream: "dsp", Team: "dsp"}
+
+	baseDeployConfig := &config.DeploymentConfig{
+		DefaultModelResourceRequests:          defaultModelResourceRequests,
+		DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+		QueueResourcePercentage:               "2",
+		StandardTransformer:                   standardTransformerConfig,
+		UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+		UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+		UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+		DefaultEnvVarsWithoutCPULimits:        []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
+	}
+
+	gpuConfig := config.GPUConfig{
+		Name:         "NVIDIA T4",
+		Values:       []string{"1"},
+		ResourceType: "nvidia.com/gpu",
+		NodeSelector: gpuNodeSelector,
+	}
+
+	tests := []struct {
+		name         string
+		modelSvc     *models.Service
+		deployConfig *config.DeploymentConfig
+		checkFn      func(t *testing.T, infSvc *kservev1beta1.InferenceService)
+	}{
+		{
+			name: "predictor with user-defined node selector only",
+			modelSvc: &models.Service{
+				Name: "model-1", ModelName: "model", ModelVersion: "1", Namespace: project.Name,
+				ArtifactURI: "gs://my-artifacet", Type: models.ModelTypeTensorflow, Options: &models.ModelOption{},
+				Metadata: baseMeta, Protocol: protocol.HttpJson,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1, MaxReplica: 2,
+					CPURequest: resource.MustParse("500m"), MemoryRequest: resource.MustParse("500Mi"),
+					NodeSelector: userNodeSelector,
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.Equal(t, userNodeSelector, infSvc.Spec.Predictor.NodeSelector)
+			},
+		},
+		{
+			name: "predictor with GPU node selector merged with user node selector",
+			modelSvc: &models.Service{
+				Name: "model-1", ModelName: "model", ModelVersion: "1", Namespace: project.Name,
+				ArtifactURI: "gs://my-artifacet", Type: models.ModelTypeTensorflow, Options: &models.ModelOption{},
+				Metadata: baseMeta, Protocol: protocol.HttpJson,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1, MaxReplica: 2,
+					CPURequest: resource.MustParse("500m"), MemoryRequest: resource.MustParse("500Mi"),
+					GPUName: "NVIDIA T4", GPURequest: resource.MustParse("1"),
+					NodeSelector: userNodeSelector,
+				},
+			},
+			deployConfig: func() *config.DeploymentConfig {
+				cfg := *baseDeployConfig
+				cfg.GPUs = []config.GPUConfig{gpuConfig}
+				return &cfg
+			}(),
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.Equal(t, map[string]string{
+					"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+					"pool":                             "workload-optimized",
+				}, infSvc.Spec.Predictor.NodeSelector)
+				// the shared GPU config must not be mutated by the merge
+				assert.Equal(t, gpuNodeSelector, gpuConfig.NodeSelector)
+			},
+		},
+		{
+			name: "transformer with user-defined node selector",
+			modelSvc: &models.Service{
+				Name: "model-1", ModelName: "model", ModelVersion: "1", Namespace: project.Name,
+				ArtifactURI: "gs://my-artifacet", Type: models.ModelTypeTensorflow, Options: &models.ModelOption{},
+				Metadata: baseMeta, Protocol: protocol.HttpJson,
+				Transformer: &models.Transformer{
+					Enabled: true, Image: "ghcr.io/gojek/merlin-transformer-test",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 1, MaxReplica: 2,
+						CPURequest: resource.MustParse("100m"), MemoryRequest: resource.MustParse("500Mi"),
+						NodeSelector: userNodeSelector,
+					},
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.NotNil(t, infSvc.Spec.Transformer)
+				assert.Equal(t, userNodeSelector, infSvc.Spec.Transformer.PodSpec.NodeSelector)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tpl := NewInferenceServiceTemplater(*tt.deployConfig)
+			infSvc, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, defaultDeploymentScale)
+			assert.NoError(t, err)
+			tt.checkFn(t, infSvc)
+		})
+	}
+}

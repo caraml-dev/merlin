@@ -4,7 +4,7 @@ import {
   get,
   useOnChangeHandler,
 } from "@caraml-dev/ui-lib";
-import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
+import { EuiAccordion, EuiDescribedFormGroup, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
 import React, { useContext } from "react";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
@@ -16,6 +16,8 @@ import { ImageBuilderSection } from "../components/ImageBuilderSection";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
 import { ProbesFormGroup } from "../components/ProbesFormGroup";
 import { TolerationFormGroup } from "../components/TolerationFormGroup";
+import { NodeSelectorFormGroup } from "../components/NodeSelectorFormGroup";
+import { NodePoolSelect } from "../components/NodePoolSelect";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -67,10 +69,31 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
                 errors={get(errors, "image_builder_resource_request")}
               />
               <EuiSpacer size="m" />
+              <EuiDescribedFormGroup
+                title={<p>Node Pool</p>}
+                description="Pick a pool to pin this model onto and tolerate — sets the node selector and toleration for you."
+                fullWidth
+              >
+                <NodePoolSelect
+                  environment={data.environment_name}
+                  nodeSelector={data.resource_request?.node_selector || {}}
+                  tolerations={data.resource_request?.tolerations || []}
+                  onSelect={(sel, tols) => {
+                    onChange("resource_request.node_selector")(sel);
+                    onChange("resource_request.tolerations")(tols);
+                  }}
+                />
+              </EuiDescribedFormGroup>
+              <EuiSpacer size="m" />
               <TolerationFormGroup
                 tolerations={data.resource_request?.tolerations || []}
                 onChangeHandler={onChange("resource_request.tolerations")}
                 errors={get(errors, "resource_request.tolerations")}
+              />
+              <EuiSpacer size="m" />
+              <NodeSelectorFormGroup
+                nodeSelector={data.resource_request?.node_selector || {}}
+                onChangeHandler={onChange("resource_request.node_selector")}
               />
             </EuiAccordion>
           }

@@ -55,6 +55,8 @@ type Controller interface {
 	ListPods(ctx context.Context, namespace, labelSelector string) (*corev1.PodList, error)
 	StreamPodLogs(ctx context.Context, namespace, podName string, opts *corev1.PodLogOptions) (io.ReadCloser, error)
 
+	ListNodes(ctx context.Context) (*corev1.NodeList, error)
+
 	ListJobs(ctx context.Context, namespace, labelSelector string) (*batchv1.JobList, error)
 	DeleteJob(ctx context.Context, namespace, jobName string, deleteOptions metav1.DeleteOptions) error
 	DeleteJobs(ctx context.Context, namespace string, deleteOptions metav1.DeleteOptions, listOptions metav1.ListOptions) error
@@ -501,6 +503,10 @@ func (c *controller) ListPods(ctx context.Context, namespace, labelSelector stri
 
 func (c *controller) StreamPodLogs(ctx context.Context, namespace, podName string, opts *corev1.PodLogOptions) (io.ReadCloser, error) {
 	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream(ctx)
+}
+
+func (c *controller) ListNodes(ctx context.Context) (*corev1.NodeList, error) {
+	return c.clusterClient.Nodes().List(ctx, metav1.ListOptions{})
 }
 
 func (c *controller) GetCurrentDeploymentScale(

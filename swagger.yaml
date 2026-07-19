@@ -67,6 +67,27 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Environment"
+  "/environments/{environment_name}/node-pools":
+    get:
+      tags:
+        - environment
+      summary: List schedulable node pools for an environment
+      description: Returns the deliberate taints and their shared node labels, so a model can be pinned to (and tolerate) a dedicated node pool.
+      parameters:
+        - name: environment_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/NodePool"
   "/projects":
     get:
       tags:
@@ -2126,6 +2147,30 @@ components:
           description: Tolerations allow model pods to be scheduled onto nodes with matching taints
           items:
             "$ref": "#/components/schemas/Toleration"
+        node_selector:
+          type: object
+          description: NodeSelector pins model pods onto nodes whose labels match every entry
+          additionalProperties:
+            type: string
+    NodePool:
+      type: object
+      description: A schedulable node pool discovered from the cluster's node taints and shared labels
+      properties:
+        taint:
+          type: object
+          description: The taint the pool's nodes carry; a pod must tolerate it to run there
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+            effect:
+              type: string
+        node_selector:
+          type: object
+          description: Labels shared by all nodes carrying the taint; use as node selector to pin onto the pool
+          additionalProperties:
+            type: string
     Toleration:
       type: object
       description: Kubernetes toleration for scheduling pods onto tainted nodes

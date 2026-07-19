@@ -62,6 +62,7 @@ type AppContext struct {
 	VersionImageService       service.VersionImageService
 	EndpointsService          service.EndpointsService
 	LogService                service.LogService
+	NodePoolService           service.NodePoolService
 	PredictionJobService      service.PredictionJobService
 	SecretService             service.SecretService
 	ModelEndpointAlertService service.ModelEndpointAlertService
@@ -168,6 +169,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	endpointsController := EndpointsController{&appCtx}
 	predictionJobController := PredictionJobController{&appCtx}
 	logController := LogController{&appCtx}
+	nodePoolController := NodePoolController{&appCtx}
 	secretController := SecretsController{&appCtx}
 	alertsController := AlertsController{&appCtx}
 	transformerController := TransformerController{&appCtx}
@@ -176,6 +178,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	routes := []Route{
 		// Environment API
 		{http.MethodGet, "/environments", nil, environmentController.ListEnvironments, "ListEnvironments"},
+		{http.MethodGet, "/environments/{environment_name}/node-pools", nil, nodePoolController.ListNodePools, "ListNodePools"},
 
 		// Project API
 		{http.MethodGet, "/projects/{project_id:[0-9]+}", nil, projectsController.GetProject, "GetProject"},

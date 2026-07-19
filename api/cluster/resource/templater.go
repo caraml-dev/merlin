@@ -230,10 +230,12 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 					resources.Requests[resourceType] = resourceQuantity
 					resources.Limits[resourceType] = resourceQuantity
 
-					nodeSelector = gpuConfig.NodeSelector
-					// Copy into a slice we own rather than aliasing the shared
-					// deploymentConfig backing array (a subsequent append must not
-					// mutate the config or leak across deployments).
+					// Copy into maps/slices we own rather than aliasing the shared
+					// deploymentConfig (a subsequent write must not mutate the config
+					// or leak across deployments).
+					for k, v := range gpuConfig.NodeSelector {
+						nodeSelector[k] = v
+					}
 					tolerations = append(tolerations, gpuConfig.Tolerations...)
 				}
 			}
@@ -243,6 +245,11 @@ func (t *InferenceServiceTemplater) createPredictorSpec(modelService *models.Ser
 	// Append user-defined tolerations from ResourceRequest (merged on top of any GPU-derived tolerations)
 	if len(modelService.ResourceRequest.Tolerations) > 0 {
 		tolerations = append(tolerations, modelService.ResourceRequest.Tolerations...)
+	}
+
+	// Overlay user-defined node selectors (merged on top of any GPU-derived selector)
+	for k, v := range modelService.ResourceRequest.NodeSelector {
+		nodeSelector[k] = v
 	}
 
 	// Get user-configured probe settings
@@ -479,6 +486,11 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	// Apply user-defined tolerations for transformer pods
 	if len(transformer.ResourceRequest.Tolerations) > 0 {
 		transformerSpec.PodSpec.Tolerations = transformer.ResourceRequest.Tolerations
+	}
+
+	// Apply user-defined node selector for transformer pods
+	if len(transformer.ResourceRequest.NodeSelector) > 0 {
+		transformerSpec.PodSpec.NodeSelector = transformer.ResourceRequest.NodeSelector
 	}
 
 	return transformerSpec, nil

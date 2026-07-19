@@ -116,6 +116,13 @@ export const DeployModelVersionForm = ({
         });
       }
     }
+    // Drop empty node selectors so the backend doesn't receive an empty object
+    if (_.isEmpty(versionEndpoint?.resource_request?.node_selector)) {
+      delete versionEndpoint?.resource_request?.node_selector;
+    }
+    if (_.isEmpty(versionEndpoint?.transformer?.resource_request?.node_selector)) {
+      delete versionEndpoint?.transformer?.resource_request?.node_selector;
+    }
     submitForm({
       body: JSON.stringify({
         ...versionEndpoint,
