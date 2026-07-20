@@ -41,7 +41,10 @@ func (c *NodePoolController) ListNodePools(r *http.Request, vars map[string]stri
 		return InternalServerError(fmt.Sprintf("Error getting environment: %v", err))
 	}
 
-	nodePools, err := c.NodePoolService.ListNodePools(ctx, env.Cluster)
+	// Route by environment name — this selects the same per-environment controller
+	// that deployment uses, so nodes are read from the exact cluster the model
+	// deploys to (in-cluster SA locally, or mTLS client cert for a remote cluster).
+	nodePools, err := c.NodePoolService.ListNodePools(ctx, env.Name)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing node pools: %v", err))
 	}
