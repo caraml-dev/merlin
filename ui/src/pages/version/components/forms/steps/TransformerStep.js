@@ -13,8 +13,6 @@ import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
-import { TolerationFormGroup } from "../components/TolerationFormGroup";
-import { NodeSelectorFormGroup } from "../components/NodeSelectorFormGroup";
 
 export const TransformerStep = ({ maxAllowedReplica }) => {
   const {
@@ -54,17 +52,9 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
                     onChangeHandler={onChange("transformer.resource_request")}
                     errors={get(errors, "transformer.resource_request")}
                   />
-                  <EuiSpacer size="m" />
-                  <TolerationFormGroup
-                    tolerations={transformer.resource_request?.tolerations || []}
-                    onChangeHandler={onChange("transformer.resource_request.tolerations")}
-                    errors={get(errors, "transformer.resource_request.tolerations")}
-                  />
-                  <EuiSpacer size="m" />
-                  <NodeSelectorFormGroup
-                    nodeSelector={transformer.resource_request?.node_selector || {}}
-                    onChangeHandler={onChange("transformer.resource_request.node_selector")}
-                  />
+                  {/* Node placement (node selector + tolerations) is set once via the
+                      Node dropdown in the model step and applied to both the predictor
+                      and the transformer, so they always land on the same node. */}
                 </EuiAccordion>
               }
             />

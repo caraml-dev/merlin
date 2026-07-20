@@ -22,14 +22,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// NodePoolController serves node pool discovery for a deployment environment.
-type NodePoolController struct {
+// NodeController serves node listing for a deployment environment.
+type NodeController struct {
 	*AppContext
 }
 
-// ListNodePools returns the schedulable node pools (taint + shared labels) of the
-// cluster backing the given environment, so the UI can offer them for placement.
-func (c *NodePoolController) ListNodePools(r *http.Request, vars map[string]string, _ interface{}) *Response {
+// ListNodes returns the nodes (name, status, labels, taints) of the cluster
+// backing the given environment, so the UI can offer them for model placement.
+func (c *NodeController) ListNodes(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	environmentName := vars["environment_name"]
@@ -44,10 +44,10 @@ func (c *NodePoolController) ListNodePools(r *http.Request, vars map[string]stri
 	// Route by environment name — this selects the same per-environment controller
 	// that deployment uses, so nodes are read from the exact cluster the model
 	// deploys to (in-cluster SA locally, or mTLS client cert for a remote cluster).
-	nodePools, err := c.NodePoolService.ListNodePools(ctx, env.Name)
+	nodes, err := c.NodeService.ListNodes(ctx, env.Name)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Error listing node pools: %v", err))
+		return InternalServerError(fmt.Sprintf("Error listing nodes: %v", err))
 	}
 
-	return Ok(nodePools)
+	return Ok(nodes)
 }

@@ -67,12 +67,12 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Environment"
-  "/environments/{environment_name}/node-pools":
+  "/environments/{environment_name}/nodes":
     get:
       tags:
         - environment
-      summary: List schedulable node pools for an environment
-      description: Returns the deliberate taints and their shared node labels, so a model can be pinned to (and tolerate) a dedicated node pool.
+      summary: List nodes for an environment
+      description: Returns the nodes (name, status, labels, taints) of the cluster backing the environment, for use in model placement (node selector + tolerations).
       parameters:
         - name: environment_name
           in: path
@@ -87,7 +87,7 @@ paths:
               schema:
                 type: array
                 items:
-                  "$ref": "#/components/schemas/NodePool"
+                  "$ref": "#/components/schemas/NodeInfo"
   "/projects":
     get:
       tags:
@@ -2152,25 +2152,31 @@ components:
           description: NodeSelector pins model pods onto nodes whose labels match every entry
           additionalProperties:
             type: string
-    NodePool:
+    NodeInfo:
       type: object
-      description: A schedulable node pool discovered from the cluster's node taints and shared labels
+      description: A cluster node's placement-relevant summary
       properties:
-        taint:
+        name:
+          type: string
+        ready:
+          type: boolean
+        labels:
           type: object
-          description: The taint the pool's nodes carry; a pod must tolerate it to run there
-          properties:
-            key:
-              type: string
-            value:
-              type: string
-            effect:
-              type: string
-        node_selector:
-          type: object
-          description: Labels shared by all nodes carrying the taint; use as node selector to pin onto the pool
+          description: Node labels; usable as a node selector to pin a pod onto this node's pool
           additionalProperties:
             type: string
+        taints:
+          type: array
+          description: Node taints; a pod must tolerate these to be scheduled here
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              effect:
+                type: string
     Toleration:
       type: object
       description: Kubernetes toleration for scheduling pods onto tainted nodes

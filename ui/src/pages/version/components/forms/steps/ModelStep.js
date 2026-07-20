@@ -17,7 +17,7 @@ import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
 import { ProbesFormGroup } from "../components/ProbesFormGroup";
 import { TolerationFormGroup } from "../components/TolerationFormGroup";
 import { NodeSelectorFormGroup } from "../components/NodeSelectorFormGroup";
-import { NodePoolSelect } from "../components/NodePoolSelect";
+import { NodeSelect } from "../components/NodeSelect";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -70,17 +70,18 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
               />
               <EuiSpacer size="m" />
               <EuiDescribedFormGroup
-                title={<p>Node Pool</p>}
-                description="Pick a pool to pin this model onto and tolerate — sets the node selector and toleration for you."
+                title={<p>Node</p>}
+                description="Pick a node to pin this model onto — pins both the predictor and the transformer to the same node, and tolerates the node's taints."
                 fullWidth
               >
-                <NodePoolSelect
+                <NodeSelect
                   environment={data.environment_name}
-                  nodeSelector={data.resource_request?.node_selector || {}}
-                  tolerations={data.resource_request?.tolerations || []}
                   onSelect={(sel, tols) => {
+                    // Pin predictor and transformer to the same node.
                     onChange("resource_request.node_selector")(sel);
                     onChange("resource_request.tolerations")(tols);
+                    onChange("transformer.resource_request.node_selector")(sel);
+                    onChange("transformer.resource_request.tolerations")(tols);
                   }}
                 />
               </EuiDescribedFormGroup>

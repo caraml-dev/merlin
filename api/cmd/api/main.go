@@ -286,7 +286,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	batchDeployment := initBatchDeployment(cfg, db, batchControllers, predJobBuilder)
 	predictionJobService := initPredictionJobService(cfg, batchControllers, predJobBuilder, db, dispatcher)
 	logService := initLogService(cfg)
-	nodePoolService := service.NewNodePoolService(clusterControllers)
+	nodeService := service.NewNodeService(clusterControllers)
 	// use "mlp" as product name for enforcer so that same policy can be reused by other components
 	enforcerCfg := enforcer.NewEnforcerBuilder().KetoEndpoints(cfg.AuthorizationConfig.KetoRemoteRead,
 		cfg.AuthorizationConfig.KetoRemoteWrite)
@@ -353,7 +353,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		VersionImageService:       versionImageService,
 		EndpointsService:          versionEndpointService,
 		LogService:                logService,
-		NodePoolService:           nodePoolService,
+		NodeService:               nodeService,
 		PredictionJobService:      predictionJobService,
 		SecretService:             secretService,
 		ModelEndpointAlertService: modelEndpointAlertService,

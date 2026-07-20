@@ -22,27 +22,27 @@ import (
 	"github.com/caraml-dev/merlin/models"
 )
 
-// NodePoolService discovers the schedulable node pools of the cluster backing a
-// deployment environment, so users can target dedicated / tainted nodes without
-// knowing raw labels and taints. It reuses the same per-environment controller
-// that deployment uses, so nodes are always read from the exact cluster (and via
-// the exact credentials, e.g. mTLS for remote clusters) the model deploys to.
-type NodePoolService interface {
-	ListNodePools(ctx context.Context, environmentName string) ([]models.NodePool, error)
+// NodeService lists the nodes of the cluster backing a deployment environment,
+// so users can see the available nodes (labels + taints) for model placement.
+// It reuses the same per-environment controller that deployment uses, so nodes
+// are read from the exact cluster (and via the exact credentials, e.g. mTLS for
+// remote clusters) the model deploys to.
+type NodeService interface {
+	ListNodes(ctx context.Context, environmentName string) ([]models.NodeInfo, error)
 }
 
-type nodePoolService struct {
+type nodeService struct {
 	// clusterControllers is a map of environment name to its cluster.Controller.
 	clusterControllers map[string]cluster.Controller
 }
 
-// NewNodePoolService creates a NodePoolService.
+// NewNodeService creates a NodeService.
 // clusterControllers is a map of environment name to its cluster.Controller.
-func NewNodePoolService(clusterControllers map[string]cluster.Controller) NodePoolService {
-	return &nodePoolService{clusterControllers: clusterControllers}
+func NewNodeService(clusterControllers map[string]cluster.Controller) NodeService {
+	return &nodeService{clusterControllers: clusterControllers}
 }
 
-func (s *nodePoolService) ListNodePools(ctx context.Context, environmentName string) ([]models.NodePool, error) {
+func (s *nodeService) ListNodes(ctx context.Context, environmentName string) ([]models.NodeInfo, error) {
 	controller, ok := s.clusterControllers[environmentName]
 	if !ok {
 		return nil, fmt.Errorf("unable to find cluster controller for environment %s", environmentName)
@@ -53,5 +53,5 @@ func (s *nodePoolService) ListNodePools(ctx context.Context, environmentName str
 		return nil, fmt.Errorf("unable to list nodes for environment %s: %w", environmentName, err)
 	}
 
-	return models.AggregateNodePools(nodeList.Items), nil
+	return models.NewNodeInfos(nodeList.Items), nil
 }
