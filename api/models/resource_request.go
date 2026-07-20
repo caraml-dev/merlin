@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -41,6 +42,10 @@ type ResourceRequest struct {
 	LivenessProbe *ProbeConfig `json:"liveness_probe,omitempty"`
 	// Readiness probe configuration
 	ReadinessProbe *ProbeConfig `json:"readiness_probe,omitempty"`
+	// Tolerations allow the model pods to be scheduled onto nodes with matching taints
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// NodeSelector pins the model pods onto nodes whose labels match every entry
+	NodeSelector map[string]string `json:"node_selector,omitempty"`
 }
 
 // ProbeConfig represents the configuration for Kubernetes liveness/readiness probes

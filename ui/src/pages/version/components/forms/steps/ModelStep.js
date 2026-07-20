@@ -4,7 +4,7 @@ import {
   get,
   useOnChangeHandler,
 } from "@caraml-dev/ui-lib";
-import { EuiAccordion, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
+import { EuiAccordion, EuiDescribedFormGroup, EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
 import React, { useContext } from "react";
 import { PROTOCOL } from "../../../../../services/version_endpoint/VersionEndpoint";
 import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
@@ -15,6 +15,9 @@ import { ResourcesPanel } from "../components/ResourcesPanel";
 import { ImageBuilderSection } from "../components/ImageBuilderSection";
 import { CPULimitsFormGroup } from "../components/CPULimitsFormGroup";
 import { ProbesFormGroup } from "../components/ProbesFormGroup";
+import { TolerationFormGroup } from "../components/TolerationFormGroup";
+import { NodeSelectorFormGroup } from "../components/NodeSelectorFormGroup";
+import { NodeSelect } from "../components/NodeSelect";
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedReplica, setMaxAllowedReplica }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -64,6 +67,34 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false, maxAllowedRe
                 imageBuilderResourceConfig={data.image_builder_resource_request}
                 onChangeHandler={onChange("image_builder_resource_request")}
                 errors={get(errors, "image_builder_resource_request")}
+              />
+              <EuiSpacer size="m" />
+              <EuiDescribedFormGroup
+                title={<p>Node</p>}
+                description="Pick a node to pin this model onto — pins both the predictor and the transformer to the same node, and tolerates the node's taints."
+                fullWidth
+              >
+                <NodeSelect
+                  environment={data.environment_name}
+                  onSelect={(sel, tols) => {
+                    // Pin predictor and transformer to the same node.
+                    onChange("resource_request.node_selector")(sel);
+                    onChange("resource_request.tolerations")(tols);
+                    onChange("transformer.resource_request.node_selector")(sel);
+                    onChange("transformer.resource_request.tolerations")(tols);
+                  }}
+                />
+              </EuiDescribedFormGroup>
+              <EuiSpacer size="m" />
+              <TolerationFormGroup
+                tolerations={data.resource_request?.tolerations || []}
+                onChangeHandler={onChange("resource_request.tolerations")}
+                errors={get(errors, "resource_request.tolerations")}
+              />
+              <EuiSpacer size="m" />
+              <NodeSelectorFormGroup
+                nodeSelector={data.resource_request?.node_selector || {}}
+                onChangeHandler={onChange("resource_request.node_selector")}
               />
             </EuiAccordion>
           }

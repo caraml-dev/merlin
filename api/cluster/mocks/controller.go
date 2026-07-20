@@ -202,6 +202,36 @@ func (_m *Controller) ListJobs(ctx context.Context, namespace string, labelSelec
 }
 
 // ListPods provides a mock function with given fields: ctx, namespace, labelSelector
+// ListNodes provides a mock function with given fields: ctx
+func (_m *Controller) ListNodes(ctx context.Context) (*corev1.NodeList, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListNodes")
+	}
+
+	var r0 *corev1.NodeList
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (*corev1.NodeList, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) *corev1.NodeList); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*corev1.NodeList)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 func (_m *Controller) ListPods(ctx context.Context, namespace string, labelSelector string) (*corev1.PodList, error) {
 	ret := _m.Called(ctx, namespace, labelSelector)
 

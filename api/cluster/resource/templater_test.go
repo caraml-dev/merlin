@@ -4794,3 +4794,328 @@ func sortInferenceServiceSpecEnvVars(isvc kservev1beta1.InferenceServiceSpec) {
 		}
 	}
 }
+
+func TestCreateInferenceServiceSpecWithTolerations(t *testing.T) {
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
+	assert.NoError(t, err)
+	defer func() { _ = labeller.InitKubernetesLabeller("", "", "") }()
+
+	project := mlp.Project{Name: "project"}
+
+	userTolerations := []corev1.Toleration{
+		{
+			Key:      "dedicated",
+			Operator: corev1.TolerationOpEqual,
+			Value:    "ml-team",
+			Effect:   corev1.TaintEffectNoSchedule,
+		},
+	}
+
+	gpuTolerations := []corev1.Toleration{
+		{
+			Key:      "nvidia.com/gpu",
+			Operator: corev1.TolerationOpExists,
+			Effect:   corev1.TaintEffectNoSchedule,
+		},
+	}
+
+	gpuConfig := config.GPUConfig{
+		Name:         "NVIDIA T4",
+		Values:       []string{"1"},
+		ResourceType: "nvidia.com/gpu",
+		NodeSelector: map[string]string{"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"},
+		Tolerations:  gpuTolerations,
+	}
+
+	baseModelSvc := &models.Service{
+		Name:         "model-1",
+		ModelName:    "model",
+		Namespace:    "project",
+		ModelVersion: "1",
+		ArtifactURI:  "gs://my-artifacet",
+		Metadata: models.Metadata{
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
+		},
+		Protocol: protocol.HttpJson,
+	}
+
+	baseDeployConfig := &config.DeploymentConfig{
+		DefaultModelResourceRequests:          defaultModelResourceRequests,
+		DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+		QueueResourcePercentage:               "2",
+		StandardTransformer:                   standardTransformerConfig,
+		UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+		UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+		UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+		DefaultEnvVarsWithoutCPULimits:        []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
+	}
+
+	tests := []struct {
+		name         string
+		modelSvc     *models.Service
+		deployConfig *config.DeploymentConfig
+		wantErr      bool
+		checkFn      func(t *testing.T, infSvc *kservev1beta1.InferenceService)
+	}{
+		{
+			name: "predictor with user-defined tolerations only",
+			modelSvc: &models.Service{
+				Name:         baseModelSvc.Name,
+				ModelName:    baseModelSvc.ModelName,
+				ModelVersion: baseModelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  baseModelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     baseModelSvc.Metadata,
+				Protocol:     protocol.HttpJson,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    2,
+					CPURequest:    resource.MustParse("500m"),
+					MemoryRequest: resource.MustParse("500Mi"),
+					Tolerations:   userTolerations,
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.Equal(t, userTolerations, infSvc.Spec.Predictor.Tolerations,
+					"predictor should carry user-defined tolerations")
+				assert.Nil(t, infSvc.Spec.Transformer)
+			},
+		},
+		{
+			name: "predictor with GPU tolerations merged with user-defined tolerations",
+			modelSvc: &models.Service{
+				Name:         baseModelSvc.Name,
+				ModelName:    baseModelSvc.ModelName,
+				ModelVersion: baseModelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  baseModelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     baseModelSvc.Metadata,
+				Protocol:     protocol.HttpJson,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    2,
+					CPURequest:    resource.MustParse("500m"),
+					MemoryRequest: resource.MustParse("500Mi"),
+					GPUName:       "NVIDIA T4",
+					GPURequest:    resource.MustParse("1"),
+					Tolerations:   userTolerations,
+				},
+			},
+			deployConfig: func() *config.DeploymentConfig {
+				cfg := *baseDeployConfig
+				cfg.GPUs = []config.GPUConfig{gpuConfig}
+				return &cfg
+			}(),
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				got := infSvc.Spec.Predictor.Tolerations
+				assert.Equal(t, append(gpuTolerations, userTolerations...), got,
+					"predictor should have GPU tolerations followed by user tolerations")
+			},
+		},
+		{
+			name: "predictor with no tolerations has empty toleration list",
+			modelSvc: &models.Service{
+				Name:         baseModelSvc.Name,
+				ModelName:    baseModelSvc.ModelName,
+				ModelVersion: baseModelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  baseModelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     baseModelSvc.Metadata,
+				Protocol:     protocol.HttpJson,
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.Empty(t, infSvc.Spec.Predictor.Tolerations)
+			},
+		},
+		{
+			name: "transformer with user-defined tolerations",
+			modelSvc: &models.Service{
+				Name:         baseModelSvc.Name,
+				ModelName:    baseModelSvc.ModelName,
+				ModelVersion: baseModelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  baseModelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     baseModelSvc.Metadata,
+				Protocol:     protocol.HttpJson,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    2,
+						CPURequest:    resource.MustParse("100m"),
+						MemoryRequest: resource.MustParse("500Mi"),
+						Tolerations:   userTolerations,
+					},
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.NotNil(t, infSvc.Spec.Transformer)
+				assert.Equal(t, userTolerations, infSvc.Spec.Transformer.PodSpec.Tolerations,
+					"transformer pods should carry user-defined tolerations")
+			},
+		},
+		{
+			name: "transformer without tolerations has no tolerations set",
+			modelSvc: &models.Service{
+				Name:         baseModelSvc.Name,
+				ModelName:    baseModelSvc.ModelName,
+				ModelVersion: baseModelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  baseModelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     baseModelSvc.Metadata,
+				Protocol:     protocol.HttpJson,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.NotNil(t, infSvc.Spec.Transformer)
+				assert.Empty(t, infSvc.Spec.Transformer.PodSpec.Tolerations)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tpl := NewInferenceServiceTemplater(*tt.deployConfig)
+			infSvc, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, defaultDeploymentScale)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			tt.checkFn(t, infSvc)
+		})
+	}
+}
+
+func TestCreateInferenceServiceSpecWithNodeSelector(t *testing.T) {
+	err := labeller.InitKubernetesLabeller("gojek.com/", "caraml.dev/", testEnvironmentName)
+	assert.NoError(t, err)
+	defer func() { _ = labeller.InitKubernetesLabeller("", "", "") }()
+
+	project := mlp.Project{Name: "project"}
+	userNodeSelector := map[string]string{"pool": "workload-optimized"}
+	gpuNodeSelector := map[string]string{"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"}
+
+	baseMeta := models.Metadata{App: "model", Component: models.ComponentModelVersion, Stream: "dsp", Team: "dsp"}
+
+	baseDeployConfig := &config.DeploymentConfig{
+		DefaultModelResourceRequests:          defaultModelResourceRequests,
+		DefaultTransformerResourceRequests:    defaultTransformerResourceRequests,
+		QueueResourcePercentage:               "2",
+		StandardTransformer:                   standardTransformerConfig,
+		UserContainerCPUDefaultLimit:          userContainerCPUDefaultLimit,
+		UserContainerCPULimitRequestFactor:    userContainerCPULimitRequestFactor,
+		UserContainerMemoryLimitRequestFactor: userContainerMemoryLimitRequestFactor,
+		DefaultEnvVarsWithoutCPULimits:        []corev1.EnvVar{defaultEnvVarWithoutCPULimits},
+	}
+
+	gpuConfig := config.GPUConfig{
+		Name:         "NVIDIA T4",
+		Values:       []string{"1"},
+		ResourceType: "nvidia.com/gpu",
+		NodeSelector: gpuNodeSelector,
+	}
+
+	tests := []struct {
+		name         string
+		modelSvc     *models.Service
+		deployConfig *config.DeploymentConfig
+		checkFn      func(t *testing.T, infSvc *kservev1beta1.InferenceService)
+	}{
+		{
+			name: "predictor with user-defined node selector only",
+			modelSvc: &models.Service{
+				Name: "model-1", ModelName: "model", ModelVersion: "1", Namespace: project.Name,
+				ArtifactURI: "gs://my-artifacet", Type: models.ModelTypeTensorflow, Options: &models.ModelOption{},
+				Metadata: baseMeta, Protocol: protocol.HttpJson,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1, MaxReplica: 2,
+					CPURequest: resource.MustParse("500m"), MemoryRequest: resource.MustParse("500Mi"),
+					NodeSelector: userNodeSelector,
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.Equal(t, userNodeSelector, infSvc.Spec.Predictor.NodeSelector)
+			},
+		},
+		{
+			name: "predictor with GPU node selector merged with user node selector",
+			modelSvc: &models.Service{
+				Name: "model-1", ModelName: "model", ModelVersion: "1", Namespace: project.Name,
+				ArtifactURI: "gs://my-artifacet", Type: models.ModelTypeTensorflow, Options: &models.ModelOption{},
+				Metadata: baseMeta, Protocol: protocol.HttpJson,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1, MaxReplica: 2,
+					CPURequest: resource.MustParse("500m"), MemoryRequest: resource.MustParse("500Mi"),
+					GPUName: "NVIDIA T4", GPURequest: resource.MustParse("1"),
+					NodeSelector: userNodeSelector,
+				},
+			},
+			deployConfig: func() *config.DeploymentConfig {
+				cfg := *baseDeployConfig
+				cfg.GPUs = []config.GPUConfig{gpuConfig}
+				return &cfg
+			}(),
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.Equal(t, map[string]string{
+					"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+					"pool":                             "workload-optimized",
+				}, infSvc.Spec.Predictor.NodeSelector)
+				// the shared GPU config must not be mutated by the merge
+				assert.Equal(t, gpuNodeSelector, gpuConfig.NodeSelector)
+			},
+		},
+		{
+			name: "transformer with user-defined node selector",
+			modelSvc: &models.Service{
+				Name: "model-1", ModelName: "model", ModelVersion: "1", Namespace: project.Name,
+				ArtifactURI: "gs://my-artifacet", Type: models.ModelTypeTensorflow, Options: &models.ModelOption{},
+				Metadata: baseMeta, Protocol: protocol.HttpJson,
+				Transformer: &models.Transformer{
+					Enabled: true, Image: "ghcr.io/gojek/merlin-transformer-test",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 1, MaxReplica: 2,
+						CPURequest: resource.MustParse("100m"), MemoryRequest: resource.MustParse("500Mi"),
+						NodeSelector: userNodeSelector,
+					},
+				},
+			},
+			deployConfig: baseDeployConfig,
+			checkFn: func(t *testing.T, infSvc *kservev1beta1.InferenceService) {
+				assert.NotNil(t, infSvc.Spec.Transformer)
+				assert.Equal(t, userNodeSelector, infSvc.Spec.Transformer.PodSpec.NodeSelector)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tpl := NewInferenceServiceTemplater(*tt.deployConfig)
+			infSvc, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, defaultDeploymentScale)
+			assert.NoError(t, err)
+			tt.checkFn(t, infSvc)
+		})
+	}
+}

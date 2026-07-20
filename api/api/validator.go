@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/exp/slices"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
@@ -61,20 +63,84 @@ func validateRequest(validators ...requestValidator) error {
 
 func resourceRequestValidation(endpoint *models.VersionEndpoint) requestValidator {
 	return newFuncValidate(func() error {
-		if endpoint.ResourceRequest == nil {
-			return nil
+		if endpoint.ResourceRequest != nil {
+			if endpoint.ResourceRequest.MinReplica > endpoint.ResourceRequest.MaxReplica {
+				return fmt.Errorf("min replica must be less or equal to max replica")
+			}
+
+			if endpoint.ResourceRequest.MaxReplica < 1 {
+				return fmt.Errorf("max replica must be greater than 0")
+			}
+
+			if err := validateTolerations(endpoint.ResourceRequest.Tolerations); err != nil {
+				return fmt.Errorf("invalid toleration in resource request: %w", err)
+			}
+
+			if err := validateNodeSelector(endpoint.ResourceRequest.NodeSelector); err != nil {
+				return fmt.Errorf("invalid node selector in resource request: %w", err)
+			}
 		}
 
-		if endpoint.ResourceRequest.MinReplica > endpoint.ResourceRequest.MaxReplica {
-			return fmt.Errorf("min replica must be less or equal to max replica")
-		}
+		if endpoint.Transformer != nil && endpoint.Transformer.ResourceRequest != nil {
+			if endpoint.Transformer.ResourceRequest.MinReplica > endpoint.Transformer.ResourceRequest.MaxReplica {
+				return fmt.Errorf("transformer min replica must be less or equal to max replica")
+			}
 
-		if endpoint.ResourceRequest.MaxReplica < 1 {
-			return fmt.Errorf("max replica must be greater than 0")
+			if endpoint.Transformer.ResourceRequest.MaxReplica < 1 {
+				return fmt.Errorf("transformer max replica must be greater than 0")
+			}
+
+			if err := validateTolerations(endpoint.Transformer.ResourceRequest.Tolerations); err != nil {
+				return fmt.Errorf("invalid toleration in transformer resource request: %w", err)
+			}
+
+			if err := validateNodeSelector(endpoint.Transformer.ResourceRequest.NodeSelector); err != nil {
+				return fmt.Errorf("invalid node selector in transformer resource request: %w", err)
+			}
 		}
 
 		return nil
 	})
+}
+
+var validTolerationEffects = []corev1.TaintEffect{
+	corev1.TaintEffectNoSchedule,
+	corev1.TaintEffectPreferNoSchedule,
+	corev1.TaintEffectNoExecute,
+	"", // empty matches all effects
+}
+
+var validTolerationOperators = []corev1.TolerationOperator{
+	corev1.TolerationOpEqual,
+	corev1.TolerationOpExists,
+	"", // empty defaults to Equal
+}
+
+func validateTolerations(tolerations []corev1.Toleration) error {
+	for i, t := range tolerations {
+		if !slices.Contains(validTolerationEffects, t.Effect) {
+			return fmt.Errorf("toleration[%d] has invalid effect %q; must be one of: NoSchedule, PreferNoSchedule, NoExecute", i, t.Effect)
+		}
+		if !slices.Contains(validTolerationOperators, t.Operator) {
+			return fmt.Errorf("toleration[%d] has invalid operator %q; must be one of: Equal, Exists", i, t.Operator)
+		}
+		if t.Operator == corev1.TolerationOpExists && t.Value != "" {
+			return fmt.Errorf("toleration[%d] with operator 'Exists' must not specify a value", i)
+		}
+		if t.TolerationSeconds != nil && t.Effect != corev1.TaintEffectNoExecute {
+			return fmt.Errorf("toleration[%d] tolerationSeconds is only valid for effect 'NoExecute'", i)
+		}
+	}
+	return nil
+}
+
+func validateNodeSelector(nodeSelector map[string]string) error {
+	for k := range nodeSelector {
+		if strings.TrimSpace(k) == "" {
+			return fmt.Errorf("node selector must not contain an empty label key")
+		}
+	}
+	return nil
 }
 
 func customModelValidation(model *models.Model, version *models.Version) requestValidator {
