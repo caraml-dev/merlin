@@ -20,26 +20,25 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictInt, StrictStr
-from client.models.probe_config import ProbeConfig
+from pydantic import Field
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class ResourceRequest(BaseModel):
+class ProbeConfig(BaseModel):
     """
-    ResourceRequest
+    ProbeConfig
     """ # noqa: E501
-    min_replica: Optional[StrictInt] = None
-    max_replica: Optional[StrictInt] = None
-    cpu_request: Optional[StrictStr] = None
-    cpu_limit: Optional[StrictStr] = None
-    memory_request: Optional[StrictStr] = None
-    gpu_name: Optional[StrictStr] = None
-    gpu_request: Optional[StrictStr] = None
-    liveness_probe: Optional[ProbeConfig] = None
-    readiness_probe: Optional[ProbeConfig] = None
-    __properties: ClassVar[List[str]] = ["min_replica", "max_replica", "cpu_request", "cpu_limit", "memory_request", "gpu_name", "gpu_request", "liveness_probe", "readiness_probe"]
+    path: Optional[StrictStr] = Field(default=None, description="Path for HTTP probe")
+    port: Optional[StrictInt] = Field(default=None, description="Port for the probe")
+    scheme: Optional[StrictStr] = Field(default=None, description="Scheme for HTTP probe (HTTP or HTTPS)")
+    initial_delay_seconds: Optional[StrictInt] = Field(default=None, description="Initial delay before starting the probe (seconds)")
+    timeout_seconds: Optional[StrictInt] = Field(default=None, description="Timeout for the probe (seconds)")
+    period_seconds: Optional[StrictInt] = Field(default=None, description="Period between probe checks (seconds)")
+    success_threshold: Optional[StrictInt] = Field(default=None, description="Number of successes required to be considered healthy")
+    failure_threshold: Optional[StrictInt] = Field(default=None, description="Number of failures before considered unhealthy")
+    __properties: ClassVar[List[str]] = ["path", "port", "scheme", "initial_delay_seconds", "timeout_seconds", "period_seconds", "success_threshold", "failure_threshold"]
 
     model_config = {
         "populate_by_name": True,
@@ -58,7 +57,7 @@ class ResourceRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of ResourceRequest from a JSON string"""
+        """Create an instance of ProbeConfig from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -77,17 +76,11 @@ class ResourceRequest(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of liveness_probe
-        if self.liveness_probe:
-            _dict['liveness_probe'] = self.liveness_probe.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of readiness_probe
-        if self.readiness_probe:
-            _dict['readiness_probe'] = self.readiness_probe.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of ResourceRequest from a dict"""
+        """Create an instance of ProbeConfig from a dict"""
         if obj is None:
             return None
 
@@ -95,15 +88,14 @@ class ResourceRequest(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "min_replica": obj.get("min_replica"),
-            "max_replica": obj.get("max_replica"),
-            "cpu_request": obj.get("cpu_request"),
-            "cpu_limit": obj.get("cpu_limit"),
-            "memory_request": obj.get("memory_request"),
-            "gpu_name": obj.get("gpu_name"),
-            "gpu_request": obj.get("gpu_request"),
-            "liveness_probe": ProbeConfig.from_dict(obj.get("liveness_probe")) if obj.get("liveness_probe") is not None else None,
-            "readiness_probe": ProbeConfig.from_dict(obj.get("readiness_probe")) if obj.get("readiness_probe") is not None else None
+            "path": obj.get("path"),
+            "port": obj.get("port"),
+            "scheme": obj.get("scheme"),
+            "initial_delay_seconds": obj.get("initial_delay_seconds"),
+            "timeout_seconds": obj.get("timeout_seconds"),
+            "period_seconds": obj.get("period_seconds"),
+            "success_threshold": obj.get("success_threshold"),
+            "failure_threshold": obj.get("failure_threshold")
         })
         return _obj
 
