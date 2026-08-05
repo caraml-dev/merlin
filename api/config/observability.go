@@ -8,7 +8,6 @@ import (
 // ObservabilityPublisher
 type ObservabilityPublisher struct {
 	ArizeSink                ArizeSink
-	BigQuerySink             BigQuerySink
 	MaxComputeSink           MaxComputeSink
 	KafkaConsumer            KafkaConsumer
 	ImageName                string
@@ -44,14 +43,6 @@ func (az ArizeSink) IsEnabled(modelSerial string) bool {
 	}
 
 	return false
-}
-
-// BigQuerySink
-type BigQuerySink struct {
-	Project string
-	Dataset string
-	TTLDays int
-	Enabled bool
 }
 
 // MaxComputeSink
