@@ -15,7 +15,7 @@
 # ============================================================
 # Build stage 1: Build API
 # ============================================================
-FROM golang:1.22-alpine3.19 as go-builder
+FROM golang:1.22-alpine as go-builder
 
 RUN apk update && apk add --no-cache git ca-certificates bash
 RUN mkdir -p src/api
@@ -46,7 +46,7 @@ RUN gcloud components install gke-gcloud-auth-plugin --quiet
 # ============================================================
 # Build stage 3: Copy binary and config file
 # ============================================================
-FROM alpine:3.19
+FROM alpine:3.12
 
 COPY --from=go-builder /src/api/bin/merlin_api /usr/bin/merlin_api
 COPY --from=go-builder /src/api/db-migrations ./db-migrations
