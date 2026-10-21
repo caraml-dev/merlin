@@ -101,7 +101,9 @@ func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newM
 				return err
 			}
 
+			previousStatus := versionEndpoint.Status
 			versionEndpoint.Status = models.EndpointRunning
+			log.Infof("[DEPLOYMENT_STATUS] version_endpoint endpoint=%s status=%s->%s reason=removed_from_model_endpoint_routing", versionEndpoint.ID, previousStatus, versionEndpoint.Status)
 			err = tx.Save(versionEndpoint).Error
 			if err != nil {
 				return errors.Wrap(err, "Failed to save previous model version endpoint")
@@ -117,11 +119,13 @@ func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newM
 			return err
 		}
 
+		previousStatus := versionEndpoint.Status
 		versionEndpoint.Status = models.EndpointServing
 		if newModelEndpoint.Status == models.EndpointTerminated {
 			versionEndpoint.Status = models.EndpointRunning
 		}
 
+		log.Infof("[DEPLOYMENT_STATUS] version_endpoint endpoint=%s status=%s->%s reason=model_endpoint_routing_updated", versionEndpoint.ID, previousStatus, versionEndpoint.Status)
 		err = tx.Save(versionEndpoint).Error
 		if err != nil {
 			return errors.Wrap(err, "Failed to save new model version endpoint")
