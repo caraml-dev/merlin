@@ -1,5 +1,16 @@
 replicas: 4
 
+# Built from the original upstream releases and imported into k3d by setup-cluster.sh.
+image:
+  repository: merlin-e2e/minio
+  tag: RELEASE.2022-03-24T00-43-44Z
+  pullPolicy: Never
+
+mcImage:
+  repository: merlin-e2e/mc
+  tag: RELEASE.2022-03-17T20-25-06Z
+  pullPolicy: Never
+
 resources:
   requests:
     cpu: 10m
