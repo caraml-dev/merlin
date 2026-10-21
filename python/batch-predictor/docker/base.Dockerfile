@@ -23,7 +23,15 @@ ENV PATH /opt/conda/bin:$PATH
 ENV SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
 ENV SPARK_BQ_CONNECTOR_VERSION=0.27.0
 
-RUN apt-get -o Acquire::http::No-Cache=true -o Acquire::Retries=3 update && \
+# Spark 3.1.3 uses Debian Bullseye, whose repositories are now archived.
+# Allow expired archive metadata while retaining package signature verification.
+RUN printf '%s\n' \
+        'deb [check-valid-until=no] https://archive.debian.org/debian bullseye main' \
+        'deb [check-valid-until=no] https://archive.debian.org/debian bullseye-updates main' \
+        'deb [check-valid-until=no] https://archive.debian.org/debian-security bullseye-security main' \
+        > /etc/apt/sources.list && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get -o Acquire::http::No-Cache=true -o Acquire::Retries=3 update && \
     apt-get install -y --no-install-recommends unzip && \
     rm -rf /var/lib/apt/lists/*
 
