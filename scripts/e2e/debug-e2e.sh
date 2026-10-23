@@ -4,6 +4,19 @@ echo "::group::Get nodes"
 kubectl get nodes
 echo "::endgroup::"
 
+echo "::group::MinIO workloads and storage"
+kubectl get statefulsets,pods,jobs,services,endpoints,pvc -n minio -o wide
+kubectl describe pods,jobs,pvc -n minio
+kubectl get events -n minio --sort-by=.metadata.creationTimestamp
+echo "::endgroup::"
+
+echo "::group::MinIO server and initialization job logs"
+kubectl get pods -n minio -l release=minio -o name | while IFS= read -r pod; do
+    kubectl logs -n minio "${pod}" --all-containers=true --prefix=true --tail=200 || true
+    kubectl logs -n minio "${pod}" --all-containers=true --prefix=true --previous --tail=200 || true
+done
+echo "::endgroup::"
+
 echo "::group::Describe nodes"
 kubectl describe nodes
 echo "::endgroup::"
