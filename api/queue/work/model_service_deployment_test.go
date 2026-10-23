@@ -1,7 +1,6 @@
 package work
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -106,8 +105,8 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
-					Return(&models.Service{
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything). //revert once done testing
+												Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
 						ServiceName: svcName,
@@ -524,7 +523,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", context.Background(), mock.Anything, mock.Anything).
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -536,8 +535,8 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return("gojek/mymodel-1:latest", nil)
+				mockImgBuilder.On("BuildImage", mock.Anything, project, mock.Anything, mock.Anything, mock.Anything, mock.Anything). //revert once done testing
+																			Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
 			webhook: func() *webhookMock.Client {
@@ -580,8 +579,8 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", context.Background(), mock.Anything, mock.Anything).
-					Return(&models.Service{
+				ctrl.On("Deploy", mock.Anything, mock.Anything, mock.Anything). //revert once done testing
+												Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
 						ServiceName: svcName,
@@ -592,8 +591,8 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return("gojek/mymodel-1:latest", nil)
+				mockImgBuilder.On("BuildImage", mock.Anything, project, mock.Anything, mock.Anything, mock.Anything, mock.Anything). //revert once done testing
+																			Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
 			webhook: func() *webhookMock.Client {
@@ -756,7 +755,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
+				mockImgBuilder.On("BuildImage", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
 				return mockImgBuilder
 			},
 			webhook: func() *webhookMock.Client {
