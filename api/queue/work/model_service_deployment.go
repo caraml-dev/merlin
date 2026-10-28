@@ -54,8 +54,8 @@ type EndpointJob struct {
 }
 
 func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
-	// FIX 2: Add a reasonable context timeout (e.g., 30 minutes) for cluster deployments
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	// FIX 2: Add a reasonable context timeout (e.g., 10 minutes) for cluster deployments
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	data := job.Arguments[dataArgKey]
