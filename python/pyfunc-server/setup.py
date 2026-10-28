@@ -29,7 +29,7 @@ TESTS_REQUIRE = [
     "mypy",
     "pytest-benchmark",
     "pytest-tornasync",
-    "pytest",
+    "pytest>=8,<9.2",  # pytest 9.2 removed Node._nodeid, which pytest-benchmark<=5.3.0 still uses
     "requests",
     "scikit-learn>=1.1.2",
     "types-protobuf",
