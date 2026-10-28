@@ -54,7 +54,9 @@ type EndpointJob struct {
 }
 
 func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
-	ctx := context.Background()
+	// FIX 2: Add a reasonable context timeout (e.g., 10 minutes) for cluster deployments
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
 
 	data := job.Arguments[dataArgKey]
 	byte, _ := json.Marshal(data)
@@ -128,7 +130,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		})
 		// record the deployment process
 		if err != nil {
-			log.Warnf("unable to create deployment history", err)
+			log.Warnf("unable to create deployment history: %v", err)
 		}
 	}
 
@@ -148,8 +150,15 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 			}
 		}
 
-		// if redeployment failed, we only update the previous endpoint status from pending to previous status
-		if deployment.Error != "" {
+		// Ensure deployment status is recorded as failed if error exists OR if status is still pending on exit
+		if deployment.Error != "" || deployment.Status == models.EndpointPending {
+			if deployment.Status == models.EndpointPending {
+				deployment.Status = models.EndpointFailed
+				if deployment.Error == "" {
+					deployment.Error = "deployment execution terminated prematurely"
+				}
+			}
+
 			prevEndpoint.Status = previousStatus
 			// but if it's not redeployment (first deployment), we set the status to failed
 			if !isRedeployment {
@@ -176,9 +185,11 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	modelService := models.NewService(model, version, modelOpt, endpoint)
 	ctl, ok := depl.ClusterControllers[endpoint.EnvironmentName]
 	if !ok {
+		// FIX 1: Set explicit error message instead of err.Error() (which was nil!)
+		errMsg := fmt.Sprintf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
 		deployment.Status = models.EndpointFailed
-		deployment.Error = err.Error()
-		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
+		deployment.Error = errMsg
+		return errors.New(errMsg)
 	}
 
 	svc, err := ctl.Deploy(ctx, modelService, int(model.ProjectID))

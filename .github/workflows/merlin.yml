@@ -155,6 +155,8 @@ jobs:
           # Ensure the same version as the one defined in Makefile
           version: v1.58.1
           working-directory: api
+          # Avoid fetching the remote JSON schema before running the linters.
+          verify: false
 
   test-api:
     runs-on: ubuntu-latest

@@ -126,6 +126,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 
 	currentEndpoint := *endpoint
 	currentEndpoint.Status = models.EndpointPending
+	log.Infof("[DEPLOYMENT_STATUS] version_endpoint model=%s version=%s endpoint=%s status=%s->%s reason=deploy_requested", model.Name, version.ID, currentEndpoint.ID, endpoint.Status, currentEndpoint.Status)
 	err := k.storage.Save(&currentEndpoint)
 	if err != nil {
 		return nil, err
@@ -298,6 +299,7 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 		return nil, err
 	}
 
+	previousStatus := endpoint.Status
 	endpoint.Status = models.EndpointTerminated
 
 	if err := k.storage.Save(endpoint); err != nil {
@@ -307,6 +309,7 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	if err := k.deploymentStorage.Undeploy(model.ID.String(), version.ID.String(), endpoint.ID.String()); err != nil {
 		return nil, err
 	}
+	log.Infof("[DEPLOYMENT_STATUS] version_endpoint model=%s version=%s endpoint=%s status=%s->%s deployment_history=terminated reason=undeploy_completed", model.Name, version.ID, endpoint.ID, previousStatus, endpoint.Status)
 
 	// calling webhook if there's any webhook configured
 	if err = k.webhook.TriggerWebhooks(ctx, webhook.OnVersionEndpointUndeployed, webhook.SetBody(endpoint)); err != nil {
