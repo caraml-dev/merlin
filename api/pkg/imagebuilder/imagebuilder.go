@@ -40,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	batchv1client "k8s.io/client-go/kubernetes/typed/batch/v1"
 
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
@@ -264,7 +265,8 @@ func (c *imageBuilder) BuildImage(
 
 	// check for existing job
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
-	job, err := jobClient.Get(ctx, c.nameGenerator.generateBuilderJobName(project, model, version), metav1.GetOptions{})
+	jobName := c.nameGenerator.generateBuilderJobName(project, model, version)
+	job, err := c.getJob(ctx, jobClient, jobName)
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			log.Errorf("error retrieving job status: %v", err)
@@ -279,7 +281,7 @@ func (c *imageBuilder) BuildImage(
 			}
 		}
 
-		job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
+		job, err = c.createJob(ctx, jobClient, jobSpec)
 		if err != nil {
 			log.Errorf("unable to build image %s, error: %v", imageRef, err)
 			return "", ErrUnableToBuildImage{
@@ -289,7 +291,7 @@ func (c *imageBuilder) BuildImage(
 	} else {
 		if job.Status.Failed != 0 {
 			// job already created before so we have to delete it first if it failed
-			err = jobClient.Delete(ctx, job.Name, metav1.DeleteOptions{})
+			err = c.deleteJob(ctx, jobClient, job.Name)
 			if err != nil {
 				log.Errorf("error deleting job: %v", err)
 				return "", ErrDeleteFailedJob
@@ -309,7 +311,7 @@ func (c *imageBuilder) BuildImage(
 				}
 			}
 
-			job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
+			job, err = c.createJob(ctx, jobClient, jobSpec)
 			if err != nil {
 				log.Errorf("unable to build image %s, error: %v", imageRef, err)
 				return "", ErrUnableToBuildImage{
@@ -567,6 +569,48 @@ func parseJobConditions(jobConditions []batchv1.JobCondition) (string, error) {
 
 	jobTable := utils.LogTable(jobConditionHeaders, jobConditionRows)
 	return jobTable, err
+}
+
+// getJob retrieves a job, retrying transient failures (including a stalled call that hit kubeCallTimeout).
+// A NotFound error is returned as is, without retry.
+func (c *imageBuilder) getJob(ctx context.Context, jobClient batchv1client.JobInterface, name string) (*batchv1.Job, error) {
+	var job *batchv1.Job
+	err := retryKubeCall(ctx, "get job "+name, func(callCtx context.Context) (err error) {
+		job, err = jobClient.Get(callCtx, name, metav1.GetOptions{})
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return job, nil
+}
+
+// createJob creates a job, retrying transient failures. If a previous attempt actually reached the API server
+// but its response was lost (timeout), the retry gets AlreadyExists; in that case the existing job is returned.
+func (c *imageBuilder) createJob(ctx context.Context, jobClient batchv1client.JobInterface, spec *batchv1.Job) (*batchv1.Job, error) {
+	var job *batchv1.Job
+	err := retryKubeCall(ctx, "create job "+spec.Name, func(callCtx context.Context) (err error) {
+		job, err = jobClient.Create(callCtx, spec, metav1.CreateOptions{})
+		return err
+	})
+	if kerrors.IsAlreadyExists(err) {
+		return c.getJob(ctx, jobClient, spec.Name)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return job, nil
+}
+
+// deleteJob deletes a job, retrying transient failures. A NotFound error is treated as success.
+func (c *imageBuilder) deleteJob(ctx context.Context, jobClient batchv1client.JobInterface, name string) error {
+	err := retryKubeCall(ctx, "delete job "+name, func(callCtx context.Context) error {
+		return jobClient.Delete(callCtx, name, metav1.DeleteOptions{})
+	})
+	if kerrors.IsNotFound(err) {
+		return nil
+	}
+	return err
 }
 
 func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) error {
