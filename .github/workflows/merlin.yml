@@ -39,7 +39,8 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
   test-batch-predictor:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 builds for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +75,8 @@ jobs:
         run: make unit-test
 
   test-pyfunc-server:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 builds for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -107,7 +109,8 @@ jobs:
         run: make test
 
   test-python-sdk:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 builds for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
