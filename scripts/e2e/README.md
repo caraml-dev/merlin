@@ -9,6 +9,7 @@ You need following softwares to execute merlin end to end test locally:
 - k3d
 - yq
 - jq
+- Docker (used to build the MinIO server and client images)
 
 ## Steps
 
@@ -34,6 +35,9 @@ Some notes about the end to end test setup:
 
 1. 127.0.0.nip.io is used as ingress host so that we don't need to modify etc/hosts. See https://nip.io/ for more details
 2. Minio is used as the object storage
+   The setup script builds the server and client releases expected by the pinned
+   Helm chart from checksum-verified upstream source archives, then imports the
+   images into k3d. The original upstream container images are no longer public.
 3. In order for internal pods to access istio, the K3D core dns configuration is modified (see [patch](config/coredns/patch.yaml)).
 
 ```

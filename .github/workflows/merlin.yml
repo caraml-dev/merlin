@@ -39,7 +39,8 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
   test-batch-predictor:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 builds for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +75,8 @@ jobs:
         run: make unit-test
 
   test-pyfunc-server:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 builds for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -107,7 +109,8 @@ jobs:
         run: make test
 
   test-python-sdk:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 builds for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -394,7 +397,8 @@ jobs:
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   e2e-test:
-    runs-on: ubuntu-latest
+    # Pinned: keep e2e on the same runner image as the python test jobs.
+    runs-on: ubuntu-24.04
     needs:
       - build-api
       - build-transformer
@@ -406,7 +410,7 @@ jobs:
       DOCKER_REGISTRY: "dev.localhost:12345"
       INGRESS_HOST: "127.0.0.1.nip.io"
       MERLIN_CHART_VERSION: 0.13.18
-      E2E_PYTHON_VERSION: "3.10.6"
+      E2E_PYTHON_VERSION: "3.10"
       K3S_VERSION: v1.26.7-k3s1
     steps:
       - uses: actions/checkout@v4
