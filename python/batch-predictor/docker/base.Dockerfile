@@ -23,34 +23,48 @@ ENV PATH /opt/conda/bin:$PATH
 ENV SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
 ENV SPARK_BQ_CONNECTOR_VERSION=0.27.0
 
-RUN apt-get update && apt-get install unzip
+# Spark 3.1.3 uses Debian Bullseye, whose repositories are now archived.
+# Allow expired archive metadata while retaining package signature verification.
+RUN printf '%s\n' \
+        'deb [check-valid-until=no] https://archive.debian.org/debian bullseye main' \
+        'deb [check-valid-until=no] https://archive.debian.org/debian bullseye-updates main' \
+        'deb [check-valid-until=no] https://archive.debian.org/debian-security bullseye-security main' \
+        > /etc/apt/sources.list && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get -o Acquire::http::No-Cache=true -o Acquire::Retries=3 update && \
+    apt-get install -y --no-install-recommends unzip curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download remote jars/configs with curl instead of `ADD <url>`: ADD has no retry,
+# so a single HTTP 429 from Maven Central / GitHub fails the whole build.
+# Usage: fetch <url> <dest-dir>
+RUN printf '%s\n' '#!/bin/sh' 'set -e' \
+        'mkdir -p "$2"' \
+        'curl -fsSL --retry 8 --retry-delay 10 --retry-all-errors -o "$2/$(basename "$1")" "$1"' \
+        'chmod 644 "$2/$(basename "$1")"' \
+        > /usr/local/bin/fetch && chmod 755 /usr/local/bin/fetch
 
 # Setup dependencies for Google Cloud Storage access.
 RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
-ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar \
-    $SPARK_HOME/jars
+RUN fetch https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar $SPARK_HOME/jars
 
 # Add the connector jar needed to access Google Cloud Storage using the Hadoop FileSystem API.
-ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.2.8.jar \
-    $SPARK_HOME/jars
-ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/${SPARK_BQ_CONNECTOR_VERSION}/spark-bigquery-with-dependencies_2.12-${SPARK_BQ_CONNECTOR_VERSION}.jar \
-    $SPARK_HOME/jars
+RUN fetch https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.2.8.jar $SPARK_HOME/jars && \
+    fetch https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/${SPARK_BQ_CONNECTOR_VERSION}/spark-bigquery-with-dependencies_2.12-${SPARK_BQ_CONNECTOR_VERSION}.jar $SPARK_HOME/jars
 
 # Add ODPS driver jar for accessing Alibaba Cloud MaxCompute.
-ADD https://github.com/aliyun/aliyun-odps-jdbc/releases/download/v3.8.2/odps-jdbc-3.8.2-jar-with-dependencies.jar $SPARK_HOME/jars
-ADD https://github.com/caraml-dev/caraml-store/releases/download/caraml-store-spark/odps/v0.0.1/custom-dialect.jar $SPARK_HOME/jars 
+RUN fetch https://github.com/aliyun/aliyun-odps-jdbc/releases/download/v3.8.2/odps-jdbc-3.8.2-jar-with-dependencies.jar $SPARK_HOME/jars && \
+    fetch https://github.com/caraml-dev/caraml-store/releases/download/caraml-store-spark/odps/v0.0.1/custom-dialect.jar $SPARK_HOME/jars
 
 RUN chmod 644 -R $SPARK_HOME/jars/*
 
 # Setup for the Prometheus JMX exporter.
 RUN mkdir -p /etc/metrics/conf
 # Add the Prometheus JMX exporter Java agent jar for exposing metrics sent to the JmxSink to Prometheus.
-ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus/
-RUN chmod 644 /prometheus/jmx_prometheus_javaagent-0.11.0.jar
+RUN fetch https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus
 
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/metrics.properties /etc/metrics/conf
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/prometheus.yaml /etc/metrics/conf
-RUN chmod 644 -R /etc/metrics/conf/*
+RUN fetch https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/metrics.properties /etc/metrics/conf && \
+    fetch https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/prometheus.yaml /etc/metrics/conf
 
 RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y wget bzip2 ca-certificates \
     libglib2.0-0 libxext6 libsm6 libxrender1 \

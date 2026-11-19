@@ -6,6 +6,7 @@ set -o pipefail
 set -o nounset
 
 # Software requirements:
+# - docker
 # - yq
 # - helm
 # - k3d
@@ -132,6 +133,23 @@ install_cert_manager() {
 
 install_minio() {
     echo "::group::Minio Deployment"
+
+    local minio_image
+    local mc_image
+    minio_image=$(yq '.image.repository + ":" + .image.tag' config/minio/values.yaml)
+    mc_image=$(yq '.mcImage.repository + ":" + .mcImage.tag' config/minio/values.yaml)
+
+    docker build -t "${minio_image}" \
+        --build-arg COMPONENT=minio \
+        --build-arg RELEASE="$(yq '.image.tag' config/minio/values.yaml)" \
+        --build-arg SOURCE_SHA256=c113345f98c85ceee89faa0dcdc02564a004d7cf196aad64e87762dae8e8c0d2 \
+        config/minio
+    docker build -t "${mc_image}" \
+        --build-arg COMPONENT=mc \
+        --build-arg RELEASE="$(yq '.mcImage.tag' config/minio/values.yaml)" \
+        --build-arg SOURCE_SHA256=d5c6fa828913314372ca34129c7a34665b6148c1f17d3c17d6b3b3efa0fc5706 \
+        config/minio
+    k3d image import "${minio_image}" "${mc_image}" -c "${CLUSTER_NAME}"
 
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
         --namespace=minio --create-namespace --timeout=${TIMEOUT} \
