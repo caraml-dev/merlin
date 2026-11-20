@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION=3.9
-FROM python:${PYTHON_VERSION}-slim-buster
+FROM python:${PYTHON_VERSION}-slim-trixie
 
 LABEL org.opencontainers.image.source https://github.com/caraml-dev/merlin
 
