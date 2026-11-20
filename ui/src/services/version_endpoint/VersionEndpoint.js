@@ -30,6 +30,7 @@ export class VersionEndpoint {
       memory_request: "512Mi",
       liveness_probe: null,
       readiness_probe: null,
+      startup_probe: null,
     };
 
     this.image_builder_resource_request = {

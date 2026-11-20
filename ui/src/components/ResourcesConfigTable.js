@@ -29,6 +29,7 @@ export const ResourcesConfigTable = ({
     gpu_request,
     liveness_probe,
     readiness_probe,
+    startup_probe,
   },
 }) => {
   const items = [
@@ -99,6 +100,23 @@ export const ResourcesConfigTable = ({
     if (probeDetails.length > 0) {
       items.push({
         title: "Readiness Probe",
+        description: probeDetails.join(", "),
+      });
+    }
+  }
+
+  // Add startup probe info if configured
+  if (startup_probe && Object.keys(startup_probe).some(k => startup_probe[k])) {
+    const probeDetails = [];
+    if (startup_probe.initial_delay_seconds) probeDetails.push(`delay: ${startup_probe.initial_delay_seconds}s`);
+    if (startup_probe.timeout_seconds) probeDetails.push(`timeout: ${startup_probe.timeout_seconds}s`);
+    if (startup_probe.period_seconds) probeDetails.push(`period: ${startup_probe.period_seconds}s`);
+    if (startup_probe.failure_threshold) probeDetails.push(`failures: ${startup_probe.failure_threshold}`);
+    if (startup_probe.success_threshold) probeDetails.push(`successes: ${startup_probe.success_threshold}`);
+    if (startup_probe.path) probeDetails.push(`path: ${startup_probe.path}`);
+    if (probeDetails.length > 0) {
+      items.push({
+        title: "Startup Probe",
         description: probeDetails.join(", "),
       });
     }

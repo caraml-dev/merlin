@@ -71,6 +71,12 @@ export const DeployModelVersionForm = ({
         delete versionEndpoint.resource_request.readiness_probe;
       }
     }
+    if (versionEndpoint?.resource_request?.startup_probe) {
+      const probe = versionEndpoint.resource_request.startup_probe;
+      if (!Object.keys(probe).some(k => probe[k])) {
+        delete versionEndpoint.resource_request.startup_probe;
+      }
+    }
     if (versionEndpoint?.image_builder_resource_request?.cpu_request === "") {
       delete versionEndpoint.image_builder_resource_request.cpu_request;
     }

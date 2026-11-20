@@ -195,6 +195,12 @@ export const ProbesFormGroup = ({
         "Readiness Probe",
         "Configure the readiness probe to determine if the container is ready to receive traffic. Empty values use platform defaults."
       )}
+      <EuiSpacer size="m" />
+      {renderProbeFields(
+        "startup_probe",
+        "Startup Probe",
+        "Configure the startup probe to determine when the container has started. Useful for slow-starting containers. Empty values use platform defaults."
+      )}
     </Fragment>
   );
 };

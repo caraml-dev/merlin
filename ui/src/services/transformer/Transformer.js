@@ -23,7 +23,10 @@ export class Transformer {
       max_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 4 : 2,
       cpu_request: "500m",
       cpu_limit: "",
-      memory_request: "512Mi"
+      memory_request: "512Mi",
+      liveness_probe: null,
+      readiness_probe: null,
+      startup_probe: null,
     };
 
     this.env_vars = [];
