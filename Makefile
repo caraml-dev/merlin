@@ -197,7 +197,7 @@ generate-client-go:
 	@echo "Generating Go client from swagger.yaml"
 	@mv ${CLIENT_GO_EXAMPLES_DIR} ${TEMP_CLIENT_GO_EXAMPLES_DIR}
 	@rm -rf ${CLIENT_GO_OUTPUT_DIR}
-	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
+	@docker run --rm -u "$$(id -u):$$(id -g)" -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
 		--input-spec /local/swagger.yaml \
 		--generator-name go \
 		--output /local/api/client_tmp/. \
@@ -215,11 +215,33 @@ TEMP_CLIENT_PYTHON_OUTPUT_DIR = ./python/sdk/client_tmp
 .PHONY: generate-client-python
 generate-client-python:
 	rm -rf ${CLIENT_PYTHON_OUTPUT_DIR}
-	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
+	@docker run --rm -u "$$(id -u):$$(id -g)" -v ${PWD}/:/local openapitools/openapi-generator-cli:v7.1.0 generate \
 		--input-spec /local/swagger.yaml \
 		--generator-name python \
 		--output /local/python/sdk/. \
 		--config /local/openapi-sdk-codegen.yaml
+
+
+# Generated OpenAPI client paths checked for drift against swagger.yaml.
+# Scoped to the client directories so the untracked python/sdk/.openapi-generator/
+# manifest (a sibling of client/, dropped by the generator) cannot false-positive.
+GENERATED_CLIENT_PATHS = api/client python/sdk/client python/sdk/client_README.md
+.PHONY: verify-client
+verify-client: generate-client
+	@echo "Verifying generated OpenAPI clients are in sync with swagger.yaml ..."
+	@drift="$$(git status --porcelain -- ${GENERATED_CLIENT_PATHS})"; \
+	if [ -n "$$drift" ]; then \
+		echo ""; \
+		echo "ERROR: generated OpenAPI clients are out of sync with swagger.yaml."; \
+		echo "The following generated files differ from what is committed:"; \
+		echo "$$drift"; \
+		echo ""; \
+		git --no-pager diff -- ${GENERATED_CLIENT_PATHS}; \
+		echo ""; \
+		echo "Run 'make generate-client' and commit the regenerated clients."; \
+		exit 1; \
+	fi; \
+	echo "Generated OpenAPI clients are in sync with swagger.yaml."
 
 
 .PHONY: generate-proto

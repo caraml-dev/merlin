@@ -20,6 +20,7 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictInt, StrictStr
+from client.models.probe_config import ProbeConfig
 try:
     from typing import Self
 except ImportError:
@@ -36,7 +37,9 @@ class ResourceRequest(BaseModel):
     memory_request: Optional[StrictStr] = None
     gpu_name: Optional[StrictStr] = None
     gpu_request: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["min_replica", "max_replica", "cpu_request", "cpu_limit", "memory_request", "gpu_name", "gpu_request"]
+    liveness_probe: Optional[ProbeConfig] = None
+    readiness_probe: Optional[ProbeConfig] = None
+    __properties: ClassVar[List[str]] = ["min_replica", "max_replica", "cpu_request", "cpu_limit", "memory_request", "gpu_name", "gpu_request", "liveness_probe", "readiness_probe"]
 
     model_config = {
         "populate_by_name": True,
@@ -74,6 +77,12 @@ class ResourceRequest(BaseModel):
             },
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of liveness_probe
+        if self.liveness_probe:
+            _dict['liveness_probe'] = self.liveness_probe.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of readiness_probe
+        if self.readiness_probe:
+            _dict['readiness_probe'] = self.readiness_probe.to_dict()
         return _dict
 
     @classmethod
@@ -92,7 +101,9 @@ class ResourceRequest(BaseModel):
             "cpu_limit": obj.get("cpu_limit"),
             "memory_request": obj.get("memory_request"),
             "gpu_name": obj.get("gpu_name"),
-            "gpu_request": obj.get("gpu_request")
+            "gpu_request": obj.get("gpu_request"),
+            "liveness_probe": ProbeConfig.from_dict(obj.get("liveness_probe")) if obj.get("liveness_probe") is not None else None,
+            "readiness_probe": ProbeConfig.from_dict(obj.get("readiness_probe")) if obj.get("readiness_probe") is not None else None
         })
         return _obj
 

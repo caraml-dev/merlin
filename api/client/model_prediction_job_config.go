@@ -19,14 +19,16 @@ var _ MappedNullable = &PredictionJobConfig{}
 
 // PredictionJobConfig struct for PredictionJobConfig
 type PredictionJobConfig struct {
-	Version        *string                            `json:"version,omitempty"`
-	Kind           *string                            `json:"kind,omitempty"`
-	Name           *string                            `json:"name,omitempty"`
-	BigquerySource *PredictionJobConfigBigquerySource `json:"bigquery_source,omitempty"`
-	GcsSource      *PredictionJobConfigGcsSource      `json:"gcs_source,omitempty"`
-	Model          *PredictionJobConfigModel          `json:"model,omitempty"`
-	BigquerySink   *PredictionJobConfigBigquerySink   `json:"bigquery_sink,omitempty"`
-	GcsSink        *PredictionJobConfigGcsSink        `json:"gcs_sink,omitempty"`
+	Version          *string                              `json:"version,omitempty"`
+	Kind             *string                              `json:"kind,omitempty"`
+	Name             *string                              `json:"name,omitempty"`
+	BigquerySource   *PredictionJobConfigBigquerySource   `json:"bigquery_source,omitempty"`
+	GcsSource        *PredictionJobConfigGcsSource        `json:"gcs_source,omitempty"`
+	MaxcomputeSource *PredictionJobConfigMaxcomputeSource `json:"maxcompute_source,omitempty"`
+	Model            *PredictionJobConfigModel            `json:"model,omitempty"`
+	BigquerySink     *PredictionJobConfigBigquerySink     `json:"bigquery_sink,omitempty"`
+	GcsSink          *PredictionJobConfigGcsSink          `json:"gcs_sink,omitempty"`
+	MaxcomputeSink   *PredictionJobConfigMaxcomputeSink   `json:"maxcompute_sink,omitempty"`
 }
 
 // NewPredictionJobConfig instantiates a new PredictionJobConfig object
@@ -206,6 +208,38 @@ func (o *PredictionJobConfig) SetGcsSource(v PredictionJobConfigGcsSource) {
 	o.GcsSource = &v
 }
 
+// GetMaxcomputeSource returns the MaxcomputeSource field value if set, zero value otherwise.
+func (o *PredictionJobConfig) GetMaxcomputeSource() PredictionJobConfigMaxcomputeSource {
+	if o == nil || IsNil(o.MaxcomputeSource) {
+		var ret PredictionJobConfigMaxcomputeSource
+		return ret
+	}
+	return *o.MaxcomputeSource
+}
+
+// GetMaxcomputeSourceOk returns a tuple with the MaxcomputeSource field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *PredictionJobConfig) GetMaxcomputeSourceOk() (*PredictionJobConfigMaxcomputeSource, bool) {
+	if o == nil || IsNil(o.MaxcomputeSource) {
+		return nil, false
+	}
+	return o.MaxcomputeSource, true
+}
+
+// HasMaxcomputeSource returns a boolean if a field has been set.
+func (o *PredictionJobConfig) HasMaxcomputeSource() bool {
+	if o != nil && !IsNil(o.MaxcomputeSource) {
+		return true
+	}
+
+	return false
+}
+
+// SetMaxcomputeSource gets a reference to the given PredictionJobConfigMaxcomputeSource and assigns it to the MaxcomputeSource field.
+func (o *PredictionJobConfig) SetMaxcomputeSource(v PredictionJobConfigMaxcomputeSource) {
+	o.MaxcomputeSource = &v
+}
+
 // GetModel returns the Model field value if set, zero value otherwise.
 func (o *PredictionJobConfig) GetModel() PredictionJobConfigModel {
 	if o == nil || IsNil(o.Model) {
@@ -302,6 +336,38 @@ func (o *PredictionJobConfig) SetGcsSink(v PredictionJobConfigGcsSink) {
 	o.GcsSink = &v
 }
 
+// GetMaxcomputeSink returns the MaxcomputeSink field value if set, zero value otherwise.
+func (o *PredictionJobConfig) GetMaxcomputeSink() PredictionJobConfigMaxcomputeSink {
+	if o == nil || IsNil(o.MaxcomputeSink) {
+		var ret PredictionJobConfigMaxcomputeSink
+		return ret
+	}
+	return *o.MaxcomputeSink
+}
+
+// GetMaxcomputeSinkOk returns a tuple with the MaxcomputeSink field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *PredictionJobConfig) GetMaxcomputeSinkOk() (*PredictionJobConfigMaxcomputeSink, bool) {
+	if o == nil || IsNil(o.MaxcomputeSink) {
+		return nil, false
+	}
+	return o.MaxcomputeSink, true
+}
+
+// HasMaxcomputeSink returns a boolean if a field has been set.
+func (o *PredictionJobConfig) HasMaxcomputeSink() bool {
+	if o != nil && !IsNil(o.MaxcomputeSink) {
+		return true
+	}
+
+	return false
+}
+
+// SetMaxcomputeSink gets a reference to the given PredictionJobConfigMaxcomputeSink and assigns it to the MaxcomputeSink field.
+func (o *PredictionJobConfig) SetMaxcomputeSink(v PredictionJobConfigMaxcomputeSink) {
+	o.MaxcomputeSink = &v
+}
+
 func (o PredictionJobConfig) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -327,6 +393,9 @@ func (o PredictionJobConfig) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.GcsSource) {
 		toSerialize["gcs_source"] = o.GcsSource
 	}
+	if !IsNil(o.MaxcomputeSource) {
+		toSerialize["maxcompute_source"] = o.MaxcomputeSource
+	}
 	if !IsNil(o.Model) {
 		toSerialize["model"] = o.Model
 	}
@@ -335,6 +404,9 @@ func (o PredictionJobConfig) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.GcsSink) {
 		toSerialize["gcs_sink"] = o.GcsSink
+	}
+	if !IsNil(o.MaxcomputeSink) {
+		toSerialize["maxcompute_sink"] = o.MaxcomputeSink
 	}
 	return toSerialize, nil
 }

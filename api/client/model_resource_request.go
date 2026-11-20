@@ -19,13 +19,15 @@ var _ MappedNullable = &ResourceRequest{}
 
 // ResourceRequest struct for ResourceRequest
 type ResourceRequest struct {
-	MinReplica    *int32  `json:"min_replica,omitempty"`
-	MaxReplica    *int32  `json:"max_replica,omitempty"`
-	CpuRequest    *string `json:"cpu_request,omitempty"`
-	CpuLimit      *string `json:"cpu_limit,omitempty"`
-	MemoryRequest *string `json:"memory_request,omitempty"`
-	GpuName       *string `json:"gpu_name,omitempty"`
-	GpuRequest    *string `json:"gpu_request,omitempty"`
+	MinReplica     *int32       `json:"min_replica,omitempty"`
+	MaxReplica     *int32       `json:"max_replica,omitempty"`
+	CpuRequest     *string      `json:"cpu_request,omitempty"`
+	CpuLimit       *string      `json:"cpu_limit,omitempty"`
+	MemoryRequest  *string      `json:"memory_request,omitempty"`
+	GpuName        *string      `json:"gpu_name,omitempty"`
+	GpuRequest     *string      `json:"gpu_request,omitempty"`
+	LivenessProbe  *ProbeConfig `json:"liveness_probe,omitempty"`
+	ReadinessProbe *ProbeConfig `json:"readiness_probe,omitempty"`
 }
 
 // NewResourceRequest instantiates a new ResourceRequest object
@@ -269,6 +271,70 @@ func (o *ResourceRequest) SetGpuRequest(v string) {
 	o.GpuRequest = &v
 }
 
+// GetLivenessProbe returns the LivenessProbe field value if set, zero value otherwise.
+func (o *ResourceRequest) GetLivenessProbe() ProbeConfig {
+	if o == nil || IsNil(o.LivenessProbe) {
+		var ret ProbeConfig
+		return ret
+	}
+	return *o.LivenessProbe
+}
+
+// GetLivenessProbeOk returns a tuple with the LivenessProbe field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ResourceRequest) GetLivenessProbeOk() (*ProbeConfig, bool) {
+	if o == nil || IsNil(o.LivenessProbe) {
+		return nil, false
+	}
+	return o.LivenessProbe, true
+}
+
+// HasLivenessProbe returns a boolean if a field has been set.
+func (o *ResourceRequest) HasLivenessProbe() bool {
+	if o != nil && !IsNil(o.LivenessProbe) {
+		return true
+	}
+
+	return false
+}
+
+// SetLivenessProbe gets a reference to the given ProbeConfig and assigns it to the LivenessProbe field.
+func (o *ResourceRequest) SetLivenessProbe(v ProbeConfig) {
+	o.LivenessProbe = &v
+}
+
+// GetReadinessProbe returns the ReadinessProbe field value if set, zero value otherwise.
+func (o *ResourceRequest) GetReadinessProbe() ProbeConfig {
+	if o == nil || IsNil(o.ReadinessProbe) {
+		var ret ProbeConfig
+		return ret
+	}
+	return *o.ReadinessProbe
+}
+
+// GetReadinessProbeOk returns a tuple with the ReadinessProbe field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ResourceRequest) GetReadinessProbeOk() (*ProbeConfig, bool) {
+	if o == nil || IsNil(o.ReadinessProbe) {
+		return nil, false
+	}
+	return o.ReadinessProbe, true
+}
+
+// HasReadinessProbe returns a boolean if a field has been set.
+func (o *ResourceRequest) HasReadinessProbe() bool {
+	if o != nil && !IsNil(o.ReadinessProbe) {
+		return true
+	}
+
+	return false
+}
+
+// SetReadinessProbe gets a reference to the given ProbeConfig and assigns it to the ReadinessProbe field.
+func (o *ResourceRequest) SetReadinessProbe(v ProbeConfig) {
+	o.ReadinessProbe = &v
+}
+
 func (o ResourceRequest) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -299,6 +365,12 @@ func (o ResourceRequest) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.GpuRequest) {
 		toSerialize["gpu_request"] = o.GpuRequest
+	}
+	if !IsNil(o.LivenessProbe) {
+		toSerialize["liveness_probe"] = o.LivenessProbe
+	}
+	if !IsNil(o.ReadinessProbe) {
+		toSerialize["readiness_probe"] = o.ReadinessProbe
 	}
 	return toSerialize, nil
 }

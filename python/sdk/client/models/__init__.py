@@ -68,6 +68,7 @@ from client.models.prediction_job_config_model_result import PredictionJobConfig
 from client.models.prediction_job_resource_request import PredictionJobResourceRequest
 from client.models.prediction_log_ingestion_resource_request import PredictionLogIngestionResourceRequest
 from client.models.prediction_logger_config import PredictionLoggerConfig
+from client.models.probe_config import ProbeConfig
 from client.models.project import Project
 from client.models.protocol import Protocol
 from client.models.ranking_output import RankingOutput
