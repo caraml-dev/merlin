@@ -67,6 +67,27 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Environment"
+  "/environments/{environment_name}/nodes":
+    get:
+      tags:
+        - environment
+      summary: List nodes for an environment
+      description: Returns the nodes (name, status, labels, taints) of the cluster backing the environment, for use in model placement (node selector + tolerations).
+      parameters:
+        - name: environment_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/NodeInfo"
   "/projects":
     get:
       tags:
@@ -2121,6 +2142,61 @@ components:
           "$ref": "#/components/schemas/ProbeConfig"
         readiness_probe:
           "$ref": "#/components/schemas/ProbeConfig"
+        tolerations:
+          type: array
+          description: Tolerations allow model pods to be scheduled onto nodes with matching taints
+          items:
+            "$ref": "#/components/schemas/Toleration"
+        node_selector:
+          type: object
+          description: NodeSelector pins model pods onto nodes whose labels match every entry
+          additionalProperties:
+            type: string
+    NodeInfo:
+      type: object
+      description: A cluster node's placement-relevant summary
+      properties:
+        name:
+          type: string
+        ready:
+          type: boolean
+        labels:
+          type: object
+          description: Node labels; usable as a node selector to pin a pod onto this node's pool
+          additionalProperties:
+            type: string
+        taints:
+          type: array
+          description: Node taints; a pod must tolerate these to be scheduled here
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              effect:
+                type: string
+    Toleration:
+      type: object
+      description: Kubernetes toleration for scheduling pods onto tainted nodes
+      properties:
+        key:
+          type: string
+          description: The taint key the toleration applies to
+        operator:
+          type: string
+          description: "'Exists' or 'Equal' (default: Equal)"
+        value:
+          type: string
+          description: The taint value the toleration matches (only used when operator is Equal)
+        effect:
+          type: string
+          description: "'NoSchedule', 'PreferNoSchedule', or 'NoExecute'. Empty matches all effects"
+        toleration_seconds:
+          type: integer
+          format: int64
+          description: Period (seconds) the pod tolerates the taint (only for NoExecute effect)
     ProbeConfig:
       type: object
       properties:

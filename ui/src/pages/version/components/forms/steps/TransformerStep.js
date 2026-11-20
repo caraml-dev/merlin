@@ -52,6 +52,9 @@ export const TransformerStep = ({ maxAllowedReplica }) => {
                     onChangeHandler={onChange("transformer.resource_request")}
                     errors={get(errors, "transformer.resource_request")}
                   />
+                  {/* Node placement (node selector + tolerations) is set once via the
+                      Node dropdown in the model step and applied to both the predictor
+                      and the transformer, so they always land on the same node. */}
                 </EuiAccordion>
               }
             />

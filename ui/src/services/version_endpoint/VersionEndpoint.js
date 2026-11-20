@@ -30,6 +30,8 @@ export class VersionEndpoint {
       memory_request: "512Mi",
       liveness_probe: null,
       readiness_probe: null,
+      tolerations: [],
+      node_selector: {},
     };
 
     this.image_builder_resource_request = {
@@ -72,6 +74,14 @@ export class VersionEndpoint {
         cpu_request: "",
         memory_request: ""
       }
+    }
+
+    if (versionEndpoint.resource_request && !versionEndpoint.resource_request.tolerations) {
+      versionEndpoint.resource_request.tolerations = [];
+    }
+
+    if (versionEndpoint.resource_request && !versionEndpoint.resource_request.node_selector) {
+      versionEndpoint.resource_request.node_selector = {};
     }
 
     if (json.transformer) {

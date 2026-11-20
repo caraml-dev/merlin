@@ -1,0 +1,178 @@
+name: Fast API Image CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag to use. Defaults to the commit SHA.
+        required: false
+        type: string
+      push_image:
+        description: Push the built image to GHCR.
+        required: true
+        default: true
+        type: boolean
+
+env:
+  GO_VERSION: "1.22"
+  DOCKER_REGISTRY: ghcr.io
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      artifact_name: ${{ steps.meta.outputs.artifact_name }}
+      transformer_artifact_name: ${{ steps.meta.outputs.transformer_artifact_name }}
+    steps:
+      - id: meta
+        env:
+          INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          IMAGE_TAG="${INPUT_IMAGE_TAG}"
+          if [ -z "${IMAGE_TAG}" ]; then
+            IMAGE_TAG="${GITHUB_SHA}"
+          fi
+
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=merlin.${IMAGE_TAG}.tar" >> "$GITHUB_OUTPUT"
+          echo "transformer_artifact_name=merlin-transformer.${IMAGE_TAG}.tar" >> "$GITHUB_OUTPUT"
+
+  test-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12.4
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Test API files
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        run: make it-test-api-ci
+
+  build-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: ui/yarn.lock
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Build UI static files
+        run: make build-ui
+      - name: Publish UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: merlin-ui-dist-fast
+          path: ui/build/
+
+  build-transformer:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build Standard Transformer
+        run: make build-transformer
+      - name: Build Standard Transformer Docker image
+        run: docker build -t merlin-transformer:${{ needs.prepare.outputs.image_tag }} -f transformer.Dockerfile .
+      - name: Save Standard Transformer Docker image
+        run: docker image save --output "${{ needs.prepare.outputs.transformer_artifact_name }}" "merlin-transformer:${{ needs.prepare.outputs.image_tag }}"
+      - name: Publish Standard Transformer Docker artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.transformer_artifact_name }}
+          path: ${{ needs.prepare.outputs.transformer_artifact_name }}
+
+  build-api-image:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - test-api
+      - build-ui
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download UI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: merlin-ui-dist-fast
+          path: ui/build
+      - name: Build API Docker image
+        run: docker build -t merlin:${{ needs.prepare.outputs.image_tag }} -f Dockerfile .
+      - name: Save API Docker image
+        run: docker image save --output "${{ needs.prepare.outputs.artifact_name }}" "merlin:${{ needs.prepare.outputs.image_tag }}"
+      - name: Publish API Docker artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.artifact_name }}
+          path: ${{ needs.prepare.outputs.artifact_name }}
+
+  push-api-image:
+    if: ${{ inputs.push_image }}
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build-api-image
+    permissions:
+      packages: write
+    steps:
+      - name: Download API Docker artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.artifact_name }}
+      - name: Push Docker image
+        env:
+          IMAGE_TAG: ghcr.io/${{ github.repository }}/merlin:${{ needs.prepare.outputs.image_tag }}
+        run: |
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          docker image load --input "${{ needs.prepare.outputs.artifact_name }}"
+          docker tag "merlin:${{ needs.prepare.outputs.image_tag }}" "${IMAGE_TAG}"
+          docker push "${IMAGE_TAG}"
+
+  push-transformer-image:
+    if: ${{ inputs.push_image }}
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build-transformer
+    permissions:
+      packages: write
+    steps:
+      - name: Download Standard Transformer Docker artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.transformer_artifact_name }}
+      - name: Push Docker image
+        env:
+          IMAGE_TAG: ghcr.io/${{ github.repository }}/merlin-transformer:${{ needs.prepare.outputs.image_tag }}
+        run: |
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          docker image load --input "${{ needs.prepare.outputs.transformer_artifact_name }}"
+          docker tag "merlin-transformer:${{ needs.prepare.outputs.image_tag }}" "${IMAGE_TAG}"
+          docker push "${IMAGE_TAG}"

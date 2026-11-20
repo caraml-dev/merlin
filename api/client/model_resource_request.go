@@ -19,13 +19,15 @@ var _ MappedNullable = &ResourceRequest{}
 
 // ResourceRequest struct for ResourceRequest
 type ResourceRequest struct {
-	MinReplica    *int32  `json:"min_replica,omitempty"`
-	MaxReplica    *int32  `json:"max_replica,omitempty"`
-	CpuRequest    *string `json:"cpu_request,omitempty"`
-	CpuLimit      *string `json:"cpu_limit,omitempty"`
-	MemoryRequest *string `json:"memory_request,omitempty"`
-	GpuName       *string `json:"gpu_name,omitempty"`
-	GpuRequest    *string `json:"gpu_request,omitempty"`
+	MinReplica    *int32             `json:"min_replica,omitempty"`
+	MaxReplica    *int32             `json:"max_replica,omitempty"`
+	CpuRequest    *string            `json:"cpu_request,omitempty"`
+	CpuLimit      *string            `json:"cpu_limit,omitempty"`
+	MemoryRequest *string            `json:"memory_request,omitempty"`
+	GpuName       *string            `json:"gpu_name,omitempty"`
+	GpuRequest    *string            `json:"gpu_request,omitempty"`
+	Tolerations   []Toleration       `json:"tolerations,omitempty"`
+	NodeSelector  *map[string]string `json:"node_selector,omitempty"`
 }
 
 // NewResourceRequest instantiates a new ResourceRequest object
@@ -269,6 +271,68 @@ func (o *ResourceRequest) SetGpuRequest(v string) {
 	o.GpuRequest = &v
 }
 
+// GetTolerations returns the Tolerations field value if set, zero value otherwise.
+func (o *ResourceRequest) GetTolerations() []Toleration {
+	if o == nil || IsNil(o.Tolerations) {
+		var ret []Toleration
+		return ret
+	}
+	return o.Tolerations
+}
+
+// GetTolerationsOk returns a tuple with the Tolerations field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ResourceRequest) GetTolerationsOk() ([]Toleration, bool) {
+	if o == nil || IsNil(o.Tolerations) {
+		return nil, false
+	}
+	return o.Tolerations, true
+}
+
+// HasTolerations returns a boolean if a field has been set.
+func (o *ResourceRequest) HasTolerations() bool {
+	if o != nil && !IsNil(o.Tolerations) {
+		return true
+	}
+	return false
+}
+
+// SetTolerations gets a reference to the given []Toleration and assigns it to the Tolerations field.
+func (o *ResourceRequest) SetTolerations(v []Toleration) {
+	o.Tolerations = v
+}
+
+// GetNodeSelector returns the NodeSelector field value if set, zero value otherwise.
+func (o *ResourceRequest) GetNodeSelector() map[string]string {
+	if o == nil || IsNil(o.NodeSelector) {
+		var ret map[string]string
+		return ret
+	}
+	return *o.NodeSelector
+}
+
+// GetNodeSelectorOk returns a tuple with the NodeSelector field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ResourceRequest) GetNodeSelectorOk() (*map[string]string, bool) {
+	if o == nil || IsNil(o.NodeSelector) {
+		return nil, false
+	}
+	return o.NodeSelector, true
+}
+
+// HasNodeSelector returns a boolean if a field has been set.
+func (o *ResourceRequest) HasNodeSelector() bool {
+	if o != nil && !IsNil(o.NodeSelector) {
+		return true
+	}
+	return false
+}
+
+// SetNodeSelector gets a reference to the given map[string]string and assigns it to the NodeSelector field.
+func (o *ResourceRequest) SetNodeSelector(v map[string]string) {
+	o.NodeSelector = &v
+}
+
 func (o ResourceRequest) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -299,6 +363,12 @@ func (o ResourceRequest) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.GpuRequest) {
 		toSerialize["gpu_request"] = o.GpuRequest
+	}
+	if !IsNil(o.Tolerations) {
+		toSerialize["tolerations"] = o.Tolerations
+	}
+	if !IsNil(o.NodeSelector) {
+		toSerialize["node_selector"] = o.NodeSelector
 	}
 	return toSerialize, nil
 }
