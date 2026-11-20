@@ -114,6 +114,10 @@ func (fc *featureCache) insertFeatureTable(featureTable *internalFeatureTable, p
 	for idx, entity := range featureTable.entities {
 		if err := fc.insertFeaturesOfEntity(entity, featureTable.columnNames, project, featureTable.valueRows[idx], featureTable.columnTypes); err != nil {
 			errorMsgs = append(errorMsgs, fmt.Sprintf("(value: %v, with message: %v)", featureTable.valueRows[idx], err.Error()))
+		} else {
+			fmt.Printf("CACHE INSERT: entity=%v, project=%s, columns=%v, values=%v\n",
+				entity, project, featureTable.columnNames, featureTable.valueRows[idx])
+
 		}
 	}
 	if len(errorMsgs) > 0 {
